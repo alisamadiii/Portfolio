@@ -55,38 +55,12 @@ const jsonLd = {
         {
           "@type": "Offer",
           "name": "Launch",
-          "price": "2500",
+          "price": "1200",
           "priceCurrency": "USD",
           "description": "One Google Ads campaign managing up to $3k/mo in ads, custom website, hosting & care, conversion tracking, monthly report.",
           "priceSpecification": {
             "@type": "UnitPriceSpecification",
-            "price": 2500,
-            "priceCurrency": "USD",
-            "unitText": "MONTH"
-          }
-        },
-        {
-          "@type": "Offer",
-          "name": "Growth",
-          "price": "3500",
-          "priceCurrency": "USD",
-          "description": "Multiple campaigns managing up to $6k/mo in ads, call tracking, a landing page per service, Local Services Ads, biweekly strategy call.",
-          "priceSpecification": {
-            "@type": "UnitPriceSpecification",
-            "price": 3500,
-            "priceCurrency": "USD",
-            "unitText": "MONTH"
-          }
-        },
-        {
-          "@type": "Offer",
-          "name": "Scale",
-          "price": "4500",
-          "priceCurrency": "USD",
-          "description": "Unlimited campaigns managing up to $10k/mo in ads, landing pages per service & location, local SEO & Google Business Profile, weekly strategy call.",
-          "priceSpecification": {
-            "@type": "UnitPriceSpecification",
-            "price": 4500,
+            "price": 1200,
             "priceCurrency": "USD",
             "unitText": "MONTH"
           }
@@ -109,7 +83,7 @@ const jsonLd = {
           "name": "Is ad spend included?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. Each tier covers a set amount of monthly spend: up to $3,000 on Launch, $6,000 on Growth, and $10,000 on Scale."
+            "text": "No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. The Launch plan covers up to $3,000 in monthly ad spend."
           }
         },
         {
@@ -125,7 +99,7 @@ const jsonLd = {
           "name": "What's your guarantee?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Two of them. Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account. And site and ads live within 14 days, every lead tracked, and your report by the 5th of each month. If we miss any of these, that month is free. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours."
+            "text": "Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours."
           }
         },
         {
@@ -330,27 +304,26 @@ const jsonLd = {
 <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
 <p class="pill cap" style="margin: 0"><span aria-hidden="true" style="color: #fc8464">✦</span>Pricing</p>
 <h2 class="h2" style="max-width: 16ch">Website and Google Ads, <span style="color: #fc8464">one monthly price</span></h2>
-<p style="margin: 0; max-width: 540px; font-size: 17px; color: #c9bfb5">No setup fee. Pick the tier that matches your ad budget. Google bills the ad spend to you directly.</p>
+<p style="margin: 0; max-width: 540px; font-size: 17px; color: #c9bfb5">One plan, $300 one-time setup. Bigger tiers are on the way. Google bills the ad spend to you directly.</p>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; align-items: stretch">
 
-<article style="padding: 32px; border-radius: 24px; background: rgba(246,239,233,0.04); box-shadow: inset 0 0 0 1px rgba(246,239,233,0.1); display: flex; flex-direction: column; gap: 18px">
-<div style="display: flex; justify-content: space-between; align-items: center"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Launch</h3><span class="cap" style="font-size: 10.5px; color: #a89e94">Ads up to $3K/mo</span></div>
-<p style="margin: 0; display: flex; align-items: baseline; gap: 6px"><span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">$2,500</span><span class="mono" style="font-size: 14px; color: #a89e94">/mo</span></p>
+<article style="position: relative; padding: 32px; border-radius: 24px; background: linear-gradient(180deg, #2a2420 0%, #221d1a 100%); box-shadow: inset 0 0 0 1.5px #fc8464, 0 40px 80px -30px rgba(252,132,100,0.45); display: flex; flex-direction: column; gap: 18px">
+<span class="cap" style="position: absolute; top: -13px; left: 50%; transform: translateX(-50%); padding: 6px 14px; border-radius: 9999px; background: #fc8464; color: #221f1c; font-size: 10.5px; white-space: nowrap">Now enrolling</span>
+<div style="display: flex; justify-content: space-between; align-items: center"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Launch</h3><span class="cap" style="font-size: 10.5px; color: #fc8464">Ads up to $3K/mo</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><p style="margin: 0; display: flex; align-items: baseline; gap: 6px"><span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">$1,200</span><span class="mono" style="font-size: 14px; color: #a89e94">/mo</span></p><p class="mono" style="margin: 0; font-size: 13px; color: #a89e94">+ $300 one-time setup</p></div>
 <p style="margin: 0; font-size: 15px; color: #c9bfb5">For a business ready to turn on paid leads for the first time. One focused campaign, one site built to convert it.</p>
 <ul style="margin: 0; padding: 18px 0 0; border-top: 1px solid rgba(246,239,233,0.1); list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Custom website, hosting &amp; care</li>
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> 1 Google Ads campaign, manages up to $3k/mo in ads</li>
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Form &amp; GA4 conversion tracking</li>
-<li><span aria-hidden="true" style="color: #fc8464">✓</span> Home page + 1 landing page</li>
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Monthly performance report</li>
 </ul>
-<a href="#contact" data-plan="launch" class="btn ghost-d" style="margin-top: auto">Start a Project ↗</a>
+<a href="#contact" data-plan="launch" class="btn cta" style="margin-top: auto">Start a Project ↗</a>
 </article>
 
-<article style="position: relative; padding: 32px; border-radius: 24px; background: linear-gradient(180deg, #2a2420 0%, #221d1a 100%); box-shadow: inset 0 0 0 1.5px #fc8464, 0 40px 80px -30px rgba(252,132,100,0.45); display: flex; flex-direction: column; gap: 18px">
-<span class="cap" style="position: absolute; top: -13px; left: 50%; transform: translateX(-50%); padding: 6px 14px; border-radius: 9999px; background: #fc8464; color: #221f1c; font-size: 10.5px; white-space: nowrap">Most popular</span>
-<div style="display: flex; justify-content: space-between; align-items: center"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Growth</h3><span class="cap" style="font-size: 10.5px; color: #fc8464">Ads up to $6K/mo</span></div>
+<article aria-disabled="true" style="padding: 32px; border-radius: 24px; background: rgba(246,239,233,0.04); box-shadow: inset 0 0 0 1px rgba(246,239,233,0.1); display: flex; flex-direction: column; gap: 18px; opacity: 0.4; user-select: none">
+<div style="display: flex; justify-content: space-between; align-items: center"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Growth</h3><span class="cap" style="font-size: 10.5px; color: #a89e94">Ads up to $6K/mo</span></div>
 <p style="margin: 0; display: flex; align-items: baseline; gap: 6px"><span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">$3,500</span><span class="mono" style="font-size: 14px; color: #a89e94">/mo</span></p>
 <p style="margin: 0; font-size: 15px; color: #c9bfb5">For a business with several services to sell. A landing page and campaign for each, with every call tracked.</p>
 <ul style="margin: 0; padding: 18px 0 0; border-top: 1px solid rgba(246,239,233,0.1); list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
@@ -361,10 +334,10 @@ const jsonLd = {
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Local Services Ads setup</li>
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Biweekly strategy call</li>
 </ul>
-<a href="#contact" data-plan="growth" class="btn cta" style="margin-top: auto">Start a Project ↗</a>
+<span class="btn ghost-d" style="margin-top: auto; cursor: not-allowed; pointer-events: none">Coming soon</span>
 </article>
 
-<article style="padding: 32px; border-radius: 24px; background: rgba(246,239,233,0.04); box-shadow: inset 0 0 0 1px rgba(246,239,233,0.1); display: flex; flex-direction: column; gap: 18px">
+<article aria-disabled="true" style="padding: 32px; border-radius: 24px; background: rgba(246,239,233,0.04); box-shadow: inset 0 0 0 1px rgba(246,239,233,0.1); display: flex; flex-direction: column; gap: 18px; opacity: 0.4; user-select: none">
 <div style="display: flex; justify-content: space-between; align-items: center"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Scale</h3><span class="cap" style="font-size: 10.5px; color: #a89e94">Ads up to $10K/mo</span></div>
 <p style="margin: 0; display: flex; align-items: baseline; gap: 6px"><span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">$4,500</span><span class="mono" style="font-size: 14px; color: #a89e94">/mo</span></p>
 <p style="margin: 0; font-size: 15px; color: #c9bfb5">For a business covering several cities or locations that wants the whole local search page working for it.</p>
@@ -375,11 +348,11 @@ const jsonLd = {
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Local SEO &amp; Google Business Profile</li>
 <li><span aria-hidden="true" style="color: #fc8464">✓</span> Weekly strategy call</li>
 </ul>
-<a href="#contact" data-plan="scale" class="btn ghost-d" style="margin-top: auto">Start a Project ↗</a>
+<span class="btn ghost-d" style="margin-top: auto; cursor: not-allowed; pointer-events: none">Coming soon</span>
 </article>
 </div>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
-<p class="cap" style="margin: 0; color: #a89e94">$0 setup · Website included · 6-month minimum, then month-to-month · Ad spend paid to Google directly</p>
+<p class="cap" style="margin: 0; color: #a89e94">$300 setup · Website included · 6-month minimum, then month-to-month · Ad spend paid to Google directly</p>
 <p style="margin: 0; font-size: 15px; color: #c9bfb5">Just need a website, no ads? <strong style="color: #fffdfb">$1,299 + $100/mo</strong> · <a href="/websites" class="tlink" style="color: #fc8464; font-weight: 700">See website plans →</a></p>
 </div>
 </div>
@@ -393,14 +366,10 @@ const jsonLd = {
 <p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Our guarantee</p>
 <h2 class="h2" style="max-width: 15ch">Hit the lead number, <span style="color: #e0603d">or walk away</span></h2>
 </div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px">
+<div style="width: 100%; max-width: 640px; align-self: center">
 <article style="padding: 28px; border-radius: 20px; background: #221f1c; color: #f6efe9; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; align-items: center; gap: 12px"><span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #fc8464; color: #221f1c; display: flex; align-items: center; justify-content: center; font-weight: 800">✓</span><span class="cap" style="color: #fc8464">Lead guarantee · 90 days</span></div>
 <p style="margin: 0; font-size: 16px; color: #e6ddd4">Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account.</p>
-</article>
-<article style="padding: 28px; border-radius: 20px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08); display: flex; flex-direction: column; gap: 12px">
-<div style="display: flex; align-items: center; gap: 12px"><span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 9999px; background: #fff1eb; color: #c4502e; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 2.5M9 2h6"></path></svg></span><span class="cap" style="color: #c4502e">On-time guarantee</span></div>
-<p style="margin: 0; font-size: 16px; color: #5a524b">Site and ads live within 14 days, every lead tracked, and your report by the 5th of each month. If we miss any of these, that month is free.</p>
 </article>
 </div>
 <p style="margin: 0; max-width: 760px; align-self: center; text-align: center; font-size: 13px; line-height: 1.55; color: #6d645c">A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours.</p>
@@ -414,9 +383,9 @@ const jsonLd = {
 <div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>FAQ</p><h2 class="h2">Common questions</h2><p style="margin: 0; font-size: 16px; color: #5a524b">Still unsure? <a href="https://cal.com/alisamadii" class="tlink" style="font-weight: 700">Book a meeting ↗</a></p></div>
 <div class="card" style="flex: 999 1 560px; min-width: 0; overflow: hidden">
 <details open="" style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What exactly do I get?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">More leads. We run your Google Ads so the right local searches find you, send them to a website built to turn clicks into calls, and track every lead to the keyword that drove it. We handle the campaigns, the site, hosting, and monthly reporting. You answer the phone.</p></details>
-<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Is ad spend included?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. Each tier covers a set amount of monthly spend: up to $3,000 on Launch, $6,000 on Growth, and $10,000 on Scale.</p></details>
+<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Is ad spend included?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. The Launch plan covers up to $3,000 in monthly ad spend.</p></details>
 <details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Why is there a 6-month minimum?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Google Ads needs time to learn. The first months go into finding which searches turn into jobs, and the months after are where the cost per lead comes down. 6 months gives the campaigns a fair run. After that it's month-to-month.</p></details>
-<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What's your guarantee?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Two of them. Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account. And site and ads live within 14 days, every lead tracked, and your report by the 5th of each month. If we miss any of these, that month is free. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours.</p></details>
+<details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What's your guarantee?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, cancel the 6-month minimum and keep your website and Google Ads account. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies to growth plans while ad spend stays at the agreed level and leads are answered in business hours.</p></details>
 <details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Do I own the website?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Yes. Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. If you ever leave after the minimum term, the site and the account go with you.</p></details>
 <details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">What if I already have a website?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included in every growth plan at no extra cost.</p></details>
 <details style="border-bottom: 1px solid rgba(34,31,28,0.07)"><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">Can I get just a website, without ads?<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">Yes. Our website-only plan is $1,299 setup + $100/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our <a href="/websites" class="tlink">Websites page</a>.</p></details>
@@ -448,9 +417,7 @@ const jsonLd = {
 </div>
 <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700">I'm interested in
 <select class="fld" name="plan" id="quote-plan">
-<option value="launch">Launch · $2,500/mo</option>
-<option value="growth" selected>Growth · $3,500/mo</option>
-<option value="scale">Scale · $4,500/mo</option>
+<option value="launch" selected>Launch · $1,200/mo + $300 setup</option>
 <option value="website">Website only · $1,299 + $100/mo</option>
 <option value="ecommerce">E-commerce storefront</option>
 <option value="newsletter">Newsletter for my business · quoted</option>
@@ -552,7 +519,7 @@ const jsonLd = {
           if (!res.ok || !payload?.ok) throw new Error('failed');
           window.track?.('generate_lead', { plan });
           form.reset();
-          if (planSelect) planSelect.value = 'growth';
+          if (planSelect) planSelect.value = 'launch';
           if (sent) sent.hidden = false;
         } catch {
           window.track?.('quote_form_error', { plan, reason: 'request_failed' });
