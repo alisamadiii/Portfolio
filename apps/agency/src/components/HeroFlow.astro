@@ -1,0 +1,217 @@
+---
+// Homepage hero background: the search → Ali Samadi → booked job flow,
+// drawn as inline SVG so it stays sharp at any width. Laid out on a
+// 1600×893 board and cropped like object-fit: cover, anchored bottom.
+const { class: className, style } = Astro.props;
+
+const coral = "#f2785a";
+const ink = "#221f1c";
+const muted = "#8a837b";
+const line = "rgba(27,26,23,0.08)";
+const stars = [0, 1, 2, 3, 4];
+---
+
+<svg
+  class={className}
+  style={style}
+  viewBox="0 0 1600 893"
+  preserveAspectRatio="xMidYMax slice"
+  aria-hidden="true"
+  focusable="false"
+  xmlns="http://www.w3.org/2000/svg"
+  font-family="'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
+>
+  <defs>
+    <pattern id="hf-dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="11" cy="11" r="1" fill="rgba(27,26,23,0.13)"></circle>
+    </pattern>
+    <filter id="hf-card" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#1b1a17" flood-opacity="0.08"></feDropShadow>
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#1b1a17" flood-opacity="0.07"></feDropShadow>
+    </filter>
+    <filter id="hf-glow" x="-40%" y="-40%" width="180%" height="190%">
+      <feDropShadow dx="0" dy="6" stdDeviation="16" flood-color={coral} flood-opacity="0.35"></feDropShadow>
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#1b1a17" flood-opacity="0.06"></feDropShadow>
+    </filter>
+    <filter id="hf-badge" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color={coral} flood-opacity="0.45"></feDropShadow>
+    </filter>
+    <filter id="hf-node" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1b1a17" flood-opacity="0.12"></feDropShadow>
+    </filter>
+    <marker id="hf-arrow-c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 8 5 1 9" fill="none" stroke={coral} stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+    </marker>
+    <marker id="hf-arrow-g" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 8 5 1 9" fill="none" stroke="#a9a29a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+    </marker>
+
+    <!-- cuts the orbit and side lines short of each icon circle -->
+    <mask id="hf-node-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="893">
+      <rect width="1600" height="893" fill="#fff"></rect>
+      <g fill="#000">
+        <circle cx="802" cy="637" r="32"></circle>
+        <circle cx="802" cy="818" r="32"></circle>
+        <circle cx="662" cy="730" r="32"></circle>
+        <circle cx="942" cy="730" r="32"></circle>
+      </g>
+    </mask>
+
+    <!-- Lucide icons -->
+    <symbol id="hf-i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></symbol>
+    <symbol id="hf-i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></symbol>
+    <symbol id="hf-i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"></path></symbol>
+    <symbol id="hf-i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path><rect x="2" y="4" width="20" height="16" rx="2"></rect></symbol>
+    <symbol id="hf-i-window" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M10 4v4"></path><path d="M2 8h20"></path><path d="M6 4v4"></path><path d="m12 12 1.6 6.2 1.2-2.6 2.6-1.2z"></path></symbol>
+    <symbol id="hf-i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18"></path></symbol>
+    <symbol id="hf-i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></symbol>
+  </defs>
+
+  <rect width="1600" height="893" fill="#fbf6f2"></rect>
+  <rect class="hf-bg" width="1600" height="893" fill="url(#hf-dots)"></rect>
+
+  <!-- Steps fade in one by one, following the lead's path (see <style>) -->
+
+  <!-- 0 Local searches -->
+  <g class="hf-s" style="--i:0">
+    <g filter="url(#hf-card)">
+      <rect x="215" y="612" width="266" height="218" rx="14" fill="#fff"></rect>
+    </g>
+    <text x="232" y="647" font-size="18" font-weight="700" fill={ink} letter-spacing="-0.2">Local searches</text>
+    <rect x="232.5" y="668.5" width="231" height="37" rx="9" fill="#fff" stroke="rgba(27,26,23,0.14)"></rect>
+    <use href="#hf-i-search" x="242" y="678" width="18" height="18" color="#8a837b"></use>
+    <text x="270" y="693" font-size="16" fill={muted}>Search</text>
+    <use href="#hf-i-search" x="240" y="725" width="17" height="17" color="#a9a29a"></use>
+    <rect x="270" y="728" width="147" height="10" rx="5" fill="#e3dfda"></rect>
+    <rect x="270" y="746" width="108" height="9" rx="4.5" fill="#ebe7e3"></rect>
+    <use href="#hf-i-search" x="240" y="775" width="17" height="17" color="#a9a29a"></use>
+    <rect x="270" y="778" width="147" height="10" rx="5" fill="#e3dfda"></rect>
+    <rect x="270" y="796" width="108" height="9" rx="4.5" fill="#ebe7e3"></rect>
+    <rect x="427" y="773" width="30" height="21" rx="5" fill={coral}></rect>
+    <text x="442" y="788.5" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">Ad</text>
+  </g>
+
+  <!-- 1 searches → hub -->
+  <g class="hf-s" style="--i:1"><path d="M492 730H637" fill="none" stroke="#cfc8c0" stroke-width="1.5" opacity="0.6" mask="url(#hf-node-gap)"></path></g>
+
+  <!-- 2 orbit + channel nodes -->
+  <g class="hf-s" style="--i:2">
+    <ellipse cx="802" cy="728" rx="136" ry="91" fill="none" stroke="#cfc8c0" stroke-width="1.5" opacity="0.6" mask="url(#hf-node-gap)"></ellipse>
+    <g filter="url(#hf-node)" fill="#fff">
+      <circle cx="802" cy="637" r="24"></circle>
+      <circle cx="802" cy="818" r="24"></circle>
+      <circle cx="662" cy="730" r="24"></circle>
+      <circle cx="942" cy="730" r="24"></circle>
+    </g>
+    <use href="#hf-i-window" x="790" y="625" width="24" height="24" color={ink}></use>
+    <use href="#hf-i-mail" x="790" y="806" width="24" height="24" color={ink}></use>
+    <use href="#hf-i-globe" x="650" y="718" width="24" height="24" color={ink}></use>
+    <use href="#hf-i-phone" x="930" y="718" width="24" height="24" color={ink}></use>
+  </g>
+
+  <!-- 3 Ali Samadi -->
+  <g class="hf-s" style="--i:3">
+    <g filter="url(#hf-glow)">
+      <rect x="714" y="701" width="176" height="58" rx="29" fill={coral}></rect>
+    </g>
+    <text x="802" y="738" font-size="22" font-weight="600" fill="#fff" text-anchor="middle" letter-spacing="-0.2">Ali Samadi</text>
+  </g>
+
+  <!-- 4 hub → business -->
+  <g class="hf-s" style="--i:4"><path d="M967 730H1138" fill="none" stroke="#cfc8c0" stroke-width="1.5" opacity="0.6" mask="url(#hf-node-gap)" marker-end="url(#hf-arrow-g)"></path></g>
+
+  <!-- 5 Your business -->
+  <g class="hf-s" style="--i:5">
+    <g filter="url(#hf-card)">
+      <rect x="1150" y="612" width="239" height="218" rx="14" fill="#fff"></rect>
+    </g>
+    <text x="1168" y="647" font-size="18" font-weight="700" fill={ink} letter-spacing="-0.2">Your business</text>
+    <use href="#hf-i-phone" x="1174" y="684" width="22" height="22" color={ink}></use>
+    <text x="1208" y="689" font-size="13" fill={muted}>Incoming call</text>
+    <text x="1208" y="711" font-size="16" fill={ink}>New lead</text>
+    <path d="M1168 727H1371M1168 772H1371" stroke={line}></path>
+    <use href="#hf-i-calendar" x="1175" y="739" width="21" height="21" color={ink}></use>
+    <text x="1208" y="756" font-size="16" fill={ink}>Job booked</text>
+  </g>
+  {stars.map((i) => (
+    <use class="hf-s hf-star" style={`--i:${5.6 + i * 0.35}`} href="#hf-i-star" x={1167 + i * 25.5} y="789" width="22" height="22" color={coral}></use>
+  ))}
+
+  <!-- 6 business → tracking loop -->
+  <g class="hf-s" style="--i:6.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1494 185H1518Q1533 185 1533 200V715Q1533 730 1518 730H1402" stroke="#c3bcb4" stroke-dasharray="6 5"></path>
+    <path d="M1530 445 1535 450 1530 455" stroke="#b3aca4"></path>
+  </g>
+
+  <!-- 7 Every lead tracked -->
+  <g class="hf-s" style="--i:7.4">
+    <path d="M1373 0V88" fill="none" stroke={coral} stroke-width="1.5" stroke-dasharray="6 5" stroke-linecap="round" marker-end="url(#hf-arrow-c)"></path>
+    <g filter="url(#hf-glow)">
+      <rect x="1255" y="104" width="225" height="160" rx="14" fill="#fff"></rect>
+    </g>
+    <text x="1367.5" y="143" font-size="18" font-weight="700" fill={ink} text-anchor="middle" letter-spacing="-0.2">Every lead tracked</text>
+  </g>
+  <g class="hf-s hf-pop" style="--i:8.2">
+    <g transform="translate(1367.5 202)">
+      <path filter="url(#hf-badge)" transform="scale(2.7) translate(-12 -12)" fill={coral} d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"></path>
+      <path d="M-11 0-3 8 12-8" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </g>
+  </g>
+
+  <!-- 8 tracking feeds back into the hub -->
+  <path class="hf-s" style="--i:9" d="M1373 268V540Q1373 557 1356 557H818Q802 557 802 573V597" fill="none" stroke={coral} stroke-width="1.5" stroke-dasharray="6 5" stroke-linecap="round" marker-end="url(#hf-arrow-c)"></path>
+
+  <!-- 9 Cost per lead + loop back to searches -->
+  <g class="hf-s" style="--i:10">
+    <path d="M245 0V88" fill="none" stroke="#b3aca4" stroke-width="1.5" stroke-dasharray="6 5" stroke-linecap="round" marker-end="url(#hf-arrow-g)"></path>
+    <g filter="url(#hf-card)">
+      <rect x="130" y="103" width="230" height="158" rx="14" fill="#fff"></rect>
+    </g>
+    <text x="146" y="139" font-size="18" font-weight="700" fill={ink} letter-spacing="-0.2">Cost per lead</text>
+    <path d="M146 158H344M146 207H344" stroke={line}></path>
+    <text x="146" y="189" font-size="16" fill="#3d3833">Before</text>
+    <rect x="224" y="177" width="120" height="12" rx="6" fill="#d9d5d0"></rect>
+    <text x="146" y="238" font-size="16" fill="#3d3833">With us</text>
+    <rect x="224" y="226" width="120" height="12" rx="6" fill="#f6efe9"></rect>
+    <rect x="224" y="226" width="72" height="12" rx="6" fill={coral}></rect>
+    <path d="M326 227V237M322 233.5 326 237.5 330 233.5" fill="none" stroke={coral} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+  </g>
+  <g class="hf-s" style="--i:11" fill="none" stroke={coral} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M118 185H86Q71 185 71 200V715Q71 730 86 730H203" stroke-dasharray="6 5" marker-end="url(#hf-arrow-c)"></path>
+    <path d="M67 445 72 450 67 455" stroke-width="1.6"></path>
+  </g>
+</svg>
+
+<style>
+  .hf-bg {
+    animation: hf-fade 1400ms ease-out both;
+  }
+  .hf-s {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hf-in 900ms cubic-bezier(0.2, 0.7, 0.2, 1) calc(300ms + var(--i) * 170ms) both;
+  }
+  .hf-star {
+    animation-duration: 600ms;
+  }
+  .hf-pop {
+    animation-name: hf-pop;
+  }
+  @keyframes hf-fade {
+    from { opacity: 0; }
+  }
+  @keyframes hf-in {
+    from { opacity: 0; transform: translateY(10px); filter: blur(6px); }
+    to { opacity: 1; transform: none; filter: blur(0); }
+  }
+  @keyframes hf-pop {
+    from { opacity: 0; transform: scale(0.6); filter: blur(6px); }
+    to { opacity: 1; transform: none; filter: blur(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hf-bg,
+    .hf-s {
+      animation: none;
+    }
+  }
+</style>
