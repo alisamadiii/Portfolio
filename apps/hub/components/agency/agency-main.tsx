@@ -11,6 +11,8 @@ const FULL_WIDTH = [
   "/marketing/conversions",
   "/marketing/budget",
   "/marketing/search-terms",
+  "/analytics",
+  "/reports",
 ];
 
 export function AgencyMain({ children }: { children: React.ReactNode }) {

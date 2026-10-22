@@ -24,6 +24,7 @@ import {
   AGENCY_LEAD_STATUS_VALUES,
   agencyClient,
   agencyLead,
+  agencyWeeklyReport,
   hubProject,
   subscriptions,
   user as userTable,
@@ -43,7 +44,7 @@ import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
 import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
 import { ADS_TTL, cachedAds, invalidateAds, ttlForRange } from "../lib/agency/ads-cache";
-import { evaluateAlerts } from "../lib/agency/ads-alerts";
+import { getAccountAlerts, wiredActions } from "../lib/agency/account-alerts";
 import { budgetPacing } from "../lib/agency/budget-pacing";
 import {
   EDITABLE_CATEGORIES,
@@ -51,8 +52,6 @@ import {
   buildUpdate,
   findPreset,
   planPreset,
-  trackingStatus,
-  type WiredActions,
 } from "../lib/agency/conversion-presets";
 import {
   reportLeadStage,
@@ -60,12 +59,12 @@ import {
   syncConversionUploads,
 } from "../lib/agency/conversion-uploads";
 import { enrichAdClicks } from "../lib/agency/enrich-ad-clicks";
+import type { WeeklyReportData } from "../lib/agency/weekly-report";
 import { classifyLead } from "../lib/agency/lead-channel";
 import {
   addNegativeKeyword,
   createConversionActions,
   getAdsStats,
-  getAlertSignals,
   getBudgetPacing,
   getConversionActions,
   getSearchTerms,
@@ -512,6 +511,7 @@ const adminRouter = createTRPCRouter({
         googleAdsCustomerId: agencyClient.googleAdsCustomerId,
         googleAdsConversionAction: agencyClient.googleAdsConversionAction,
         leadNotifyEmail: agencyClient.leadNotifyEmail,
+        weeklyReport: agencyClient.weeklyReport,
         email: userTable.email,
         name: userTable.name,
         repo: hubProject.repo,
@@ -589,6 +589,7 @@ const adminRouter = createTRPCRouter({
         googleAdsCustomerId: z.string().trim().max(20).nullable(),
         googleAdsConversionAction: z.string().trim().max(200).nullable(),
         leadNotifyEmail: z.string().trim().email().nullable().or(z.literal("")),
+        weeklyReport: z.boolean(),
       })
     )
     .mutation(async ({ input }) => {
@@ -627,6 +628,7 @@ const adminRouter = createTRPCRouter({
           : null,
         googleAdsConversionAction: input.googleAdsConversionAction || null,
         leadNotifyEmail: input.leadNotifyEmail || null,
+        weeklyReport: input.weeklyReport,
       };
 
       const [client] = await db
@@ -734,11 +736,6 @@ const actionFields = z.object({
   clickThroughLookbackWindowDays: z.number().int().min(1).max(90),
   primaryForGoal: z.boolean(),
   defaultValue: z.number().min(0).max(1_000_000),
-});
-
-const wiredActions = (client: typeof agencyClient.$inferSelect): WiredActions => ({
-  ...client.googleAdsActions,
-  won: client.googleAdsConversionAction ?? undefined,
 });
 
 /** Point a lead stage at an action (or nothing); `calls` is only remembered. */
@@ -952,6 +949,25 @@ export const agencyRouter = createTRPCRouter({
 
   leads: leadsRouter,
 
+  // Saved copies of the Monday report emails, newest week first.
+  reports: createTRPCRouter({
+    list: agencyProcedure.query(async ({ ctx }) => {
+      await requireFeature(ctx.session.user, ctx.client.repoId, "leads");
+      const rows = await db
+        .select()
+        .from(agencyWeeklyReport)
+        .where(eq(agencyWeeklyReport.repoId, ctx.client.repoId))
+        .orderBy(desc(agencyWeeklyReport.weekFrom))
+        .limit(52);
+      return rows.map((row) => ({
+        id: row.id,
+        weekFrom: row.weekFrom,
+        emailedAt: row.emailedAt,
+        data: row.data as WeeklyReportData,
+      }));
+    }),
+  }),
+
   ads: createTRPCRouter({
     // Null when this client has no Google Ads account linked yet.
     stats: agencyProcedure
@@ -1095,78 +1111,8 @@ export const agencyRouter = createTRPCRouter({
 
     // Health checks across budget, conversions, ads and uploads. Empty when
     // nothing needs attention; null when no account is linked. Cached 15 min.
-    alerts: conversionsProcedure.query(async ({ ctx }) => {
-      const customerId = ctx.client.googleAdsCustomerId;
-      if (!customerId || !isGoogleAdsConfigured()) return null;
-      try {
-        return await cachedAds(customerId, "alerts", ADS_TTL.live, async () => {
-          const today = new Date().toISOString().slice(0, 10);
-          const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .slice(0, 10);
-
-          const failureStage = (stage: string) =>
-            sql`(${agencyLead.adsUploads} -> ${stage} ->> 'error') is not null or (${agencyLead.adsUploads} -> ${stage} ->> 'verifyError') is not null`;
-
-          const [pacingData, signals, actions, [failures]] = await Promise.all([
-            getBudgetPacing(customerId),
-            getAlertSignals(customerId),
-            getConversionActions(customerId, monthAgo, today),
-            db
-              .select({ count: count() })
-              .from(agencyLead)
-              .where(
-                and(
-                  eq(agencyLead.repoId, ctx.client.repoId),
-                  gte(
-                    agencyLead.createdAt,
-                    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-                  ),
-                  or(
-                    isNotNull(agencyLead.conversionError),
-                    ...["lead", "qualified", "won"].map(failureStage)
-                  )
-                )
-              ),
-          ]);
-
-          const wired = wiredActions(ctx.client);
-          const trackingBroken = Object.values(wired)
-            .filter(Boolean)
-            .flatMap((resourceName) => {
-              const action = actions.find((a) => a.resourceName === resourceName);
-              if (!action) return [];
-              const status = trackingStatus(action);
-              return status === "inactive" || status === "no_recent"
-                ? [{ name: action.name, status }]
-                : [];
-            });
-
-          const targetCents = ctx.client.googleAdsBudget?.monthlyCents ?? null;
-          return evaluateAlerts({
-            pacing: targetCents
-              ? budgetPacing(pacingData.spentCents, targetCents, new Date())
-              : null,
-            targetCents,
-            conversionsLast7: signals.conversionsLast7,
-            conversionsPrior7: signals.conversionsPrior7,
-            disapprovedAds: signals.disapprovedAds,
-            budgetLimited: pacingData.campaigns
-              .filter((campaign) => campaign.status === "ENABLED")
-              .map((campaign) => ({
-                name: campaign.name,
-                share: campaign.budgetLostShare,
-              })),
-            trackingBroken,
-            uploadFailures: failures?.count ?? 0,
-          });
-        });
-      } catch (error) {
-        // Alerts are a bonus: never break the page over them.
-        console.error("Ads alerts failed", error);
-        return [];
-      }
-    }),
+    // Health checks shared with the weekly report email (lib/agency/account-alerts).
+    alerts: conversionsProcedure.query(({ ctx }) => getAccountAlerts(ctx.client)),
 
     // Light list for the sidebar campaign filter. Null when no account linked.
     campaigns: agencyProcedure.query(async ({ ctx }) => {

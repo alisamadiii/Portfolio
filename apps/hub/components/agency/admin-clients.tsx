@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
+import { Switch } from "@workspace/ui/components/switch";
 import {
   Select,
   SelectContent,
@@ -44,6 +45,7 @@ const EMPTY = {
   googleAdsCustomerId: "",
   googleAdsConversionAction: "",
   leadNotifyEmail: "",
+  weeklyReport: true,
 };
 
 // Admin: turn a Hub user into an agency client (one website) and wire their
@@ -148,6 +150,7 @@ export function AdminAgencyClients() {
             googleAdsCustomerId: form.googleAdsCustomerId || null,
             googleAdsConversionAction: form.googleAdsConversionAction || null,
             leadNotifyEmail: form.leadNotifyEmail,
+            weeklyReport: form.weeklyReport,
           });
         }}
       >
@@ -343,6 +346,20 @@ export function AdminAgencyClients() {
             onChange={(event) => set("leadNotifyEmail")(event.target.value)}
           />
         </div>
+        <label className="flex items-center justify-between gap-4 rounded-lg border p-3">
+          <span>
+            <span className="block text-[14px] font-medium">Weekly report email</span>
+            <span className="text-muted-foreground block text-[12.5px]">
+              Monday summary of leads and ad spend to the owner.
+            </span>
+          </span>
+          <Switch
+            checked={form.weeklyReport}
+            onCheckedChange={(checked) =>
+              setForm((current) => ({ ...current, weeklyReport: checked }))
+            }
+          />
+        </label>
         <div className="flex items-end justify-end gap-2">
           {form !== EMPTY && (
             <Button
@@ -429,6 +446,7 @@ export function AdminAgencyClients() {
                         googleAdsConversionAction:
                           client.googleAdsConversionAction ?? "",
                         leadNotifyEmail: client.leadNotifyEmail ?? "",
+                        weeklyReport: client.weeklyReport,
                       })
                     }
                   >

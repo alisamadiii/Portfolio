@@ -1,5 +1,6 @@
 import {
   bigint,
+  boolean,
   index,
   integer,
   jsonb,
@@ -115,6 +116,8 @@ export const agencyClient = pgTable("agency_client", {
   googleAdsActions: jsonb("google_ads_actions").$type<AgencyAdsActions>(),
   // Monthly ad spend target for budget pacing; unset = no pacing shown.
   googleAdsBudget: jsonb("google_ads_budget").$type<AgencyAdsBudget>(),
+  // Monday email with the week's numbers; the email's unsubscribe link clears it.
+  weeklyReport: boolean("weekly_report").notNull().default(true),
 
   // New-lead notification address; falls back to the owner's email.
   leadNotifyEmail: text("lead_notify_email"),
@@ -219,5 +222,27 @@ export const agencyRateLimit = pgTable(
   },
   (table) => ({
     idxWindowStart: index("agency_rate_limit_window_start_idx").on(table.windowStart),
+  })
+);
+
+// One saved weekly report per client per week: what the Monday email said,
+// kept so the hub can show history and week-over-week comparisons.
+export const agencyWeeklyReport = pgTable(
+  "agency_weekly_report",
+  {
+    id: serial("id").primaryKey(),
+    repoId: bigint("repo_id", { mode: "number" }).notNull(),
+    // Monday of the reported week (YYYY-MM-DD).
+    weekFrom: text("week_from").notNull(),
+    // The WeeklyReportData the email rendered (packages/trpc lib/agency/weekly-report).
+    data: jsonb("data").notNull(),
+    emailedAt: timestamp("emailed_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uniqRepoWeek: uniqueIndex("agency_weekly_report_repo_week_idx").on(
+      table.repoId,
+      table.weekFrom
+    ),
   })
 );

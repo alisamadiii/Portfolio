@@ -29,6 +29,8 @@ import { useAgency } from "@/components/agency/use-agency";
 import {
   Blocks,
   BookOpen,
+  ChartColumn,
+  FileText,
   CreditCard,
   HelpCircle,
   House,
@@ -78,6 +80,8 @@ const overviewPages: {
     feature: "ads",
     badge: <AdsAlertCount />,
   },
+  { title: "Analytics", url: "/analytics", icon: ChartColumn },
+  { title: "Reports", url: "/reports", icon: FileText, feature: "leads" },
   {
     title: "Newsletter",
     url: "/newsletter",

@@ -18,7 +18,6 @@ import { ChannelBadge } from "@/components/agency/lead-channel";
 import { formatMoney, LeadStatusBadge } from "@/components/agency/lead-status";
 import { useAgency } from "@/components/agency/use-agency";
 import { ArrowRight, ExternalLink, Globe, Pencil } from "@/components/icon";
-import { AnalyticsPanel } from "@/components/settings/analytics-panel";
 
 const WebsiteCard = () => {
   const { repoId, repo, websiteUrl, role } = useAgency();
@@ -189,10 +188,6 @@ export function AgencyHome() {
       </div>
 
       <RecentLeads />
-
-      <div className="-mx-6">
-        <AnalyticsPanel />
-      </div>
     </div>
   );
 }

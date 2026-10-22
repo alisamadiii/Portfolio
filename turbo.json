@@ -26,6 +26,7 @@
         "GITHUB_APP_NAME",
         "GITHUB_APP_PRIVATE_KEY",
         "GITHUB_APP_WEBHOOK_SECRET",
+        "CRON_SECRET",
         "USESEND_API_KEY",
         "USESEND_URL",
         "USESEND_CONTACT_BOOK_ID",

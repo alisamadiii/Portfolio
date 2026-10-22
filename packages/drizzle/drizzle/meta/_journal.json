@@ -148,6 +148,20 @@
       "when": 1792700654335,
       "tag": "0020_cool_hex",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792702256496,
+      "tag": "0021_chief_victor_mancha",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792702746785,
+      "tag": "0022_woozy_unicorn",
+      "breakpoints": true
     }
   ]
 }
