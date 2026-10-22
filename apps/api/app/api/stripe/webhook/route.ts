@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 
-import { stripe } from "@workspace/trpc/lib/stripe";
-import { MIRROR_EVENTS, syncStripeEvent } from "@workspace/trpc/lib/stripe-sync";
+import { stripe } from "@workspace/trpc/lib/payment/stripe";
+import { MIRROR_EVENTS, syncStripeEvent } from "@workspace/trpc/lib/payment/stripe-sync";
 import { trackPurchase } from "@workspace/google-analytics/server";
 import { db } from "@workspace/drizzle/index";
 import { subscriptions, user, webhookEvents } from "@workspace/drizzle/schema";
@@ -18,9 +18,8 @@ import { subscriptions, user, webhookEvents } from "@workspace/drizzle/schema";
 //     the Stripe sub id).
 //
 // State-sync pattern: we do NOT trust the event body where ordering matters.
-// CMS events funnel to syncCmsSubscription(customerId), which re-fetches the
-// customer's current subscription from Stripe and upserts one row per
-// project; product events re-fetch the product + price. This is idempotent
+// CMS events funnel to syncCmsSubscription, which re-fetches the event's
+// subscription from Stripe and upserts one row per project; product events re-fetch the product + price. This is idempotent
 // and order-independent — duplicate or out-of-order events all converge to
 // the same final state, sidestepping Stripe's event-ordering pain.
 //
@@ -36,18 +35,67 @@ const CMS_EVENTS = new Set<string>([
   "invoice.paid",
 ]);
 
-async function syncCmsSubscription(customerId: string) {
-  const subs = await stripe.subscriptions.list({
-    customer: customerId,
-    status: "all",
-    limit: 1,
-    expand: ["data.items.data.price"],
-  });
-  const sub = subs.data[0];
+/** Statuses that keep a project unlocked (matches the hub's plan gate). */
+const LIVE_STATUSES = new Set<string>(["active", "trialing", "past_due"]);
+
+/** The subscription a CMS event is about, when the event names one. */
+function subscriptionIdOf(event: Stripe.Event): string | null {
+  const ref = (value: string | { id: string } | null | undefined) =>
+    typeof value === "string" ? value : (value?.id ?? null);
+  switch (event.type) {
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+    case "customer.subscription.deleted":
+      return event.data.object.id;
+    case "checkout.session.completed":
+      return ref(event.data.object.subscription);
+    case "invoice.paid":
+      // API v22 nests the invoice's subscription under parent.subscription_details.
+      return ref(event.data.object.parent?.subscription_details?.subscription);
+    default:
+      return null;
+  }
+}
+
+async function syncCmsSubscription(customerId: string, subscriptionId: string | null) {
+  // Sync the subscription the event is about: a customer can hold several
+  // (one per project, or a website plan being replaced by an agency plan),
+  // and "the newest one" would miss updates to the others.
+  const sub = subscriptionId
+    ? await stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ["items.data.price"],
+      })
+    : (
+        await stripe.subscriptions.list({
+          customer: customerId,
+          status: "all",
+          limit: 1,
+          expand: ["data.items.data.price"],
+        })
+      ).data[0];
   if (!sub) return;
 
   const repoId = Number(sub.metadata.repoId ?? sub.metadata.repo_id);
   if (!Number.isFinite(repoId) || repoId <= 0) return; // not a CMS project sub
+
+  // One row per project. When a different subscription already holds it:
+  // - a live row is never overwritten by a sub that isn't live (e.g. the old
+  //   website plan's "deleted" event arriving after the agency plan started);
+  // - a new live sub replaces the old live one, which is canceled with a
+  //   prorated credit so the client never pays twice for the same project.
+  const [current] = await db
+    .select({ id: subscriptions.id, status: subscriptions.status })
+    .from(subscriptions)
+    .where(eq(subscriptions.repoId, repoId))
+    .limit(1);
+  if (current && current.id !== sub.id && LIVE_STATUSES.has(current.status)) {
+    if (!LIVE_STATUSES.has(sub.status)) return;
+    if (current.id.startsWith("sub_")) {
+      await stripe.subscriptions.cancel(current.id, { prorate: true }).catch((error) => {
+        console.error(`Failed to cancel replaced subscription ${current.id}`, error);
+      });
+    }
+  }
 
   const userId = sub.metadata.userId || null;
 
@@ -74,8 +122,7 @@ async function syncCmsSubscription(customerId: string) {
     : null;
 
   const values = {
-    // Also set on upgrade: a free row ('free_<repoId>') becomes the real
-    // Stripe sub row the moment the project goes paid.
+    // Also set on replacement: the row follows the project's live sub.
     id: sub.id,
     repoId,
     userId: userId ?? "",
@@ -203,7 +250,7 @@ export async function POST(req: Request) {
 
     // Per-project CMS subscription (hub_subscription).
     if (CMS_EVENTS.has(event.type) && customerId) {
-      await syncCmsSubscription(customerId);
+      await syncCmsSubscription(customerId, subscriptionIdOf(event));
     }
   } catch (error) {
     // Return 500 so Stripe retries.

@@ -4,7 +4,7 @@ import { useUser } from "@/contexts/user-context";
 
 import { ActiveSessionsBanner } from "@/components/active-sessions-banner";
 import { DocumentTitle } from "@/components/document-title";
-import { ProjectGallery } from "@/components/project-gallery";
+import { ProjectGallery } from "@/components/website/project-gallery";
 
 // ─── Page ───────────────────────────────────────────────────────
 

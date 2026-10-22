@@ -1,4 +1,4 @@
-import { requireProjectPlan } from "@workspace/trpc/lib/cms/feature-access";
+import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import z from "zod";
@@ -171,10 +171,7 @@ export const emailsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+      await requireFeature(ctx.user, ctx.repoId, "emails");
       const project = await resolveProject(ctx.repoId);
       if (project.usesendDomainId || project.usesendPendingDomainId) {
         throw new TRPCError({
@@ -196,10 +193,7 @@ export const emailsRouter = createTRPCRouter({
     }),
 
   verifyDomain: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+    await requireFeature(ctx.user, ctx.repoId, "emails");
     const project = await resolveProject(ctx.repoId);
     if (!project.usesendPendingDomainId) {
       throw new TRPCError({
@@ -257,10 +251,7 @@ export const emailsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+      await requireFeature(ctx.user, ctx.repoId, "emails");
       const project = await resolveProject(ctx.repoId);
       const emails = await projectEmails(project);
 
@@ -297,10 +288,7 @@ export const emailsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+      await requireFeature(ctx.user, ctx.repoId, "emails");
       const project = await resolveProject(ctx.repoId);
       const emails = await projectEmails(project);
 
@@ -333,10 +321,7 @@ export const emailsRouter = createTRPCRouter({
   get: cmsProcedure
     .input(z.object({ id: emailId }))
     .query(async ({ ctx, input }) => {
-      await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+      await requireFeature(ctx.user, ctx.repoId, "emails");
       const project = await resolveProject(ctx.repoId);
       const emails = await projectEmails(project);
       const email = emails.find((e) => e.id === input.id);
@@ -349,10 +334,7 @@ export const emailsRouter = createTRPCRouter({
   getViewUrl: cmsProcedure
     .input(z.object({ id: emailId }))
     .mutation(async ({ ctx, input }) => {
-      await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+      await requireFeature(ctx.user, ctx.repoId, "emails");
       const project = await resolveProject(ctx.repoId);
 
       // The detail endpoint has no domainId — scope by requiring the id in

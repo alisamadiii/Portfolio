@@ -8,7 +8,7 @@ import {
 } from "@workspace/trpc/lib/cms/branch-name";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { installationCommitAuthor } from "@workspace/trpc/lib/github-app";
-import { requireProjectPlan } from "@workspace/trpc/lib/cms/feature-access";
+import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 import { getBranchHeadSha } from "@workspace/trpc/lib/cms/github-cache-file";
 import { createOctokitInstance } from "@workspace/trpc/lib/cms/octokit";
 import {
@@ -451,10 +451,7 @@ export const previewSessionRouter = createTRPCRouter({
   publish: cmsFullAccessProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+      await requireFeature(ctx.user, ctx.repoId, "ai-chat");
       const session = await sessionForRepo(ctx.repoId, input.sessionId);
 
       // Throws CONFLICT when production moved under the session (the pilot

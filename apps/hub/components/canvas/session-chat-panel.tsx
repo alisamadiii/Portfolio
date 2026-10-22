@@ -10,6 +10,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
+import type { Feature } from "@workspace/trpc/lib/payment/plans";
 
 import { shrinkImage } from "@/lib/shrink-image";
 import { handleCmsError, SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
@@ -690,12 +691,13 @@ export function SessionChatPanel() {
       setTriedSend(true);
       return;
     }
-    // AI chat is plan-gated: no edit token means the server refused the mint
-    // (402) — open the purchase dialog instead of posting with a dead token.
+    // AI chat is plan-gated: no edit token means the plan lacks "ai-chat"
+    // (the mint is skipped or 402s), so open the purchase dialog instead of
+    // posting with a dead token.
     if (!editToken) {
       window.dispatchEvent(
         new CustomEvent(SUBSCRIPTION_REQUIRED_EVENT, {
-          detail: { feature: "cms" },
+          detail: { feature: "ai-chat" satisfies Feature },
         })
       );
       return;

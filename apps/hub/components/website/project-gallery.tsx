@@ -10,11 +10,13 @@ import { Github } from "@workspace/ui/icons/social";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
+import { FREE_PLAN, type Entitlement } from "@workspace/trpc/lib/payment/plans";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { repoPath } from "@/lib/paths";
 
 import { DeployButton } from "@/components/deploy/deploy-dialog";
+import { usePlans } from "@/hooks/use-plans";
 import { Globe, LockKeyhole } from "@/components/icon";
 
 // Logical size the live site renders at inside the preview iframe before it's
@@ -31,9 +33,6 @@ type Project = {
   private?: boolean;
   updatedAt?: string | null;
   websiteUrl?: string | null;
-  plan?: string | null;
-  status?: string | null;
-  freeLife?: boolean;
 };
 
 type Site = {
@@ -100,42 +99,19 @@ const LivePill = ({ up }: { up: boolean }) => (
   </span>
 );
 
-// Plan badge for a project card. `undefined` plan ⇒ no subscription row.
-// free_life (agency gift, from cms_org_repo) takes precedence over any plan.
-const PlanBadge = ({
-  plan,
-  freeLife,
-}: {
-  plan: string | undefined;
-  freeLife?: boolean;
-}) => {
-  const label = freeLife
-    ? "Free for life"
-    : plan === "free_lifetime"
-      ? "Free for life"
-      : plan === "free"
-        ? "Free"
-        : plan === "paid"
-          ? "Paid"
-          : "No plan";
-  const style = freeLife
-    ? "bg-status-success-bg text-status-success"
-    : plan === "paid"
-      ? "bg-status-success-bg text-status-success"
-      : plan === "free" || plan === "free_lifetime"
-        ? "bg-status-info-bg text-status-info"
-        : "bg-status-neutral-bg text-status-neutral";
-  return (
-    <span
-      className={cn(
-        "shrink-0 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
-        style
-      )}
-    >
-      {label}
-    </span>
-  );
-};
+// Plan badge for a project card, straight from the project's entitlement.
+const PlanBadge = ({ entitlement }: { entitlement: Entitlement }) => (
+  <span
+    className={cn(
+      "shrink-0 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold",
+      entitlement.plan === FREE_PLAN
+        ? "bg-status-neutral-bg text-status-neutral"
+        : "bg-status-success-bg text-status-success"
+    )}
+  >
+    {entitlement.label}
+  </span>
+);
 
 // Bare host for the secondary line ("https://acme.com/" → "acme.com").
 const hostOf = (url: string) =>
@@ -156,13 +132,11 @@ const ConfigChips = () => (
 const ProjectCard = ({
   project,
   site,
-  plan,
-  freeLife,
+  entitlement,
 }: {
   project: Project;
   site?: Site;
-  plan?: string;
-  freeLife?: boolean;
+  entitlement: Entitlement;
 }) => {
   const url = project.websiteUrl ?? null;
   return (
@@ -191,7 +165,7 @@ const ProjectCard = ({
           <ConfigChips />
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <PlanBadge plan={plan} freeLife={freeLife} />
+          <PlanBadge entitlement={entitlement} />
           {site && <LivePill up={site.status.up} />}
         </div>
       </div>
@@ -234,12 +208,7 @@ export function ProjectGallery() {
   const siteFor = (p: Project): Site | undefined =>
     (sites as Site[] | undefined)?.find((s) => s.id === `${p.owner}/${p.repo}`);
 
-  // A fully canceled paid sub is no plan at all — badge as "No plan", not
-  // a green "Paid".
-  const planFor = (p: Project): string | undefined =>
-    p.plan === "paid" && p.status === "canceled" ? undefined : (p.plan ?? undefined);
-
-  const freeLifeFor = (p: Project): boolean => !!p.freeLife;
+  const plans = usePlans();
 
   return (
     <section className="space-y-4">
@@ -273,8 +242,7 @@ export function ProjectGallery() {
               key={`${p.owner}/${p.repo}`}
               project={p}
               site={siteFor(p)}
-              plan={planFor(p)}
-              freeLife={freeLifeFor(p)}
+              entitlement={plans.forRepo(p.repoId)}
             />
           ))}
         </div>

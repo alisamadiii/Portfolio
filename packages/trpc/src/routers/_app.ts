@@ -1,6 +1,7 @@
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 import { createTRPCRouter } from "../init";
+import { agencyRouter } from "./agency";
 import { analyticsRouter } from "./integrations/analytics";
 import { authRouter } from "./auth";
 import { cmsRouter } from "./cms/index";
@@ -11,6 +12,7 @@ import { emailsRouter } from "./emails";
 import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
 import { paymentsRouter } from "./payments";
+import { plansRouter } from "./plans";
 import { productsRouter } from "./products";
 import { projectRouter } from "./project";
 import { sourcesRouter } from "./sources";
@@ -24,6 +26,7 @@ export const appRouter = createTRPCRouter({
   users: usersRouter,
   products: productsRouter,
   payments: paymentsRouter,
+  plans: plansRouter,
   sources: sourcesRouter,
   stats: statsRouter,
   uploads: uploadsRouter,
@@ -37,6 +40,7 @@ export const appRouter = createTRPCRouter({
   project: projectRouter,
   websites: websitesRouter,
   leads: leadsRouter,
+  agency: agencyRouter,
 });
 
 // export type definition of API

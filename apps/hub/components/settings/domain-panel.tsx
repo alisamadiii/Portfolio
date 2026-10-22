@@ -401,7 +401,7 @@ function SiteDomainPanel({
           </div>
 
           {/* Custom domain */}
-          <ProjectFeatureGate feature="Custom domain">
+          <ProjectFeatureGate feature="domain">
             <div className="bg-card rounded-lg border">
               {!data.custom ? (
                 <>

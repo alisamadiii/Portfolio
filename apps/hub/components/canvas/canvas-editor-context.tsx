@@ -24,6 +24,7 @@ import {
 } from "@/lib/bridge-messages";
 import { repoPath } from "@/lib/paths";
 import { useSessionHeartbeat } from "@/hooks/use-session-heartbeat";
+import { useEntitlement } from "@/hooks/use-plans";
 
 // The URL param the cms-bridge overlay watches to turn edit mode on. Must match
 // EDIT_PARAM in the bridge client (packages/cms-bridge/src/client.ts).
@@ -201,6 +202,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     )
   );
 
+  // Plans decide AI chat; skip the mint (and its 402) when the tier lacks it.
+  const canAiChat = useEntitlement(repoId).can("ai-chat");
+
   // Short-lived, repo-scoped token for the edit iframe (server-minted by
   // cms.aiEdits.mintEditToken). Keeps the long-lived content-pilot key off the
   // browser; refetch inside the token's TTL so a long session stays valid.
@@ -208,14 +212,14 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     trpc.cms.aiEdits.mintEditToken.queryOptions(
       { repoId },
       {
-        enabled: Boolean(repoId) && canEdit,
+        enabled: Boolean(repoId) && canEdit && canAiChat,
         staleTime: 25 * 60 * 1000,
         refetchInterval: 25 * 60 * 1000,
       }
     )
   );
-  // AI editing is plan-gated server-side: the mint 402s for unpaid projects,
-  // leaving editToken empty. The chat composer opens the purchase dialog on
+  // AI editing is plan-gated (server: requireFeature "ai-chat"): without it
+  // editToken stays empty. The chat composer opens the purchase dialog on
   // send — previewing stays free, so no auto-popup here.
   const editToken = editTokenQuery.data?.token ?? "";
 

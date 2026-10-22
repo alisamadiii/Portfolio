@@ -912,3 +912,11 @@ export function X(props: LucideProps) {
 export function Undo2(props: LucideProps) {
   return <Lucide.Undo2 {...props} />;
 }
+
+export function Inbox(props: LucideProps) {
+  return <Lucide.Inbox {...props} />;
+}
+
+export function Megaphone(props: LucideProps) {
+  return <Lucide.Megaphone {...props} />;
+}

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, or, type SQL } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -10,6 +10,7 @@ import {
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { assertRepoAccessByRepoId } from "@workspace/trpc/lib/cms/authz";
 import { resolveProjectByRepoId } from "@workspace/trpc/lib/cms/repo-id";
+import { accessibleProjectsWhere } from "@workspace/trpc/lib/cms/accessible-projects";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
 import { parseHosting } from "@workspace/trpc/lib/hosting";
@@ -19,7 +20,7 @@ import {
   isGithubAppConfigured,
 } from "@workspace/trpc/lib/github-app";
 import { db } from "@workspace/drizzle/index";
-import { hubProject, subscriptions } from "@workspace/drizzle/schema";
+import { hubProject } from "@workspace/drizzle/schema";
 
 export const reposRouter = createTRPCRouter({
   /**
@@ -87,26 +88,8 @@ export const reposRouter = createTRPCRouter({
   // so the account switcher and search filter it client-side.
   listMine: collaboratorProcedure.query(async ({ ctx }) => {
     try {
-      const conds: (SQL | undefined)[] = [eq(hubProject.hidden, false)];
-
-      // Admins see every project. Everyone else sees repos they collaborate on,
-      // plus their own imported repos — the user who connected GitHub gets
-      // access without a collaborator invite.
-      if (!ctx.isAdmin) {
-        const collabConds = (ctx.collaborations ?? [])
-          .map((c) => c.repoId)
-          .filter((id): id is number => id != null)
-          .map((id) => eq(hubProject.repoId, id));
-        const ownConnected = eq(
-          hubProject.githubConnectedUserId,
-          ctx.session.user.id
-        );
-        conds.push(or(ownConnected, ...collabConds));
-      }
-
-      // One query: project rows + their plan (left join, so free-for-life
-      // projects with no subscription still surface). websiteUrl is the
-      // project's own stored URL.
+      // websiteUrl is the project's own stored URL. Plans come from
+      // plans.mine (usePlans on the client).
         const rows = await db
           .select({
             owner: hubProject.owner,
@@ -116,17 +99,10 @@ export const reposRouter = createTRPCRouter({
             private: hubProject.private,
             defaultBranch: hubProject.defaultBranch,
             updatedAt: hubProject.githubUpdatedAt,
-            freeLife: hubProject.freeLife,
             websiteUrl: hubProject.websiteUrl,
-            plan: subscriptions.plan,
-            status: subscriptions.status,
           })
           .from(hubProject)
-          .leftJoin(
-            subscriptions,
-            eq(subscriptions.repoId, hubProject.repoId)
-          )
-          .where(and(...conds))
+          .where(accessibleProjectsWhere(ctx))
           .orderBy(desc(hubProject.githubUpdatedAt));
 
         return rows.map((row) => ({
@@ -138,9 +114,6 @@ export const reposRouter = createTRPCRouter({
           defaultBranch: row.defaultBranch,
           updatedAt: row.updatedAt.toISOString(),
           websiteUrl: row.websiteUrl ?? null,
-          plan: row.plan ?? null,
-          status: row.status ?? null,
-          freeLife: row.freeLife,
         }));
       } catch (error) {
         if (error instanceof TRPCError) throw error;

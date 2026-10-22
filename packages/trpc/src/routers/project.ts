@@ -19,7 +19,7 @@ import {
   normalizeWebsiteUrl,
 } from "@workspace/trpc/lib/hosting";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
-import { settleAndCancel } from "@workspace/trpc/lib/cms/settle-subscription";
+import { settleAndCancel } from "@workspace/trpc/lib/payment/settle-subscription";
 import { deleteUsesendDomain } from "@workspace/trpc/lib/usesend";
 
 export const projectRouter = createTRPCRouter({

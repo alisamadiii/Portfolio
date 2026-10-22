@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 
-import { stripe } from "@workspace/trpc/lib/stripe";
+import { stripe } from "@workspace/trpc/lib/payment/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,
@@ -15,7 +15,7 @@ import {
   grantPurchaseCredits,
   resetCreditsToAllowance,
   revokePurchaseCredits,
-} from "./credits";
+} from "../credits";
 
 // Syncs the Stripe catalog/billing mirror tables (product / subscription /
 // order) from webhook events. Single entry point: syncStripeEvent(event).

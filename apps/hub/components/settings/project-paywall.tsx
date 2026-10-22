@@ -9,21 +9,24 @@ import { toast } from "sonner";
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { PlanCard } from "@/components/billing/plan-card";
-import { startPlanCheckout, useProjectAccess } from "@/hooks/use-project-access";
+import { FEATURES, type Feature } from "@workspace/trpc/lib/payment/plans";
+
+import { startPlanCheckout, useEntitlement } from "@/hooks/use-plans";
 
 /**
- * Lock screen for paid settings pages (Emails, Analytics). Shown instead of
- * the panel content when the project has no active plan — the server gates
- * the underlying procedures with the same rule.
+ * Lock screen for a feature the project's plan doesn't include. Shown instead
+ * of the panel content; the server gates the underlying procedures with the
+ * same catalog (requireFeature).
  */
 export const ProjectPaywall = ({
   repoId,
   feature,
 }: {
   repoId: number;
-  feature: string;
+  feature: Feature;
 }) => {
   const { user } = useUser();
+  const label = FEATURES[feature];
   const [checkingOut, setCheckingOut] = useState(false);
 
   const subscribe = async () => {
@@ -53,10 +56,10 @@ export const ProjectPaywall = ({
         <div className="space-y-1.5 text-center">
           <p className="flex items-center justify-center gap-2 text-[15px] font-extrabold tracking-tight">
             <LockKeyhole className="size-4" />
-            {feature} is part of the website plan
+            {label} is part of the website plan
           </p>
           <p className="text-muted-foreground text-[14.5px]">
-            Subscribe this project to unlock {feature.toLowerCase()},
+            Subscribe this project to unlock {label.toLowerCase()},
             publishing, and AI editing.
           </p>
         </div>
@@ -70,7 +73,7 @@ export const ProjectPaywall = ({
 };
 
 /**
- * Wraps a paid settings panel: plan active (or admin/freeLife/free row) →
+ * Wraps a feature's panel: the project's plan includes it (or admin) →
  * children; otherwise the paywall. Lives OUTSIDE the panel so the panel's own
  * hooks never run while locked.
  */
@@ -78,12 +81,12 @@ export const ProjectFeatureGate = ({
   feature,
   children,
 }: {
-  feature: string;
+  feature: Feature;
   children: React.ReactNode;
 }) => {
   const { config } = useConfig();
   const repoId = config?.repoId ?? undefined;
-  const { hasAccess, isLoading } = useProjectAccess(repoId);
+  const { can, isLoading } = useEntitlement(repoId);
 
   if (isLoading) {
     return (
@@ -92,7 +95,7 @@ export const ProjectFeatureGate = ({
       </div>
     );
   }
-  if (repoId && !hasAccess) {
+  if (repoId && !can(feature)) {
     return <ProjectPaywall repoId={repoId} feature={feature} />;
   }
   return children;

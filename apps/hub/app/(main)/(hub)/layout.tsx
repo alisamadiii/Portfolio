@@ -1,30 +1,24 @@
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@workspace/ui/components/sidebar";
+import { headers } from "next/headers";
 
-import { HubContainer } from "@/components/hub-container";
-import { HubSidebar } from "@/components/hub-sidebar";
+import { createHttpCaller } from "@workspace/trpc/http-caller";
 
-export default function HubLayout({
-  children,
+import { AgencyProvider } from "@/components/agency/agency-context";
+
+// The Hub has two UIs: the website one (@website) and the lead-generation
+// agency one (@agency). Each slot is a full tree with its own shell, sidebar
+// and pages; this is the only place that decides which one a user gets.
+export default async function HubLayout({
+  agency,
+  website,
 }: {
   children: React.ReactNode;
+  agency: React.ReactNode;
+  website: React.ReactNode;
 }) {
-  return (
-    <SidebarProvider
-      style={{ "--sidebar-width": "18.5rem" } as React.CSSProperties}
-    >
-      <HubSidebar />
-      <SidebarInset className="bg-shell min-h-screen">
-        <header className="bg-shell sticky top-0 z-30 flex h-12 shrink-0 items-center px-4 md:hidden">
-          <SidebarTrigger />
-        </header>
-        <main className="w-full flex-1">
-          <HubContainer>{children}</HubContainer>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
-  );
+  const caller = createHttpCaller(await headers());
+  const agencyClient = await caller.agency.me.query();
+
+  if (!agencyClient) return website;
+
+  return <AgencyProvider client={agencyClient}>{agency}</AgencyProvider>;
 }

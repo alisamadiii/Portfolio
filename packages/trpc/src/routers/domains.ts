@@ -14,7 +14,7 @@ import {
   isCloudflareSaasConfigured,
   saasCnameTarget,
 } from "../lib/cloudflare-saas";
-import { requireProjectPlan } from "../lib/cms/feature-access";
+import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 import { toTRPCError } from "../lib/cms/errors";
 import {
   getImport,
@@ -186,10 +186,7 @@ export const domainsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-        await requireProjectPlan(ctx.user, ctx.repoId, {
-        owner: ctx.owner,
-        repo: ctx.repo,
-      });
+        await requireFeature(ctx.user, ctx.repoId, "domain");
       const project = await projectRow(ctx.repoId);
       if (project.customDomain) {
         throw new TRPCError({
@@ -237,10 +234,7 @@ export const domainsRouter = createTRPCRouter({
 
   /** Step 2: check Cloudflare; on verified, go live. */
   verifyCustomDomain: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    await requireProjectPlan(ctx.user, ctx.repoId, {
-      owner: ctx.owner,
-      repo: ctx.repo,
-    });
+    await requireFeature(ctx.user, ctx.repoId, "domain");
     const project = await projectRow(ctx.repoId);
     if (!project.customDomain || project.customDomainStatus !== "pending") {
       throw new TRPCError({

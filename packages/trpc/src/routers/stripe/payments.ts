@@ -9,15 +9,12 @@ import {
   authenticatedProcedure,
   baseProcedure,
   createTRPCRouter,
-  internalProcedure,
 } from "@workspace/trpc/init";
 import {
   getStripeCustomerIdsByEmail,
-  hasFeatureAccess,
   revalidateStripeTagsForCustomer,
-} from "@workspace/trpc/lib/feature-access-check";
-import { featureKeys } from "@workspace/trpc/lib/features";
-import { stripe } from "@workspace/trpc/lib/stripe";
+} from "@workspace/trpc/lib/payment/stripe-cache";
+import { stripe } from "@workspace/trpc/lib/payment/stripe";
 import { db } from "@workspace/drizzle/index";
 import { user } from "@workspace/drizzle/schema";
 
@@ -215,22 +212,6 @@ export const stripeRouter = createTRPCRouter({
         })),
       };
     }),
-
-  // Server-to-server feature gate (e.g. CMS save). `fresh: true` bypasses the
-  // minutes-TTL cache and revalidates it — used right after a purchase so the
-  // user is never blocked by a stale "no subscription" read.
-  internalHasFeatureAccess: internalProcedure
-    .input(
-      z.object({
-        email: z.email(),
-        feature: z.enum(featureKeys),
-        fresh: z.boolean().default(false),
-      })
-    )
-    .query(
-      async ({ input }): Promise<{ hasAccess: boolean }> =>
-        hasFeatureAccess(input)
-    ),
 
   getStripeSubscriptions: authenticatedProcedure.query(async ({ ctx }) => {
     const customerIds = await getStripeCustomerIdsForUser(ctx.session.user.id);

@@ -2,8 +2,8 @@
  * Creates the single per-project hub plan in Stripe: Website Management,
  * $100/mo recurring. Run once per mode (the key in apps/api/.env decides):
  *   npx tsx packages/trpc/scripts/seed-project-plan.mts
- * Then paste the printed price id into PRICE_IDS in
- * packages/trpc/src/lib/features.ts (sandbox or prod slot to match the key).
+ * Then paste the printed price id into PLANS in
+ * packages/trpc/src/lib/payment/plans.ts (live or sandbox arg of price()).
  * Idempotent: skips creation when a product named 'Website Management'
  * already exists in the mode.
  */
@@ -43,5 +43,5 @@ const price = await stripe.prices.create({
 await stripe.products.update(product.id, { default_price: price.id });
 
 console.log(`[${mode}] created product: ${product.id}`);
-console.log(`[${mode}] price id (paste into features.ts PRICE_IDS): ${price.id}`);
+console.log(`[${mode}] price id (paste into lib/payment/plans.ts): ${price.id}`);
 process.exit(0);

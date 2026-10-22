@@ -4,15 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
-  Check,
   ChevronDown,
   ChevronRight,
   ExternalLink,
   FileText,
-  Gift,
   Globe,
-  Heart,
-  Sparkles,
 } from "@/components/icon";
 import { toast } from "sonner";
 
@@ -35,7 +31,7 @@ import {
 } from "@/components/billing/shared";
 import { PanelError } from "@/components/settings/panel-error";
 import { PlanCard } from "@/components/billing/plan-card";
-import { startPlanCheckout } from "@/hooks/use-project-access";
+import { startPlanCheckout, useEntitlement } from "@/hooks/use-plans";
 
 type ProjectSubscription = NonNullable<
   RouterOutputs["cms"]["subscription"]["getProject"]["subscription"]
@@ -51,6 +47,7 @@ export const ProjectBillingPanel = () => {
   const { user } = useUser();
 
   const repoId = config?.repoId ?? 0;
+  const { refresh: refreshPlans } = useEntitlement(repoId);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery(
     trpc.cms.subscription.getProject.queryOptions(
@@ -70,9 +67,13 @@ export const ProjectBillingPanel = () => {
     url.searchParams.delete("purchase");
     window.history.replaceState(null, "", url.toString());
     void refetch();
-    const t = setTimeout(() => void refetch(), 2500);
+    void refreshPlans();
+    const t = setTimeout(() => {
+      void refetch();
+      void refreshPlans();
+    }, 2500);
     return () => clearTimeout(t);
-  }, [refetch]);
+  }, [refetch, refreshPlans]);
 
   return (
     <div className="mx-auto w-full max-w-screen-md p-6">
@@ -94,8 +95,6 @@ export const ProjectBillingPanel = () => {
         <div className="flex justify-center py-24">
           <Spinner className="text-muted-foreground size-6" />
         </div>
-      ) : data.freeLife ? (
-        <FreeForLifePanel />
       ) : !data.subscription ||
         // Fully canceled = no plan anymore — back to the picker to
         // resubscribe (distinct from cancelAtPeriodEnd, which stays managed
@@ -109,9 +108,6 @@ export const ProjectBillingPanel = () => {
             userName={user.name}
           />
         ) : null
-      ) : data.subscription.plan === "free" ||
-        data.subscription.plan === "free_lifetime" ? (
-        <FreePlanPanel plan={data.subscription.plan} />
       ) : (
         <ProjectManage repoId={data.repoId} subscription={data.subscription} />
       )}
@@ -170,85 +166,6 @@ export const ProjectPlans = ({
   );
 };
 
-// ─── Free / free-for-life panel ─────────────────────────────────
-
-export const FreePlanPanel = ({
-  plan,
-}: {
-  plan: "free" | "free_lifetime";
-}) => (
-  <div className="bg-card rounded-lg border px-6 py-14 text-center">
-    <div className="bg-status-success-bg text-status-success mx-auto grid size-14 place-items-center rounded-full">
-      <Sparkles className="size-7" />
-    </div>
-    <h3 className="mt-5 text-[22px] font-extrabold tracking-tight">
-      {plan === "free_lifetime" ? "Free for life" : "Free plan"}
-    </h3>
-    <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14.5px]">
-      {plan === "free_lifetime"
-        ? "This project is on the house — no subscription needed, ever. Enjoy full access."
-        : "This project is on a complimentary plan. No billing is required right now."}
-    </p>
-    <div className="mt-6">
-      <RequestDialog>
-        <Button variant="outline" className="rounded-full px-5">
-          Request a change
-        </Button>
-      </RequestDialog>
-    </div>
-  </div>
-);
-
-// ─── Free-for-life panel (agency gift, cms_org_repo.free_life) ───
-// Shown when a project is flagged free-for-life on the repo — a gesture of
-// gratitude, granting full access forever with nothing to pay. Distinct from
-// FreePlanPanel (which reflects a free/free_lifetime subscription row).
-
-const FREE_FOR_LIFE_PERKS = [
-  "Full CMS access",
-  "Media library",
-  "Draft & publish",
-  "No billing, ever",
-];
-
-export const FreeForLifePanel = () => (
-  <div className="bg-card overflow-hidden rounded-lg border">
-    <div className="from-primary/10 to-accent/40 relative bg-gradient-to-br px-6 py-12 text-center">
-      <div className="bg-primary text-primary-foreground mx-auto grid size-16 place-items-center rounded-2xl shadow-sm">
-        <Gift className="size-8" />
-      </div>
-      <h3 className="mt-6 text-[26px] font-extrabold tracking-tight">
-        Free for life
-      </h3>
-      <p className="text-muted-foreground mx-auto mt-2.5 max-w-[440px] text-[14.5px] leading-relaxed">
-        This project is on us — full access, forever. It&apos;s our way of
-        saying thank you. There&apos;s nothing to pay, now or ever.
-      </p>
-    </div>
-
-    <div className="grid grid-cols-2 gap-x-6 gap-y-3.5 px-6 py-6 sm:grid-cols-4">
-      {FREE_FOR_LIFE_PERKS.map((perk) => (
-        <div key={perk} className="flex items-center gap-2 text-[13.5px]">
-          <Check className="text-primary size-4 shrink-0" />
-          {perk}
-        </div>
-      ))}
-    </div>
-
-    <div className="border-rule flex items-center justify-between gap-3 border-t px-6 py-5">
-      <p className="text-muted-foreground flex items-center gap-1.5 text-[13px]">
-        <Heart className="text-primary size-3.5" />
-        With gratitude, from AliSamadii.LLC
-      </p>
-      <RequestDialog>
-        <Button variant="outline" className="rounded-full px-5">
-          Request a change
-        </Button>
-      </RequestDialog>
-    </div>
-  </div>
-);
-
 // ─── Manage view (paid subscription) ────────────────────────────
 
 type ProjectInvoice =
@@ -262,6 +179,7 @@ export const ProjectManage = ({
   subscription: ProjectSubscription;
 }) => {
   const trpc = useTRPC();
+  const { entitlement } = useEntitlement(repoId);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const {
@@ -326,7 +244,7 @@ export const ProjectManage = ({
             label="Next renewal"
             value={renewal ? format(renewal, "MMM d, yyyy") : "—"}
           />
-          <Stat label="Plan" value="Paid" />
+          <Stat label="Plan" value={entitlement.label} />
           <Stat label="Auto-renewal" value={isCanceling ? "Off" : "On"} />
         </div>
 

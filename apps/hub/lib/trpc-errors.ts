@@ -1,5 +1,5 @@
 // PAYMENT_REQUIRED is reserved for feature gates (see
-// @workspace/trpc/lib/cms/feature-access). Every CMS mutation funnels its
+// @workspace/trpc/lib/payment/entitlements). Every CMS mutation funnels its
 // error through here, so dispatching once opens the purchase dialog
 // app-wide without per-surface wiring — the SubscriptionGateProvider
 // listens for this event.

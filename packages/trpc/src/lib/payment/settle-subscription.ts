@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@workspace/drizzle/index";
 import { subscriptions } from "@workspace/drizzle/schema";
 
-import { stripe } from "@workspace/trpc/lib/stripe";
+import { stripe } from "@workspace/trpc/lib/payment/stripe";
 
 /**
  * Cancel a project's paid Stripe subscription and refund the unused (prorated)
@@ -27,8 +27,8 @@ export async function settleAndCancel(repoId: number): Promise<void> {
     .where(eq(subscriptions.repoId, repoId))
     .limit(1);
 
-  // Paid rows carry the Stripe sub id as the row id; free rows use a
-  // 'free_<repoId>' placeholder and have nothing to settle.
+  // Paid rows carry the Stripe sub id as the row id. Legacy free rows
+  // ('free_<repoId>', no Stripe sub) have nothing to settle.
   const subId = row?.id;
   if (
     !row ||

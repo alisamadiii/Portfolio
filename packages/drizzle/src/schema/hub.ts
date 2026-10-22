@@ -143,10 +143,6 @@ export const hubProject = pgTable(
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
     // Per-project settings, with defaults for new projects.
     basePath: text("base_path").notNull().default(""),
-    // Agency-granted free-for-life access. When true, the hub gate is bypassed
-    // for this project for every user (no subscription, no Stripe), and Billing
-    // shows a gratitude panel. Set directly in the DB (no admin UI).
-    freeLife: boolean("free_life").notNull().default(false),
     // Blog sync state: the Blog tab shows an "unpublished changes" banner when
     // blogEditedAt > blogPublishedAt. Edited is stamped on every blog CRUD
     // mutation (including deletes, which max(updatedAt) could never detect);

@@ -84,15 +84,17 @@ export function SettingsMode() {
         ) : selected === DOMAIN ? (
           <DomainPanel />
         ) : selected === EMAILS ? (
-          <ProjectFeatureGate feature="Emails">
+          <ProjectFeatureGate feature="emails">
             <EmailsPanel />
           </ProjectFeatureGate>
         ) : selected === ANALYTICS ? (
-          <ProjectFeatureGate feature="Analytics">
+          <ProjectFeatureGate feature="analytics">
             <AnalyticsPanel />
           </ProjectFeatureGate>
         ) : selected === SPEED ? (
-          <SpeedPanel />
+          <ProjectFeatureGate feature="speed">
+            <SpeedPanel />
+          </ProjectFeatureGate>
         ) : selected === DANGER ? (
           <DangerPanel />
         ) : null}

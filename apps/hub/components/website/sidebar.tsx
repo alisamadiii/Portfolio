@@ -12,6 +12,7 @@ import {
   Globe,
   HelpCircle,
   House,
+  Inbox,
   LogOut,
   Settings,
 } from "@/components/icon";
@@ -35,11 +36,12 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { useUser } from "@/contexts/user-context";
 import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
 
-import { NavPages } from "./nav-pages";
-import { StatusDot } from "./status-dot";
+import { NavPages } from "@/components/nav-pages";
+import { StatusDot } from "@/components/status-dot";
 
 const overviewPages = [
   {
@@ -141,7 +143,17 @@ const WebsiteGroup = () => {
   );
 };
 
+const adminPages = [
+  {
+    title: "Agency clients",
+    url: "/agency-clients",
+    icon: Inbox,
+  },
+];
+
 export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useUser();
+
   return (
     <Sidebar {...props}>
       <SidebarHeader className="px-5 pt-6 pb-5">
@@ -166,6 +178,7 @@ export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavPages label="Overview" pages={overviewPages} />
         <WebsiteGroup />
         <NavPages label="Account" pages={accountPages} />
+        {user?.isAdmin && <NavPages label="Admin" pages={adminPages} />}
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel className="text-sidebar-foreground/60 px-3 text-[11px] font-semibold tracking-[0.06em] uppercase">
             Support

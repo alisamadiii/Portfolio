@@ -4,8 +4,8 @@ import type Stripe from "stripe";
 import { z } from "zod";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
-import { FEATURES, featureKeys } from "@workspace/trpc/lib/features";
-import { stripe } from "@workspace/trpc/lib/stripe";
+import { pricesFor, SELF_SERVE_PLANS } from "@workspace/trpc/lib/payment/plans";
+import { stripe } from "@workspace/trpc/lib/payment/stripe";
 import { db } from "@workspace/drizzle/index";
 import { user } from "@workspace/drizzle/schema";
 import { urls } from "@workspace/ui/lib/company";
@@ -35,8 +35,8 @@ export async function OPTIONS(req: Request) {
 // ─── Checkout ───────────────────────────────────────────────────
 
 const bodySchema = z.object({
-  // Feature keys ("cms", …) buy a single gated feature's subscription.
-  plan: z.enum(featureKeys),
+  // Self-serve plan keys from lib/payment/plans ("website:paid").
+  plan: z.enum(SELF_SERVE_PLANS),
   email: z.email().optional(),
   name: z.string().max(200).optional(),
   // Per-project CMS subscription: the webhook keys the subscription off
@@ -70,8 +70,16 @@ export async function POST(req: Request) {
   }
   const { plan, email, name, returnUrl, repoId, userId } = parsed.data;
 
+  const prices = pricesFor(plan);
+  if (!prices) {
+    return NextResponse.json(
+      { error: "This plan isn't available yet." },
+      { status: 503, headers }
+    );
+  }
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-    { price: FEATURES[plan].price, quantity: 1 },
+    { price: prices.recurring, quantity: 1 },
+    ...(prices.setup ? [{ price: prices.setup, quantity: 1 }] : []),
   ];
 
   const metadata = {
@@ -119,6 +127,8 @@ export async function POST(req: Request) {
       metadata,
       success_url: featureSuccessUrl,
       cancel_url: featureBackUrl,
+      // Free projects get a 100%-off-forever promotion code instead of a DB flag.
+      allow_promotion_codes: true,
       custom_text: {
         submit: {
           message: "Use the same email you sign in with — access is tied to it.",

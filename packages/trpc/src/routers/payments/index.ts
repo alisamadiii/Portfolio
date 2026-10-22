@@ -12,7 +12,7 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
-import { stripe } from "@workspace/trpc/lib/stripe";
+import { stripe } from "@workspace/trpc/lib/payment/stripe";
 import { db } from "@workspace/drizzle/index";
 import {
   orders,

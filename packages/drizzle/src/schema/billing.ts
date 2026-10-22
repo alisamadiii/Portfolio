@@ -95,9 +95,9 @@ export const prices = pgTable(
 //   repoId NULL     -> product subscription, keyed/upserted on `id` (sub_…)
 //   repoId NOT NULL -> per-project CMS subscription, one row per project,
 //                      upserted on the partial-unique repoId index by the
-//                      Stripe webhook's state-sync. Admin-granted
-//                      free/free_lifetime rows have no Stripe sub and use
-//                      id = 'free_<repoId>'.
+//                      Stripe webhook's state-sync. Free access is a
+//                      100%-off Stripe promotion code, so every row is a
+//                      real Stripe subscription.
 // Historical product rows keep their Polar UUID ids.
 export const subscriptions = pgTable(
   "subscription",
@@ -129,9 +129,9 @@ export const subscriptions = pgTable(
     // GitHub-stable repo id, unique per project. Survives repo rename.
     // bigint: upload projects use synthetic ids >= 1e12.
     repoId: bigint("repo_id", { mode: "number" }),
-    // Plan tier — drives gating + home badge. Stripe rows use "paid";
-    // "free"/"free_lifetime" are admin-granted with no Stripe subscription.
-    plan: text("plan", { enum: ["free", "free_lifetime", "paid"] }),
+    // Plan tier — drives gating + home badge. Stripe rows use "paid".
+    // The price id tells the website plan apart from agency plans.
+    plan: text("plan", { enum: ["paid"] }),
     stripeCustomerId: text("stripe_customer_id"),
     priceId: text("price_id"),
     currentPeriodEnd: timestamp("current_period_end"),

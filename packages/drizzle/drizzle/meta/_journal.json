@@ -92,6 +92,20 @@
       "when": 1792587874408,
       "tag": "0012_fresh_chamber",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792666914899,
+      "tag": "0013_clear_northstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792671743448,
+      "tag": "0014_known_marauders",
+      "breakpoints": true
     }
   ]
 }
