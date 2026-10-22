@@ -4,6 +4,7 @@ import {
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar";
 
+import { AgencyMain } from "@/components/agency/agency-main";
 import { AgencySidebar } from "@/components/agency/sidebar";
 
 export default function AgencyLayout({
@@ -21,9 +22,7 @@ export default function AgencyLayout({
           <SidebarTrigger />
         </header>
         <main className="w-full flex-1">
-          <div className="mx-auto w-full max-w-[1200px] p-6 md:p-10">
-            {children}
-          </div>
+          <AgencyMain>{children}</AgencyMain>
         </main>
       </SidebarInset>
     </SidebarProvider>

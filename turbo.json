@@ -34,7 +34,13 @@
         "R2_SECRET_ACCESS_KEY",
         "R2_BUCKET",
         "R2_PUBLIC_BASE_URL",
-        "GOOGLE_PLACES_API_KEY"
+        "GOOGLE_PLACES_API_KEY",
+        "GOOGLE_ADS_DEVELOPER_TOKEN",
+        "GOOGLE_ADS_CLIENT_ID",
+        "GOOGLE_ADS_CLIENT_SECRET",
+        "GOOGLE_ADS_REFRESH_TOKEN",
+        "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
+        "GOOGLE_ADS_API_VERSION"
       ]
     },
     "lint": {

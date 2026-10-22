@@ -11,6 +11,7 @@ import {
   type AgencyLeadUtm,
 } from "@workspace/drizzle/schema";
 import { sendEmail } from "@workspace/email/usesend";
+import { CHANNEL_LABELS, classifyLead } from "@workspace/trpc/lib/agency/lead-channel";
 import { urls } from "@workspace/ui/lib/company";
 
 // ─── Agency lead capture ────────────────────────────────────────
@@ -94,6 +95,15 @@ const bodySchema = z.object({
   formName: short,
   pageUrl: z.string().max(2000).optional(),
   referrer: z.string().max(2000).optional(),
+  landingPage: z.string().max(2000).optional(),
+  firstTouch: z
+    .object({
+      referrer: z.string().max(1000).optional(),
+      landing: z.string().max(1000).optional(),
+      at: z.string().max(40).optional(),
+    })
+    .optional(),
+  clickAt: z.string().max(40).optional(),
   gclid: short,
   gbraid: short,
   wbraid: short,
@@ -208,7 +218,8 @@ export async function POST(
 
   const [client] = await db
     .select({
-      repoId: agencyClient.repoId,
+      // From the joined website: a client with no website linked has no form.
+      repoId: hubProject.repoId,
       leadNotifyEmail: agencyClient.leadNotifyEmail,
       ownerEmail: userTable.email,
       websiteUrl: hubProject.websiteUrl,
@@ -258,6 +269,18 @@ export async function POST(
   const isSpam = Boolean(data.hp) || looksLikeSpam(`${message ?? ""} ${Object.values(rest).join(" ")}`);
   const utm: AgencyLeadUtm | null =
     data.utm && Object.values(data.utm).some(Boolean) ? data.utm : null;
+  const channel = classifyLead({
+    source: "form",
+    gclid: data.gclid,
+    gbraid: data.gbraid,
+    wbraid: data.wbraid,
+    utm,
+    referrer: data.referrer,
+    siteHost: hostOf(origin) ?? hostOf(client.websiteUrl),
+  });
+  const clickAt = data.clickAt ? new Date(data.clickAt) : null;
+  const firstTouch =
+    data.firstTouch && Object.values(data.firstTouch).some(Boolean) ? data.firstTouch : null;
 
   const [lead] = await db
     .insert(agencyLead)
@@ -277,6 +300,10 @@ export async function POST(
       gclid: data.gclid || null,
       gbraid: data.gbraid || null,
       wbraid: data.wbraid || null,
+      landingPage: data.landingPage || null,
+      firstTouch,
+      clickAt: clickAt && !Number.isNaN(clickAt.getTime()) ? clickAt : null,
+      channel,
     })
     .returning({ id: agencyLead.id });
 
@@ -287,9 +314,7 @@ export async function POST(
       ...(phone ? [["Phone", phone] as [string, string]] : []),
       ...(message ? [["Message", message] as [string, string]] : []),
       ...Object.entries(rest),
-      ...(data.gclid || data.gbraid || data.wbraid
-        ? [["Source", "Google Ads"] as [string, string]]
-        : []),
+      ["Source", CHANNEL_LABELS[channel]],
     ];
     const siteName = hostOf(client.websiteUrl) ?? client.repo;
     try {

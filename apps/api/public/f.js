@@ -2,8 +2,9 @@
  * Ali Samadii LLC lead capture.
  * <script src="https://api.alisamadii.com/f.js" data-key="FORM_KEY" defer></script>
  *
- * - Keeps Google Ads click IDs (gclid/gbraid/wbraid) and utm_* from the landing
- *   URL in a 90-day first-party cookie, so they survive page changes.
+ * - Keeps Google Ads click IDs (gclid/gbraid/wbraid), utm_*, the outside
+ *   referrer and the landing page in a 90-day first-party cookie (last touch),
+ *   plus the very first visit in a second one, so they survive page changes.
  * - Takes over every <form data-lead-form>: posts its fields plus that
  *   attribution to the Hub, then shows a thank-you message.
  *
@@ -21,33 +22,65 @@
   if (!key) return;
   var endpoint = new URL(script.src).origin + "/api/agency/forms/" + encodeURIComponent(key);
 
-  var COOKIE = "_lead_attr";
+  var COOKIE = "_lead_attr"; // last touch: click IDs, utm, referrer, landing page
+  var FIRST = "_lead_ft"; // first visit ever: referrer, landing page, time
+  var MAX_AGE = 60 * 60 * 24 * 90;
   var PARAMS = ["gclid", "gbraid", "wbraid", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
+  var CLICK_IDS = ["gclid", "gbraid", "wbraid"];
 
-  function readCookie() {
-    var match = document.cookie.match(new RegExp("(?:^|; )" + COOKIE + "=([^;]*)"));
-    if (!match) return {};
+  function readCookie(name) {
+    var match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    if (!match) return null;
     try {
       return JSON.parse(decodeURIComponent(match[1]));
     } catch (e) {
-      return {};
+      return null;
     }
   }
 
-  // A new ad click replaces the old attribution; plain visits keep it.
+  function writeCookie(name, value) {
+    document.cookie =
+      name + "=" + encodeURIComponent(JSON.stringify(value)) +
+      "; max-age=" + MAX_AGE + "; path=/; SameSite=Lax" +
+      (location.protocol === "https:" ? "; Secure" : "");
+  }
+
+  // Referrer from another site; internal navigation doesn't count.
+  var referrer = "";
+  try {
+    if (document.referrer && new URL(document.referrer).host !== location.host) {
+      referrer = document.referrer.slice(0, 1000);
+    }
+  } catch (e) {}
+  var landing = location.href.slice(0, 1000);
+  var now = new Date().toISOString();
+
+  if (!readCookie(FIRST)) writeCookie(FIRST, { referrer: referrer, landing: landing, at: now });
+
   var query = new URLSearchParams(location.search);
-  var fresh = {};
+  var tagged = {};
   PARAMS.forEach(function (p) {
     var v = query.get(p);
-    if (v) fresh[p] = v.slice(0, 500);
+    if (v) tagged[p] = v.slice(0, 500);
   });
-  if (Object.keys(fresh).length) {
-    fresh.landing = location.href.slice(0, 1000);
-    fresh.referrer = document.referrer.slice(0, 1000);
-    document.cookie =
-      COOKIE + "=" + encodeURIComponent(JSON.stringify(fresh)) +
-      "; max-age=" + 60 * 60 * 24 * 90 + "; path=/; SameSite=Lax" +
-      (location.protocol === "https:" ? "; Secure" : "");
+  var current = readCookie(COOKIE);
+
+  if (Object.keys(tagged).length) {
+    // A tagged visit (ad click, campaign link) replaces the last touch.
+    tagged.landing = landing;
+    tagged.referrer = referrer;
+    if (CLICK_IDS.some(function (id) { return tagged[id]; })) tagged.clickAt = now;
+    writeCookie(COOKIE, tagged);
+  } else if (referrer || !current) {
+    // A visit from another site (search, social, a link) becomes the last touch,
+    // but an ad click from the last 90 days stays credited, like Google Ads does.
+    var next = { landing: landing, referrer: referrer };
+    if (current) {
+      CLICK_IDS.concat("clickAt").forEach(function (k) {
+        if (current[k]) next[k] = current[k];
+      });
+    }
+    writeCookie(COOKIE, next);
   }
 
   function showMessage(form, text, isError) {
@@ -79,12 +112,16 @@
         else fields[name] = value;
       });
 
-      var attr = readCookie();
+      var attr = readCookie(COOKIE) || {};
+      var first = readCookie(FIRST);
       var payload = {
         fields: fields,
         formName: form.getAttribute("data-lead-form") || form.getAttribute("name") || undefined,
         pageUrl: location.href.slice(0, 2000),
-        referrer: (attr.referrer || document.referrer || "").slice(0, 2000) || undefined,
+        landingPage: attr.landing || undefined,
+        referrer: (attr.referrer || "").slice(0, 2000) || undefined,
+        firstTouch: first || undefined,
+        clickAt: attr.clickAt || undefined,
         gclid: attr.gclid,
         gbraid: attr.gbraid,
         wbraid: attr.wbraid,

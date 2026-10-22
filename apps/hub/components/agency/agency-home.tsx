@@ -14,6 +14,7 @@ import {
   StatCard,
   useAgencyNumbers,
 } from "@/components/agency/ads-performance";
+import { ChannelBadge } from "@/components/agency/lead-channel";
 import { formatMoney, LeadStatusBadge } from "@/components/agency/lead-status";
 import { useAgency } from "@/components/agency/use-agency";
 import { ArrowRight, ExternalLink, Globe, Pencil } from "@/components/icon";
@@ -109,6 +110,10 @@ const RecentLeads = () => {
                     })}
                   </p>
                 </div>
+                <ChannelBadge
+                  channel={lead.channel}
+                  className="hidden sm:inline-flex"
+                />
                 <LeadStatusBadge status={lead.status} />
               </Link>
             </li>
@@ -122,7 +127,10 @@ const RecentLeads = () => {
 export function AgencyHome() {
   const user = useCurrentUser().data?.user ?? null;
   const firstName = user?.name?.split(" ")[0];
-  const { leads, ads, currency, costPerLead } = useAgencyNumbers(30);
+  const { leads, ads, currency, costPerLead, adLeads } = useAgencyNumbers(30);
+  const organic =
+    leads.data?.byChannel.find((row) => row.channel === "organic_search")
+      ?.leads ?? 0;
 
   return (
     <div className="space-y-8">
@@ -141,10 +149,18 @@ export function AgencyHome() {
         <p className="text-muted-foreground text-[12px] font-medium tracking-wide uppercase">
           Last 30 days
         </p>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           <StatCard
             label="Leads"
             value={leads.data ? String(leads.data.leads) : null}
+          />
+          <StatCard
+            label="From ads"
+            value={adLeads === null ? null : String(adLeads)}
+          />
+          <StatCard
+            label="Organic"
+            value={leads.data ? String(organic) : null}
           />
           <StatCard
             label="Ad spend"
@@ -160,7 +176,7 @@ export function AgencyHome() {
             }
           />
           <StatCard
-            label="Cost per lead"
+            label="Cost per ad lead"
             value={
               ads.isFetching || leads.isLoading ? null : (costPerLead ?? "–")
             }

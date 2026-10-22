@@ -7,6 +7,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
@@ -27,12 +28,43 @@ export const AGENCY_LEAD_STATUS_VALUES = [
 export type AgencyLeadStatus = (typeof AGENCY_LEAD_STATUS_VALUES)[number];
 export type AgencyLeadSource = "form" | "manual";
 
+// Where the lead came from, computed at capture (lib/agency/lead-channel.ts).
+export const AGENCY_LEAD_CHANNEL_VALUES = [
+  "google_ads",
+  "paid_other",
+  "organic_search",
+  "social",
+  "email",
+  "referral",
+  "direct",
+  "manual",
+] as const;
+export type AgencyLeadChannel = (typeof AGENCY_LEAD_CHANNEL_VALUES)[number];
+
 export type AgencyLeadUtm = {
   source?: string;
   medium?: string;
   campaign?: string;
   term?: string;
   content?: string;
+};
+
+// The visitor's first visit to the site (f.js _lead_ft cookie).
+export type AgencyLeadTouch = {
+  referrer?: string;
+  landing?: string;
+  at?: string;
+};
+
+// The Google Ads click behind a lead, looked up by gclid in click_view.
+export type AgencyLeadAdClick = {
+  campaignId?: string;
+  campaignName?: string;
+  adGroupId?: string;
+  adGroupName?: string;
+  keyword?: string;
+  matchType?: string;
+  device?: string;
 };
 
 // One row per agency client: their single website plus Google Ads wiring.
@@ -43,8 +75,9 @@ export const agencyClient = pgTable("agency_client", {
     .notNull()
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
-  // The client's one website (hub_project.repoId).
-  repoId: bigint("repo_id", { mode: "number" }).notNull().unique(),
+  // The client's one website (hub_project.repoId). Null until it's built and
+  // linked: the client then sees "workspace not ready" instead of the agency UI.
+  repoId: bigint("repo_id", { mode: "number" }).unique(),
 
   // Public key the capture script posts with (f.js data-key).
   formKey: text("form_key").notNull().unique(),
@@ -86,6 +119,15 @@ export const agencyLead = pgTable(
     gclid: text("gclid"),
     gbraid: text("gbraid"),
     wbraid: text("wbraid"),
+    // Page the visit started on, the first visit ever, and when the ad was clicked.
+    landingPage: text("landing_page"),
+    firstTouch: jsonb("first_touch").$type<AgencyLeadTouch>(),
+    clickAt: timestamp("click_at"),
+    // Null on rows captured before channels existed; read falls back to classifyLead.
+    channel: text("channel").$type<AgencyLeadChannel>(),
+    // Filled in later from Google Ads (click data lands a few hours after the click).
+    adClick: jsonb("ad_click").$type<AgencyLeadAdClick>(),
+    adClickCheckedAt: timestamp("ad_click_checked_at"),
 
     status: text("status").$type<AgencyLeadStatus>().notNull().default("new"),
     valueCents: integer("value_cents"),
@@ -107,6 +149,30 @@ export const agencyLead = pgTable(
     idxRepoCreated: index("agency_lead_repo_created_idx").on(
       table.repoId,
       table.createdAt.desc()
+    ),
+    idxRepoChannelCreated: index("agency_lead_repo_channel_created_idx").on(
+      table.repoId,
+      table.channel,
+      table.createdAt.desc()
+    ),
+  })
+);
+
+// Google Ads API responses per client account, so dashboards share one fetch
+// instead of spending API operations on every page view.
+export const agencyAdsCache = pgTable(
+  "agency_ads_cache",
+  {
+    id: serial("id").primaryKey(),
+    customerId: text("customer_id").notNull(),
+    key: text("key").notNull(),
+    data: jsonb("data").notNull(),
+    fetchedAt: timestamp("fetched_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uniqCustomerKey: uniqueIndex("agency_ads_cache_customer_key_idx").on(
+      table.customerId,
+      table.key
     ),
   })
 );

@@ -123,7 +123,7 @@ export function EmailsPanel() {
   );
   const emailsEnabled = hasProject && gate?.enabled === true;
 
-  const { data, isLoading, error } = useQuery(
+  const { data, isLoading, error, isPlaceholderData } = useQuery(
     trpc.emails.list.queryOptions(
       {
         repoId,
@@ -135,7 +135,7 @@ export function EmailsPanel() {
     )
   );
 
-  const { data: stats } = useQuery(
+  const { data: stats, isPlaceholderData: statsStale } = useQuery(
     trpc.emails.stats.queryOptions(
       {
         repoId,
@@ -229,7 +229,12 @@ export function EmailsPanel() {
       <PanelHeading />
 
       {/* ── KPI tiles ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div
+        className={cn(
+          "grid grid-cols-3 gap-3 transition-opacity duration-200",
+          statsStale && "opacity-50"
+        )}
+      >
         <StatTile label="Total sent" value={totals.total} />
         <StatTile
           label="Delivered"
@@ -245,7 +250,12 @@ export function EmailsPanel() {
 
       {/* ── Analytics chart ── */}
       {totals.total > 0 && chartData.length > 0 && (
-        <div className="bg-card rounded-lg border p-4">
+        <div
+          className={cn(
+            "bg-card rounded-lg border p-4 transition-opacity duration-200",
+            statsStale && "opacity-50"
+          )}
+        >
           <p className="text-muted-foreground mb-3 text-[13px] font-medium">
             Emails per day
           </p>
@@ -361,7 +371,10 @@ export function EmailsPanel() {
       ) : (
         <>
           <DataTable
-            className="table-card"
+            className={cn(
+              "table-card transition-opacity duration-200",
+              isPlaceholderData && "opacity-50"
+            )}
             isLoading={isLoading && PAGE_SIZE}
             columns={[
               {

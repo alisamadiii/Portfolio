@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-import type { AgencyLeadStatus } from "@workspace/drizzle/schema";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
@@ -21,12 +20,89 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Textarea } from "@workspace/ui/components/textarea";
 
 import { useTRPC } from "@workspace/trpc/client";
+import { referrerHost } from "@workspace/trpc/lib/agency/lead-channel";
+import type { RouterOutputs } from "@workspace/trpc/routers/_app";
+import type { AgencyLeadStatus } from "@workspace/drizzle/schema";
 
+import {
+  CHANNEL_LABELS,
+  ChannelBadge,
+  urlPath,
+} from "@/components/agency/lead-channel";
+import {
+  formatMoney,
+  LEAD_STATUSES,
+  LeadStatusBadge,
+  leadStatusLabel,
+} from "@/components/agency/lead-status";
 import { useAgency } from "@/components/agency/use-agency";
-import { LEAD_STATUSES, LeadStatusBadge } from "@/components/agency/lead-status";
-import { ArrowLeft, CircleCheck, Mail, Phone, TriangleAlert } from "@/components/icon";
+import {
+  ArrowLeft,
+  CircleCheck,
+  Mail,
+  Phone,
+  TriangleAlert,
+} from "@/components/icon";
 
-const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+type Lead = RouterOutputs["agency"]["leads"]["get"];
+
+const when = (value: string | Date | null | undefined) =>
+  value ? format(new Date(value), "PPP 'at' p:ss") : null;
+
+/** Every stored attribute of a lead, raw, in capture order. */
+const recorded = (lead: Lead): [string, string | null][] => [
+  ["Lead ID", String(lead.id)],
+  ["Received", when(lead.createdAt)],
+  ["Last updated", when(lead.updatedAt)],
+  ["Entered via", lead.source === "manual" ? "Added by hand" : "Website form"],
+  ["Form name", lead.formName],
+  ["Source", CHANNEL_LABELS[lead.channel]],
+  ["Form page URL", lead.pageUrl],
+  ["Landing page URL", lead.landingPage],
+  ["Referrer", lead.referrer],
+  ["UTM source", lead.utm?.source ?? null],
+  ["UTM medium", lead.utm?.medium ?? null],
+  ["UTM campaign", lead.utm?.campaign ?? null],
+  ["UTM term", lead.utm?.term ?? null],
+  ["UTM content", lead.utm?.content ?? null],
+  ["Google click ID (gclid)", lead.gclid],
+  ["iOS app click ID (gbraid)", lead.gbraid],
+  ["iOS web click ID (wbraid)", lead.wbraid],
+  ["Ad clicked at", when(lead.clickAt)],
+  ["Campaign ID", lead.adClick?.campaignId ?? null],
+  ["Campaign", lead.adClick?.campaignName ?? null],
+  ["Ad group ID", lead.adClick?.adGroupId ?? null],
+  ["Ad group", lead.adClick?.adGroupName ?? null],
+  ["Keyword", lead.adClick?.keyword ?? null],
+  ["Match type", lead.adClick?.matchType ?? null],
+  ["Device", lead.adClick?.device ?? null],
+  ["Matched with Google Ads at", when(lead.adClickCheckedAt)],
+  ["First visit at", when(lead.firstTouch?.at)],
+  ["First visit referrer", lead.firstTouch?.referrer || null],
+  ["First visit landing page", lead.firstTouch?.landing ?? null],
+  ["Status", leadStatusLabel(lead.status)],
+  [
+    "Deal value",
+    lead.valueCents !== null
+      ? formatMoney(lead.valueCents, lead.currency)
+      : null,
+  ],
+  ["Currency", lead.currency],
+  ["Won at", when(lead.wonAt)],
+  ["Reported to Google Ads at", when(lead.conversionUploadedAt)],
+  ["Google Ads upload error", lead.conversionError],
+];
+
+const titleCase = (value: string) =>
+  value.charAt(0) + value.slice(1).toLowerCase().replaceAll("_", " ");
+
+const Field = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
   <div className="flex gap-4 border-b py-2.5 text-[14px] last:border-b-0">
     <span className="text-muted-foreground w-36 shrink-0">{label}</span>
     <span className="min-w-0 break-words">{children}</span>
@@ -39,9 +115,11 @@ export function LeadDetail({ id }: { id: number }) {
   const { repoId, role } = useAgency();
   const canEdit = role !== "view-only";
 
-  const { data: lead, isLoading, error } = useQuery(
-    trpc.agency.leads.get.queryOptions({ repoId, id })
-  );
+  const {
+    data: lead,
+    isLoading,
+    error,
+  } = useQuery(trpc.agency.leads.get.queryOptions({ repoId, id }));
 
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
@@ -56,8 +134,12 @@ export function LeadDetail({ id }: { id: number }) {
       trpc.agency.leads.get.queryOptions({ repoId, id }).queryKey,
       updated
     );
-    queryClient.invalidateQueries({ queryKey: trpc.agency.leads.list.pathKey() });
-    queryClient.invalidateQueries({ queryKey: trpc.agency.leads.stats.pathKey() });
+    queryClient.invalidateQueries({
+      queryKey: trpc.agency.leads.list.pathKey(),
+    });
+    queryClient.invalidateQueries({
+      queryKey: trpc.agency.leads.stats.pathKey(),
+    });
   };
 
   const update = useMutation(
@@ -84,8 +166,9 @@ export function LeadDetail({ id }: { id: number }) {
   }
 
   const valueCents = value.trim() ? Math.round(Number(value) * 100) : null;
-  const valueInvalid = valueCents !== null && (!Number.isFinite(valueCents) || valueCents < 0);
-  const fromAds = Boolean(lead.gclid || lead.gbraid || lead.wbraid);
+  const valueInvalid =
+    valueCents !== null && (!Number.isFinite(valueCents) || valueCents < 0);
+  const fromAds = lead.channel === "google_ads";
 
   const save = (status: AgencyLeadStatus = lead.status) =>
     update.mutate({ repoId, id, status, valueCents, notes: notes || null });
@@ -112,13 +195,21 @@ export function LeadDetail({ id }: { id: number }) {
         </div>
         <div className="flex gap-2">
           {lead.phone && (
-            <Button variant="outline" size="sm" render={<a href={`tel:${lead.phone}`} />}>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<a href={`tel:${lead.phone}`} />}
+            >
               <Phone className="size-4" />
               Call
             </Button>
           )}
           {lead.email && (
-            <Button variant="outline" size="sm" render={<a href={`mailto:${lead.email}`} />}>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<a href={`mailto:${lead.email}`} />}
+            >
               <Mail className="size-4" />
               Email
             </Button>
@@ -144,22 +235,98 @@ export function LeadDetail({ id }: { id: number }) {
           </section>
 
           <section className="bg-card rounded-lg border px-5 py-2">
-            <p className="text-muted-foreground pt-2 pb-1 text-[12px] font-medium tracking-wide uppercase">
-              Where it came from
-            </p>
-            <Field label="Source">
-              {fromAds ? "Google Ads" : lead.source === "manual" ? "Added by hand" : "Website"}
-            </Field>
-            {lead.utm?.campaign && <Field label="Campaign">{lead.utm.campaign}</Field>}
-            {lead.utm?.term && <Field label="Keyword">{lead.utm.term}</Field>}
-            {lead.utm?.source && !fromAds && (
-              <Field label="UTM source">
-                {lead.utm.source}
-                {lead.utm.medium ? ` / ${lead.utm.medium}` : ""}
+            <div className="flex items-center justify-between pt-2 pb-1">
+              <p className="text-muted-foreground text-[12px] font-medium tracking-wide uppercase">
+                Where it came from
+              </p>
+              <ChannelBadge channel={lead.channel} withInfo />
+            </div>
+            {fromAds && (
+              <>
+                <Field label="Campaign">
+                  {lead.adClick?.campaignName ?? lead.utm?.campaign ?? (
+                    <span className="text-muted-foreground">
+                      {lead.adClickCheckedAt
+                        ? "Not found in Google Ads"
+                        : "Matching with Google Ads (takes a few hours)"}
+                    </span>
+                  )}
+                </Field>
+                {lead.adClick?.adGroupName && (
+                  <Field label="Ad group">{lead.adClick.adGroupName}</Field>
+                )}
+                {(lead.adClick?.keyword ?? lead.utm?.term) && (
+                  <Field label="Keyword">
+                    {lead.adClick?.keyword ?? lead.utm?.term}
+                    {lead.adClick?.matchType && (
+                      <span className="text-muted-foreground">
+                        {" "}
+                        · {lead.adClick.matchType.toLowerCase()} match
+                      </span>
+                    )}
+                  </Field>
+                )}
+                {lead.adClick?.device && (
+                  <Field label="Device">{titleCase(lead.adClick.device)}</Field>
+                )}
+                {lead.clickAt && (
+                  <Field label="Ad clicked">
+                    {format(new Date(lead.clickAt), "PPP 'at' p")}
+                  </Field>
+                )}
+              </>
+            )}
+            {lead.referrer && (
+              <Field label="Came from">
+                {referrerHost(lead.referrer) ?? lead.referrer}
               </Field>
             )}
-            {lead.pageUrl && <Field label="Page">{lead.pageUrl}</Field>}
-            {lead.referrer && <Field label="Referrer">{lead.referrer}</Field>}
+            {lead.utm?.source && !fromAds && (
+              <Field label="Campaign tag">
+                {[lead.utm.source, lead.utm.medium, lead.utm.campaign]
+                  .filter(Boolean)
+                  .join(" / ")}
+              </Field>
+            )}
+            {lead.landingPage && (
+              <Field label="Landed on">
+                {urlPath(lead.landingPage) ?? lead.landingPage}
+              </Field>
+            )}
+            {lead.pageUrl && (
+              <Field label="Form on">
+                {urlPath(lead.pageUrl) ?? lead.pageUrl}
+              </Field>
+            )}
+            {lead.firstTouch?.at && (
+              <Field label="First visit">
+                {format(new Date(lead.firstTouch.at), "PPP")}
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {referrerHost(lead.firstTouch.referrer) ?? "direct"}
+                  {urlPath(lead.firstTouch.landing)
+                    ? ` → ${urlPath(lead.firstTouch.landing)}`
+                    : ""}
+                </span>
+              </Field>
+            )}
+          </section>
+
+          <section className="bg-card rounded-lg border px-5 py-2">
+            <p className="text-muted-foreground pt-2 pb-1 text-[12px] font-medium tracking-wide uppercase">
+              Everything we recorded
+            </p>
+            {recorded(lead).map(([label, value]) => (
+              <Field key={label} label={label}>
+                {value ? (
+                  <span className="font-mono text-[12.5px] break-all">
+                    {value}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Not recorded</span>
+                )}
+              </Field>
+            ))}
           </section>
         </div>
 
@@ -170,6 +337,7 @@ export function LeadDetail({ id }: { id: number }) {
           </div>
 
           <Select
+            items={LEAD_STATUSES}
             value={lead.status}
             disabled={!canEdit || update.isPending}
             onValueChange={(status) => save(status as AgencyLeadStatus)}

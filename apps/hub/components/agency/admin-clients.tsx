@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDeferredValue, useState } from "react";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
@@ -25,6 +30,14 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { SearchPicker } from "@/components/agency/search-picker";
+
+const NO_WEBSITE = "none";
+
+// "1234567890" -> "123-456-7890"
+const formatCustomerId = (id: string) =>
+  id.replace(/\D/g, "").replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
+
 const EMPTY = {
   email: "",
   repoId: "",
@@ -42,6 +55,34 @@ export function AdminAgencyClients() {
 
   const clients = useQuery(trpc.agency.admin.listClients.queryOptions());
   const projects = useQuery(trpc.cms.repos.listMine.queryOptions());
+
+  const [userSearch, setUserSearch] = useState("");
+  const userQuery = useDeferredValue(userSearch.trim());
+  const users = useQuery(
+    trpc.agency.admin.searchUsers.queryOptions(
+      { query: userQuery },
+      { placeholderData: keepPreviousData }
+    )
+  );
+
+  const [adsSearch, setAdsSearch] = useState("");
+  const adsAccounts = useQuery(
+    trpc.agency.admin.adsAccounts.queryOptions(undefined, {
+      staleTime: 5 * 60 * 1000,
+      retry: false,
+    })
+  );
+  const adsNeedle = adsSearch.trim().toLowerCase();
+  const adsDigits = adsSearch.replace(/\D/g, "");
+  const adsMatches = (adsAccounts.data ?? []).filter(
+    (account) =>
+      !adsNeedle ||
+      account.name.toLowerCase().includes(adsNeedle) ||
+      (adsDigits && account.id.includes(adsDigits))
+  );
+  const pickedAds = adsAccounts.data?.find(
+    (account) => account.id === form.googleAdsCustomerId.replace(/\D/g, "")
+  );
   const customerId = form.googleAdsCustomerId.replace(/\D/g, "");
   const actions = useQuery(
     trpc.agency.admin.conversionActions.queryOptions(
@@ -51,7 +92,9 @@ export function AdminAgencyClients() {
   );
 
   const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.agency.admin.listClients.queryKey() });
+    queryClient.invalidateQueries({
+      queryKey: trpc.agency.admin.listClients.queryKey(),
+    });
 
   const upsert = useMutation(
     trpc.agency.admin.upsertClient.mutationOptions({
@@ -98,7 +141,10 @@ export function AdminAgencyClients() {
           event.preventDefault();
           upsert.mutate({
             email: form.email,
-            repoId: Number(form.repoId),
+            repoId:
+              form.repoId && form.repoId !== NO_WEBSITE
+                ? Number(form.repoId)
+                : null,
             googleAdsCustomerId: form.googleAdsCustomerId || null,
             googleAdsConversionAction: form.googleAdsConversionAction || null,
             leadNotifyEmail: form.leadNotifyEmail,
@@ -106,22 +152,49 @@ export function AdminAgencyClients() {
         }}
       >
         <div className="space-y-1.5">
-          <Label htmlFor="client-email">Client account email</Label>
-          <Input
+          <Label htmlFor="client-email">Client account</Label>
+          <SearchPicker
             id="client-email"
-            type="email"
-            required
-            value={form.email}
-            onChange={(event) => set("email")(event.target.value)}
+            label={form.email || null}
+            placeholder="Search Hub users"
+            searchPlaceholder="Email or name"
+            search={userSearch}
+            onSearchChange={setUserSearch}
+            loading={users.isLoading}
+            items={(users.data ?? []).map((user) => ({
+              key: user.id,
+              title: user.name || user.email,
+              subtitle: user.name ? user.email : undefined,
+              note: user.agencyClientId ? "Agency client" : undefined,
+              selected: user.email === form.email,
+              onSelect: () => set("email")(user.email),
+            }))}
+            empty="No Hub account matches. Have them sign up first."
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Website</Label>
-          <Select value={form.repoId} onValueChange={(value) => set("repoId")(String(value))}>
+          <Label>
+            Website{" "}
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
+          </Label>
+          <Select
+            items={[
+              { value: NO_WEBSITE, label: "No website yet" },
+              ...(projects.data ?? []).map((project) => ({
+                value: String(project.repoId),
+                label: `${project.owner}/${project.repo}`,
+              })),
+            ]}
+            value={form.repoId || NO_WEBSITE}
+            onValueChange={(value) => set("repoId")(String(value))}
+          >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a website" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value={NO_WEBSITE}>No website yet</SelectItem>
               {projects.data?.map((project) => (
                 <SelectItem key={project.repoId} value={String(project.repoId)}>
                   {project.owner}/{project.repo}
@@ -131,27 +204,110 @@ export function AdminAgencyClients() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="client-ads">Google Ads customer ID</Label>
-          <Input
+          <Label htmlFor="client-ads">Google Ads account</Label>
+          <SearchPicker
             id="client-ads"
-            placeholder="123-456-7890"
-            value={form.googleAdsCustomerId}
-            onChange={(event) => set("googleAdsCustomerId")(event.target.value)}
+            label={
+              form.googleAdsCustomerId
+                ? pickedAds
+                  ? `${pickedAds.name || "Unnamed"} · ${formatCustomerId(pickedAds.id)}`
+                  : formatCustomerId(form.googleAdsCustomerId)
+                : null
+            }
+            placeholder={
+              adsAccounts.data
+                ? `Pick from ${adsAccounts.data.length} accounts in your MCC`
+                : "Pick a Google Ads account"
+            }
+            searchPlaceholder="Account name or customer ID"
+            search={adsSearch}
+            onSearchChange={setAdsSearch}
+            loading={adsAccounts.isLoading}
+            items={[
+              ...(form.googleAdsCustomerId
+                ? [
+                    {
+                      key: "none",
+                      title: "No Google Ads account",
+                      onSelect: () => {
+                        set("googleAdsCustomerId")("");
+                        set("googleAdsConversionAction")("");
+                      },
+                    },
+                  ]
+                : []),
+              ...adsMatches.map((account) => ({
+                key: account.id,
+                title: account.name || "Unnamed account",
+                subtitle: `${formatCustomerId(account.id)}${account.testAccount ? " · test" : ""}${
+                  account.status && account.status !== "ENABLED"
+                    ? ` · ${account.status.toLowerCase()}`
+                    : ""
+                }`,
+                note:
+                  account.usedBy && account.usedBy !== form.email
+                    ? account.usedBy
+                    : undefined,
+                selected:
+                  account.id === form.googleAdsCustomerId.replace(/\D/g, ""),
+                onSelect: () => {
+                  if (
+                    account.id !== form.googleAdsCustomerId.replace(/\D/g, "")
+                  ) {
+                    set("googleAdsConversionAction")("");
+                  }
+                  set("googleAdsCustomerId")(account.id);
+                },
+              })),
+            ]}
+            empty={
+              adsAccounts.error
+                ? adsAccounts.error.message
+                : "Not in your MCC yet. Type the 10-digit customer ID to add it by hand."
+            }
+            footer={(close) =>
+              adsDigits.length === 10 &&
+              !adsAccounts.data?.some((account) => account.id === adsDigits) ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => {
+                    set("googleAdsCustomerId")(adsDigits);
+                    set("googleAdsConversionAction")("");
+                    close();
+                  }}
+                >
+                  Use {formatCustomerId(adsDigits)}
+                </Button>
+              ) : null
+            }
           />
+          {form.googleAdsCustomerId && !pickedAds && adsAccounts.data && (
+            <p className="text-muted-foreground text-[12px]">
+              Not linked under your MCC yet. Send a link request from Google
+              Ads; stats show once they accept.
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="client-action">Closed-deal conversion action</Label>
           {actions.data?.length ? (
             <Select
               value={form.googleAdsConversionAction}
-              onValueChange={(value) => set("googleAdsConversionAction")(String(value))}
+              onValueChange={(value) =>
+                set("googleAdsConversionAction")(String(value))
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose a conversion action" />
               </SelectTrigger>
               <SelectContent>
                 {actions.data.map((action) => (
-                  <SelectItem key={action.resourceName} value={action.resourceName}>
+                  <SelectItem
+                    key={action.resourceName}
+                    value={action.resourceName}
+                  >
                     {action.name} ({action.type})
                   </SelectItem>
                 ))}
@@ -162,11 +318,15 @@ export function AdminAgencyClients() {
               id="client-action"
               placeholder="customers/123/conversionActions/456"
               value={form.googleAdsConversionAction}
-              onChange={(event) => set("googleAdsConversionAction")(event.target.value)}
+              onChange={(event) =>
+                set("googleAdsConversionAction")(event.target.value)
+              }
             />
           )}
           {actions.error && (
-            <p className="text-muted-foreground text-[12px]">{actions.error.message}</p>
+            <p className="text-muted-foreground text-[12px]">
+              {actions.error.message}
+            </p>
           )}
         </div>
         <div className="space-y-1.5">
@@ -181,11 +341,15 @@ export function AdminAgencyClients() {
         </div>
         <div className="flex items-end justify-end gap-2">
           {form !== EMPTY && (
-            <Button type="button" variant="ghost" onClick={() => setForm(EMPTY)}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setForm(EMPTY)}
+            >
               Clear
             </Button>
           )}
-          <Button type="submit" disabled={upsert.isPending || !form.repoId}>
+          <Button type="submit" disabled={upsert.isPending || !form.email}>
             Save client
           </Button>
         </div>
@@ -208,19 +372,34 @@ export function AdminAgencyClients() {
               <TableRow key={client.id}>
                 <TableCell>
                   <div className="font-medium">{client.name}</div>
-                  <div className="text-muted-foreground text-[12.5px]">{client.email}</div>
+                  <div className="text-muted-foreground text-[12.5px]">
+                    {client.email}
+                  </div>
                 </TableCell>
-                <TableCell>{client.repo}</TableCell>
+                <TableCell>
+                  {client.repo ?? (
+                    <span className="text-muted-foreground text-[13px]">
+                      No website yet
+                    </span>
+                  )}
+                </TableCell>
                 <TableCell className="text-[13px] capitalize">
                   {client.agencyPlanStatus ?? (
-                    <span className="text-muted-foreground normal-case">Not paid</span>
+                    <span className="text-muted-foreground normal-case">
+                      Not paid
+                    </span>
                   )}
                 </TableCell>
                 <TableCell className="text-[13px]">
-                  {client.googleAdsCustomerId ?? "Not linked"}
-                  {client.googleAdsCustomerId && !client.googleAdsConversionAction && (
-                    <div className="text-destructive text-[12px]">No conversion action</div>
-                  )}
+                  {client.googleAdsCustomerId
+                    ? formatCustomerId(client.googleAdsCustomerId)
+                    : "Not linked"}
+                  {client.googleAdsCustomerId &&
+                    !client.googleAdsConversionAction && (
+                      <div className="text-destructive text-[12px]">
+                        No conversion action
+                      </div>
+                    )}
                 </TableCell>
                 <TableCell>
                   <code className="text-[12px]">{client.formKey}</code>
@@ -229,8 +408,9 @@ export function AdminAgencyClients() {
                   <Button
                     size="sm"
                     variant="outline"
-                    disabled={paymentLink.isPending}
-                    onClick={() => paymentLink.mutate({ repoId: client.repoId })}
+                    disabled={paymentLink.isPending || !client.repoId}
+                    title={client.repoId ? undefined : "Link a website first"}
+                    onClick={() => paymentLink.mutate({ id: client.id })}
                   >
                     Payment link
                   </Button>
@@ -240,9 +420,10 @@ export function AdminAgencyClients() {
                     onClick={() =>
                       setForm({
                         email: client.email,
-                        repoId: String(client.repoId),
+                        repoId: client.repoId ? String(client.repoId) : "",
                         googleAdsCustomerId: client.googleAdsCustomerId ?? "",
-                        googleAdsConversionAction: client.googleAdsConversionAction ?? "",
+                        googleAdsConversionAction:
+                          client.googleAdsConversionAction ?? "",
                         leadNotifyEmail: client.leadNotifyEmail ?? "",
                       })
                     }
@@ -254,7 +435,11 @@ export function AdminAgencyClients() {
                     variant="ghost"
                     disabled={remove.isPending}
                     onClick={() => {
-                      if (confirm(`Remove ${client.email} as an agency client? Their leads stay saved.`)) {
+                      if (
+                        confirm(
+                          `Remove ${client.email} as an agency client? Their leads stay saved.`
+                        )
+                      ) {
                         remove.mutate({ id: client.id });
                       }
                     }}
@@ -266,7 +451,10 @@ export function AdminAgencyClients() {
             ))}
             {clients.data && !clients.data.length && (
               <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground py-8 text-center">
+                <TableCell
+                  colSpan={6}
+                  className="text-muted-foreground py-8 text-center"
+                >
                   No agency clients yet.
                 </TableCell>
               </TableRow>

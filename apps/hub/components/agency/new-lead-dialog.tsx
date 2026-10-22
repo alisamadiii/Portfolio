@@ -48,7 +48,7 @@ export function NewLeadDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button size="sm">
+          <Button size="lg" className="text-sm md:px-4">
             <Plus className="size-4" />
             Add lead
           </Button>

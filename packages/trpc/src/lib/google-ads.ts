@@ -2,12 +2,15 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
+import type { AgencyLeadAdClick } from "@workspace/drizzle/schema";
+
 // ─── Google Ads API (agency MCC) ─────────────────────────────────
 // Raw REST, no SDK. Auth is agency-level: Ali's manager (MCC) account's
 // refresh token, so client accounts linked under the MCC need no OAuth of
 // their own. Every call sends login-customer-id = the MCC.
 
-const API_VERSION = process.env.GOOGLE_ADS_API_VERSION ?? "v25";
+// `||` not `??`: an empty GOOGLE_ADS_API_VERSION= line must fall back too.
+const API_VERSION = process.env.GOOGLE_ADS_API_VERSION || "v25";
 const BASE = `https://googleads.googleapis.com/${API_VERSION}`;
 
 export class GoogleAdsError extends Error {}
@@ -180,24 +183,47 @@ const toMetrics = (row: MetricsRow) => ({
   conversions: Number(row.metrics?.conversions ?? 0),
 });
 
-/** Spend and performance for a date range (YYYY-MM-DD), by day and by campaign. */
-export async function getAdsStats(customerId: string, from: string, to: string) {
+const CAMPAIGN_ID = /^\d+$/;
+
+/**
+ * Spend and performance for a date range (YYYY-MM-DD), by day and by campaign.
+ * `campaignId` scopes totals + days to one campaign; the campaign list always
+ * covers every non-removed campaign, including ones with no activity.
+ */
+export async function getAdsStats(
+  customerId: string,
+  from: string,
+  to: string,
+  campaignId?: string
+) {
+  if (campaignId && !CAMPAIGN_ID.test(campaignId)) {
+    throw new GoogleAdsError("Invalid campaign id.");
+  }
   const range = `segments.date BETWEEN '${from}' AND '${to}'`;
   const metrics =
     "metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions";
 
-  const [daily, campaigns, account] = await Promise.all([
+  const [daily, campaignMetrics, campaignList, account] = await Promise.all([
     query<MetricsRow & { segments?: { date?: string } }>(
       customerId,
-      `SELECT segments.date, ${metrics} FROM customer WHERE ${range} ORDER BY segments.date`
+      campaignId
+        ? `SELECT segments.date, ${metrics} FROM campaign WHERE ${range} AND campaign.id = ${campaignId} ORDER BY segments.date`
+        : `SELECT segments.date, ${metrics} FROM customer WHERE ${range} ORDER BY segments.date`
     ),
-    query<MetricsRow & { campaign?: { id?: string; name?: string; status?: string } }>(
+    query<MetricsRow & { campaign?: { id?: string } }>(
       customerId,
-      `SELECT campaign.id, campaign.name, campaign.status, ${metrics} FROM campaign WHERE ${range} AND campaign.status != 'REMOVED'`
+      `SELECT campaign.id, ${metrics} FROM campaign WHERE ${range} AND campaign.status != 'REMOVED'`
     ),
-    query<{ customer?: { currencyCode?: string } }>(
+    // Metrics queries skip campaigns with no activity, so list them separately.
+    query<{
+      campaign?: { id?: string; name?: string; status?: string; advertisingChannelType?: string };
+    }>(
       customerId,
-      "SELECT customer.currency_code FROM customer LIMIT 1"
+      "SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type FROM campaign WHERE campaign.status != 'REMOVED'"
+    ),
+    query<{ customer?: { id?: string; descriptiveName?: string; currencyCode?: string } }>(
+      customerId,
+      "SELECT customer.id, customer.descriptive_name, customer.currency_code FROM customer LIMIT 1"
     ),
   ]);
 
@@ -215,19 +241,113 @@ export async function getAdsStats(customerId: string, from: string, to: string) 
     { cost: 0, clicks: 0, impressions: 0, conversions: 0 }
   );
 
+  const metricsById = new Map(
+    campaignMetrics.map((row) => [row.campaign?.id ?? "", toMetrics(row)])
+  );
+  const empty = { cost: 0, clicks: 0, impressions: 0, conversions: 0 };
+  const customer = account[0]?.customer;
+
   return {
-    currency: account[0]?.customer?.currencyCode ?? "USD",
+    account: {
+      id: customer?.id ?? normalizeCustomerId(customerId),
+      name: customer?.descriptiveName ?? "",
+    },
+    currency: customer?.currencyCode ?? "USD",
     totals,
     days,
-    campaigns: campaigns
-      .map((row) => ({
-        id: row.campaign?.id ?? "",
-        name: row.campaign?.name ?? "",
-        status: row.campaign?.status ?? "",
-        ...toMetrics(row),
-      }))
-      .sort((a, b) => b.cost - a.cost),
+    campaigns: campaignList
+      .map((row) => {
+        const id = row.campaign?.id ?? "";
+        return {
+          id,
+          name: row.campaign?.name ?? "",
+          status: row.campaign?.status ?? "",
+          channel: row.campaign?.advertisingChannelType ?? "",
+          ...(metricsById.get(id) ?? empty),
+        };
+      })
+      .sort(
+        (a, b) =>
+          Number(b.status === "ENABLED") - Number(a.status === "ENABLED") ||
+          b.cost - a.cost
+      ),
   };
+}
+
+// ─── Manager account ─────────────────────────────────────────────
+
+/** Client (non-manager) accounts linked under the agency MCC. */
+export async function listManagedAccounts() {
+  const mcc = normalizeCustomerId(process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID ?? "");
+  const rows = await query<{
+    customerClient?: {
+      id?: string;
+      descriptiveName?: string;
+      manager?: boolean;
+      testAccount?: boolean;
+      status?: string;
+      currencyCode?: string;
+    };
+  }>(
+    mcc,
+    "SELECT customer_client.id, customer_client.descriptive_name, customer_client.manager, customer_client.test_account, customer_client.status, customer_client.currency_code FROM customer_client WHERE customer_client.manager = FALSE"
+  );
+  return rows
+    .map((row) => ({
+      id: row.customerClient?.id ?? "",
+      name: row.customerClient?.descriptiveName ?? "",
+      status: row.customerClient?.status ?? "",
+      currency: row.customerClient?.currencyCode ?? "",
+      testAccount: Boolean(row.customerClient?.testAccount),
+    }))
+    .filter((account) => account.id)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ─── Ad clicks ───────────────────────────────────────────────────
+
+const GCLID = /^[\w-]{10,200}$/;
+
+type ClickRow = {
+  clickView?: {
+    gclid?: string;
+    keywordInfo?: { text?: string; matchType?: string };
+  };
+  campaign?: { id?: string; name?: string };
+  adGroup?: { id?: string; name?: string };
+  segments?: { device?: string };
+};
+
+/**
+ * Campaign, ad group and keyword behind each gclid, for clicks on one day
+ * (YYYY-MM-DD, account time zone). click_view only allows a single day per
+ * query and only keeps the last 90 days; clicks show up a few hours later.
+ */
+export async function lookupClicks(customerId: string, day: string, gclids: string[]) {
+  const ids = [...new Set(gclids)].filter((id) => GCLID.test(id));
+  if (!ids.length) return new Map<string, AgencyLeadAdClick>();
+
+  const rows = await query<ClickRow>(
+    customerId,
+    `SELECT click_view.gclid, click_view.keyword_info.text, click_view.keyword_info.match_type, campaign.id, campaign.name, ad_group.id, ad_group.name, segments.device FROM click_view WHERE segments.date = '${day}' AND click_view.gclid IN (${ids.map((id) => `'${id}'`).join(", ")})`
+  );
+
+  return new Map(
+    rows
+      .filter((row) => row.clickView?.gclid)
+      .map((row): [string, AgencyLeadAdClick] => [
+        row.clickView!.gclid!,
+        {
+          campaignId: row.campaign?.id,
+          campaignName: row.campaign?.name,
+          adGroupId: row.adGroup?.id,
+          adGroupName: row.adGroup?.name,
+          keyword: row.clickView?.keywordInfo?.text,
+          matchType: row.clickView?.keywordInfo?.matchType,
+          device: row.segments?.device,
+        },
+      ])
+  );
 }
 
 /** Upload-type conversion actions in a client account, for the admin picker. */

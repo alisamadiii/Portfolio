@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useProject } from "@/hooks/use-project";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import {
   Area,
@@ -254,7 +259,7 @@ export function AnalyticsPanel() {
   const report = useQuery(
     trpc.analytics.report.queryOptions(
       { repoId, range },
-      { enabled: connected, retry: false }
+      { enabled: connected, retry: false, placeholderData: keepPreviousData }
     )
   );
 
@@ -375,6 +380,7 @@ export function AnalyticsPanel() {
         <PanelHeading />
         <div className="flex items-center gap-2">
           <Select
+            items={RANGES}
             value={range}
             onValueChange={(value) => setRange(value as RangeValue)}
           >
@@ -415,7 +421,12 @@ export function AnalyticsPanel() {
           </Button>
         </div>
       ) : (
-        <>
+        <div
+          className={cn(
+            "space-y-6 transition-opacity duration-200",
+            report.isPlaceholderData && "opacity-50"
+          )}
+        >
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
             {(
               [
@@ -772,7 +783,7 @@ export function AnalyticsPanel() {
               </ul>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
