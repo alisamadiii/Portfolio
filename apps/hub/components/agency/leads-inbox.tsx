@@ -33,6 +33,7 @@ import type {
 } from "@workspace/drizzle/schema";
 
 import { StatCard } from "@/components/agency/ads-performance";
+import { useCampaignFilter } from "@/components/agency/campaign-filter";
 import { HoverInfo } from "@/components/agency/hover-info";
 import {
   CHANNEL_HELP,
@@ -117,11 +118,12 @@ function CampaignCell({ lead }: { lead: Parameters<typeof leadCampaign>[0] }) {
 function LeadsOverview() {
   const trpc = useTRPC();
   const { repoId } = useAgency();
+  const { campaignId } = useCampaignFilter();
   const [days, setDays] = useState<RangeValue>("30");
   const range = useMemo(() => lastDays(Number(days)), [days]);
   const { data, isPlaceholderData } = useQuery(
     trpc.agency.leads.stats.queryOptions(
-      { repoId, ...range },
+      { repoId, ...range, campaignId: campaignId ?? undefined },
       { placeholderData: keepPreviousData }
     )
   );
@@ -299,6 +301,7 @@ export function LeadsInbox() {
   const trpc = useTRPC();
   const router = useRouter();
   const { repoId, role } = useAgency();
+  const { campaignId } = useCampaignFilter();
 
   const [status, setStatus] = useState<AgencyLeadStatus | undefined>();
   const [channel, setChannel] = useState<
@@ -316,12 +319,16 @@ export function LeadsInbox() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // The sidebar campaign filter changes the result set, so start over.
+  useEffect(() => setPage(1), [campaignId]);
+
   const { data, isLoading, isPlaceholderData } = useQuery(
     trpc.agency.leads.list.queryOptions(
       {
         repoId,
         status,
         channel: channel === ALL_SOURCES ? undefined : channel,
+        campaignId: campaignId ?? undefined,
         search: debouncedSearch || undefined,
         page,
         pageSize: PAGE_SIZE,

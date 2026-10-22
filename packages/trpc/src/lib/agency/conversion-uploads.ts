@@ -12,8 +12,10 @@ import {
 import {
   GoogleAdsError,
   isGoogleAdsConfigured,
+  retrieveIngestStatus,
   uploadConversion,
 } from "../google-ads";
+import { ingestVerdict } from "./ingest-status";
 
 // ─── New-lead and qualified uploads ──────────────────────────────
 // Reports lead stages to the conversion actions wired on Marketing >
@@ -71,7 +73,7 @@ export async function reportLeadStage(
 
   let outcome: NonNullable<AgencyLeadUploads[Stage]>;
   try {
-    await uploadConversion({
+    const { requestId } = await uploadConversion({
       customerId,
       conversionAction: action,
       currency: lead.currency,
@@ -83,7 +85,7 @@ export async function reportLeadStage(
       email: lead.email,
       phone: lead.phone,
     });
-    outcome = { at: new Date().toISOString() };
+    outcome = { at: new Date().toISOString(), ...(requestId && { requestId }) };
   } catch (error) {
     const message =
       error instanceof GoogleAdsError || error instanceof Error
@@ -111,13 +113,62 @@ export async function reportLeadStages(client: Client, lead: Lead) {
   await reportLeadStage(client, lead, "qualified");
 }
 
+// Google wants at least 30 minutes between an ingest and its status check.
+const VERIFY_DELAY = 30 * 60 * 1000;
+const VERIFY_STAGES = ["lead", "qualified", "won"] as const;
+
+/**
+ * Data Manager ingestion is async: a 200 on upload only means the payload was
+ * received. This pass asks Google what actually happened to sent uploads and
+ * records verified / verifyError on the row. Never throws.
+ */
+async function verifyConversionUploads(repoId: number) {
+  try {
+    const pendingVerify = (stage: string) =>
+      sql`(${agencyLead.adsUploads} -> ${stage} ->> 'requestId') is not null and (${agencyLead.adsUploads} -> ${stage} ->> 'verified') is null and (${agencyLead.adsUploads} -> ${stage} ->> 'verifyError') is null`;
+
+    const leads = await db
+      .select()
+      .from(agencyLead)
+      .where(and(eq(agencyLead.repoId, repoId), or(...VERIFY_STAGES.map(pendingVerify))))
+      .limit(BATCH);
+
+    for (const lead of leads) {
+      for (const stage of VERIFY_STAGES) {
+        const upload = lead.adsUploads?.[stage];
+        if (!upload?.requestId || upload.verified || upload.verifyError) continue;
+        if (!upload.at || Date.now() - new Date(upload.at).getTime() < VERIFY_DELAY)
+          continue;
+
+        const verdict = ingestVerdict(await retrieveIngestStatus(upload.requestId));
+        // Still processing: ask again on a later pass.
+        if (!verdict.done) continue;
+        const patch = verdict.ok
+          ? { ...upload, verified: true }
+          : { ...upload, verifyError: verdict.error };
+        await db
+          .update(agencyLead)
+          .set({
+            adsUploads: sql`coalesce(${agencyLead.adsUploads}, '{}'::jsonb) || ${JSON.stringify({ [stage]: patch })}::jsonb`,
+          })
+          .where(eq(agencyLead.id, lead.id));
+      }
+    }
+  } catch (error) {
+    // One failure (e.g. missing datamanager scope) would hit every check, so bail.
+    console.error("Conversion upload verify failed", error);
+  }
+}
+
 /**
  * Retry pass: leads from the last 90 days with a wired stage not yet uploaded.
  * Runs before lead and ads reads, like enrichAdClicks. Never throws.
  */
 export async function syncConversionUploads(client: Client) {
-  const actions = client.googleAdsActions;
   if (!client.googleAdsCustomerId || !isGoogleAdsConfigured()) return;
+  // Won uploads verify too, so this runs even when no stage is wired.
+  await verifyConversionUploads(client.repoId);
+  const actions = client.googleAdsActions;
   if (!actions?.lead && !actions?.qualified) return;
 
   try {

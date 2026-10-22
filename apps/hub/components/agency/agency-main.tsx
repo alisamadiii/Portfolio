@@ -5,7 +5,13 @@ import { usePathname } from "next/navigation";
 import { cn } from "@workspace/ui/lib/utils";
 
 // Dashboards use the full width; reading pages stay at a comfortable width.
-const FULL_WIDTH = ["/agency", "/marketing", "/marketing/conversions"];
+const FULL_WIDTH = [
+  "/agency",
+  "/marketing",
+  "/marketing/conversions",
+  "/marketing/budget",
+  "/marketing/search-terms",
+];
 
 export function AgencyMain({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

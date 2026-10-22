@@ -5,11 +5,13 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { ChartColumn, Target } from "@/components/icon";
+import { ChartColumn, Search, Target, Wallet } from "@/components/icon";
 
 const ITEMS = [
   { title: "Overview", url: "/marketing", icon: ChartColumn },
   { title: "Conversions", url: "/marketing/conversions", icon: Target },
+  { title: "Budget", url: "/marketing/budget", icon: Wallet },
+  { title: "Search terms", url: "/marketing/search-terms", icon: Search },
 ];
 
 /** Marketing's own sections: a left column on desktop, tabs on mobile. */

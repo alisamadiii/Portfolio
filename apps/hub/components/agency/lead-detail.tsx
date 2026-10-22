@@ -49,6 +49,12 @@ type Lead = RouterOutputs["agency"]["leads"]["get"];
 const when = (value: string | Date | null | undefined) =>
   value ? format(new Date(value), "PPP 'at' p:ss") : null;
 
+// Google processes uploads asynchronously; this is the confirmed outcome.
+const accepted = (
+  upload: { verified?: boolean; verifyError?: string } | undefined
+) =>
+  upload?.verified ? "Yes" : (upload?.verifyError ?? null);
+
 /** Every stored attribute of a lead, raw, in capture order. */
 const recorded = (lead: Lead): [string, string | null][] => [
   ["Lead ID", String(lead.id)],
@@ -91,10 +97,13 @@ const recorded = (lead: Lead): [string, string | null][] => [
   ["Won at", when(lead.wonAt)],
   ["New lead reported to Google Ads at", when(lead.adsUploads?.lead?.at)],
   ["New lead upload error", lead.adsUploads?.lead?.error ?? null],
+  ["New lead accepted by Google", accepted(lead.adsUploads?.lead)],
   ["Qualified reported to Google Ads at", when(lead.adsUploads?.qualified?.at)],
   ["Qualified upload error", lead.adsUploads?.qualified?.error ?? null],
+  ["Qualified accepted by Google", accepted(lead.adsUploads?.qualified)],
   ["Closed deal reported to Google Ads at", when(lead.conversionUploadedAt)],
   ["Closed deal upload error", lead.conversionError],
+  ["Closed deal accepted by Google", accepted(lead.adsUploads?.won)],
 ];
 
 const titleCase = (value: string) =>

@@ -195,6 +195,37 @@ export async function uploadConversion(deal: ConversionUpload) {
       `Google Ads Data Manager error (${res.status}): ${(await res.text()).slice(0, 500)}`
     );
   }
+  // A 200 only means the payload was received; processing is async. The
+  // request id lets us confirm later that Google actually accepted it.
+  const body = (await res.json().catch(() => null)) as { requestId?: string } | null;
+  return { requestId: body?.requestId ?? null };
+}
+
+/**
+ * Processing outcome of an earlier events:ingest call. Google recommends
+ * waiting at least 30 minutes after the upload before checking.
+ */
+export async function retrieveIngestStatus(requestId: string) {
+  const res = await fetch(
+    "https://datamanager.googleapis.com/v1/requestStatus:retrieve",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${await getAccessToken()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ requestId }),
+    }
+  );
+  if (!res.ok) {
+    throw new GoogleAdsError(
+      `Google Ads Data Manager status error (${res.status}): ${(await res.text()).slice(0, 300)}`
+    );
+  }
+  const body = (await res.json()) as {
+    requestStatusPerDestination?: import("./agency/ingest-status").IngestDestinationStatus[];
+  };
+  return body.requestStatusPerDestination ?? [];
 }
 
 // ─── Reporting ───────────────────────────────────────────────────
@@ -303,6 +334,250 @@ export async function getAdsStats(
           Number(b.status === "ENABLED") - Number(a.status === "ENABLED") ||
           b.cost - a.cost
       ),
+  };
+}
+
+/** Light campaign list for the sidebar filter: no metrics. */
+export async function listCampaigns(customerId: string) {
+  const rows = await query<{
+    campaign?: { id?: string; name?: string; status?: string };
+  }>(
+    customerId,
+    "SELECT campaign.id, campaign.name, campaign.status FROM campaign WHERE campaign.status != 'REMOVED' ORDER BY campaign.name"
+  );
+  return rows
+    .map((row) => ({
+      id: row.campaign?.id ?? "",
+      name: row.campaign?.name ?? "",
+      status: row.campaign?.status ?? "",
+    }))
+    .sort((a, b) => Number(b.status === "ENABLED") - Number(a.status === "ENABLED"));
+}
+
+// ─── Budget pacing ───────────────────────────────────────────────
+
+type BudgetRow = {
+  campaign?: { id?: string; name?: string; status?: string; advertisingChannelType?: string };
+  campaignBudget?: { resourceName?: string; amountMicros?: string };
+  metrics?: { costMicros?: string; searchBudgetLostImpressionShare?: number };
+};
+
+/** Month-to-date spend per campaign plus each campaign's daily budget. */
+export async function getBudgetPacing(customerId: string) {
+  const now = new Date();
+  const first = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01`;
+  const today = now.toISOString().slice(0, 10);
+  const mtd = `segments.date BETWEEN '${first}' AND '${today}'`;
+
+  const [campaigns, costs, lostShare, account] = await Promise.all([
+    query<BudgetRow>(
+      customerId,
+      "SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type, campaign_budget.resource_name, campaign_budget.amount_micros FROM campaign WHERE campaign.status != 'REMOVED'"
+    ),
+    query<BudgetRow>(
+      customerId,
+      `SELECT campaign.id, metrics.cost_micros FROM campaign WHERE ${mtd}`
+    ),
+    // How much search impression share each campaign lost to budget, last 7 days.
+    query<BudgetRow>(
+      customerId,
+      "SELECT campaign.id, metrics.search_budget_lost_impression_share FROM campaign WHERE segments.date DURING LAST_7_DAYS"
+    ),
+    query<{ customer?: { currencyCode?: string } }>(
+      customerId,
+      "SELECT customer.currency_code FROM customer LIMIT 1"
+    ),
+  ]);
+
+  const costById = new Map(
+    costs.map((row) => [row.campaign?.id ?? "", Number(row.metrics?.costMicros ?? 0)])
+  );
+  const lostById = new Map(
+    lostShare.map((row) => [
+      row.campaign?.id ?? "",
+      Number(row.metrics?.searchBudgetLostImpressionShare ?? 0),
+    ])
+  );
+
+  const rows = campaigns
+    .map((row) => {
+      const id = row.campaign?.id ?? "";
+      return {
+        id,
+        name: row.campaign?.name ?? "",
+        status: row.campaign?.status ?? "",
+        channel: row.campaign?.advertisingChannelType ?? "",
+        budgetResourceName: row.campaignBudget?.resourceName ?? "",
+        dailyBudgetCents: Math.round(Number(row.campaignBudget?.amountMicros ?? 0) / 10_000),
+        spentCents: Math.round((costById.get(id) ?? 0) / 10_000),
+        budgetLostShare: lostById.get(id) ?? 0,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(b.status === "ENABLED") - Number(a.status === "ENABLED") ||
+        b.spentCents - a.spentCents
+    );
+
+  return {
+    currency: account[0]?.customer?.currencyCode ?? "USD",
+    spentCents: rows.reduce((sum, row) => sum + row.spentCents, 0),
+    campaigns: rows,
+  };
+}
+
+/** Change a campaign's daily budget. Note: a shared budget changes every campaign on it. */
+export async function setCampaignBudget(
+  customerId: string,
+  budgetResourceName: string,
+  dailyBudgetCents: number
+) {
+  await ads(
+    `customers/${normalizeCustomerId(customerId)}/campaignBudgets:mutate`,
+    {
+      operations: [
+        {
+          updateMask: "amount_micros",
+          update: {
+            resourceName: budgetResourceName,
+            amountMicros: String(dailyBudgetCents * 10_000),
+          },
+        },
+      ],
+    }
+  );
+}
+
+// ─── Search terms ────────────────────────────────────────────────
+
+type SearchTermRow = {
+  searchTermView?: { searchTerm?: string; status?: string };
+  campaign?: { id?: string; name?: string };
+  metrics?: {
+    costMicros?: string;
+    clicks?: string;
+    impressions?: string;
+    conversions?: number;
+  };
+};
+
+/**
+ * What people actually searched before clicking, merged per term + campaign.
+ * Google hides low-volume terms, so this is never the complete list.
+ */
+export async function getSearchTerms(
+  customerId: string,
+  from: string,
+  to: string,
+  campaignId?: string
+) {
+  if (campaignId && !CAMPAIGN_ID.test(campaignId)) {
+    throw new GoogleAdsError("Invalid campaign id.");
+  }
+  const rows = await query<SearchTermRow>(
+    customerId,
+    `SELECT search_term_view.search_term, search_term_view.status, campaign.id, campaign.name, metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions FROM search_term_view WHERE segments.date BETWEEN '${from}' AND '${to}'${campaignId ? ` AND campaign.id = ${campaignId}` : ""}`
+  );
+
+  // One row per ad group comes back; the page works per term + campaign.
+  const merged = new Map<
+    string,
+    {
+      term: string;
+      status: string;
+      campaignId: string;
+      campaignName: string;
+      costCents: number;
+      clicks: number;
+      impressions: number;
+      conversions: number;
+    }
+  >();
+  for (const row of rows) {
+    const term = row.searchTermView?.searchTerm ?? "";
+    const campaign = row.campaign?.id ?? "";
+    const key = `${campaign}\n${term}`;
+    const entry = merged.get(key) ?? {
+      term,
+      status: row.searchTermView?.status ?? "NONE",
+      campaignId: campaign,
+      campaignName: row.campaign?.name ?? "",
+      costCents: 0,
+      clicks: 0,
+      impressions: 0,
+      conversions: 0,
+    };
+    entry.costCents += Math.round(Number(row.metrics?.costMicros ?? 0) / 10_000);
+    entry.clicks += Number(row.metrics?.clicks ?? 0);
+    entry.impressions += Number(row.metrics?.impressions ?? 0);
+    entry.conversions += Number(row.metrics?.conversions ?? 0);
+    // EXCLUDED on any ad group means the term is already blocked somewhere.
+    if (row.searchTermView?.status === "EXCLUDED") entry.status = "EXCLUDED";
+    merged.set(key, entry);
+  }
+
+  return [...merged.values()]
+    .sort((a, b) => b.costCents - a.costCents || b.clicks - a.clicks)
+    .slice(0, 300);
+}
+
+/** Block a search term with a campaign-level negative keyword. */
+export async function addNegativeKeyword(
+  customerId: string,
+  campaignId: string,
+  text: string,
+  matchType: "EXACT" | "PHRASE"
+) {
+  if (!CAMPAIGN_ID.test(campaignId)) {
+    throw new GoogleAdsError("Invalid campaign id.");
+  }
+  await ads(
+    `customers/${normalizeCustomerId(customerId)}/campaignCriteria:mutate`,
+    {
+      operations: [
+        {
+          create: {
+            campaign: `customers/${normalizeCustomerId(customerId)}/campaigns/${campaignId}`,
+            negative: true,
+            keyword: { text, matchType },
+          },
+        },
+      ],
+    }
+  );
+}
+
+// ─── Alert signals ───────────────────────────────────────────────
+
+const dateOffset = (days: number) => {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+/** Raw account signals the alert rules run on. */
+export async function getAlertSignals(customerId: string) {
+  const conversionsIn = async (from: string, to: string) => {
+    const rows = await query<MetricsRow>(
+      customerId,
+      `SELECT metrics.conversions FROM customer WHERE segments.date BETWEEN '${from}' AND '${to}'`
+    );
+    return rows.reduce((sum, row) => sum + Number(row.metrics?.conversions ?? 0), 0);
+  };
+
+  const [last7, prior7, disapproved] = await Promise.all([
+    conversionsIn(dateOffset(-7), dateOffset(-1)),
+    conversionsIn(dateOffset(-14), dateOffset(-8)),
+    query<{ adGroupAd?: { ad?: { id?: string } } }>(
+      customerId,
+      "SELECT ad_group_ad.ad.id FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status = 'DISAPPROVED' AND ad_group_ad.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED'"
+    ),
+  ]);
+
+  return {
+    conversionsLast7: last7,
+    conversionsPrior7: prior7,
+    disapprovedAds: disapproved.length,
   };
 }
 
@@ -476,6 +751,34 @@ export async function getConversionActions(customerId: string, from: string, to:
       everConverted: (lifetime.get(resourceName) ?? 0) > 0,
     };
   });
+}
+
+type UploadSummaryRow = {
+  offlineConversionUploadConversionActionSummary?: {
+    conversionActionName?: string;
+    status?: string;
+    successfulEventCount?: string;
+    pendingEventCount?: string;
+    totalEventCount?: string;
+  };
+};
+
+/**
+ * Google's own health report for offline conversion uploads, per action.
+ * Empty when the account has never received uploads.
+ */
+export async function getUploadHealth(customerId: string) {
+  const rows = await query<UploadSummaryRow>(
+    customerId,
+    "SELECT offline_conversion_upload_conversion_action_summary.conversion_action_name, offline_conversion_upload_conversion_action_summary.status, offline_conversion_upload_conversion_action_summary.successful_event_count, offline_conversion_upload_conversion_action_summary.pending_event_count, offline_conversion_upload_conversion_action_summary.total_event_count FROM offline_conversion_upload_conversion_action_summary"
+  );
+  return rows.map(({ offlineConversionUploadConversionActionSummary: s = {} }) => ({
+    actionName: s.conversionActionName ?? "",
+    status: s.status ?? "",
+    successful: Number(s.successfulEventCount ?? 0),
+    pending: Number(s.pendingEventCount ?? 0),
+    total: Number(s.totalEventCount ?? 0),
+  }));
 }
 
 /** Every action's name, including removed ones (their names stay reserved). */

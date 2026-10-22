@@ -53,6 +53,7 @@ import {
   type UploadStage,
 } from "@workspace/trpc/lib/agency/conversion-presets";
 
+import { useCampaignFilter } from "@/components/agency/campaign-filter";
 import { HoverInfo } from "@/components/agency/hover-info";
 import {
   lastDays,
@@ -67,10 +68,18 @@ import { ConversionDialog, type EditableAction } from "./conversion-dialog";
 const number = (value: number) =>
   value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 
+const HEALTH_LABELS: Record<string, string> = {
+  EXCELLENT: "Excellent",
+  GOOD: "Good",
+  NEEDS_ATTENTION: "Needs attention",
+  NO_RECENT_UPLOADS: "No recent uploads",
+};
+
 export function ConversionsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { repoId } = useAgency();
+  const { campaignId } = useCampaignFilter();
   const [days, setDays] = useState<RangeValue>("30");
   const range = useMemo(() => lastDays(Number(days)), [days]);
   const [editing, setEditing] = useState<EditableAction | null>(null);
@@ -259,12 +268,54 @@ export function ConversionsPage() {
         </div>
       </div>
 
+      {/* Google's own report on how our uploads are processing */}
+      {data.health.length > 0 && (
+        <div className="bg-card rounded-2xl border p-5">
+          <h3 className="text-[15px] font-semibold">Upload health</h3>
+          <p className="text-muted-foreground mt-0.5 text-[13px]">
+            How Google is processing the conversions the Hub reports.
+          </p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            {data.health.map((row) => (
+              <div
+                key={row.actionName}
+                className="bg-background rounded-xl border p-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-[13.5px] font-medium">
+                    {row.actionName}
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                      row.status === "EXCELLENT" || row.status === "GOOD"
+                        ? "bg-chart-2/15 text-chart-2"
+                        : row.status === "NEEDS_ATTENTION"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {HEALTH_LABELS[row.status] ?? "No recent uploads"}
+                  </span>
+                </div>
+                <p className="text-muted-foreground mt-1.5 text-[12.5px] tabular-nums">
+                  {row.successful} of {row.total} accepted
+                  {row.pending ? `, ${row.pending} processing` : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-muted-foreground text-[14px]">
           {data.actions.length} conversion{" "}
           {data.actions.length === 1 ? "action" : "actions"} in your Google Ads
           account
+          {campaignId &&
+            ". Conversion actions are account-wide, so the campaign filter doesn't apply here."}
         </p>
         <div className="flex gap-2">
           <Select

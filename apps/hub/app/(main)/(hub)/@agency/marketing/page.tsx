@@ -1,5 +1,6 @@
 "use client";
 
+import { AdsAlerts } from "@/components/agency/ads-alerts";
 import { AdsPerformance } from "@/components/agency/ads-performance";
 import { DocumentTitle } from "@/components/document-title";
 
@@ -13,6 +14,7 @@ export default function MarketingPage() {
           What your Google Ads cost, and what they brought in.
         </p>
       </div>
+      <AdsAlerts />
       <AdsPerformance />
     </div>
   );

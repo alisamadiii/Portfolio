@@ -141,6 +141,13 @@
       "when": 1792697429509,
       "tag": "0019_big_freak",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792700654335,
+      "tag": "0020_cool_hex",
+      "breakpoints": true
     }
   ]
 }

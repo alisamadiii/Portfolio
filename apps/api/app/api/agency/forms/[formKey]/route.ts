@@ -138,6 +138,7 @@ const bodySchema = z.object({
       source: short,
       medium: short,
       campaign: short,
+      id: short,
       term: short,
       content: short,
     })
@@ -366,6 +367,12 @@ export async function POST(
       landingPage: stripUrl(data.landingPage),
       firstTouch,
       clickAt: clickAt && !Number.isNaN(clickAt.getTime()) ? clickAt : null,
+      // No click id to verify, but utm_id names the campaign directly (the
+      // Campaign URL Builder convention), so the campaign filter catches it.
+      adClick:
+        !data.gclid && !data.gbraid && !data.wbraid && /^\d+$/.test(utm?.id ?? "")
+          ? { campaignId: utm!.id, campaignName: utm?.campaign }
+          : null,
       channel,
     })
     .returning();

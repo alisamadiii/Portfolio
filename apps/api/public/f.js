@@ -25,7 +25,7 @@
   var COOKIE = "_lead_attr"; // last touch: click IDs, utm, referrer, landing page
   var FIRST = "_lead_ft"; // first visit ever: referrer, landing page, time
   var MAX_AGE = 60 * 60 * 24 * 90;
-  var PARAMS = ["gclid", "gbraid", "wbraid", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
+  var PARAMS = ["gclid", "gbraid", "wbraid", "utm_source", "utm_medium", "utm_campaign", "utm_id", "utm_term", "utm_content"];
   var CLICK_IDS = ["gclid", "gbraid", "wbraid"];
   // Only these query params are kept on stored URLs; others can hold personal data.
   var KEPT = PARAMS.concat("fbclid", "msclkid");
@@ -146,6 +146,7 @@
           source: attr.utm_source,
           medium: attr.utm_medium,
           campaign: attr.utm_campaign,
+          id: attr.utm_id,
           term: attr.utm_term,
           content: attr.utm_content,
         },

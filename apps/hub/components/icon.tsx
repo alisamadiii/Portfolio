@@ -455,3 +455,11 @@ export function Target(props: LucideProps) {
 export function ChartColumn(props: LucideProps) {
   return <Lucide.ChartColumn {...props} />;
 }
+
+export function Wallet(props: LucideProps) {
+  return <Lucide.Wallet {...props} />;
+}
+
+export function EllipsisVertical(props: LucideProps) {
+  return <Lucide.EllipsisVertical {...props} />;
+}

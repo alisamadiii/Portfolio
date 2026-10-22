@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import {
   Bar,
@@ -12,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { Button } from "@workspace/ui/components/button";
 import {
   ChartContainer,
   ChartLegend,
@@ -20,6 +22,12 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@workspace/ui/components/chart";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -47,10 +55,10 @@ import {
   RANGES,
   type RangeValue,
 } from "@/components/agency/lead-status";
+import { useCampaignFilter } from "@/components/agency/campaign-filter";
 import { useAgency } from "@/components/agency/use-agency";
-import { Megaphone } from "@/components/icon";
-
-const ALL = "all";
+import { CampaignUrlDialog } from "@/components/agency/campaign-url-dialog";
+import { EllipsisVertical, Megaphone } from "@/components/icon";
 
 const formatCustomerId = (id: string) =>
   id.replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
@@ -67,6 +75,86 @@ const CHANNEL_LABELS: Record<string, string> = {
   SMART: "Smart",
   DEMAND_GEN: "Demand Gen",
 };
+
+const copy = (label: string, value: string) =>
+  navigator.clipboard
+    .writeText(value)
+    .then(() => toast.success(`${label} copied.`))
+    .catch(() => toast.error("Couldn't copy."));
+
+/** Row menu: copy the campaign's id and details for use elsewhere. */
+function CampaignMenu({
+  campaign,
+  currency,
+}: {
+  campaign: {
+    id: string;
+    name: string;
+    status: string;
+    channel: string;
+    cost: number;
+    clicks: number;
+    impressions: number;
+    conversions: number;
+  };
+  currency: string;
+}) {
+  const details = [
+    `Campaign: ${campaign.name}`,
+    `ID: ${campaign.id}`,
+    `Status: ${campaign.status}`,
+    `Type: ${CHANNEL_LABELS[campaign.channel] ?? titleCase(campaign.channel || "UNKNOWN")}`,
+    `Spend: ${formatMoney(Math.round(campaign.cost * 100), currency)}`,
+    `Clicks: ${campaign.clicks}`,
+    `Impressions: ${campaign.impressions}`,
+    `Conversions: ${Math.round(campaign.conversions)}`,
+  ].join("\n");
+  const [buildingUrl, setBuildingUrl] = useState(false);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`${campaign.name} menu`}
+            className="text-muted-foreground"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <EllipsisVertical className="size-4" />
+          </Button>
+        }
+      />
+      <DropdownMenuContent
+        align="end"
+        sideOffset={4}
+        className="w-52"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <DropdownMenuItem onClick={() => copy("Campaign ID", campaign.id)}>
+          Copy campaign ID
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => copy("Campaign name", campaign.name)}>
+          Copy name
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => copy("Campaign details", details)}>
+          Copy all details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setBuildingUrl(true)}>
+          Build tracking link…
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+      {buildingUrl && (
+        <CampaignUrlDialog
+          open
+          onOpenChange={(open) => !open && setBuildingUrl(false)}
+          campaign={campaign}
+        />
+      )}
+    </DropdownMenu>
+  );
+}
 
 function CampaignStatus({ status }: { status: string }) {
   if (!status) return null;
@@ -121,23 +209,25 @@ export function StatCard({
 
 /**
  * Leads + Google Ads numbers for a range, shared by Home and Marketing.
- * `campaignId` scopes the ad numbers only: leads aren't tied to a campaign yet,
- * so cost per lead and return on ads are left out for a single campaign.
+ * The sidebar campaign filter scopes both sides, so cost per lead and return
+ * on ads stay comparable for a single campaign too.
  */
-export function useAgencyNumbers(days: number, campaignId?: string) {
+export function useAgencyNumbers(days: number) {
   const trpc = useTRPC();
   const { repoId, adsConnected } = useAgency();
+  const { campaignId } = useCampaignFilter();
   const range = useMemo(() => lastDays(days), [days]);
+  const scope = campaignId ?? undefined;
 
   const leads = useQuery(
     trpc.agency.leads.stats.queryOptions(
-      { repoId, ...range },
+      { repoId, ...range, campaignId: scope },
       { placeholderData: keepPreviousData }
     )
   );
   const ads = useQuery(
     trpc.agency.ads.stats.queryOptions(
-      { repoId, ...range, campaignId },
+      { repoId, ...range, campaignId: scope },
       {
         enabled: adsConnected,
         staleTime: 5 * 60 * 1000,
@@ -163,12 +253,12 @@ export function useAgencyNumbers(days: number, campaignId?: string) {
     adLeads,
     adWonValueCents,
     costPerLead:
-      !campaignId && cost !== null && adLeads
+      cost !== null && adLeads
         ? formatMoney(Math.round((cost / adLeads) * 100), currency)
         : null,
     // Revenue from deals won on ad leads per dollar of ad spend.
     roas:
-      !campaignId && cost && leads.data
+      cost && leads.data
         ? `${(adWonValueCents / 100 / cost).toFixed(1)}x`
         : null,
   };
@@ -177,20 +267,10 @@ export function useAgencyNumbers(days: number, campaignId?: string) {
 export function AdsPerformance() {
   const { adsConnected } = useAgency();
   const [days, setDays] = useState<RangeValue>("30");
-  const [campaignId, setCampaignId] = useState<string>(ALL);
-  const scoped = campaignId === ALL ? undefined : campaignId;
+  // Set from the sidebar; scopes leads and ad numbers together.
+  const { campaignId, setCampaignId } = useCampaignFilter();
   const { leads, ads, currency, costPerLead, roas, adLeads } = useAgencyNumbers(
-    Number(days),
-    scoped
-  );
-
-  const campaignItems = useMemo(
-    () => [
-      { value: ALL, label: "All campaigns" },
-      ...(ads.data?.campaigns.map((c) => ({ value: c.id, label: c.name })) ??
-        []),
-    ],
-    [ads.data]
+    Number(days)
   );
 
   const chartData = useMemo(() => {
@@ -247,22 +327,6 @@ export function AdsPerformance() {
         </div>
         <div className="flex gap-2">
           <Select
-            items={campaignItems}
-            value={campaignId}
-            onValueChange={(value) => setCampaignId(String(value))}
-          >
-            <SelectTrigger className="w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {campaignItems.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
             items={RANGES}
             value={days}
             onValueChange={(value) => setDays(value as RangeValue)}
@@ -303,11 +367,9 @@ export function AdsPerformance() {
               label="Ad leads"
               value={adLeads === null ? null : String(adLeads)}
               hint={
-                scoped
-                  ? "All campaigns"
-                  : leads.data
-                    ? `${leads.data.leads} leads from all sources`
-                    : undefined
+                leads.data
+                  ? `${leads.data.leads} leads from all sources`
+                  : undefined
               }
             />
             <StatCard
@@ -315,7 +377,6 @@ export function AdsPerformance() {
               value={
                 ads.isLoading || leads.isLoading ? null : (costPerLead ?? "–")
               }
-              hint={scoped ? "All campaigns only" : undefined}
             />
             <StatCard
               label="Won from ads"
@@ -328,12 +389,10 @@ export function AdsPerformance() {
                     )
                   : null
               }
-              hint={scoped ? "All campaigns" : undefined}
             />
             <StatCard
               label="Return on ads"
               value={ads.isLoading || leads.isLoading ? null : (roas ?? "–")}
-              hint={scoped ? "All campaigns only" : undefined}
             />
           </div>
 
@@ -393,6 +452,7 @@ export function AdsPerformance() {
                   <TableHead className="text-right">Clicks</TableHead>
                   <TableHead className="text-right">Impressions</TableHead>
                   <TableHead className="text-right">Conversions</TableHead>
+                  <TableHead className="w-12" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -403,7 +463,7 @@ export function AdsPerformance() {
                     className="data-[selected]:bg-muted cursor-pointer"
                     onClick={() =>
                       setCampaignId(
-                        campaign.id === campaignId ? ALL : campaign.id
+                        campaign.id === campaignId ? null : campaign.id
                       )
                     }
                   >
@@ -431,12 +491,18 @@ export function AdsPerformance() {
                     <TableCell className="text-right">
                       {Math.round(campaign.conversions).toLocaleString()}
                     </TableCell>
+                    <TableCell
+                      className="pr-3 text-right"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <CampaignMenu campaign={campaign} currency={currency} />
+                    </TableCell>
                   </TableRow>
                 ))}
                 {ads.data && !ads.data.campaigns.length && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="text-muted-foreground py-8 text-center"
                     >
                       No campaigns in this Google Ads account yet.

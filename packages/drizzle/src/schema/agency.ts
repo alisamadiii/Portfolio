@@ -45,6 +45,8 @@ export type AgencyLeadUtm = {
   source?: string;
   medium?: string;
   campaign?: string;
+  /** utm_id: by convention the Google Ads campaign id (Campaign URL Builder). */
+  id?: string;
   term?: string;
   content?: string;
 };
@@ -70,10 +72,26 @@ export type AgencyLeadAdClick = {
 // Conversion actions our server reports to, by lead stage ("customers/<id>/conversionActions/<id>").
 // The closed-deal action stays in googleAdsConversionAction; `calls` is tracked by Google itself.
 export type AgencyAdsActions = { lead?: string; qualified?: string; calls?: string };
+export type AgencyAdsBudget = { monthlyCents?: number };
 
 // Per-stage upload outcome on a lead (the closed deal keeps its own columns).
-export type AgencyLeadUpload = { at?: string; error?: string; tries?: number };
-export type AgencyLeadUploads = { lead?: AgencyLeadUpload; qualified?: AgencyLeadUpload };
+export type AgencyLeadUpload = {
+  at?: string;
+  error?: string;
+  tries?: number;
+  /** Data Manager ingest request id; processing is async, so "sent" isn't "accepted". */
+  requestId?: string;
+  /** Google confirmed the records were processed successfully. */
+  verified?: boolean;
+  /** Google processed the request but rejected the records. */
+  verifyError?: string;
+};
+export type AgencyLeadUploads = {
+  lead?: AgencyLeadUpload;
+  qualified?: AgencyLeadUpload;
+  /** Won keeps conversionUploadedAt/conversionError as source of truth for "sent". */
+  won?: AgencyLeadUpload;
+};
 
 // One row per agency client: their single website plus Google Ads wiring.
 export const agencyClient = pgTable("agency_client", {
@@ -95,6 +113,8 @@ export const agencyClient = pgTable("agency_client", {
   // "customers/<id>/conversionActions/<id>" for the closed-deal import.
   googleAdsConversionAction: text("google_ads_conversion_action"),
   googleAdsActions: jsonb("google_ads_actions").$type<AgencyAdsActions>(),
+  // Monthly ad spend target for budget pacing; unset = no pacing shown.
+  googleAdsBudget: jsonb("google_ads_budget").$type<AgencyAdsBudget>(),
 
   // New-lead notification address; falls back to the owner's email.
   leadNotifyEmail: text("lead_notify_email"),

@@ -43,12 +43,15 @@ import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
 import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
 import { ADS_TTL, cachedAds, invalidateAds, ttlForRange } from "../lib/agency/ads-cache";
+import { evaluateAlerts } from "../lib/agency/ads-alerts";
+import { budgetPacing } from "../lib/agency/budget-pacing";
 import {
   EDITABLE_CATEGORIES,
   MANAGED_TYPES,
   buildUpdate,
   findPreset,
   planPreset,
+  trackingStatus,
   type WiredActions,
 } from "../lib/agency/conversion-presets";
 import {
@@ -59,9 +62,15 @@ import {
 import { enrichAdClicks } from "../lib/agency/enrich-ad-clicks";
 import { classifyLead } from "../lib/agency/lead-channel";
 import {
+  addNegativeKeyword,
   createConversionActions,
   getAdsStats,
+  getAlertSignals,
+  getBudgetPacing,
   getConversionActions,
+  getSearchTerms,
+  getUploadHealth,
+  listCampaigns,
   GoogleAdsError,
   listConversionActionNames,
   isGoogleAdsConfigured,
@@ -69,6 +78,7 @@ import {
   listManagedAccounts,
   normalizeCustomerId,
   removeConversionAction,
+  setCampaignBudget,
   updateConversionAction,
   uploadConversion,
 } from "../lib/google-ads";
@@ -158,7 +168,7 @@ async function reportWonLead(
   if (!isGoogleAdsConfigured()) return;
 
   try {
-    await uploadConversion({
+    const { requestId } = await uploadConversion({
       customerId: client.googleAdsCustomerId,
       conversionAction: client.googleAdsConversionAction,
       valueCents: lead.valueCents,
@@ -173,7 +183,14 @@ async function reportWonLead(
     });
     await db
       .update(agencyLead)
-      .set({ conversionUploadedAt: new Date(), conversionError: null })
+      .set({
+        conversionUploadedAt: new Date(),
+        conversionError: null,
+        // The async verify pass confirms the records with this request id.
+        adsUploads: sql`coalesce(${agencyLead.adsUploads}, '{}'::jsonb) || ${JSON.stringify(
+          { won: { at: new Date().toISOString(), ...(requestId && { requestId }) } }
+        )}::jsonb`,
+      })
       .where(eq(agencyLead.id, lead.id));
   } catch (error) {
     await db
@@ -222,6 +239,7 @@ const leadsRouter = createTRPCRouter({
         status: z.enum(AGENCY_LEAD_STATUS_VALUES).optional(),
         channel: z.enum(AGENCY_LEAD_CHANNEL_VALUES).optional(),
         search: z.string().trim().max(200).optional(),
+        campaignId: z.string().regex(/^\d+$/).optional(),
         page: z.number().int().min(1).default(1),
         pageSize: z.number().int().min(1).max(100).default(25),
       })
@@ -232,6 +250,10 @@ const leadsRouter = createTRPCRouter({
       }
       const where = and(
         eq(agencyLead.repoId, ctx.client.repoId),
+        // Only leads whose ad click was matched to this campaign.
+        input.campaignId
+          ? sql`${agencyLead.adClick}->>'campaignId' = ${input.campaignId}`
+          : undefined,
         // Spam stays out of the inbox unless asked for.
         input.status ? eq(agencyLead.status, input.status) : ne(agencyLead.status, "spam"),
         input.channel ? sql`${channelExpr} = ${input.channel}` : undefined,
@@ -263,14 +285,21 @@ const leadsRouter = createTRPCRouter({
     .query(({ ctx, input }) => getLead(ctx.client.repoId, input.id)),
 
   // Counts, won value and leads per day for a date range (inclusive, UTC).
-  stats: agencyProcedure.input(dateRange).query(async ({ ctx, input }) => {
+  stats: agencyProcedure
+    .input(dateRange.extend({ campaignId: z.string().regex(/^\d+$/).optional() }))
+    .query(async ({ ctx, input }) => {
     await Promise.all([enrichAdClicks(ctx.client), syncConversionUploads(ctx.client)]);
     const from = new Date(`${input.from}T00:00:00Z`);
     const to = new Date(`${input.to}T00:00:00Z`);
     to.setUTCDate(to.getUTCDate() + 1);
 
+    // Only leads whose ad click was matched to this campaign.
+    const campaignFilter = input.campaignId
+      ? sql`${agencyLead.adClick}->>'campaignId' = ${input.campaignId}`
+      : undefined;
     const inRange = and(
       eq(agencyLead.repoId, ctx.client.repoId),
+      campaignFilter,
       gte(agencyLead.createdAt, from),
       lt(agencyLead.createdAt, to)
     );
@@ -278,6 +307,7 @@ const leadsRouter = createTRPCRouter({
     const notSpam = and(inRange, ne(agencyLead.status, "spam"));
     const wonInRange = and(
       eq(agencyLead.repoId, ctx.client.repoId),
+      campaignFilter,
       eq(agencyLead.status, "won"),
       gte(agencyLead.wonAt, from),
       lt(agencyLead.wonAt, to)
@@ -378,14 +408,7 @@ const leadsRouter = createTRPCRouter({
       db
         .select({ count: count(), valueCents: sum(agencyLead.valueCents) })
         .from(agencyLead)
-        .where(
-          and(
-            eq(agencyLead.repoId, ctx.client.repoId),
-            eq(agencyLead.status, "won"),
-            gte(agencyLead.wonAt, from),
-            lt(agencyLead.wonAt, to)
-          )
-        ),
+        .where(wonInRange),
     ]);
 
     const counts = Object.fromEntries(byStatus.map((row) => [row.status, row.count]));
@@ -752,11 +775,18 @@ const conversionsRouter = createTRPCRouter({
     const customerId = ctx.client.googleAdsCustomerId;
     if (!customerId || !isGoogleAdsConfigured()) return null;
 
-    const actions = await cachedAds(
+    const { actions, health } = await cachedAds(
       customerId,
-      `conversions:${input.from}:${input.to}`,
+      `conversions:v2:${input.from}:${input.to}`,
       ADS_TTL.live,
-      () => getConversionActions(customerId, input.from, input.to)
+      async () => {
+        const [actions, health] = await Promise.all([
+          getConversionActions(customerId, input.from, input.to),
+          // Google's upload pipeline report; empty for accounts without uploads.
+          getUploadHealth(customerId).catch(() => []),
+        ]);
+        return { actions, health };
+      }
     ).catch((error) => {
       throw adsError(error);
     });
@@ -777,6 +807,7 @@ const conversionsRouter = createTRPCRouter({
     return {
       customerId,
       actions,
+      health,
       wired: wiredActions(ctx.client),
       uploads: {
         lead: { count: uploads?.lead ?? 0, lastAt: uploads?.leadAt ?? null },
@@ -940,6 +971,216 @@ export const agencyRouter = createTRPCRouter({
           throw new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
         }
       }),
+
+    budget: createTRPCRouter({
+      // Null when no account linked. Pacing needs a target set on this page.
+      get: conversionsProcedure.query(async ({ ctx }) => {
+        const customerId = ctx.client.googleAdsCustomerId;
+        if (!customerId || !isGoogleAdsConfigured()) return null;
+        try {
+          const data = await cachedAds(customerId, "budget", ADS_TTL.live, () =>
+            getBudgetPacing(customerId)
+          );
+          const targetCents = ctx.client.googleAdsBudget?.monthlyCents ?? null;
+          return {
+            ...data,
+            targetCents,
+            pacing: budgetPacing(data.spentCents, targetCents, new Date()),
+            canManage: ctx.role === "full-access",
+          };
+        } catch (error) {
+          throw adsError(error);
+        }
+      }),
+
+      setTarget: conversionsManageProcedure
+        .input(
+          z.object({
+            monthlyCents: z.number().int().min(100).max(100_000_000).nullable(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          await db
+            .update(agencyClient)
+            .set({
+              googleAdsBudget: input.monthlyCents
+                ? { monthlyCents: input.monthlyCents }
+                : null,
+            })
+            .where(eq(agencyClient.id, ctx.client.id));
+          // Pacing alerts depend on the target.
+          await invalidateAds(ctx.customerId, "alerts");
+        }),
+
+      setCampaignBudget: conversionsManageProcedure
+        .input(
+          z.object({
+            budgetResourceName: z
+              .string()
+              .regex(/^customers\/\d+\/campaignBudgets\/\d+$/),
+            dailyBudgetCents: z.number().int().min(100).max(100_000_000),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (
+            !input.budgetResourceName.startsWith(
+              `customers/${normalizeCustomerId(ctx.customerId)}/`
+            )
+          ) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "That budget belongs to another account.",
+            });
+          }
+          try {
+            await setCampaignBudget(
+              ctx.customerId,
+              input.budgetResourceName,
+              input.dailyBudgetCents
+            );
+          } catch (error) {
+            throw adsError(error);
+          }
+          await Promise.all([
+            invalidateAds(ctx.customerId, "budget"),
+            invalidateAds(ctx.customerId, "alerts"),
+          ]);
+        }),
+    }),
+
+    searchTerms: createTRPCRouter({
+      // Null when no account linked.
+      list: conversionsProcedure
+        .input(
+          dateRange.extend({ campaignId: z.string().regex(/^\d+$/).optional() })
+        )
+        .query(async ({ ctx, input }) => {
+          const customerId = ctx.client.googleAdsCustomerId;
+          if (!customerId || !isGoogleAdsConfigured()) return null;
+          try {
+            const rows = await cachedAds(
+              customerId,
+              `searchTerms:${input.from}:${input.to}:${input.campaignId ?? "all"}`,
+              ttlForRange(input.to),
+              () => getSearchTerms(customerId, input.from, input.to, input.campaignId)
+            );
+            return { rows, canManage: ctx.role === "full-access" };
+          } catch (error) {
+            throw adsError(error);
+          }
+        }),
+
+      exclude: conversionsManageProcedure
+        .input(
+          z.object({
+            campaignId: z.string().regex(/^\d+$/),
+            term: z.string().trim().min(1).max(80),
+            matchType: z.enum(["EXACT", "PHRASE"]),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          try {
+            await addNegativeKeyword(
+              ctx.customerId,
+              input.campaignId,
+              input.term,
+              input.matchType
+            );
+          } catch (error) {
+            throw adsError(error);
+          }
+          await invalidateAds(ctx.customerId, "searchTerms:");
+        }),
+    }),
+
+    // Health checks across budget, conversions, ads and uploads. Empty when
+    // nothing needs attention; null when no account is linked. Cached 15 min.
+    alerts: conversionsProcedure.query(async ({ ctx }) => {
+      const customerId = ctx.client.googleAdsCustomerId;
+      if (!customerId || !isGoogleAdsConfigured()) return null;
+      try {
+        return await cachedAds(customerId, "alerts", ADS_TTL.live, async () => {
+          const today = new Date().toISOString().slice(0, 10);
+          const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .slice(0, 10);
+
+          const failureStage = (stage: string) =>
+            sql`(${agencyLead.adsUploads} -> ${stage} ->> 'error') is not null or (${agencyLead.adsUploads} -> ${stage} ->> 'verifyError') is not null`;
+
+          const [pacingData, signals, actions, [failures]] = await Promise.all([
+            getBudgetPacing(customerId),
+            getAlertSignals(customerId),
+            getConversionActions(customerId, monthAgo, today),
+            db
+              .select({ count: count() })
+              .from(agencyLead)
+              .where(
+                and(
+                  eq(agencyLead.repoId, ctx.client.repoId),
+                  gte(
+                    agencyLead.createdAt,
+                    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                  ),
+                  or(
+                    isNotNull(agencyLead.conversionError),
+                    ...["lead", "qualified", "won"].map(failureStage)
+                  )
+                )
+              ),
+          ]);
+
+          const wired = wiredActions(ctx.client);
+          const trackingBroken = Object.values(wired)
+            .filter(Boolean)
+            .flatMap((resourceName) => {
+              const action = actions.find((a) => a.resourceName === resourceName);
+              if (!action) return [];
+              const status = trackingStatus(action);
+              return status === "inactive" || status === "no_recent"
+                ? [{ name: action.name, status }]
+                : [];
+            });
+
+          const targetCents = ctx.client.googleAdsBudget?.monthlyCents ?? null;
+          return evaluateAlerts({
+            pacing: targetCents
+              ? budgetPacing(pacingData.spentCents, targetCents, new Date())
+              : null,
+            targetCents,
+            conversionsLast7: signals.conversionsLast7,
+            conversionsPrior7: signals.conversionsPrior7,
+            disapprovedAds: signals.disapprovedAds,
+            budgetLimited: pacingData.campaigns
+              .filter((campaign) => campaign.status === "ENABLED")
+              .map((campaign) => ({
+                name: campaign.name,
+                share: campaign.budgetLostShare,
+              })),
+            trackingBroken,
+            uploadFailures: failures?.count ?? 0,
+          });
+        });
+      } catch (error) {
+        // Alerts are a bonus: never break the page over them.
+        console.error("Ads alerts failed", error);
+        return [];
+      }
+    }),
+
+    // Light list for the sidebar campaign filter. Null when no account linked.
+    campaigns: agencyProcedure.query(async ({ ctx }) => {
+      await requireFeature(ctx.session.user, ctx.client.repoId, "ads");
+      const customerId = ctx.client.googleAdsCustomerId;
+      if (!customerId || !isGoogleAdsConfigured()) return null;
+      try {
+        return await cachedAds(customerId, "campaigns", ADS_TTL.live, () =>
+          listCampaigns(customerId)
+        );
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
+      }
+    }),
 
     conversions: conversionsRouter,
   }),

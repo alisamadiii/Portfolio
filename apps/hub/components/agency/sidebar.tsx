@@ -23,6 +23,8 @@ import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
 import { useEntitlement } from "@/hooks/use-plans";
 
+import { AdsAlertCount } from "@/components/agency/ads-alerts";
+import { CampaignFilterSelect } from "@/components/agency/campaign-filter";
 import { useAgency } from "@/components/agency/use-agency";
 import {
   Blocks,
@@ -44,6 +46,7 @@ const overviewPages: {
   url: string;
   icon: typeof House;
   feature?: Feature;
+  badge?: React.ReactNode;
   items?: {
     title: string;
     url: string;
@@ -68,7 +71,13 @@ const overviewPages: {
       { title: "Calls", url: "/agency/calls" },
     ],
   },
-  { title: "Marketing", url: "/marketing", icon: Megaphone, feature: "ads" },
+  {
+    title: "Marketing",
+    url: "/marketing",
+    icon: Megaphone,
+    feature: "ads",
+    badge: <AdsAlertCount />,
+  },
   {
     title: "Newsletter",
     url: "/newsletter",
@@ -117,6 +126,7 @@ export function AgencySidebar({
       </SidebarHeader>
 
       <SidebarContent className="px-1.5">
+        {can("ads") && <CampaignFilterSelect />}
         <NavPages label="Overview" pages={pages} />
         <NavPages label="Account" pages={accountPages} />
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
