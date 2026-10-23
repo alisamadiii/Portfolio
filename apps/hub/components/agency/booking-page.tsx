@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -33,7 +34,7 @@ import type { AgencyBookingSettings } from "@workspace/drizzle/schema";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { useAgency } from "@/components/agency/use-agency";
-import { Calendar, Plus, Trash, Video, X } from "@/components/icon";
+import { Calendar, ChevronDown, Plus, Trash, Video, X } from "@/components/icon";
 import { connectGoogleCalendar } from "@/lib/integrations";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");
@@ -85,8 +86,21 @@ const defaultSettings = (): AgencyBookingSettings => ({
   ],
 });
 
-const timeSelect =
-  "border-input bg-background h-8 rounded-md border px-2 text-[13px]";
+/** Native select with our own chevron, so the arrow isn't glued to the edge. */
+function SelectBox({
+  className,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <span className={cn("relative inline-flex items-center", className)}>
+      <select
+        {...props}
+        className="border-input bg-background h-8 w-full appearance-none rounded-md border pr-7 pl-2 text-[13px]"
+      />
+      <ChevronDown className="text-muted-foreground pointer-events-none absolute right-2.5 size-3.5" />
+    </span>
+  );
+}
 
 export function BookingPage() {
   const trpc = useTRPC();
@@ -215,8 +229,8 @@ function SettingsCard({
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-[13.5px]">
         <label className="flex items-center gap-2">
           <span className="text-muted-foreground">Timezone</span>
-          <select
-            className={cn(timeSelect, "max-w-56")}
+          <SelectBox
+            className="max-w-56"
             value={form.timezone}
             onChange={(e) => patch({ timezone: e.target.value })}
           >
@@ -225,12 +239,11 @@ function SettingsCard({
                 {tz}
               </option>
             ))}
-          </select>
+          </SelectBox>
         </label>
         <label className="flex items-center gap-2">
           <span className="text-muted-foreground">Earliest booking</span>
-          <select
-            className={timeSelect}
+          <SelectBox
             value={form.noticeHours ?? 4}
             onChange={(e) => patch({ noticeHours: Number(e.target.value) })}
           >
@@ -239,12 +252,11 @@ function SettingsCard({
                 {h === 0 ? "Any time" : h < 24 ? `${h}h ahead` : `${h / 24}d ahead`}
               </option>
             ))}
-          </select>
+          </SelectBox>
         </label>
         <label className="flex items-center gap-2">
           <span className="text-muted-foreground">Open up to</span>
-          <select
-            className={timeSelect}
+          <SelectBox
             value={form.horizonDays ?? 30}
             onChange={(e) => patch({ horizonDays: Number(e.target.value) })}
           >
@@ -253,12 +265,11 @@ function SettingsCard({
                 {d} days ahead
               </option>
             ))}
-          </select>
+          </SelectBox>
         </label>
         <label className="flex items-center gap-2">
           <span className="text-muted-foreground">Gap after meetings</span>
-          <select
-            className={timeSelect}
+          <SelectBox
             value={form.bufferMinutes ?? 0}
             onChange={(e) => patch({ bufferMinutes: Number(e.target.value) })}
           >
@@ -267,7 +278,7 @@ function SettingsCard({
                 {m ? `${m} min` : "None"}
               </option>
             ))}
-          </select>
+          </SelectBox>
         </label>
       </div>
 
@@ -293,8 +304,7 @@ function SettingsCard({
               <div className="flex flex-wrap items-center gap-2">
                 {ranges.map((range, i) => (
                   <span key={i} className="flex items-center gap-1.5">
-                    <select
-                      className={timeSelect}
+                    <SelectBox
                       value={range.from}
                       onChange={(e) =>
                         setRanges(
@@ -307,10 +317,9 @@ function SettingsCard({
                       {TIMES.map((t) => (
                         <option key={t}>{t}</option>
                       ))}
-                    </select>
+                    </SelectBox>
                     <span className="text-muted-foreground">to</span>
-                    <select
-                      className={timeSelect}
+                    <SelectBox
                       value={range.to}
                       onChange={(e) =>
                         setRanges(
@@ -323,7 +332,7 @@ function SettingsCard({
                       {TIMES.map((t) => (
                         <option key={t}>{t}</option>
                       ))}
-                    </select>
+                    </SelectBox>
                     {ranges.length > 1 && (
                       <Button
                         variant="ghost"
