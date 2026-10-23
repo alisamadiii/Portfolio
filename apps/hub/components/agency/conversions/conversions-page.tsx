@@ -61,7 +61,15 @@ import {
   type RangeValue,
 } from "@/components/agency/lead-status";
 import { useAgency } from "@/components/agency/use-agency";
-import { CircleCheck, Pencil, Plus, Sparkles, Trash } from "@/components/icon";
+import {
+  CircleCheck,
+  ExternalLink,
+  Pencil,
+  Plus,
+  Sparkles,
+  Trash,
+  TriangleAlert,
+} from "@/components/icon";
 
 import { ConversionDialog, type EditableAction } from "./conversion-dialog";
 
@@ -74,6 +82,10 @@ const HEALTH_LABELS: Record<string, string> = {
   NEEDS_ATTENTION: "Needs attention",
   NO_RECENT_UPLOADS: "No recent uploads",
 };
+
+// The preset card is hidden: creating actions here is discouraged in favor of
+// the Google Ads dashboard. Kept in code; flip to true to bring it back.
+const SHOW_PRESET: boolean = false;
 
 export function ConversionsPage() {
   const trpc = useTRPC();
@@ -178,7 +190,42 @@ export function ConversionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Preset */}
+      {/* Creating conversion actions here is limited; steer people to Google Ads. */}
+      <div className="border-destructive/30 bg-destructive/5 rounded-2xl border p-5">
+        <div className="flex items-start gap-3">
+          <span className="bg-destructive mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full">
+            <TriangleAlert className="size-4 text-white" />
+          </span>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-[16px] font-semibold">
+                Create conversions in Google Ads, not here
+              </h3>
+              <span className="bg-destructive rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide text-white uppercase">
+                Not recommended
+              </span>
+            </div>
+            <p className="text-muted-foreground mt-1 max-w-2xl text-[14px]">
+              This page can only set up a few basic import actions and is
+              missing most of what Google Ads offers. For creating and managing
+              conversion actions, use the Google Ads dashboard directly. This
+              page is best for watching how your leads are reported.
+            </p>
+            <a
+              href="https://ads.google.com/aw/conversions"
+              target="_blank"
+              rel="noreferrer"
+              className="text-destructive mt-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold hover:underline"
+            >
+              Open Google Ads conversions
+              <ExternalLink className="size-3.5" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Preset — hidden for now (kept in code). Flip SHOW_PRESET to show it. */}
+      {SHOW_PRESET && (
       <div
         className={cn(
           "rounded-2xl border p-5",
@@ -267,6 +314,7 @@ export function ConversionsPage() {
           })}
         </div>
       </div>
+      )}
 
       {/* Google's own report on how our uploads are processing */}
       {data.health.length > 0 && (
