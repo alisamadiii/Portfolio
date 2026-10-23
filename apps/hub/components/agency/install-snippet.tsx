@@ -9,6 +9,37 @@ import { Copy } from "@/components/icon";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");
 
+// A full working form, so whoever installs the script sees the whole contract:
+// data-lead-form on the form, plain name attributes on the inputs.
+const EXAMPLE_FORM = `<form data-lead-form="Contact" data-success="Thanks! We'll be in touch soon.">
+  <input name="name" placeholder="Your name" required />
+  <input name="email" type="email" placeholder="Email" required />
+  <input name="phone" type="tel" placeholder="Phone" />
+  <textarea name="message" placeholder="How can we help?"></textarea>
+  <!-- honeypot: hidden from people, bots fill it in -->
+  <input name="_hp" type="text" style="display:none" tabindex="-1" autocomplete="off" />
+  <button type="submit">Send</button>
+</form>`;
+
+function CopyBlock({ code }: { code: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <code className="bg-muted flex-1 rounded-md p-3 text-[12.5px] break-all whitespace-pre-wrap">
+        {code}
+      </code>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() =>
+          navigator.clipboard.writeText(code).then(() => toast.success("Copied."))
+        }
+      >
+        <Copy className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
 // The one-line capture script, for whoever maintains the site's code.
 export function InstallSnippet() {
   const { formKey } = useAgency();
@@ -21,23 +52,35 @@ export function InstallSnippet() {
       <summary className="cursor-pointer font-semibold">Lead capture setup</summary>
       <div className="mt-3 space-y-3">
         <p className="text-muted-foreground">
-          Add this tag to every page, then add <code>data-lead-form</code> to
-          each form. Submissions land here with the ad that brought them.
+          <span className="text-foreground font-medium">1. Add this tag to every page.</span>{" "}
+          It remembers which ad or link brought the visitor, even if they
+          browse around before submitting.
         </p>
-        <div className="flex items-start gap-2">
-          <code className="bg-muted flex-1 rounded-md p-3 text-[12.5px] break-all">
-            {snippet}
-          </code>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              navigator.clipboard.writeText(snippet).then(() => toast.success("Copied."))
-            }
-          >
-            <Copy className="size-4" />
-          </Button>
-        </div>
+        <CopyBlock code={snippet} />
+        <p className="text-muted-foreground">
+          <span className="text-foreground font-medium">
+            2. Add <code>data-lead-form</code> to each form.
+          </span>{" "}
+          That attribute is the only required change: the script takes over the
+          submit and sends every input along with the attribution. No code for
+          individual fields is needed.
+        </p>
+        <CopyBlock code={EXAMPLE_FORM} />
+        <p className="text-muted-foreground">
+          Fields are recognized by each input&apos;s <code>name</code>{" "}
+          attribute: <code>name</code>, <code>email</code>, <code>phone</code>{" "}
+          and <code>message</code> (and common variants like{" "}
+          <code>full_name</code>, <code>tel</code>, or{" "}
+          <code>first_name</code> + <code>last_name</code>) fill the lead&apos;s
+          contact details. Any other named input still comes through and shows
+          on the lead as an extra field.
+        </p>
+        <p className="text-muted-foreground">
+          Optional: <code>data-success=&quot;…&quot;</code> changes the
+          thank-you text, <code>data-redirect=&quot;/thank-you&quot;</code>{" "}
+          sends the visitor to a page instead, and the hidden{" "}
+          <code>_hp</code> input quietly filters out bots.
+        </p>
       </div>
     </details>
   );
