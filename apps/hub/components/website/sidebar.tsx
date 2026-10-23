@@ -40,6 +40,7 @@ import { isAdminUser } from "@/lib/authz-shared";
 import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
 
+import { ViewSwitch } from "@/components/hub-view";
 import { NavPages } from "@/components/nav-pages";
 import { StatusDot } from "@/components/status-dot";
 
@@ -171,6 +172,7 @@ export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </p>
           </div>
         </div>
+        <ViewSwitch />
       </SidebarHeader>
 
       <SidebarContent className="px-1.5">

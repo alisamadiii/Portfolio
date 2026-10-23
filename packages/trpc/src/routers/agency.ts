@@ -1108,7 +1108,8 @@ const bookingRouter = createTRPCRouter({
 
 export const agencyRouter = createTRPCRouter({
   // Null unless the user's agency website has an active agency subscription:
-  // the Hub then shows the website UI (project gallery) instead.
+  // the Hub then shows the website UI (project gallery) instead. Admins get
+  // the agency UI for any client they're set up on, no subscription needed.
   me: authenticatedProcedure.query(async ({ ctx }) => {
     const membership = await findAgencyMembership(ctx.session.user);
     if (!membership) return null;
@@ -1118,7 +1119,9 @@ export const agencyRouter = createTRPCRouter({
     const repoId = client.repoId;
     if (!repoId) return null;
     const entitlement = await getEntitlement(repoId);
-    if (entitlement.product !== "agency") return null;
+    if (entitlement.product !== "agency" && !isAdminUser(ctx.session.user)) {
+      return null;
+    }
     const project = await db.query.hubProject.findFirst({
       where: eq(hubProject.repoId, repoId),
       columns: { owner: true, repo: true, websiteUrl: true },

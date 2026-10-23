@@ -26,6 +26,7 @@ import { useEntitlement } from "@/hooks/use-plans";
 import { AdsAlertCount } from "@/components/agency/ads-alerts";
 import { CampaignFilterSelect } from "@/components/agency/campaign-filter";
 import { useAgency } from "@/components/agency/use-agency";
+import { ViewSwitch } from "@/components/hub-view";
 import {
   Blocks,
   BookOpen,
@@ -128,6 +129,7 @@ export function AgencySidebar({
             </p>
           </div>
         </div>
+        <ViewSwitch />
       </SidebarHeader>
 
       <SidebarContent className="px-1.5">
