@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -27,7 +28,7 @@ export const AGENCY_LEAD_STATUS_VALUES = [
   "spam",
 ] as const;
 export type AgencyLeadStatus = (typeof AGENCY_LEAD_STATUS_VALUES)[number];
-export type AgencyLeadSource = "form" | "manual";
+export type AgencyLeadSource = "form" | "booking" | "manual";
 
 // Where the lead came from, computed at capture (lib/agency/lead-channel.ts).
 export const AGENCY_LEAD_CHANNEL_VALUES = [
@@ -72,8 +73,62 @@ export type AgencyLeadAdClick = {
 
 // Conversion actions our server reports to, by lead stage ("customers/<id>/conversionActions/<id>").
 // The closed-deal action stays in googleAdsConversionAction; `calls` is tracked by Google itself.
-export type AgencyAdsActions = { lead?: string; qualified?: string; calls?: string };
+// `booking` takes the "lead" stage for leads whose source is "booking".
+export type AgencyAdsActions = {
+  lead?: string;
+  booking?: string;
+  qualified?: string;
+  calls?: string;
+};
 export type AgencyAdsBudget = { monthlyCents?: number };
+
+// ─── Booking ─────────────────────────────────────────────────────
+// Online appointment booking (b.js widget). Every meeting is 15 minutes;
+// availability comes from these hours minus Google Calendar busy times.
+
+export type AgencyBookingHours = {
+  /** Keyed by weekday, 0 = Sunday. Missing or empty = closed that day. */
+  [weekday: string]: { from: string; to: string }[] | undefined;
+};
+
+export type AgencyBookingType = {
+  id: string;
+  name: string;
+  description?: string;
+  /** Attach a Google Meet link to the calendar event. */
+  meet?: boolean;
+  active?: boolean;
+};
+
+export type AgencyBookingSettings = {
+  /** IANA timezone the working hours are written in (the owner's). */
+  timezone: string;
+  hours: AgencyBookingHours;
+  /** Earliest a visitor can book, in hours from now. */
+  noticeHours?: number;
+  /** How many days ahead the calendar opens. */
+  horizonDays?: number;
+  /** Free minutes kept after each booking. */
+  bufferMinutes?: number;
+  types: AgencyBookingType[];
+};
+
+// Booking details on a lead (the times live in their own indexed columns).
+export type AgencyLeadBooking = {
+  typeId?: string;
+  /** Copied at booking time so renamed types keep their history. */
+  typeName?: string;
+  /** Google Calendar event on the owner's primary calendar. */
+  eventId?: string;
+  htmlLink?: string;
+  meetUrl?: string;
+  /** The visitor's IANA timezone at booking time. */
+  timezone?: string;
+  /** Previous start time, set when the owner reschedules. */
+  rescheduledFrom?: string;
+  /** Calendar event creation failed; the booking still stands. */
+  eventError?: string;
+};
 
 // Per-stage upload outcome on a lead (the closed deal keeps its own columns).
 export type AgencyLeadUpload = {
@@ -118,6 +173,9 @@ export const agencyClient = pgTable("agency_client", {
   googleAdsBudget: jsonb("google_ads_budget").$type<AgencyAdsBudget>(),
   // Monday email with the week's numbers; the email's unsubscribe link clears it.
   weeklyReport: boolean("weekly_report").notNull().default(true),
+
+  // Working hours + meeting types for the booking widget; unset = booking off.
+  bookingSettings: jsonb("booking_settings").$type<AgencyBookingSettings>(),
 
   // New-lead notification address; falls back to the owner's email.
   leadNotifyEmail: text("lead_notify_email"),
@@ -173,6 +231,12 @@ export const agencyLead = pgTable(
     // New-lead and qualified uploads (Marketing > Conversions presets).
     adsUploads: jsonb("ads_uploads").$type<AgencyLeadUploads>(),
 
+    // Appointment times for booking leads (source "booking").
+    bookingAt: timestamp("booking_at"),
+    bookingEnd: timestamp("booking_end"),
+    bookingCanceledAt: timestamp("booking_canceled_at"),
+    booking: jsonb("booking").$type<AgencyLeadBooking>(),
+
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -189,6 +253,11 @@ export const agencyLead = pgTable(
       table.channel,
       table.createdAt.desc()
     ),
+    // Two visitors can't take the same slot: slots are a fixed 15-minute grid,
+    // so equal start times are the only possible conflict.
+    uniqRepoBookingAt: uniqueIndex("agency_lead_repo_booking_at_idx")
+      .on(table.repoId, table.bookingAt)
+      .where(sql`${table.bookingCanceledAt} is null`),
   })
 );
 

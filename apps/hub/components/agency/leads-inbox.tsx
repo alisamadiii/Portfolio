@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
@@ -450,6 +450,12 @@ export function LeadsInbox() {
                         lead.phone ||
                         `Lead #${lead.id}`}
                     </Link>
+                    {lead.source === "booking" && lead.bookingAt && (
+                      <p className="text-muted-foreground text-[12px]">
+                        Booked {format(new Date(lead.bookingAt), "MMM d, p")}
+                        {lead.bookingCanceledAt ? " (canceled)" : ""}
+                      </p>
+                    )}
                     {lead.message && (
                       <p className="text-muted-foreground line-clamp-1 max-w-[320px] text-[13px]">
                         {lead.message}

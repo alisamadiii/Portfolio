@@ -29,10 +29,10 @@ import {
   categoryLabel,
   EDITABLE_CATEGORIES,
   STAGE_LABELS,
-  UPLOAD_STAGES,
+  WIRABLE_STAGES,
   type ConversionCategory,
   type EditableFields,
-  type UploadStage,
+  type WirableStage,
 } from "@workspace/trpc/lib/agency/conversion-presets";
 
 import { useAgency } from "@/components/agency/use-agency";
@@ -40,7 +40,7 @@ import { useAgency } from "@/components/agency/use-agency";
 export type EditableAction = EditableFields & {
   resourceName: string;
   type: string;
-  stage: UploadStage | null;
+  stage: WirableStage | null;
 };
 
 const NONE = "none";
@@ -59,10 +59,10 @@ const COUNT_ITEMS = [
 ];
 const STAGE_ITEMS = [
   { value: NONE, label: "Not reported by the Hub" },
-  ...UPLOAD_STAGES.map((value) => ({ value, label: STAGE_LABELS[value] })),
+  ...WIRABLE_STAGES.map((value) => ({ value, label: STAGE_LABELS[value] })),
 ];
 
-const EMPTY: EditableFields & { type: string; stage: UploadStage | null } = {
+const EMPTY: EditableFields & { type: string; stage: WirableStage | null } = {
   name: "",
   type: "UPLOAD_CLICKS",
   category: "SUBMIT_LEAD_FORM",
@@ -294,7 +294,7 @@ export function ConversionDialog({
                 items={STAGE_ITEMS}
                 value={form.stage ?? NONE}
                 onValueChange={(value) =>
-                  set("stage")(value === NONE ? null : (value as UploadStage))
+                  set("stage")(value === NONE ? null : (value as WirableStage))
                 }
               >
                 <SelectTrigger className="w-full">

@@ -7,14 +7,22 @@
 export const UPLOAD_STAGES = ["lead", "qualified", "won"] as const;
 export type UploadStage = (typeof UPLOAD_STAGES)[number];
 
-export const STAGE_LABELS: Record<UploadStage, string> = {
+/** Stages an action can be wired to in the UI (booking shares the lead upload). */
+export const WIRABLE_STAGES = ["lead", "booking", "qualified", "won"] as const;
+export type WirableStage = (typeof WIRABLE_STAGES)[number];
+
+export const STAGE_LABELS: Record<WirableStage, string> = {
   lead: "A form lead comes in",
+  booking: "An appointment is booked",
   qualified: "A lead is marked qualified",
   won: "A lead is marked won",
 };
 
+/** Keys of agency_client.google_ads_actions, plus "won" (the closed-deal column). */
+export type WiredKey = WirableStage | "calls";
+
 /** Action resource names wired to each stage (agency_client.google_ads_actions + the closed-deal column). */
-export type WiredActions = Partial<Record<UploadStage | "calls", string>>;
+export type WiredActions = Partial<Record<WiredKey, string>>;
 
 export type ConversionCategory =
   | "SUBMIT_LEAD_FORM"
@@ -103,7 +111,7 @@ export type ActionSpec = {
 };
 
 export type PresetAction = ActionSpec & {
-  key: UploadStage | "calls";
+  key: WiredKey;
   /** What the client reads in the preset card. */
   description: string;
 };
@@ -142,6 +150,18 @@ export const CONVERSION_PRESETS: ConversionPreset[] = [
         category: "PHONE_CALL_LEAD",
         countingType: "ONE_PER_CLICK",
         clickThroughLookbackWindowDays: 30,
+        primaryForGoal: true,
+        defaultValue: 0,
+      },
+      {
+        key: "booking",
+        name: "Booked appointment",
+        description:
+          "Someone who clicked an ad books an appointment through your website.",
+        type: "UPLOAD_CLICKS",
+        category: "BOOK_APPOINTMENT",
+        countingType: "ONE_PER_CLICK",
+        clickThroughLookbackWindowDays: 90,
         primaryForGoal: true,
         defaultValue: 0,
       },

@@ -21,20 +21,32 @@ export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 // Event CRUD on the user's calendars (we only touch `primary`) — narrower
 // than the full calendar scope, no calendar-list access needed.
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+// Read-only free/busy, needed by the booking widget's availability.
+export const CALENDAR_FREEBUSY_SCOPE =
+  "https://www.googleapis.com/auth/calendar.freebusy";
+// Booking needs both: events to create meetings, freebusy to offer slots.
+// Calendar connections made before booking existed lack freebusy and must
+// reconnect once.
+export const BOOKING_SCOPES = [CALENDAR_SCOPE, CALENDAR_FREEBUSY_SCOPE];
 
-export type IntegrationId = "google-analytics" | "google-calendar";
+export type IntegrationId =
+  | "google-analytics"
+  | "google-calendar"
+  | "google-booking";
 
 type IntegrationProvider = {
   id: IntegrationId;
   /** Better Auth providerId — the account.provider_id value. */
   providerId: string;
-  /** Connected only when the account row's scope list includes this. */
-  requiredScope?: string;
+  /** Connected only when the account row's scope list includes all of these. */
+  requiredScope?: string | string[];
 };
 
 export const INTEGRATIONS: IntegrationProvider[] = [
   { id: "google-analytics", providerId: "google", requiredScope: GA_SCOPE },
   { id: "google-calendar", providerId: "google", requiredScope: CALENDAR_SCOPE },
+  // Same Google connection as google-calendar, stricter scope requirement.
+  { id: "google-booking", providerId: "google", requiredScope: BOOKING_SCOPES },
 ];
 
 /** The integration's token is missing/expired/unscoped — the UI must prompt a reconnect. */
@@ -46,6 +58,16 @@ export const reconnectError = (name: string) =>
 
 type ConnectedAccount = { accountId: string; scope: string | null };
 
+/** True when a granted scope string covers everything an integration needs. */
+export const scopeSatisfied = (
+  scope: string | null | undefined,
+  required?: string | string[]
+) =>
+  !required ||
+  (Array.isArray(required) ? required : [required]).every((entry) =>
+    scope?.includes(entry)
+  );
+
 /**
  * Find the user's account row for a provider, preferring the row whose scope
  * includes requiredScope — a user can hold multiple rows per provider
@@ -55,7 +77,7 @@ type ConnectedAccount = { accountId: string; scope: string | null };
 export async function getConnectedAccount(
   userId: string,
   providerId: string,
-  requiredScope?: string
+  requiredScope?: string | string[]
 ): Promise<ConnectedAccount | null> {
   if (!userId) return null;
   const rows = await db
@@ -63,7 +85,7 @@ export async function getConnectedAccount(
     .from(account)
     .where(and(eq(account.userId, userId), eq(account.providerId, providerId)));
   if (!requiredScope) return rows[0] ?? null;
-  return rows.find((row) => row.scope?.includes(requiredScope)) ?? null;
+  return rows.find((row) => scopeSatisfied(row.scope, requiredScope)) ?? null;
 }
 
 /**

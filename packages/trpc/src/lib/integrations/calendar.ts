@@ -100,6 +100,114 @@ export async function createLeadMeeting(
   return { id: event.id, htmlLink: event.htmlLink ?? null };
 }
 
+// ─── Booking (agency appointment widget) ─────────────────────────
+// Same calendar, stricter integration: booking needs the freebusy scope on
+// top of calendar.events, so token fetches go through "google-booking".
+
+const getBookingAccessToken = (userId: string) =>
+  getIntegrationAccessToken(userId, "google-booking", "Google Calendar");
+
+/** Busy intervals on the user's primary calendar between two instants. */
+export async function getBusy(
+  userId: string,
+  fromISO: string,
+  toISO: string
+): Promise<{ start: string; end: string }[]> {
+  const token = await getBookingAccessToken(userId);
+  const res = await cal<{
+    calendars?: { primary?: { busy?: { start: string; end: string }[] } };
+  }>("https://www.googleapis.com/calendar/v3/freeBusy", token, {
+    method: "POST",
+    body: JSON.stringify({
+      timeMin: fromISO,
+      timeMax: toISO,
+      items: [{ id: "primary" }],
+    }),
+  });
+  return res.calendars?.primary?.busy ?? [];
+}
+
+export type BookingEventInput = {
+  userId: string;
+  summary: string;
+  description: string;
+  startISO: string;
+  endISO: string;
+  attendeeEmail: string;
+  /** Attach a Google Meet link. */
+  meet?: boolean;
+};
+
+/**
+ * Create a booking event on the user's primary calendar. Google emails the
+ * invite to the visitor and notifies the owner (sendUpdates=all).
+ */
+export async function createBookingEvent(
+  input: BookingEventInput
+): Promise<{ id: string; htmlLink: string | null; meetUrl: string | null }> {
+  const token = await getBookingAccessToken(input.userId);
+  const event = await cal<{
+    id?: string;
+    htmlLink?: string;
+    hangoutLink?: string;
+  }>(`${CAL_BASE}/events?sendUpdates=all&conferenceDataVersion=1`, token, {
+    method: "POST",
+    body: JSON.stringify({
+      summary: input.summary,
+      description: input.description,
+      start: { dateTime: input.startISO },
+      end: { dateTime: input.endISO },
+      attendees: [{ email: input.attendeeEmail }],
+      ...(input.meet
+        ? {
+            conferenceData: {
+              createRequest: {
+                requestId: `booking-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                conferenceSolutionKey: { type: "hangoutsMeet" },
+              },
+            },
+          }
+        : {}),
+      reminders: {
+        useDefault: false,
+        overrides: [{ method: "popup", minutes: 30 }],
+      },
+    }),
+  });
+  if (!event.id) {
+    throw new TRPCError({
+      code: "BAD_GATEWAY",
+      message: "Google Calendar did not return an event id.",
+    });
+  }
+  return {
+    id: event.id,
+    htmlLink: event.htmlLink ?? null,
+    meetUrl: event.hangoutLink ?? null,
+  };
+}
+
+/** Move a booking to a new time; Google notifies both sides. */
+export async function moveBookingEvent(input: {
+  userId: string;
+  eventId: string;
+  startISO: string;
+  endISO: string;
+}): Promise<void> {
+  const token = await getBookingAccessToken(input.userId);
+  await cal(
+    `${CAL_BASE}/events/${encodeURIComponent(input.eventId)}?sendUpdates=all`,
+    token,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        start: { dateTime: input.startISO },
+        end: { dateTime: input.endISO },
+      }),
+    }
+  );
+}
+
 /** Delete an event, emailing attendees. Already-gone events are a success. */
 export async function deleteLeadMeeting(input: {
   userId: string;

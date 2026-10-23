@@ -10,6 +10,7 @@ import { authenticatedProcedure, createTRPCRouter } from "../../init";
 import {
   getIntegrationAccessToken,
   INTEGRATIONS,
+  scopeSatisfied,
   type IntegrationId,
 } from "../../lib/integrations";
 
@@ -41,8 +42,7 @@ export const integrationsRouter = createTRPCRouter({
       const row = rows.find(
         (r) =>
           r.providerId === integration.providerId &&
-          (!integration.requiredScope ||
-            r.scope?.includes(integration.requiredScope))
+          scopeSatisfied(r.scope, integration.requiredScope)
       );
       // Cheap DB-only health check: a token is dead only when its access token
       // has expired AND there's no refresh token to renew it (e.g. a provider
@@ -91,7 +91,7 @@ export const integrationsRouter = createTRPCRouter({
           )
         );
       const target = integration.requiredScope
-        ? rows.find((row) => row.scope?.includes(integration.requiredScope!))
+        ? rows.find((row) => scopeSatisfied(row.scope, integration.requiredScope))
         : rows[0];
       if (!target) return { success: true };
 

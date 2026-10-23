@@ -63,7 +63,8 @@ const overviewPages: {
     feature: "leads",
     items: [
       {
-        title: "Quote form",
+        // Forms, bookings and hand-added leads all land here.
+        title: "All leads",
         url: "/agency",
         // The inbox and each lead's detail page.
         match: (pathname) =>

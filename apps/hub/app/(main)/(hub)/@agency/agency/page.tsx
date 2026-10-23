@@ -7,12 +7,12 @@ import { DocumentTitle } from "@/components/document-title";
 export default function AgencyPage() {
   return (
     <div className="space-y-6">
-      <DocumentTitle title="Quote form" />
+      <DocumentTitle title="All leads" />
       <div>
-        <h2 className="text-[27px] font-extrabold tracking-tight">Quote form</h2>
+        <h2 className="text-[27px] font-extrabold tracking-tight">All leads</h2>
         <p className="text-muted-foreground mt-1 text-[14.5px]">
-          Everyone who sent a form on your website. Mark the ones that became
-          customers as won.
+          Everyone who reached out: website forms, booked appointments and
+          leads you added by hand. Mark the ones that became customers as won.
         </p>
       </div>
       <LeadsInbox />

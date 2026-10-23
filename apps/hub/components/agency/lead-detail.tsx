@@ -60,8 +60,22 @@ const recorded = (lead: Lead): [string, string | null][] => [
   ["Lead ID", String(lead.id)],
   ["Received", when(lead.createdAt)],
   ["Last updated", when(lead.updatedAt)],
-  ["Entered via", lead.source === "manual" ? "Added by hand" : "Website form"],
+  [
+    "Entered via",
+    lead.source === "manual"
+      ? "Added by hand"
+      : lead.source === "booking"
+        ? "Booked an appointment"
+        : "Website form",
+  ],
   ["Form name", lead.formName],
+  ["Meeting", lead.booking?.typeName ?? null],
+  ["Meeting at", when(lead.bookingAt)],
+  ["Meeting canceled at", when(lead.bookingCanceledAt)],
+  ["Meeting rescheduled from", when(lead.booking?.rescheduledFrom)],
+  ["Meet link", lead.booking?.meetUrl ?? null],
+  ["Calendar event", lead.booking?.htmlLink ?? null],
+  ["Calendar event error", lead.booking?.eventError ?? null],
   ["Source", CHANNEL_LABELS[lead.channel]],
   ["Form page URL", lead.pageUrl],
   ["Landing page URL", lead.landingPage],

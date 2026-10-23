@@ -48,9 +48,9 @@ import {
   STAGE_LABELS,
   TRACKING_LABELS,
   trackingStatus,
-  UPLOAD_STAGES,
+  WIRABLE_STAGES,
   type ConversionCategory,
-  type UploadStage,
+  type WirableStage,
 } from "@workspace/trpc/lib/agency/conversion-presets";
 
 import { useCampaignFilter } from "@/components/agency/campaign-filter";
@@ -127,9 +127,9 @@ export function ConversionsPage() {
   const data = list.data;
   // Stage reported to each action, by resource name.
   const stageOf = useMemo(() => {
-    const map = new Map<string, UploadStage | "calls">();
+    const map = new Map<string, WirableStage | "calls">();
     for (const [stage, resourceName] of Object.entries(data?.wired ?? {})) {
-      if (resourceName) map.set(resourceName, stage as UploadStage | "calls");
+      if (resourceName) map.set(resourceName, stage as WirableStage | "calls");
     }
     return map;
   }, [data?.wired]);
@@ -227,7 +227,7 @@ export function ConversionsPage() {
             </Button>
           )}
         </div>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
           {preset.actions.map((action) => {
             const done = Boolean(data.wired[action.key]);
             const upload =
@@ -489,9 +489,9 @@ export function ConversionsPage() {
                                   stage:
                                     stage &&
                                     (
-                                      UPLOAD_STAGES as readonly string[]
+                                      WIRABLE_STAGES as readonly string[]
                                     ).includes(stage)
-                                      ? (stage as UploadStage)
+                                      ? (stage as WirableStage)
                                       : null,
                                 })
                               }

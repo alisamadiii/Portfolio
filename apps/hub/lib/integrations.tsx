@@ -10,6 +10,22 @@ import { authClient } from "@workspace/auth/auth-client";
 
 const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+// Free/busy read, so the booking widget can offer open slots.
+const CALENDAR_FREEBUSY_SCOPE = "https://www.googleapis.com/auth/calendar.freebusy";
+
+/**
+ * Connect (or reconnect) Google Calendar with everything booking needs.
+ * The booking page uses this too: calendars linked before booking existed
+ * lack the freebusy scope and go through the same consent once more.
+ */
+export const connectGoogleCalendar = async (callbackURL: string) =>
+  toError(
+    await authClient.linkSocial({
+      provider: "google",
+      scopes: [CALENDAR_SCOPE, CALENDAR_FREEBUSY_SCOPE],
+      callbackURL,
+    })
+  );
 
 export type IntegrationApp = {
   id: string;
@@ -90,14 +106,7 @@ export const INTEGRATION_APPS: IntegrationApp[] = [
     description:
       "Connect your Google Calendar so meetings you schedule with leads land on your calendar with invites sent automatically.",
     logo: GoogleCalendarLogo,
-    connect: async (callbackURL) =>
-      toError(
-        await authClient.linkSocial({
-          provider: "google",
-          scopes: [CALENDAR_SCOPE],
-          callbackURL,
-        })
-      ),
+    connect: connectGoogleCalendar,
     unlinkWarning:
       "This unlinks your whole Google account from sign-in, not just Calendar.",
   },

@@ -40,6 +40,8 @@ type Client = {
 type Lead = typeof agencyLead.$inferSelect;
 
 const QUALIFIED_STATUSES = ["qualified", "won"] as const;
+// Sources whose capture counts as the "lead" stage (manual entries don't).
+const LEAD_SOURCES = ["form", "booking"] as const;
 
 /** Whether this lead should be reported for the stage (ignoring whether it already was). */
 const wants = (lead: Lead, stage: Stage) =>
@@ -48,8 +50,15 @@ const wants = (lead: Lead, stage: Stage) =>
     lead.gclid || lead.gbraid || lead.wbraid || lead.email || lead.phone
   ) &&
   (stage === "lead"
-    ? lead.source === "form"
+    ? (LEAD_SOURCES as readonly string[]).includes(lead.source)
     : (QUALIFIED_STATUSES as readonly string[]).includes(lead.status));
+
+/**
+ * The action the "lead" stage reports to: bookings go to the Book appointment
+ * action when wired, falling back to the website-lead one.
+ */
+const leadStageAction = (actions: AgencyAdsActions | null, lead: Lead) =>
+  lead.source === "booking" ? (actions?.booking ?? actions?.lead) : actions?.lead;
 
 /**
  * Upload one stage for one lead and record the outcome on the row. Never
@@ -60,7 +69,10 @@ export async function reportLeadStage(
   lead: Lead,
   stage: Stage
 ) {
-  const action = client.googleAdsActions?.[stage];
+  const action =
+    stage === "lead"
+      ? leadStageAction(client.googleAdsActions, lead)
+      : client.googleAdsActions?.[stage];
   const customerId = client.googleAdsCustomerId;
   if (!action || !customerId || !isGoogleAdsConfigured()) return;
   const previous = lead.adsUploads?.[stage];
@@ -169,7 +181,7 @@ export async function syncConversionUploads(client: Client) {
   // Won uploads verify too, so this runs even when no stage is wired.
   await verifyConversionUploads(client.repoId);
   const actions = client.googleAdsActions;
-  if (!actions?.lead && !actions?.qualified) return;
+  if (!actions?.lead && !actions?.booking && !actions?.qualified) return;
 
   try {
     const pendingStage = (stage: Stage) =>
@@ -193,6 +205,9 @@ export async function syncConversionUploads(client: Client) {
           or(
             actions.lead
               ? and(eq(agencyLead.source, "form"), pendingStage("lead"))
+              : sql`false`,
+            (actions.booking ?? actions.lead)
+              ? and(eq(agencyLead.source, "booking"), pendingStage("lead"))
               : sql`false`,
             actions.qualified
               ? and(

@@ -463,3 +463,15 @@ export function Wallet(props: LucideProps) {
 export function EllipsisVertical(props: LucideProps) {
   return <Lucide.EllipsisVertical {...props} />;
 }
+
+export function Calendar(props: LucideProps) {
+  return <Lucide.Calendar {...props} />;
+}
+
+export function Clock(props: LucideProps) {
+  return <Lucide.Clock {...props} />;
+}
+
+export function Video(props: LucideProps) {
+  return <Lucide.Video {...props} />;
+}

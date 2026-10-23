@@ -12,8 +12,8 @@ import {
 const preset = findPreset("lead-gen")!;
 
 describe("lead gen preset", () => {
-  it("has the four actions the Hub wires", () => {
-    expect(preset.actions.map((a) => a.key)).toEqual(["lead", "calls", "qualified", "won"]);
+  it("has the five actions the Hub wires", () => {
+    expect(preset.actions.map((a) => a.key)).toEqual(["lead", "calls", "booking", "qualified", "won"]);
   });
 
   it("only uses types that work without a website tag", () => {
@@ -31,7 +31,7 @@ describe("lead gen preset", () => {
 describe("planPreset", () => {
   it("creates everything in an empty account", () => {
     const plan = planPreset(preset, []);
-    expect(plan.create).toHaveLength(4);
+    expect(plan.create).toHaveLength(5);
     expect(plan.reuse).toHaveLength(0);
   });
 
@@ -40,7 +40,7 @@ describe("planPreset", () => {
       { name: "website lead", resourceName: "customers/1/conversionActions/9", status: "ENABLED" },
     ]);
     expect(plan.reuse).toEqual([{ key: "lead", resourceName: "customers/1/conversionActions/9" }]);
-    expect(plan.create.map((a) => a.key)).toEqual(["calls", "qualified", "won"]);
+    expect(plan.create.map((a) => a.key)).toEqual(["calls", "booking", "qualified", "won"]);
   });
 
   it("re-creates an action whose namesake was removed", () => {
@@ -137,5 +137,16 @@ describe("planPreset with reserved names", () => {
       { name: "Closed deal value", resourceName: "customers/1/conversionActions/7", status: "ENABLED" },
     ]);
     expect(plan.create.map((a) => a.key)).toContain("won");
+  });
+});
+
+describe("booking preset action", () => {
+  it("books appointments into the Book appointments goal as a primary import", () => {
+    const preset = findPreset("lead-gen")!;
+    const booking = preset.actions.find((a) => a.key === "booking")!;
+    expect(booking.name).toBe("Booked appointment");
+    expect(booking.category).toBe("BOOK_APPOINTMENT");
+    expect(booking.type).toBe("UPLOAD_CLICKS");
+    expect(booking.primaryForGoal).toBe(true);
   });
 });

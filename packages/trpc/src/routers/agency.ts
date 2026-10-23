@@ -44,6 +44,22 @@ import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
 import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
 import { ADS_TTL, cachedAds, invalidateAds, ttlForRange } from "../lib/agency/ads-cache";
+import { getAvailability } from "../lib/agency/booking";
+import {
+  BOOKING_MINUTES,
+  MAX_RANGE_DAYS,
+  bookingSettingsSchema,
+  isValidSlot,
+} from "../lib/agency/booking-slots";
+import {
+  BOOKING_SCOPES,
+  CALENDAR_SCOPE,
+  getConnectedAccount,
+} from "../lib/integrations";
+import {
+  deleteLeadMeeting,
+  moveBookingEvent,
+} from "../lib/integrations/calendar";
 import { getAccountAlerts, wiredActions } from "../lib/agency/account-alerts";
 import { budgetPacing } from "../lib/agency/budget-pacing";
 import {
@@ -727,7 +743,7 @@ const conversionsManageProcedure = conversionsProcedure.use(async ({ next, ctx }
   return next({ ctx: { ...ctx, customerId } });
 });
 
-const stageInput = z.enum(["lead", "qualified", "won"]);
+const stageInput = z.enum(["lead", "booking", "qualified", "won"]);
 
 const actionFields = z.object({
   name: z.string().trim().min(1).max(100),
@@ -741,7 +757,7 @@ const actionFields = z.object({
 /** Point a lead stage at an action (or nothing); `calls` is only remembered. */
 async function wireStage(
   client: typeof agencyClient.$inferSelect,
-  stage: "lead" | "qualified" | "won" | "calls",
+  stage: "lead" | "booking" | "qualified" | "won" | "calls",
   resourceName: string | null
 ) {
   if (stage === "won") {
@@ -791,8 +807,11 @@ const conversionsRouter = createTRPCRouter({
     // Our own uploads, per stage: count and the latest one.
     const [uploads] = await db
       .select({
-        lead: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null)`.mapWith(Number),
-        leadAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'lead' ->> 'at')`,
+        lead: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null and ${agencyLead.source} <> 'booking')`.mapWith(Number),
+        leadAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'lead' ->> 'at') filter (where ${agencyLead.source} <> 'booking')`,
+        // Bookings share the "lead" upload stage but report to their own action.
+        booking: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null and ${agencyLead.source} = 'booking')`.mapWith(Number),
+        bookingAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'lead' ->> 'at') filter (where ${agencyLead.source} = 'booking')`,
         qualified: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'qualified' ->> 'at' is not null)`.mapWith(Number),
         qualifiedAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'qualified' ->> 'at')`,
         won: sql<number>`count(${agencyLead.conversionUploadedAt})`.mapWith(Number),
@@ -808,6 +827,7 @@ const conversionsRouter = createTRPCRouter({
       wired: wiredActions(ctx.client),
       uploads: {
         lead: { count: uploads?.lead ?? 0, lastAt: uploads?.leadAt ?? null },
+        booking: { count: uploads?.booking ?? 0, lastAt: uploads?.bookingAt ?? null },
         qualified: { count: uploads?.qualified ?? 0, lastAt: uploads?.qualifiedAt ?? null },
         won: { count: uploads?.won ?? 0, lastAt: uploads?.wonAt ?? null },
       },
@@ -912,10 +932,179 @@ function assertOwnAction(customerId: string, resourceName: string) {
 /** Stop reporting any stage to this action. */
 async function unwireAction(client: typeof agencyClient.$inferSelect, resourceName: string) {
   const wired = wiredActions(client);
-  for (const stage of ["lead", "qualified", "won", "calls"] as const) {
+  for (const stage of ["lead", "booking", "qualified", "won", "calls"] as const) {
     if (wired[stage] === resourceName) await wireStage(client, stage, null);
   }
 }
+
+// ─── Booking ─────────────────────────────────────────────────────
+// Appointment settings + the owner's view of bookings. Visitors book through
+// the public widget endpoint (apps/api .../agency/booking/[formKey]); the
+// calendar behind everything is the OWNER's Google account (client.userId),
+// no matter which hub member manages the booking.
+
+const SLOT_MS = BOOKING_MINUTES * 60 * 1000;
+
+/** The lead must be a live booking belonging to this client. */
+async function findBookingLead(repoId: number, leadId: number) {
+  const lead = await db.query.agencyLead.findFirst({
+    where: and(eq(agencyLead.id, leadId), eq(agencyLead.repoId, repoId)),
+  });
+  if (!lead || lead.source !== "booking" || !lead.bookingAt) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Booking not found." });
+  }
+  return lead;
+}
+
+const bookingRouter = createTRPCRouter({
+  // Connection + settings in one call: what the booking page renders from.
+  status: agencyProcedure.query(async ({ ctx }) => {
+    const [booking, calendar] = await Promise.all([
+      getConnectedAccount(ctx.client.userId, "google", BOOKING_SCOPES),
+      getConnectedAccount(ctx.client.userId, "google", CALENDAR_SCOPE),
+    ]);
+    return {
+      // Connected with both scopes (events + freebusy).
+      connected: Boolean(booking),
+      // Calendar linked before booking existed: one reconnect adds freebusy.
+      needsReconnect: !booking && Boolean(calendar),
+      settings: ctx.client.bookingSettings,
+      formKey: ctx.role === "full-access" ? ctx.client.formKey : null,
+    };
+  }),
+
+  setSettings: agencyWriteProcedure
+    .input(z.object({ settings: bookingSettingsSchema.nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      await db
+        .update(agencyClient)
+        .set({ bookingSettings: input.settings })
+        .where(eq(agencyClient.id, ctx.client.id));
+    }),
+
+  // Booked meetings, soonest first; recent past and canceled kept visible.
+  list: agencyProcedure.query(async ({ ctx }) => {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return db
+      .select({
+        id: agencyLead.id,
+        name: agencyLead.name,
+        email: agencyLead.email,
+        phone: agencyLead.phone,
+        notes: agencyLead.message,
+        bookingAt: agencyLead.bookingAt,
+        bookingEnd: agencyLead.bookingEnd,
+        bookingCanceledAt: agencyLead.bookingCanceledAt,
+        booking: agencyLead.booking,
+        status: agencyLead.status,
+        channel: agencyLead.channel,
+      })
+      .from(agencyLead)
+      .where(
+        and(
+          eq(agencyLead.repoId, ctx.client.repoId),
+          eq(agencyLead.source, "booking"),
+          isNotNull(agencyLead.bookingAt),
+          gte(agencyLead.bookingAt, since)
+        )
+      )
+      .orderBy(desc(agencyLead.bookingAt))
+      .limit(200);
+  }),
+
+  // Free slots for the hub's reschedule picker; same math as the widget.
+  slots: agencyProcedure
+    .input(z.object({ from: z.string(), to: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const settings = ctx.client.bookingSettings;
+      const fromMs = Date.parse(input.from);
+      const toMs = Date.parse(input.to);
+      if (
+        !settings ||
+        !Number.isFinite(fromMs) ||
+        !Number.isFinite(toMs) ||
+        toMs <= fromMs ||
+        toMs - fromMs > MAX_RANGE_DAYS * 24 * 60 * 60 * 1000
+      ) {
+        return { slots: [] };
+      }
+      const slots = await getAvailability({
+        repoId: ctx.client.repoId,
+        userId: ctx.client.userId,
+        settings,
+        fromMs,
+        toMs,
+      });
+      return { slots };
+    }),
+
+  // Cancel: Google emails the visitor; the slot opens up again.
+  cancel: agencyWriteProcedure
+    .input(z.object({ leadId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      const lead = await findBookingLead(ctx.client.repoId, input.leadId);
+      if (lead.bookingCanceledAt) return;
+      if (lead.booking?.eventId) {
+        await deleteLeadMeeting({
+          userId: ctx.client.userId,
+          eventId: lead.booking.eventId,
+        });
+      }
+      await db
+        .update(agencyLead)
+        .set({ bookingCanceledAt: new Date() })
+        .where(eq(agencyLead.id, lead.id));
+    }),
+
+  // Reschedule: the event moves, Google notifies both sides.
+  reschedule: agencyWriteProcedure
+    .input(z.object({ leadId: z.number().int(), at: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const settings = ctx.client.bookingSettings;
+      const lead = await findBookingLead(ctx.client.repoId, input.leadId);
+      if (lead.bookingCanceledAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This booking was canceled." });
+      }
+      const atMs = Date.parse(input.at);
+      if (
+        !settings ||
+        !Number.isFinite(atMs) ||
+        atMs % SLOT_MS !== 0 ||
+        !isValidSlot(new Date(atMs).toISOString(), settings, new Date())
+      ) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "That time is not available." });
+      }
+      const at = new Date(atMs);
+      const end = new Date(atMs + SLOT_MS);
+      try {
+        await db
+          .update(agencyLead)
+          .set({
+            bookingAt: at,
+            bookingEnd: end,
+            booking: {
+              ...lead.booking,
+              rescheduledFrom: lead.bookingAt!.toISOString(),
+            },
+          })
+          .where(eq(agencyLead.id, lead.id));
+      } catch (error) {
+        // Unique (repo_id, booking_at): that slot is already booked.
+        if ((error as { code?: string })?.code === "23505") {
+          throw new TRPCError({ code: "CONFLICT", message: "That time was just taken." });
+        }
+        throw error;
+      }
+      if (lead.booking?.eventId) {
+        await moveBookingEvent({
+          userId: ctx.client.userId,
+          eventId: lead.booking.eventId,
+          startISO: at.toISOString(),
+          endISO: end.toISOString(),
+        });
+      }
+    }),
+});
 
 export const agencyRouter = createTRPCRouter({
   // Null unless the user's agency website has an active agency subscription:
@@ -948,6 +1137,8 @@ export const agencyRouter = createTRPCRouter({
   }),
 
   leads: leadsRouter,
+
+  booking: bookingRouter,
 
   // Saved copies of the Monday report emails, newest week first.
   reports: createTRPCRouter({
