@@ -30,7 +30,9 @@ const deleteProjectChildRows = async (
   if (!projects.length) return;
   const repoIds = projects.map((p) => p.repoId);
 
-  await db.delete(subscriptions).where(inArray(subscriptions.repoId, repoIds));
+  await db
+    .delete(subscriptions)
+    .where(inArray(sql`${subscriptions.metadata} ->> 'repoId'`, repoIds.map(String)));
   await db
     .delete(hubCollaborator)
     .where(inArray(hubCollaborator.repoId, repoIds));

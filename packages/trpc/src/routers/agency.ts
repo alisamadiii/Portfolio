@@ -539,7 +539,10 @@ const adminRouter = createTRPCRouter({
       .from(agencyClient)
       .innerJoin(userTable, eq(userTable.id, agencyClient.userId))
       .leftJoin(hubProject, eq(hubProject.repoId, agencyClient.repoId))
-      .leftJoin(subscriptions, eq(subscriptions.repoId, agencyClient.repoId))
+      .leftJoin(
+        subscriptions,
+        eq(sql`${subscriptions.metadata} ->> 'repoId'`, sql`${agencyClient.repoId}::text`)
+      )
       .orderBy(desc(agencyClient.createdAt))
       .then((rows) =>
         rows.map(({ subscriptionStatus, subscriptionPriceId, ...row }) => ({

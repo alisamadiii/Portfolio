@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
   index,
   integer,
@@ -126,11 +125,9 @@ export const subscriptions = pgTable(
     customerCancellationReason: text("customer_cancellation_reason"),
     customerCancellationComment: text("customer_cancellation_comment"),
     // ── Per-project CMS columns (null on product rows) ──
-    // GitHub-stable repo id, unique per project. Survives repo rename.
-    // bigint: upload projects use synthetic ids >= 1e12.
-    repoId: bigint("repo_id", { mode: "number" }),
-    // Plan tier — drives gating + home badge. Stripe rows use "paid".
-    // The price id tells the website plan apart from agency plans.
+    // The tenant key lives in metadata.repoId now (service-agnostic). Plan tier
+    // drives gating + home badge; Stripe rows use "paid". The price id tells
+    // the website plan apart from agency plans.
     plan: text("plan", { enum: ["paid"] }),
     stripeCustomerId: text("stripe_customer_id"),
     priceId: text("price_id"),
@@ -138,14 +135,19 @@ export const subscriptions = pgTable(
     metadata: jsonb("metadata").$type<unknown>().notNull().default({}),
   },
   (table) => ({
-    // One CMS subscription row per project (webhook upsert target).
-    uqSubscriptionRepoId: uniqueIndex("uq_subscription_repo_id")
-      .on(table.repoId)
-      .where(sql`${table.repoId} is not null`),
     // Fast webhook lookup by Stripe customer.
     idxSubscriptionCustomer: index("idx_subscription_customer").on(
       table.stripeCustomerId
     ),
+    // metadata is the service-agnostic access key. One row per tenant is
+    // enforced on the metadata repoId; the lookup index backs the entitlement
+    // query.
+    idxSubscriptionMetaRepo: index("idx_subscription_meta_repo").on(
+      sql`(${table.metadata} ->> 'repoId')`
+    ),
+    uqSubscriptionMetaRepo: uniqueIndex("uq_subscription_meta_repo")
+      .on(sql`(${table.metadata} ->> 'repoId')`)
+      .where(sql`${table.metadata} ->> 'repoId' is not null`),
   })
 );
 

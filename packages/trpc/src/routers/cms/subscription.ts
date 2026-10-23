@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import Stripe from "stripe";
 import z from "zod";
 
@@ -57,7 +57,7 @@ export const subscriptionRouter = createTRPCRouter({
       const [row] = await db
         .select()
         .from(subscriptions)
-        .where(eq(subscriptions.repoId, project.repoId))
+        .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(project.repoId)))
         .limit(1);
       return {
         repoId: project.repoId,
@@ -73,7 +73,7 @@ export const subscriptionRouter = createTRPCRouter({
       const [row] = await db
         .select({ stripeCustomerId: subscriptions.stripeCustomerId })
         .from(subscriptions)
-        .where(eq(subscriptions.repoId, input.repoId))
+        .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(input.repoId)))
         .limit(1);
       if (!row?.stripeCustomerId) return [];
       const invoices = await stripe.invoices.list({
@@ -96,7 +96,7 @@ export const subscriptionRouter = createTRPCRouter({
       const [row] = await db
         .select({ stripeCustomerId: subscriptions.stripeCustomerId })
         .from(subscriptions)
-        .where(eq(subscriptions.repoId, input.repoId))
+        .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(input.repoId)))
         .limit(1);
       if (!row?.stripeCustomerId) {
         throw new TRPCError({

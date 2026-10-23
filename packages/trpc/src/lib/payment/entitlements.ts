@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
 import { subscriptions } from "@workspace/drizzle/schema";
@@ -20,8 +20,12 @@ import {
 // it into an Entitlement. Every gate and the hub's usePlans hook go through
 // here, so "what can this project do" has exactly one answer.
 
+// The tenant key is the subscription's metadata, not a column: a sub grants
+// access to whatever `metadata.repoId` names (website repo or agency client).
+const metaRepoId = sql<string>`${subscriptions.metadata} ->> 'repoId'`;
+
 const subscriptionColumns = {
-  repoId: subscriptions.repoId,
+  repoId: sql<number>`(${subscriptions.metadata} ->> 'repoId')::bigint`,
   status: subscriptions.status,
   priceId: subscriptions.priceId,
   cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
@@ -33,8 +37,8 @@ const getEntitlements = async (repoIds: number[]): Promise<Entitlement[]> => {
   const rows = await db
     .select(subscriptionColumns)
     .from(subscriptions)
-    .where(inArray(subscriptions.repoId, repoIds));
-  const byRepo = new Map(rows.map((row) => [row.repoId, row]));
+    .where(inArray(metaRepoId, repoIds.map(String)));
+  const byRepo = new Map(rows.map((row) => [Number(row.repoId), row]));
   return repoIds.map((repoId) => entitlementFor(repoId, byRepo.get(repoId) ?? null));
 };
 
@@ -42,7 +46,7 @@ const getEntitlement = async (repoId: number): Promise<Entitlement> => {
   const [row] = await db
     .select(subscriptionColumns)
     .from(subscriptions)
-    .where(eq(subscriptions.repoId, repoId))
+    .where(eq(metaRepoId, String(repoId)))
     .limit(1);
   return entitlementFor(repoId, row ?? null);
 };

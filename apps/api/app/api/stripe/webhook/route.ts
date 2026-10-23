@@ -3,6 +3,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 
 import { stripe } from "@workspace/trpc/lib/payment/stripe";
+import { planForPrice } from "@workspace/trpc/lib/payment/plans";
 import { MIRROR_EVENTS, syncStripeEvent } from "@workspace/trpc/lib/payment/stripe-sync";
 import { trackPurchase } from "@workspace/google-analytics/server";
 import { db } from "@workspace/drizzle/index";
@@ -83,10 +84,12 @@ async function syncCmsSubscription(customerId: string, subscriptionId: string | 
   //   website plan's "deleted" event arriving after the agency plan started);
   // - a new live sub replaces the old live one, which is canceled with a
   //   prorated credit so the client never pays twice for the same project.
+  // One live row per tenant, keyed on metadata (the repoId column is gone).
+  const metaRepoId = sql`${subscriptions.metadata} ->> 'repoId'`;
   const [current] = await db
     .select({ id: subscriptions.id, status: subscriptions.status })
     .from(subscriptions)
-    .where(eq(subscriptions.repoId, repoId))
+    .where(eq(metaRepoId, String(repoId)))
     .limit(1);
   if (current && current.id !== sub.id && LIVE_STATUSES.has(current.status)) {
     if (!LIVE_STATUSES.has(sub.status)) return;
@@ -121,10 +124,19 @@ async function syncCmsSubscription(customerId: string, subscriptionId: string | 
     ? new Date(item.current_period_end * 1000)
     : null;
 
+  // What this subscription grants lives entirely in metadata — the
+  // service-agnostic key every entitlement query reads.
+  const product = planForPrice(price?.id)?.split(":")[0] ?? "";
+  const metadata = {
+    repoId: String(repoId),
+    userId: userId ?? "",
+    product,
+    name: sub.metadata.name || "",
+  };
+
   const values = {
     // Also set on replacement: the row follows the project's live sub.
     id: sub.id,
-    repoId,
     userId: userId ?? "",
     email: sub.metadata.email || "",
     plan: "paid" as const,
@@ -137,18 +149,24 @@ async function syncCmsSubscription(customerId: string, subscriptionId: string | 
     recurringInterval: price?.recurring?.interval ?? null,
     currentPeriodEnd: periodEnd,
     cancelAtPeriodEnd: sub.cancel_at_period_end,
+    metadata,
     updatedAt: new Date(),
   };
 
-  await db
-    .insert(subscriptions)
-    .values({ ...values, createdAt: new Date(sub.created * 1000) })
-    .onConflictDoUpdate({
-      // Partial unique index: one CMS row per project.
-      target: subscriptions.repoId,
-      targetWhere: sql`repo_id is not null`,
-      set: values,
-    });
+  // Select-then-write keyed on metadata (no onConflict on an expression index).
+  // The row for this tenant follows its live sub, so update it by id even when
+  // the Stripe sub id changed (plan replacement); the unique metadata index
+  // backstops any race.
+  if (current) {
+    await db
+      .update(subscriptions)
+      .set(values)
+      .where(eq(subscriptions.id, current.id));
+  } else {
+    await db
+      .insert(subscriptions)
+      .values({ ...values, createdAt: new Date(sub.created * 1000) });
+  }
 }
 
 export async function POST(req: Request) {

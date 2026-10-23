@@ -1,0 +1,2 @@
+CREATE INDEX "idx_subscription_meta_repo" ON "subscription" USING btree (("metadata" ->> 'repoId'));--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_subscription_meta_repo" ON "subscription" USING btree (("metadata" ->> 'repoId')) WHERE "subscription"."metadata" ->> 'repoId' is not null;

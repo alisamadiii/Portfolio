@@ -32,7 +32,7 @@ export const statsRouter = createTRPCRouter({
           .from(subscriptions)
           // Product subscriptions only — CMS website rows have repoId set.
           .where(
-            and(eq(subscriptions.status, "active"), isNull(subscriptions.repoId))
+            and(eq(subscriptions.status, "active"), sql`${subscriptions.metadata} ->> 'repoId' is null`)
           ),
         db.select({ count: count() }).from(source),
       ]);

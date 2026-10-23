@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 import { z } from "zod";
 
@@ -421,7 +421,7 @@ export const paymentsRouter = createTRPCRouter({
           // Product subscriptions only — per-project CMS rows (repoId set)
           // belong to the hub's per-project Billing panel.
           .where(
-            and(eq(subscriptions.userId, userId), isNull(subscriptions.repoId))
+            and(eq(subscriptions.userId, userId), sql`${subscriptions.metadata} ->> 'repoId' is null`)
           )
           .orderBy(desc(subscriptions.createdAt));
 
@@ -482,7 +482,7 @@ export const paymentsRouter = createTRPCRouter({
         .where(
           and(
             eq(subscriptions.userId, ctx.session.user.id),
-            isNull(subscriptions.repoId)
+            sql`${subscriptions.metadata} ->> 'repoId' is null`
           )
         ),
       db

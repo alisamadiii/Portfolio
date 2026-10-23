@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
 import { subscriptions } from "@workspace/drizzle/schema";
@@ -24,7 +24,7 @@ export async function settleAndCancel(repoId: number): Promise<void> {
       status: subscriptions.status,
     })
     .from(subscriptions)
-    .where(eq(subscriptions.repoId, repoId))
+    .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(repoId)))
     .limit(1);
 
   // Paid rows carry the Stripe sub id as the row id. Legacy free rows
