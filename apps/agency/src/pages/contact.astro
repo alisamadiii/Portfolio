@@ -30,9 +30,10 @@ const channels = [
   {
     label: "Schedule",
     value: "Book a Meeting",
-    href: "https://cal.com/alisamadii",
+    href: "#",
     note: "Pick a time that works and we'll talk through your project.",
-    external: true,
+    external: false,
+    booking: true,
   },
   {
     label: "Phone",
@@ -95,25 +96,38 @@ const channels = [
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;">
           {
-            channels.map((c) => (
-              <a
-                href={c.href}
-                target={c.external ? "_blank" : undefined}
-                rel={c.external ? "noopener noreferrer" : undefined}
-                class="lift"
-                style="text-decoration:none;color:rgb(27,26,23);border-radius:18px;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.08) 0px 10px 28px;padding:26px;display:flex;flex-direction:column;gap:10px;"
-              >
-                <p class="mono" style="margin:0;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
-                  {c.label}
-                </p>
-                <p style="margin:0;font-size:18px;font-weight:600;letter-spacing:-0.01em;color:rgb(194,69,31);">
-                  {c.value}
-                </p>
-                <p style="margin:0;font-size:14px;line-height:1.55;color:rgb(103,98,90);">
-                  {c.note}
-                </p>
-              </a>
-            ))
+            channels.map((c) => {
+              const inner = (
+                <>
+                  <p class="mono" style="margin:0;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);">
+                    {c.label}
+                  </p>
+                  <p style="margin:0;font-size:18px;font-weight:600;letter-spacing:-0.01em;color:rgb(194,69,31);">
+                    {c.value}
+                  </p>
+                  <p style="margin:0;font-size:14px;line-height:1.55;color:rgb(103,98,90);">
+                    {c.note}
+                  </p>
+                </>
+              );
+              const cardStyle =
+                "text-align:left;text-decoration:none;color:rgb(27,26,23);border-radius:18px;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.08) 0px 10px 28px;padding:26px;display:flex;flex-direction:column;gap:10px;";
+              return c.booking ? (
+                <button type="button" data-booking class="lift" style={`${cardStyle}border:none;cursor:pointer;font:inherit;width:100%;`}>
+                  {inner}
+                </button>
+              ) : (
+                <a
+                  href={c.href}
+                  target={c.external ? "_blank" : undefined}
+                  rel={c.external ? "noopener noreferrer" : undefined}
+                  class="lift"
+                  style={cardStyle}
+                >
+                  {inner}
+                </a>
+              );
+            })
           }
         </div>
       </div>

@@ -42,6 +42,14 @@ const {
 const SITE = "https://www.alisamadii.com";
 const OG_IMAGE = `${SITE}/og-image.png`;
 
+// Hub lead-capture + booking scripts, pointed at the local api in dev.
+const apiBase = import.meta.env.DEV
+  ? "http://localhost:3000"
+  : "https://api.alisamadii.com";
+const captureScripts =
+  `<script src="${apiBase}/f.js" data-key="nJCBP6mhoapkA4NE" defer></script>` +
+  `<script src="${apiBase}/b.js" data-key="nJCBP6mhoapkA4NE" defer></script>`;
+
 // The page's own URL/@id — falls back to SITE for the home page.
 const pageUrl = canonical ?? SITE;
 
@@ -182,5 +190,18 @@ const jsonLd = {
   <body class={bodyClass}>
     <slot />
     <SearchPalette />
+
+    {
+      /*
+      Lead capture + booking, loaded site-wide:
+      - f.js keeps the ad click (gclid/UTM) in a cookie so a quote submitted on
+        any page is credited to the ad that brought the visitor.
+      - b.js turns any [data-booking] element into the appointment dialog.
+      set:html so the tags are real parser-inserted scripts (their
+      document.currentScript lookup needs that); both re-bind on Astro soft
+      navigations via their own astro:page-load handlers.
+    */
+    }
+    <Fragment set:html={captureScripts} />
   </body>
 </html>

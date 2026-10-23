@@ -655,7 +655,12 @@
 
   function boot() {
     var hosts = document.querySelectorAll("[data-booking]");
-    for (var i = 0; i < hosts.length; i++) setup(hosts[i]);
+    for (var i = 0; i < hosts.length; i++) {
+      // Bind each trigger once, even if boot runs again (SPA navigations).
+      if (hosts[i].__bkBound) continue;
+      hosts[i].__bkBound = true;
+      setup(hosts[i]);
+    }
   }
 
   if (document.readyState === "loading") {
@@ -663,4 +668,7 @@
   } else {
     boot();
   }
+  // Astro View Transitions / other client routers swap the DOM without a full
+  // load; re-scan so triggers on the new page get bound.
+  document.addEventListener("astro:page-load", boot);
 })();

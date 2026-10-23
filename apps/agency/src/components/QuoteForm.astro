@@ -59,7 +59,8 @@ const labelClass =
 
     <form
       class:list={["quote-form space-y-5", compact ? "mt-5" : "mt-8"]}
-      novalidate
+      data-lead-form="Quote"
+      data-success="Thanks, we'll reply within a day."
     >
       <div
         class:list={["grid grid-cols-1 gap-5", compact ? "" : "sm:grid-cols-2"]}
@@ -160,124 +161,45 @@ const labelClass =
           class={`${inputClass} resize-none`}></textarea>
       </div>
 
+      {/* Honeypot: hidden from people, bots fill it in (f.js drops those). */}
+      <input
+        type="text"
+        name="_hp"
+        tabindex="-1"
+        autocomplete="off"
+        style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"
+        aria-hidden="true"
+      />
+
       <div class="flex flex-col gap-3 pt-1">
         <button
           type="submit"
           class:list={[
-            "quote-submit mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60",
+            "mag-btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60",
             compact ? "" : "sm:w-auto sm:px-8",
           ]}
         >
-          <span class="quote-submit-label">Request a Quote</span>
+          Request a Quote
         </button>
-        <p class="quote-status hidden text-sm" role="status"></p>
+        {/* f.js shows the thank-you here after a successful submit. */}
+        <p data-lead-message class="text-sm" role="status"></p>
       </div>
     </form>
   </div>
 </div>
 
 <script is:inline data-astro-rerun>
+  // Preselect the plan from ?plan= (pricing cards + offer CTAs deep-link here).
+  // Submission is handled by the shared lead-capture script (f.js); this form
+  // just needs data-lead-form, which it has.
   (() => {
-    const API_BASE =
-      location.hostname === "127.0.0.1" || location.hostname === "localhost"
-        ? "http://localhost:3000"
-        : "https://api.alisamadii.com";
-    const QUOTE_API = `${API_BASE}/api/agency/quote`;
-
     const plan = new URLSearchParams(location.search).get("plan");
-
+    if (!plan) return;
     document.querySelectorAll(".quote-form").forEach((form) => {
-      if (form.dataset.bound) return;
-      form.dataset.bound = "true";
-
-      const fields = form.elements;
-      const btn = form.querySelector(".quote-submit");
-      const label = form.querySelector(".quote-submit-label");
-      const status = form.querySelector(".quote-status");
-
-      // Preselect the plan from ?plan= (pricing card + offer page CTAs).
-      if (plan && fields.plan.querySelector(`option[value="${plan}"]`)) {
-        fields.plan.value = plan;
+      const select = form.elements.plan;
+      if (select && select.querySelector(`option[value="${plan}"]`)) {
+        select.value = plan;
       }
-
-      const setStatus = (msg, ok) => {
-        status.textContent = msg;
-        status.classList.remove("hidden", "text-emerald-700", "text-red-600");
-        status.classList.add(ok ? "text-emerald-700" : "text-red-600");
-      };
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const name = fields.name.value.trim();
-        const email = fields.email.value.trim();
-        const message = fields.message.value.trim();
-        const business = fields.business?.value.trim() ?? "";
-        const phone = fields.phone?.value.trim() ?? "";
-
-        if (!name) return setStatus("Please enter your name.", false);
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-          return setStatus("Please enter a valid email address.", false);
-        if (!message)
-          return setStatus("Tell us a little about your project.", false);
-
-        const selectedPlan = fields.plan.value;
-        window.track?.("quote_form_submit", { plan: selectedPlan });
-
-        btn.disabled = true;
-        label.textContent = "Sending…";
-        status.classList.add("hidden");
-
-        try {
-          const res = await fetch(QUOTE_API, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name,
-              email,
-              message,
-              plan: fields.plan.value,
-              ...(business && { business }),
-              ...(phone && { phone }),
-            }),
-          });
-
-          if (res.status === 429) {
-            window.track?.("quote_form_error", {
-              plan: selectedPlan,
-              reason: "rate_limited",
-            });
-            setStatus(
-              "Looks like you've sent a few requests already — give it a little while and try again, or email agency@alisamadii.com directly.",
-              false
-            );
-            return;
-          }
-          const payload = await res.json().catch(() => null);
-          if (!res.ok || !payload?.ok) {
-            throw new Error(payload?.error || "Failed to send.");
-          }
-
-          window.track?.("generate_lead", { plan: selectedPlan });
-          form.reset();
-          setStatus("Thanks — we'll reply within a day.", true);
-          label.textContent = "Sent";
-        } catch {
-          window.track?.("quote_form_error", {
-            plan: selectedPlan,
-            reason: "request_failed",
-          });
-          setStatus(
-            "Something went wrong sending your request. Please try again, or email agency@alisamadii.com.",
-            false
-          );
-        } finally {
-          if (label.textContent !== "Sent") {
-            label.textContent = "Request a Quote";
-          }
-          btn.disabled = false;
-        }
-      });
     });
   })();
 </script>
