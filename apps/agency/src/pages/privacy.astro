@@ -2,7 +2,7 @@
 // Privacy — migrated to the mockup design system (MockupLayout).
 import MockupLayout from "../layouts/MockupLayout.astro";
 
-const updated = "August 2025";
+const updated = "October 2026";
 ---
 
 <MockupLayout
@@ -71,9 +71,83 @@ const updated = "August 2025";
           <h2>Third-party services</h2>
           <p>
             We rely on a small number of trusted providers to run our business
-            — including <strong>Stripe</strong> for payments and our hosting and
-            email providers for delivering the site and communicating with you.
-            Each processes data only as needed to provide their service.
+            — including <strong>Stripe</strong> for payments,
+            <strong>Google</strong> for optional calendar integration (see
+            below), and our hosting and email providers for delivering the site
+            and communicating with you. Each processes data only as needed to
+            provide their service.
+          </p>
+
+          <h2>Google user data (Google Calendar)</h2>
+          <p>
+            Our client dashboard offers an optional appointment booking feature.
+            If you choose to connect your Google account, we request access to
+            the following Google Calendar scopes:
+          </p>
+          <ul>
+            <li>
+              <strong>Free/busy availability</strong>
+              (<code>calendar.freebusy</code>) — read when your calendar is busy
+              so the booking widget only offers time slots when you are
+              available. We never read event titles, descriptions, attendees, or
+              any other event content through this scope.
+            </li>
+            <li>
+              <strong>Calendar events</strong>
+              (<code>calendar.events</code>) — create an event on your calendar
+              when a visitor confirms a booking, so the appointment appears in
+              your schedule with the visitor's name and contact details.
+            </li>
+          </ul>
+          <p>
+            We use this access solely to power the booking feature you enabled.
+            Specifically:
+          </p>
+          <ul>
+            <li>
+              We store the OAuth tokens Google issues to us, encrypted, in our
+              database so the connection keeps working between sessions.
+            </li>
+            <li>
+              We store the bookings created through the widget (date, time,
+              visitor name and contact details) in our database so you can see
+              them in your dashboard.
+            </li>
+            <li>
+              We do <strong>not</strong> store your calendar contents.
+              Availability is checked live at the moment a visitor views the
+              booking widget and is not retained.
+            </li>
+            <li>
+              We do not use Google user data for advertising, do not sell it,
+              and do not share it with third parties. No humans read this data
+              except as needed for security, to comply with the law, or with
+              your explicit consent for support.
+            </li>
+            <li>
+              We do not use Google user data to develop, improve, or train
+              machine-learning or artificial-intelligence models.
+            </li>
+          </ul>
+          <p>
+            You can disconnect Google Calendar at any time from your dashboard,
+            or revoke our access from your
+            <a
+              href="https://myaccount.google.com/permissions"
+              target="_blank"
+              rel="noopener noreferrer">Google account permissions</a
+            >. On disconnection we delete the stored tokens. You can also email
+            us to request deletion of any stored booking data.
+          </p>
+          <p>
+            Our use and transfer of information received from Google APIs
+            adheres to the
+            <a
+              href="https://developers.google.com/terms/api-services-user-data-policy"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Google API Services User Data Policy</a
+            >, including the Limited Use requirements.
           </p>
 
           <h2>Your rights</h2>
