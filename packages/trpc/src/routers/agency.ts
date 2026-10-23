@@ -10,6 +10,7 @@ import {
   ilike,
   inArray,
   isNotNull,
+  isNull,
   lt,
   ne,
   or,
@@ -1130,9 +1131,28 @@ export const agencyRouter = createTRPCRouter({
     if (!membership) return null;
 
     const { client, role } = membership;
-    // No website linked yet: the agency UI has nothing to show.
-    const repoId = client.repoId;
-    if (!repoId) return null;
+    // Every agency client needs a tenant id (leads/booking/entitlement key),
+    // website or not. Older clients may have none; mint one on first visit so
+    // the agency UI works without requiring a linked website.
+    let repoId = client.repoId;
+    if (!repoId) {
+      const [updated] = await db
+        .update(agencyClient)
+        .set({ repoId: syntheticRepoId() })
+        .where(and(eq(agencyClient.id, client.id), isNull(agencyClient.repoId)))
+        .returning({ repoId: agencyClient.repoId });
+      // A concurrent request may have set it first; re-read to be safe.
+      repoId =
+        updated?.repoId ??
+        (
+          await db.query.agencyClient.findFirst({
+            where: eq(agencyClient.id, client.id),
+            columns: { repoId: true },
+          })
+        )?.repoId ??
+        null;
+      if (!repoId) return null;
+    }
     const entitlement = await getEntitlement(repoId);
     if (entitlement.product !== "agency" && !isAdminUser(ctx.session.user)) {
       return null;

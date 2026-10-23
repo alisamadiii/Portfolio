@@ -28,7 +28,11 @@ export default async function HubLayout({
   const view = resolveHubView(eligible, cookieValue);
 
   if (view === "website") {
-    return <HubViewProvider view="website">{website}</HubViewProvider>;
+    return (
+      <HubViewProvider view="website" eligible={eligible}>
+        {website}
+      </HubViewProvider>
+    );
   }
 
   return (

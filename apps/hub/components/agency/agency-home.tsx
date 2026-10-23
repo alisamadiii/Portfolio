@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 
 import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
+import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
@@ -21,6 +22,38 @@ import { ArrowRight, ExternalLink, Globe, Pencil } from "@/components/icon";
 
 const WebsiteCard = () => {
   const { repoId, repo, websiteUrl, role } = useAgency();
+  // No linked project: the client runs their own site, or doesn't have one yet.
+  const hasWebsite = Boolean(repo);
+
+  if (!hasWebsite) {
+    return (
+      <div className="bg-card flex flex-wrap items-center gap-4 rounded-lg border p-5">
+        <div className="bg-muted grid size-11 shrink-0 place-items-center rounded-full">
+          <Globe className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-semibold">Your website</p>
+          <p className="text-muted-foreground text-[13px]">
+            You&apos;re probably using your own website: add our scripts to it on
+            the Origins page. If you don&apos;t have one yet, tell us and
+            we&apos;ll build it and put it here for you to edit.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="lg"
+            render={<Link href="/origins" />}
+          >
+            Set up origins
+          </Button>
+          <RequestDialog>
+            <Button size="lg">Tell us</Button>
+          </RequestDialog>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card flex flex-wrap items-center gap-4 rounded-lg border p-5">
