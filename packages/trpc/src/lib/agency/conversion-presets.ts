@@ -267,6 +267,22 @@ export function buildUpdate(
   return { body, updateMask: changed.map((key) => FIELD_PATHS[key]).join(",") };
 }
 
+// Sources whose capture counts as the "lead" stage (manual entries don't).
+export const LEAD_STAGE_SOURCES = ["form", "booking"] as const;
+
+/**
+ * Whether a lead's "lead" stage should ever be reported. Pure, shared with
+ * the upload gate and tests: canceled bookings must not become conversions.
+ */
+export const leadStageEligible = (lead: {
+  source: string;
+  status: string;
+  bookingCanceledAt?: Date | null;
+}) =>
+  lead.status !== "spam" &&
+  (LEAD_STAGE_SOURCES as readonly string[]).includes(lead.source) &&
+  !lead.bookingCanceledAt;
+
 export type TrackingStatus =
   "recording" | "no_recent" | "awaiting" | "inactive";
 

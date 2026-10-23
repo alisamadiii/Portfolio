@@ -4,6 +4,7 @@ import {
   buildUpdate,
   CONVERSION_PRESETS,
   findPreset,
+  leadStageEligible,
   planPreset,
   trackingStatus,
   type EditableFields,
@@ -148,5 +149,27 @@ describe("booking preset action", () => {
     expect(booking.category).toBe("BOOK_APPOINTMENT");
     expect(booking.type).toBe("UPLOAD_CLICKS");
     expect(booking.primaryForGoal).toBe(true);
+  });
+});
+
+describe("leadStageEligible", () => {
+  it("form and booking leads count as the lead stage, manual does not", () => {
+    expect(leadStageEligible({ source: "form", status: "new" })).toBe(true);
+    expect(leadStageEligible({ source: "booking", status: "new" })).toBe(true);
+    expect(leadStageEligible({ source: "manual", status: "new" })).toBe(false);
+  });
+
+  it("a canceled booking never becomes a conversion", () => {
+    expect(
+      leadStageEligible({
+        source: "booking",
+        status: "new",
+        bookingCanceledAt: new Date("2026-10-23T12:00:00Z"),
+      })
+    ).toBe(false);
+  });
+
+  it("spam is never reported", () => {
+    expect(leadStageEligible({ source: "form", status: "spam" })).toBe(false);
   });
 });

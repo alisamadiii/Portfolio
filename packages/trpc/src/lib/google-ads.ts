@@ -151,6 +151,8 @@ export async function uploadConversion(deal: ConversionUpload) {
   const event: Record<string, unknown> = {
     eventTimestamp: deal.convertedAt.toISOString(),
     transactionId: deal.transactionId,
+    // Data Manager requires an event source; our conversions are website leads.
+    eventSource: "WEB",
   };
   // Only one click ID per conversion is allowed.
   if (deal.gclid) event.adIdentifiers = { gclid: deal.gclid };

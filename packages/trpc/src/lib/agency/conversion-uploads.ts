@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, gte, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/pool";
 import {
@@ -15,6 +15,7 @@ import {
   retrieveIngestStatus,
   uploadConversion,
 } from "../google-ads";
+import { leadStageEligible } from "./conversion-presets";
 import { ingestVerdict } from "./ingest-status";
 
 // ─── New-lead and qualified uploads ──────────────────────────────
@@ -40,8 +41,6 @@ type Client = {
 type Lead = typeof agencyLead.$inferSelect;
 
 const QUALIFIED_STATUSES = ["qualified", "won"] as const;
-// Sources whose capture counts as the "lead" stage (manual entries don't).
-const LEAD_SOURCES = ["form", "booking"] as const;
 
 /** Whether this lead should be reported for the stage (ignoring whether it already was). */
 const wants = (lead: Lead, stage: Stage) =>
@@ -50,7 +49,7 @@ const wants = (lead: Lead, stage: Stage) =>
     lead.gclid || lead.gbraid || lead.wbraid || lead.email || lead.phone
   ) &&
   (stage === "lead"
-    ? (LEAD_SOURCES as readonly string[]).includes(lead.source)
+    ? leadStageEligible(lead)
     : (QUALIFIED_STATUSES as readonly string[]).includes(lead.status));
 
 /**
@@ -207,7 +206,12 @@ export async function syncConversionUploads(client: Client) {
               ? and(eq(agencyLead.source, "form"), pendingStage("lead"))
               : sql`false`,
             (actions.booking ?? actions.lead)
-              ? and(eq(agencyLead.source, "booking"), pendingStage("lead"))
+              ? and(
+                  eq(agencyLead.source, "booking"),
+                  // A canceled booking never becomes a conversion.
+                  isNull(agencyLead.bookingCanceledAt),
+                  pendingStage("lead")
+                )
               : sql`false`,
             actions.qualified
               ? and(
