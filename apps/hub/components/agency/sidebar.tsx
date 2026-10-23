@@ -33,6 +33,7 @@ import {
   ChartColumn,
   FileText,
   CreditCard,
+  Globe,
   HelpCircle,
   House,
   Inbox,
@@ -95,6 +96,7 @@ const overviewPages: {
 const accountPages = [
   { title: "Account", url: "/account", icon: Settings },
   { title: "Integrations", url: "/integrations", icon: Blocks },
+  { title: "Origins", url: "/origins", icon: Globe },
   { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Guide", url: "/guide", icon: BookOpen },
 ];

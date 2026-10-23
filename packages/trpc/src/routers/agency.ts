@@ -97,6 +97,8 @@ import {
   updateConversionAction,
   uploadConversion,
 } from "../lib/google-ads";
+import { syntheticRepoId } from "../lib/cms/upload-slug";
+import { normalizeOrigin } from "../lib/agency/origins";
 
 // ─── Lead-generation agency ──────────────────────────────────────
 // Agency clients see the agency UI in the Hub: their one website, the leads
@@ -636,9 +638,19 @@ const adminRouter = createTRPCRouter({
         }
       }
 
+      // Every client needs a tenant id for leads/booking/entitlement. Use the
+      // linked website's repoId when given, otherwise keep the existing one, or
+      // mint a standalone synthetic id for a website-less client.
+      const existing = await db.query.agencyClient.findFirst({
+        where: eq(agencyClient.userId, owner.id),
+        columns: { repoId: true },
+      });
+      const repoId =
+        input.repoId ?? existing?.repoId ?? syntheticRepoId();
+
       const values = {
         userId: owner.id,
-        repoId: input.repoId,
+        repoId,
         googleAdsCustomerId: input.googleAdsCustomerId
           ? normalizeCustomerId(input.googleAdsCustomerId)
           : null,
@@ -1142,6 +1154,28 @@ export const agencyRouter = createTRPCRouter({
   leads: leadsRouter,
 
   booking: bookingRouter,
+
+  // Domains the client's capture + booking scripts are allowed to run on.
+  origins: createTRPCRouter({
+    get: agencyProcedure.query(({ ctx }) => ctx.client.origins ?? []),
+    set: agencyWriteProcedure
+      .input(z.object({ origins: z.array(z.string().trim().max(253)).max(50) }))
+      .mutation(async ({ ctx, input }) => {
+        // Store bare hostnames, deduped; drop anything without a host.
+        const cleaned = [
+          ...new Set(
+            input.origins
+              .map((o) => normalizeOrigin(o))
+              .filter((h): h is string => Boolean(h))
+          ),
+        ];
+        await db
+          .update(agencyClient)
+          .set({ origins: cleaned })
+          .where(eq(agencyClient.id, ctx.client.id));
+        return cleaned;
+      }),
+  }),
 
   // Saved copies of the Monday report emails, newest week first.
   reports: createTRPCRouter({

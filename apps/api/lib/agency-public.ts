@@ -57,20 +57,20 @@ export const clientIp = (req: Request) =>
 
 // ─── Origin check ───────────────────────────────────────────────
 
-export const hostOf = (value: string | null | undefined) => {
-  if (!value) return null;
-  try {
-    return new URL(value.includes("://") ? value : `https://${value}`).hostname;
-  } catch {
-    return null;
-  }
-};
+export { hostOf } from "@workspace/trpc/lib/agency/origins";
+import { hostOf, isOriginAllowed } from "@workspace/trpc/lib/agency/origins";
 
 const withoutWww = (host: string) => host.replace(/^www\./, "");
 
+/**
+ * The request may post from a host on the client's own `origins` list, or
+ * (for clients that still have a linked website) one of the website's domains.
+ * Dev bypasses the check entirely.
+ */
 export const isAllowedOrigin = (
   origin: string | null,
-  project: {
+  client: {
+    origins: string[] | null;
     websiteUrl: string | null;
     customDomain: string | null;
     freeSubdomain: string | null;
@@ -80,28 +80,37 @@ export const isAllowedOrigin = (
   if (!host) return false;
   if (process.env.NODE_ENV !== "production") return true;
 
-  const own = [hostOf(project.websiteUrl), hostOf(project.customDomain)]
+  // The explicit allow-list the client manages in the hub.
+  if (isOriginAllowed(client.origins, host)) return true;
+
+  // Backward-compat: a client with a linked website keeps its site's domains.
+  const own = [hostOf(client.websiteUrl), hostOf(client.customDomain)]
     .filter((h): h is string => Boolean(h))
     .map(withoutWww);
   if (own.includes(withoutWww(host))) return true;
 
   // Free subdomains are "<slug>.<content-pilot wildcard>" on our own domain.
   return Boolean(
-    project.freeSubdomain &&
-      host.startsWith(`${project.freeSubdomain}.`) &&
+    client.freeSubdomain &&
+      host.startsWith(`${client.freeSubdomain}.`) &&
       host.endsWith(".alisamadii.com")
   );
 };
 
 // ─── Client lookup ──────────────────────────────────────────────
 
-/** The agency client behind a public form key; null when unknown or unlinked. */
+/**
+ * The agency client behind a public form key; null when unknown. The client's
+ * tenant id is `agency_client.repoId` (website-less clients have a synthetic
+ * one), so we no longer require a linked website — the website is left-joined
+ * only to keep its domains + name when one exists.
+ */
 export async function findClientByFormKey(formKey: string) {
   const [client] = await db
     .select({
-      // From the joined website: a client with no website linked has no form.
-      repoId: hubProject.repoId,
+      repoId: agencyClient.repoId,
       userId: agencyClient.userId,
+      origins: agencyClient.origins,
       leadNotifyEmail: agencyClient.leadNotifyEmail,
       ownerEmail: userTable.email,
       websiteUrl: hubProject.websiteUrl,
@@ -114,10 +123,12 @@ export async function findClientByFormKey(formKey: string) {
     })
     .from(agencyClient)
     .innerJoin(userTable, eq(userTable.id, agencyClient.userId))
-    .innerJoin(hubProject, eq(hubProject.repoId, agencyClient.repoId))
+    .leftJoin(hubProject, eq(hubProject.repoId, agencyClient.repoId))
     .where(eq(agencyClient.formKey, formKey))
     .limit(1);
-  return client ?? null;
+  // A client with no tenant id can't store leads; treat as not found.
+  if (!client || client.repoId == null) return null;
+  return client as typeof client & { repoId: number };
 }
 
 // ─── Attribution payload (shared zod fragment) ──────────────────

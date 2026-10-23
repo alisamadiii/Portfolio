@@ -157,12 +157,17 @@ export const agencyClient = pgTable("agency_client", {
     .notNull()
     .unique()
     .references(() => user.id, { onDelete: "cascade" }),
-  // The client's one website (hub_project.repoId). Null until it's built and
-  // linked: the client then sees "workspace not ready" instead of the agency UI.
+  // The client's tenant id for leads/booking/entitlement. When the client has
+  // a website it's that hub_project.repoId; a website-less client gets a
+  // standalone synthetic id (>= 1e12). Opaque bigint key, no FK.
   repoId: bigint("repo_id", { mode: "number" }).unique(),
 
-  // Public key the capture script posts with (f.js data-key).
+  // Public key the capture script posts with (f.js / b.js data-key).
   formKey: text("form_key").notNull().unique(),
+
+  // Hostnames the capture + booking scripts may run on (lead-source protection).
+  // The client manages this in the hub; empty/unset = nothing allowed in prod.
+  origins: jsonb("origins").$type<string[]>(),
 
   // Client account under the agency MCC, digits only ("1234567890").
   googleAdsCustomerId: text("google_ads_customer_id"),

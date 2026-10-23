@@ -110,7 +110,7 @@ export async function GET(
     return NextResponse.json(
       {
         // Shown in the widget's summary panel.
-        site: hostOf(client.websiteUrl) ?? client.repo,
+        site: hostOf(client.websiteUrl) ?? client.repo ?? client.origins?.[0] ?? "",
         types: activeTypes(settings!).map(({ id, name, description, meet }) => ({
           id,
           name,
@@ -385,7 +385,8 @@ export async function POST(
   // Report to Google Ads after responding (Book appointment action).
   after(() => reportLeadStage(client, lead!, "lead"));
 
-  const siteName = hostOf(client.websiteUrl) ?? client.repo;
+  const siteName =
+    hostOf(client.websiteUrl) ?? client.repo ?? client.origins?.[0] ?? "your site";
   const whenText = `${at.toISOString().slice(0, 10)} ${at.toISOString().slice(11, 16)} UTC`;
   const lines: [string, string][] = [
     ["Meeting", type.name],
