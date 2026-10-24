@@ -30,25 +30,28 @@ import { ViewSwitch } from "@/components/hub-view";
 import {
   Blocks,
   BookOpen,
+  Building2,
   ChartColumn,
-  FileText,
   CreditCard,
   Globe,
   HelpCircle,
-  House,
   Inbox,
   LogOut,
   Mail,
   Megaphone,
   Settings,
+  type LucideProps,
 } from "@/components/icon";
+// Home + Reports use the plain line icons (lucide), matching the other nav
+// items; the hub-local House/FileText are the filled two-tone variants.
+import { FileText, House } from "lucide-react";
 import { NavPages } from "@/components/nav-pages";
 
 // Pages tied to a plan feature only show when the client's tier includes it.
 const overviewPages: {
   title: string;
   url: string;
-  icon: typeof House;
+  icon: React.ComponentType<LucideProps>;
   feature?: Feature;
   badge?: React.ReactNode;
   items?: {
@@ -85,6 +88,7 @@ const overviewPages: {
   },
   { title: "Analytics", url: "/analytics", icon: ChartColumn },
   { title: "Reports", url: "/reports", icon: FileText, feature: "leads" },
+  { title: "Business Info", url: "/business-info", icon: Building2 },
   {
     title: "Newsletter",
     url: "/newsletter",

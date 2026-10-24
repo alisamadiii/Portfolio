@@ -279,7 +279,7 @@ export function AdsPerformance() {
     );
     return (ads.data?.days ?? []).map((day) => ({
       date: day.date,
-      cost: Math.round(day.cost),
+      cost: day.cost,
       leads: leadsByDay.get(day.date) ?? 0,
     }));
   }, [ads.data, leads.data]);
@@ -422,7 +422,31 @@ export function AdsPerformance() {
                     hide
                     allowDecimals={false}
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value, name, item) => (
+                          <>
+                            <div
+                              className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            <div className="flex flex-1 items-center justify-between gap-2 leading-none">
+                              <span className="text-muted-foreground">
+                                {chartConfig[name as keyof typeof chartConfig]
+                                  ?.label ?? name}
+                              </span>
+                              <span className="text-foreground font-mono font-medium tabular-nums">
+                                {name === "cost"
+                                  ? money(Number(value))
+                                  : Number(value).toLocaleString()}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      />
+                    }
+                  />
                   <ChartLegend content={<ChartLegendContent />} />
                   <Bar
                     yAxisId="cost"
