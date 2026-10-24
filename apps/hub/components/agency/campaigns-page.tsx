@@ -19,25 +19,66 @@ import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { useTRPC } from "@workspace/trpc/client";
-import type { AdCampaignKeyword } from "@workspace/drizzle/schema";
+import type { AdCampaign, AdCampaignKeyword } from "@workspace/drizzle/schema";
 
+import { sectionUrl } from "@/components/agency/business-info-config";
 import {
-  BUSINESS_SECTIONS,
-  sectionUrl,
-} from "@/components/agency/business-info-config";
+  FieldHead,
+  FrameCard,
+  StepShell,
+} from "@/components/agency/business-info/step-shell";
 import { useAgency } from "@/components/agency/use-agency";
-import { ArrowLeft, Plus, Trash } from "@/components/icon";
+import { ArrowLeft, ChevronRight, Plus, Trash } from "@/components/icon";
 
-const SECTION = BUSINESS_SECTIONS.find((s) => s.key === "keywords")!;
+/** "1,200" when every value parses as a number, else null. */
+function sumIfNumeric(values: string[]): string | null {
+  const present = values.map((v) => v.trim()).filter(Boolean);
+  if (present.length === 0) return null;
+  let total = 0;
+  for (const value of present) {
+    const parsed = Number(value.replace(/[$,\s]/g, ""));
+    if (!Number.isFinite(parsed)) return null;
+    total += parsed;
+  }
+  return total.toLocaleString();
+}
 
-/** The Keywords page: one card per category (= one planned campaign). */
+function avgIfNumeric(values: string[]): string | null {
+  const present = values.map((v) => v.trim()).filter(Boolean);
+  if (present.length === 0) return null;
+  let total = 0;
+  for (const value of present) {
+    const parsed = Number(value.replace(/[$,\s]/g, ""));
+    if (!Number.isFinite(parsed)) return null;
+    total += parsed;
+  }
+  return (total / present.length).toFixed(2);
+}
+
+function campaignSummary(campaign: AdCampaign): string {
+  const parts = [
+    `${campaign.keywords.length} ${campaign.keywords.length === 1 ? "keyword" : "keywords"}`,
+  ];
+  const searches = sumIfNumeric(
+    campaign.keywords.map((k) => k.avgMonthlySearches)
+  );
+  if (searches) parts.push(`${searches} monthly searches`);
+  const cpc = avgIfNumeric(campaign.keywords.map((k) => k.maxCpc));
+  if (cpc) parts.push(`$${cpc} avg max CPC`);
+  if (campaign.niche) parts.push(campaign.niche);
+  return parts.join(" · ");
+}
+
+/** Step 6 index: one row per keyword group (= one planned campaign). */
 export function CampaignsIndex() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { repoId } = useAgency();
 
-  const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ repoId }));
+  const campaigns = useQuery(
+    trpc.agency.campaigns.list.queryOptions({ repoId })
+  );
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -56,60 +97,77 @@ export function CampaignsIndex() {
   );
 
   return (
-    <div className="space-y-5">
-      <div>
-        <p className="text-muted-foreground/70 font-mono text-[12px] font-semibold">
-          {SECTION.num}
-        </p>
-        <h3 className="mt-1 text-[19px] font-bold tracking-tight">
-          {SECTION.title}
-        </h3>
-        <p className="text-muted-foreground mt-1 max-w-2xl text-[14px]">
-          {SECTION.lead}
-        </p>
-        {SECTION.description?.map((paragraph, i) => (
-          <p
-            key={i}
-            className="text-muted-foreground/90 mt-3 max-w-2xl text-[13.5px] leading-relaxed"
-          >
-            {paragraph}
+    <StepShell
+      stepKey="keywords"
+      aside={
+        <div className="ring-foreground/7 flex flex-col gap-3.5 rounded-[18px] p-6 ring-1">
+          <h2 className="text-[18px] font-semibold">
+            Where do the numbers come from?
+          </h2>
+          <p className="text-muted-foreground text-[15px] leading-relaxed">
+            Google's Keyword Planner (free, inside Google Ads) shows the
+            average monthly searches and a top-of-page bid for every keyword.
+            Copy them in here so we can size each campaign before spending a
+            dollar.
           </p>
-        ))}
-      </div>
-
+        </div>
+      }
+    >
       {campaigns.isPending ? (
-        <Skeleton className="h-32 w-full max-w-2xl rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-[18px]" />
       ) : campaigns.error ? (
-        <p className="text-destructive text-[14px]">{campaigns.error.message}</p>
+        <p className="text-destructive text-[15px]">
+          {campaigns.error.message}
+        </p>
       ) : (
-        <div className="max-w-2xl space-y-3">
-          {campaigns.data.length === 0 && (
-            <p className="text-muted-foreground text-[13.5px]">
-              No categories yet. Add one for each campaign you're planning.
-            </p>
-          )}
-          {campaigns.data.map((campaign) => (
-            <Link
-              key={campaign.id}
-              href={`${sectionUrl("keywords")}/${campaign.id}`}
-              className="bg-card hover:border-foreground/25 block rounded-2xl border p-4 transition-colors"
-            >
-              <p className="text-[15px] font-semibold">{campaign.name}</p>
-              <p className="text-muted-foreground mt-0.5 text-[13px]">
-                {campaign.keywords.length}{" "}
-                {campaign.keywords.length === 1 ? "keyword" : "keywords"}
-                {campaign.niche && <> · {campaign.niche}</>}
+        <>
+          {campaigns.data.length === 0 ? (
+            <div className="bg-card ring-foreground/7 rounded-[18px] p-7 ring-1">
+              <p className="text-muted-foreground text-[17px]">
+                No keyword groups yet. Add one for each campaign you're
+                planning, like "Online courses".
               </p>
-            </Link>
-          ))}
+            </div>
+          ) : (
+            <div className="bg-card ring-foreground/7 overflow-hidden rounded-[18px] shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1">
+              {campaigns.data.map((campaign, i) => (
+                <Link
+                  key={campaign.id}
+                  href={`${sectionUrl("keywords")}/${campaign.id}`}
+                  className={
+                    i < campaigns.data.length - 1
+                      ? "border-foreground/7 flex items-center gap-5 border-b px-6 py-5"
+                      : "flex items-center gap-5 px-6 py-5"
+                  }
+                >
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="text-[19px] font-semibold">
+                      {campaign.name}
+                    </span>
+                    <span className="text-muted-foreground text-[15px]">
+                      {campaignSummary(campaign)}
+                    </span>
+                  </span>
+                  <ChevronRight className="text-muted-foreground size-5 shrink-0" />
+                </Link>
+              ))}
+            </div>
+          )}
 
           <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={<Button variant="outline" />}>
-              <Plus className="size-4" /> Add category
+            <DialogTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  className="bg-foreground/5 hover:bg-foreground/8 self-start rounded-[11px] px-4.5 py-3 text-[16px]"
+                />
+              }
+            >
+              <Plus className="size-4" /> Add keyword group
             </DialogTrigger>
             <DialogContent className="sm:max-w-sm">
               <DialogHeader>
-                <DialogTitle>New category</DialogTitle>
+                <DialogTitle>New keyword group</DialogTitle>
               </DialogHeader>
               <Input
                 value={name}
@@ -131,9 +189,9 @@ export function CampaignsIndex() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
+        </>
       )}
-    </div>
+    </StepShell>
   );
 }
 
@@ -143,20 +201,23 @@ const EMPTY_KEYWORD: AdCampaignKeyword = {
   maxCpc: "",
 };
 
-/** One category's page: name, niche, and the keyword table. */
+/** One keyword group's editor: name, niche and the keyword table. */
 export function CampaignDetail({ campaignId }: { campaignId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { repoId } = useAgency();
 
-  const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ repoId }));
+  const campaigns = useQuery(
+    trpc.agency.campaigns.list.queryOptions({ repoId })
+  );
   const campaign = campaigns.data?.find((c) => c.id === campaignId);
 
   const [name, setName] = useState("");
   const [niche, setNiche] = useState("");
   const [rows, setRows] = useState<AdCampaignKeyword[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!campaign) return;
@@ -169,12 +230,15 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
   }, [campaign]);
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: trpc.agency.campaigns.pathKey() });
+    queryClient.invalidateQueries({
+      queryKey: trpc.agency.campaigns.pathKey(),
+    });
 
   const update = useMutation(
     trpc.agency.campaigns.update.mutationOptions({
       onSuccess: () => {
-        toast.success("Category saved.");
+        setSavedAt(new Date());
+        setDirty(false);
         invalidate();
       },
       onError: (error) => toast.error(error.message),
@@ -190,19 +254,21 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
     })
   );
 
-  if (campaigns.isPending)
-    return <Skeleton className="h-64 w-full max-w-2xl rounded-2xl" />;
-  if (campaigns.error)
-    return (
-      <p className="text-destructive text-[14px]">{campaigns.error.message}</p>
-    );
-  if (!campaign)
-    return (
-      <div className="space-y-3">
-        <p className="text-muted-foreground text-[14px]">Category not found.</p>
-        <BackLink />
-      </div>
-    );
+  const saveAnd = async (to?: string) => {
+    if (!campaign || !name.trim()) return;
+    try {
+      await update.mutateAsync({
+        repoId,
+        id: campaign.id,
+        name: name.trim(),
+        niche: niche.trim(),
+        keywords: rows,
+      });
+      if (to) router.push(to);
+    } catch {
+      // onError toasted
+    }
+  };
 
   const setRow = (i: number, patch: Partial<AdCampaignKeyword>) => {
     setRows((prev) => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
@@ -210,132 +276,160 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
   };
 
   return (
-    <div className="max-w-2xl space-y-5">
-      <BackLink />
-
-      <div className="space-y-4">
-        <div>
-          <p className="text-foreground/80 mb-1.5 text-[13px] font-medium">
-            Category name
+    <StepShell
+      stepKey="keywords"
+      footer={{ dirty, saving: update.isPending, savedAt, saveAnd }}
+      aside={
+        <div className="ring-foreground/7 flex flex-col gap-3.5 rounded-[18px] p-6 ring-1">
+          <h2 className="text-[18px] font-semibold">Reading the numbers</h2>
+          <p className="text-muted-foreground text-[15px] leading-relaxed">
+            Avg. monthly searches tells you how many people look for this each
+            month; max CPC is roughly what one click costs. High searches and a
+            CPC you can afford make a keyword worth bidding on.
           </p>
-          <Input
-            value={name}
-            className="max-w-md"
-            onChange={(e) => {
-              setName(e.target.value);
-              setDirty(true);
-            }}
-          />
         </div>
-        <div>
-          <p className="text-foreground/80 mb-1.5 text-[13px] font-medium">
-            Niche
+      }
+    >
+      {campaigns.isPending ? (
+        <Skeleton className="h-64 w-full rounded-[18px]" />
+      ) : campaigns.error ? (
+        <p className="text-destructive text-[15px]">
+          {campaigns.error.message}
+        </p>
+      ) : !campaign ? (
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-muted-foreground text-[16px]">
+            Keyword group not found.
           </p>
-          <Input
-            value={niche}
-            placeholder="e.g. Websites for local service businesses"
-            className="max-w-md"
-            onChange={(e) => {
-              setNiche(e.target.value);
-              setDirty(true);
-            }}
-          />
-        </div>
-      </div>
-
-      <div>
-        <div className="text-muted-foreground grid grid-cols-[1fr_9rem_6.5rem_auto] items-center gap-2 pb-1.5 text-[12px] font-semibold tracking-[0.04em] uppercase">
-          <span>Keyword</span>
-          <span>Avg. monthly searches</span>
-          <span>Max CPC</span>
-          <span className="w-7" />
-        </div>
-        <div className="space-y-2">
-          {rows.map((row, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[1fr_9rem_6.5rem_auto] items-center gap-2"
-            >
-              <Input
-                value={row.text}
-                placeholder="e.g. best online marketing courses"
-                onChange={(e) => setRow(i, { text: e.target.value })}
-              />
-              <Input
-                value={row.avgMonthlySearches}
-                placeholder="e.g. 50"
-                onChange={(e) =>
-                  setRow(i, { avgMonthlySearches: e.target.value })
-                }
-              />
-              <Input
-                value={row.maxCpc}
-                placeholder="e.g. 2.77"
-                onChange={(e) => setRow(i, { maxCpc: e.target.value })}
-              />
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className={rows.length > 1 ? "" : "invisible"}
-                onClick={() => {
-                  setRows((prev) => prev.filter((_, j) => j !== i));
-                  setDirty(true);
-                }}
-              >
-                <Trash className="size-3.5" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setRows((prev) => [...prev, { ...EMPTY_KEYWORD }]);
-              setDirty(true);
-            }}
+          <Link
+            href={sectionUrl("keywords")}
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-[15px] font-medium"
           >
-            <Plus className="size-4" /> Add keyword
-          </Button>
+            <ArrowLeft className="size-4" /> Keywords
+          </Link>
         </div>
-      </div>
+      ) : (
+        <FrameCard innerClassName="flex flex-col gap-7 p-7">
+          <Link
+            href={sectionUrl("keywords")}
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start text-[15px] font-medium"
+          >
+            <ArrowLeft className="size-4" /> All keyword groups
+          </Link>
 
-      <div className="flex items-center gap-3">
-        <Button
-          size="lg"
-          disabled={!dirty || !name.trim() || update.isPending}
-          onClick={() =>
-            update.mutate({
-              repoId,
-              id: campaign.id,
-              name: name.trim(),
-              niche: niche.trim(),
-              keywords: rows,
-            })
-          }
-        >
-          {update.isPending ? "Saving…" : "Save"}
-        </Button>
-        <Button
-          variant="ghost"
-          className="text-destructive hover:text-destructive"
-          disabled={remove.isPending}
-          onClick={() => {
-            if (confirm(`Delete "${campaign.name}" and its keywords?`))
-              remove.mutate({ repoId, id: campaign.id });
-          }}
-        >
-          Delete category
-        </Button>
-      </div>
-    </div>
+          <div className="flex flex-col gap-2">
+            <FieldHead
+              htmlFor="catname"
+              label="Group name"
+              hint="One group = one campaign, e.g. Online courses."
+            />
+            <Input
+              id="catname"
+              value={name}
+              className="h-auto max-w-md px-4 py-3.5 text-[17px]"
+              onChange={(e) => {
+                setName(e.target.value);
+                setDirty(true);
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHead
+              htmlFor="catniche"
+              label="Niche"
+              hint="The market this group competes in; it feeds the ad prompt."
+            />
+            <Input
+              id="catniche"
+              value={niche}
+              placeholder="e.g. Websites for local service businesses"
+              className="h-auto max-w-md px-4 py-3.5 text-[17px]"
+              onChange={(e) => {
+                setNiche(e.target.value);
+                setDirty(true);
+              }}
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className="min-w-[560px]">
+              <div className="text-muted-foreground grid grid-cols-[1fr_10rem_7rem_auto] items-center gap-2.5 pb-2 font-mono text-[13px] tracking-[0.04em] uppercase">
+                <span>Keyword</span>
+                <span>Avg. monthly searches</span>
+                <span>Max CPC</span>
+                <span className="w-9" />
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {rows.map((row, i) => (
+                  <div
+                    key={i}
+                    className="grid grid-cols-[1fr_10rem_7rem_auto] items-center gap-2.5"
+                  >
+                    <Input
+                      aria-label={`Keyword ${i + 1}`}
+                      value={row.text}
+                      placeholder="e.g. best online marketing courses"
+                      className="h-auto px-4 py-3 text-[16px]"
+                      onChange={(e) => setRow(i, { text: e.target.value })}
+                    />
+                    <Input
+                      aria-label={`Avg. monthly searches ${i + 1}`}
+                      value={row.avgMonthlySearches}
+                      placeholder="e.g. 50"
+                      className="h-auto px-4 py-3 text-[16px]"
+                      onChange={(e) =>
+                        setRow(i, { avgMonthlySearches: e.target.value })
+                      }
+                    />
+                    <Input
+                      aria-label={`Max CPC ${i + 1}`}
+                      value={row.maxCpc}
+                      placeholder="e.g. 2.77"
+                      className="h-auto px-4 py-3 text-[16px]"
+                      onChange={(e) => setRow(i, { maxCpc: e.target.value })}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Remove keyword ${i + 1}`}
+                      className={rows.length > 1 ? "" : "invisible"}
+                      onClick={() => {
+                        setRows((prev) => prev.filter((_, j) => j !== i));
+                        setDirty(true);
+                      }}
+                    >
+                      <Trash className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Button
+              variant="ghost"
+              className="bg-foreground/5 hover:bg-foreground/8 rounded-[11px] px-4 text-[15px]"
+              onClick={() => {
+                setRows((prev) => [...prev, { ...EMPTY_KEYWORD }]);
+                setDirty(true);
+              }}
+            >
+              <Plus className="size-4" /> Add keyword
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive text-[15px]"
+              disabled={remove.isPending}
+              onClick={() => {
+                if (confirm(`Delete "${campaign.name}" and its keywords?`))
+                  remove.mutate({ repoId, id: campaign.id });
+              }}
+            >
+              Delete group
+            </Button>
+          </div>
+        </FrameCard>
+      )}
+    </StepShell>
   );
 }
-
-const BackLink = () => (
-  <Link
-    href={sectionUrl("keywords")}
-    className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-[13px] font-medium"
-  >
-    <ArrowLeft className="size-3.5" /> Keywords
-  </Link>
-);

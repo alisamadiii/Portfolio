@@ -15,9 +15,14 @@ const FULL_WIDTH = [
   "/reports",
 ];
 
+// Prefixes whose whole subtree is full-width (section pages share a route).
+const FULL_WIDTH_PREFIX = ["/business-info"];
+
 export function AgencyMain({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const fullWidth = FULL_WIDTH.includes(pathname);
+  const fullWidth =
+    FULL_WIDTH.includes(pathname) ||
+    FULL_WIDTH_PREFIX.some((p) => pathname.startsWith(p));
 
   return (
     <div

@@ -1,7 +1,7 @@
 "use client";
 
-import { SearchAdPage } from "@/components/agency/search-ad-page";
+import { StepSearchAd } from "@/components/agency/business-info/step-search-ad";
 
 export default function AgencySearchAdPage() {
-  return <SearchAdPage />;
+  return <StepSearchAd />;
 }

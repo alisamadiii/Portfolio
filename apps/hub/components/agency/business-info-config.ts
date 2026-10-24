@@ -1,19 +1,14 @@
-// Business Information page — documentation-style section registry.
+// Business Information — step registry.
 //
-// The page renders itself from BUSINESS_SECTIONS. Each section reads like a
-// chapter of the agency playbook (number, title, lead, short explanation),
-// holds the client's editable values, and optionally shows the course prompt
-// that generates them — with its [BRACKET] tokens auto-filled from values
-// saved in earlier sections, ready to paste into ChatGPT.
+// Seven setup steps rendered as an overview page plus one page per step
+// (Claude Design handoff in business-info-handoff/). Each step page is
+// bespoke; this file holds the shared metadata (numbers, slugs, copy), the
+// course prompts and the fill definitions that resolve their [BRACKET]
+// tokens from saved answers.
 //
 // Values live in the `agency_client.business_info` jsonb map as
-// Record<fieldKey, string[]>. Single-value fields store a one-element array;
-// positional fields (brand purpose, per-segment messaging) rely on the router
-// keeping interior empty slots.
-//
-// Every section is unique, so a field is a discriminated union of layout
-// kinds. Adding a section — or a new shape of section — is a config change
-// here, not a page change.
+// Record<fieldKey, string[]>; keyword categories live in
+// `agency_client.ad_campaigns`.
 //
 // The prompts are the Digital Marketing Guide course prompts, copied verbatim
 // from the agency playbook (digital-marketing-guide/src/data/prompts.ts).
@@ -118,56 +113,14 @@ Generate 4 Descriptions: Each up to 90 characters, detailed and engaging, highli
 
 Generate 4 Callouts: Each up to 25 characters, focusing on additional benefits like "Free Shipping", "24/7 Customer Support", etc based on the data I've given you.`;
 
-interface FieldBase {
-  /** Stable storage key in the jsonb map. Never reuse or rename in place. */
-  key: string;
-  label: string;
-  multiline?: boolean;
-  placeholder?: string;
-}
-
-/** One fixed input, stored as a one-element array. */
-export interface SingleField extends FieldBase {
-  kind: "single";
-}
-
-/** Open-ended rows with add/remove. */
-export interface ListField extends FieldBase {
-  kind: "list";
-  /** Empty rows to show when nothing is saved yet. */
-  initial: number;
-}
-
-/** Exactly rowLabels.length labeled inputs — no add/remove. Positional. */
-export interface FixedField extends FieldBase {
-  kind: "fixed";
-  rowLabels: string[];
-}
-
-/**
- * A repeated block of several inputs. Block i reads/writes index i of each
- * subfield's own storage array, so the arrays stay aligned per block.
- */
-export interface GroupField {
-  kind: "group";
-  /** Field key whose saved rows title each block (e.g. segment names). */
-  titleFrom?: string;
-  /** Fallback block title + count when titleFrom has no values. */
-  blockLabel: string;
-  count: number;
-  subfields: FieldBase[];
-}
-
-export type BusinessField = SingleField | ListField | FixedField | GroupField;
-
 export interface PromptFill {
   /** Storage key whose value(s) replace the [TOKEN]. */
   key: string;
-  /** Human name of the missing info, shown when the value is empty. */
+  /** Human name of the missing info, shown in the AI helper checklist. */
   label: string;
   /** How a list becomes text: single value, joined lines, or "1. …" lines. */
   format?: "text" | "lines" | "numbered";
-  /** Section to link to when the value is missing. */
+  /** Step key the value comes from (for "Add in step N" links). */
   section: string;
 }
 
@@ -176,95 +129,106 @@ export interface PromptSpec {
   template: string;
   /** TOKEN (without brackets) -> where its value comes from. */
   fills: Record<string, PromptFill>;
+  /** AI helper heading, plain words. */
+  helperTitle: string;
+  /** One line under the heading. */
+  helperNote: string;
+  /** Third line of the copy-paste-bring-back mini guide. */
+  guideReturn: string;
 }
 
-export interface BusinessSection {
+export interface BusinessStep {
   key: string;
+  /** 1-based step number. */
+  step: number;
   num: string;
+  part: "Brand foundation" | "Google Ads";
   title: string;
-  /** One-line goal under the title. */
+  /** Short label for the step pill bar. */
+  shortLabel: string;
+  /** Lead paragraph on the step page. */
   lead: string;
-  /** Short explanation paragraphs. */
-  description?: string[];
-  /** Sub-sidebar group label; unset = the default "Business" group. */
-  group?: string;
-  /** Rendered by its own bespoke page, not the generic [section] route. */
-  custom?: boolean;
-  fields: BusinessField[];
+  /** One-line description on the overview row. */
+  rowDescription: string;
+  /** Rough time estimate for the overview. */
+  minutes: number;
   prompts?: PromptSpec[];
 }
 
-/** Each section lives on its own page; the first one is the index route. */
+/** The overview lives at /business-info; every step has its own slug. */
 export function sectionUrl(key: string): string {
-  return key === "business" ? "/business-info" : `/business-info/${key}`;
+  return `/business-info/${key}`;
 }
 
-export const BUSINESS_SECTIONS: BusinessSection[] = [
+export function stepFor(key: string): BusinessStep | undefined {
+  return BUSINESS_STEPS.find((s) => s.key === key);
+}
+
+/** Turn a stored list into the text that replaces a prompt token. */
+export function fillText(
+  values: Record<string, string[]>,
+  fill: PromptFill
+): string {
+  const rows = (values[fill.key] ?? []).map((r) => r.trim()).filter(Boolean);
+  if (rows.length === 0) return "";
+  switch (fill.format) {
+    case "lines":
+      return rows.join("\n");
+    case "numbered":
+      return rows.map((r, i) => `${i + 1}. ${r}`).join("\n");
+    default:
+      return rows[0] ?? "";
+  }
+}
+
+/** Resolve a prompt template: filled tokens replaced, missing left as-is. */
+export function resolvePrompt(
+  prompt: PromptSpec,
+  values: Record<string, string[]>
+): { text: string; missing: PromptFill[] } {
+  let text = prompt.template;
+  const missing: PromptFill[] = [];
+  for (const [token, fill] of Object.entries(prompt.fills)) {
+    const value = fillText(values, fill);
+    if (value) text = text.replaceAll(`[${token}]`, value);
+    else missing.push(fill);
+  }
+  return { text, missing };
+}
+
+export const BUSINESS_STEPS: BusinessStep[] = [
   {
     key: "business",
+    step: 1,
     num: "01",
+    part: "Brand foundation",
     title: "Your business",
-    lead: "Everything below builds on this. Describe what you sell once, reuse it everywhere.",
-    description: [
-      "These answers auto-fill every prompt on this page, and we reuse them when writing your ads, website copy, and campaigns. Keep them plain and specific.",
-    ],
-    fields: [
-      {
-        kind: "single",
-        key: "productDescription",
-        label: "Product / service description",
-        multiline: true,
-        placeholder:
-          "e.g. We build, host, and manage websites for local businesses…",
-      },
-      {
-        kind: "list",
-        key: "features",
-        label: "Feature",
-        initial: 4,
-        placeholder: "One feature or benefit, e.g. 24/7 support",
-      },
-      {
-        kind: "single",
-        key: "website",
-        label: "Website / business name",
-        placeholder: "e.g. Ali Samadii LLC",
-      },
-      {
-        kind: "single",
-        key: "goal",
-        label: "Main goal",
-        multiline: true,
-        placeholder: "e.g. 20 qualified leads per month from Google",
-      },
-    ],
+    shortLabel: "Your business",
+    lead: "Describe what you sell once. Every later step, prompt and ad builds on what you write here.",
+    rowDescription: "What you sell, your features and your main goal.",
+    minutes: 10,
   },
   {
     key: "segments",
+    step: 2,
     num: "02",
+    part: "Brand foundation",
     title: "Audience segments",
-    lead: "Goal: find your audience — the exact people who need what you sell.",
-    description: [
-      "Your audience is the group of people or businesses that need your product or service. Identify 3 clear, distinct segments — who they are, not broad categories — then verify that real brands explicitly target them.",
-    ],
-    fields: [
-      {
-        kind: "list",
-        key: "segments",
-        label: "Audience segment",
-        initial: 3,
-        multiline: true,
-        placeholder: "Segment name — and why they're a strong match.",
-      },
-    ],
+    shortLabel: "Audience",
+    lead: 'Name the three groups of people who need what you sell most. Describe who they are, not a broad category: "pest control owners with 2 to 10 trucks", not "small businesses".',
+    rowDescription: "The three groups of people who need what you sell most.",
+    minutes: 10,
     prompts: [
       {
-        title: "Prompt — identify 3 audience segments",
+        title: "Identify 3 audience segments",
         template: IDENTIFY_SEGMENTS,
+        helperTitle: "Not sure? Let ChatGPT draft them.",
+        helperNote: "This prompt already includes your answers from step 1.",
+        guideReturn: "Bring the best three back here",
         fills: {
           "PRODUCT DESCRIPTION": {
             key: "productDescription",
-            label: "Product description",
+            label: "What you sell",
             section: "business",
           },
           FEATURES: {
@@ -276,8 +240,12 @@ export const BUSINESS_SECTIONS: BusinessSection[] = [
         },
       },
       {
-        title: "Prompt — verify segments with competitor data",
+        title: "Verify segments with competitor data",
         template: VERIFY_SEGMENTS,
+        helperTitle: "Then: check them against competitors",
+        helperNote:
+          "A second prompt confirms real brands target these groups.",
+        guideReturn: "Keep the segments that get validated",
         fills: {
           SEGMENTS: {
             key: "segments",
@@ -291,43 +259,22 @@ export const BUSINESS_SECTIONS: BusinessSection[] = [
   },
   {
     key: "messaging",
+    step: 3,
     num: "03",
+    part: "Brand foundation",
     title: "Problem, solution & key message",
-    lead: "Per segment: the pain, how you solve it, one short message.",
-    description: [
-      "For each audience segment, name the problem they feel, how your product solves it, and one headline-ready message. These become your ad copy and landing page angles.",
-    ],
-    fields: [
-      {
-        kind: "group",
-        titleFrom: "segments",
-        blockLabel: "Segment",
-        count: 3,
-        subfields: [
-          {
-            key: "messagingProblem",
-            label: "Problem",
-            multiline: true,
-            placeholder: "The key pain point this segment experiences.",
-          },
-          {
-            key: "messagingSolution",
-            label: "Solution",
-            multiline: true,
-            placeholder: "How your product solves it, naming features.",
-          },
-          {
-            key: "messagingKeyMessage",
-            label: "Key message",
-            placeholder: "8–12 words, headline-ready.",
-          },
-        ],
-      },
-    ],
+    shortLabel: "Message",
+    lead: "For each audience segment: the pain they feel, how you fix it, and one headline-ready message.",
+    rowDescription:
+      "For each group: the pain they feel, how you fix it, one headline.",
+    minutes: 10,
     prompts: [
       {
-        title: "Prompt — problems, solutions & key messages",
+        title: "Problems, solutions & key messages",
         template: PROBLEMS_SOLUTIONS,
+        helperTitle: "Let ChatGPT write the first draft.",
+        helperNote: "This prompt already includes your audience segments.",
+        guideReturn: "Paste the best lines back here",
         fills: {
           SEGMENTS: {
             key: "segments",
@@ -341,31 +288,31 @@ export const BUSINESS_SECTIONS: BusinessSection[] = [
   },
   {
     key: "taglines",
+    step: 4,
     num: "04",
+    part: "Brand foundation",
     title: "Taglines",
-    lead: "One short line that says what you do and sticks.",
-    fields: [
-      {
-        kind: "list",
-        key: "taglines",
-        label: "Tagline",
-        initial: 5,
-        placeholder: "e.g. Fast, friendly, done right.",
-      },
-    ],
+    shortLabel: "Taglines",
+    lead: "One short line that says what you do and sticks. Generate ten options, keep the few you like.",
+    rowDescription: "One short line that says what you do and sticks.",
+    minutes: 10,
     prompts: [
       {
-        title: "Prompt — 10 tagline options",
+        title: "10 tagline options",
         template: TAGLINES,
+        helperTitle: "Get 10 options in one go.",
+        helperNote:
+          "This prompt includes your business name, product and audience.",
+        guideReturn: "Keep the ones that sound like you",
         fills: {
           WEBSITE: {
             key: "website",
-            label: "Website / business name",
+            label: "Business name",
             section: "business",
           },
           PRODUCT: {
             key: "productDescription",
-            label: "Product description",
+            label: "What you sell",
             section: "business",
           },
           "AUDIENCE SEGMENTS": {
@@ -380,72 +327,60 @@ export const BUSINESS_SECTIONS: BusinessSection[] = [
   },
   {
     key: "purpose",
+    step: 5,
     num: "05",
+    part: "Brand foundation",
     title: "Brand purpose",
-    lead: "Branding is what you deliver. Marketing is how you deliver it.",
-    description: [
-      "A brand strategy is the target everything aims at: it makes you stand out, guides the marketing, and keeps customers loyal. Answer these five questions in your own words — there are no wrong answers.",
-    ],
-    fields: [
-      {
-        kind: "fixed",
-        key: "purpose",
-        label: "Brand purpose",
-        multiline: true,
-        rowLabels: [
-          "Why do you do what you do?",
-          "Who do you want to help?",
-          "What can you help with?",
-          "Would your audience like that?",
-          "What does your audience actually like?",
-        ],
-      },
-    ],
+    shortLabel: "Purpose",
+    lead: "Five quick questions about why you do this work. Answer in your own words, there are no wrong answers.",
+    rowDescription: "Five quick questions about why you do this work.",
+    minutes: 10,
   },
   {
     key: "keywords",
+    step: 6,
     num: "06",
+    part: "Google Ads",
     title: "Keywords",
-    lead: "Keyword categories — each category is one campaign.",
-    description: [
-      "Group the keywords you want to bid on into categories, like the course's Keyword Research sheet. Each category becomes its own campaign with its own keywords, average monthly searches, and max CPC from Keyword Planner.",
-    ],
-    group: "Google Ads",
-    custom: true,
-    fields: [],
+    shortLabel: "Keywords",
+    lead: "Group the searches you want to show up for. Each group becomes one campaign, with its keywords, average monthly searches and max CPC from Keyword Planner.",
+    rowDescription:
+      "Group the searches you want to show up for. Each group becomes one campaign.",
+    minutes: 10,
   },
   {
     key: "search-ad",
+    step: 7,
     num: "07",
+    part: "Google Ads",
     title: "Search ad text",
-    lead: "Headlines, descriptions, and callouts for a lead-gen Google Ads search campaign.",
-    description: [
-      "Pick a category and the prompt pulls in its keywords and niche, plus your product description, features, and audience segments, then writes every ad component at its maximum length. The copy you keep is saved on that category.",
-    ],
-    group: "Google Ads",
-    custom: true,
-    fields: [],
+    shortLabel: "Ad text",
+    lead: "Write the headlines, descriptions and callouts for one keyword group at a time. Google mixes them, so each line has to work on its own.",
+    rowDescription:
+      "Headlines, descriptions and callouts for each keyword group.",
+    minutes: 10,
     prompts: [
       {
-        title: "Prompt — search ad text",
+        title: "Search ad text",
         template: SEARCH_AD_TEXT,
+        helperTitle: "Draft every line at full length",
+        helperNote: "The prompt is strongest with every answer filled in:",
+        guideReturn: "Paste the lines you keep back here",
         fills: {
           KEYWORDS: {
-            // Pseudo-key injected from the selected campaign's keywords.
             key: "campaignKeywords",
-            label: "Category keywords",
+            label: "Keywords in this group",
             format: "lines",
             section: "keywords",
           },
           DESCRIPTION: {
             key: "productDescription",
-            label: "Product description",
+            label: "What you sell",
             section: "business",
           },
           NICHE: {
-            // Pseudo-key injected from the selected campaign's niche.
             key: "campaignNiche",
-            label: "Category niche",
+            label: "Niche for this group",
             section: "keywords",
           },
           "TARGET AUDIENCE": {
@@ -465,3 +400,30 @@ export const BUSINESS_SECTIONS: BusinessSection[] = [
     ],
   },
 ];
+
+// ---- Segments are stored as one string per row ("who — why"); the step 2
+// UI edits the two halves separately.
+
+export interface SegmentParts {
+  who: string;
+  why: string;
+}
+
+export function splitSegment(row: string): SegmentParts {
+  const text = row.trim();
+  for (const sep of [" — ", ": "]) {
+    const at = text.indexOf(sep);
+    if (at > 0)
+      return {
+        who: text.slice(0, at).trim(),
+        why: text.slice(at + sep.length).trim(),
+      };
+  }
+  return { who: text, why: "" };
+}
+
+export function joinSegment({ who, why }: SegmentParts): string {
+  const w = who.trim();
+  const y = why.trim();
+  return y ? `${w} — ${y}` : w;
+}

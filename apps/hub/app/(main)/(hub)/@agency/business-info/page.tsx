@@ -1,7 +1,7 @@
 "use client";
 
-import { BusinessInfoSection } from "@/components/agency/business-info-page";
+import { BusinessInfoOverview } from "@/components/agency/business-info/overview-page";
 
 export default function AgencyBusinessInfoPage() {
-  return <BusinessInfoSection sectionKey="business" />;
+  return <BusinessInfoOverview />;
 }
