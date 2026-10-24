@@ -95,10 +95,16 @@ export const PLANS = {
       launch: {
         label: "Launch",
         priceLabel: "$1,200/mo + $300 setup",
-        // scripts/seed-agency-launch.mts (live ids still to create)
+        // scripts/seed-agency-launch.mts
         prices: {
-          recurring: price("", "price_1UTKyOEhKQbL1BLmeqzyho6l"),
-          setup: price("", "price_1UTKyPEhKQbL1BLmoPB4xRAO"),
+          recurring: price(
+            "price_1UUBAFEhKQbL1BLmlSe2sisf",
+            "price_1UTKyOEhKQbL1BLmeqzyho6l"
+          ),
+          setup: price(
+            "price_1UUBAGEhKQbL1BLm3qrm1zXz",
+            "price_1UTKyPEhKQbL1BLmoPB4xRAO"
+          ),
         },
         features: [...WEBSITE_PAID_FEATURES, "leads", "ads"],
         limits: { adCampaigns: 1, adSpendCap: 3000 },
