@@ -286,6 +286,12 @@ function LeadChannels() {
       <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
         {channels.map((channel) => {
           const Icon = channel.icon;
+          const tile = cn(
+            "flex flex-col rounded-[14px] p-4 ring-1",
+            channel.on
+              ? "bg-[#e6efe4]/50 ring-[#2f6b3f]/45"
+              : "bg-[#f6eedb]/50 ring-[#b8860b]/50"
+          );
           const inner = (
             <>
               <span
@@ -293,13 +299,23 @@ function LeadChannels() {
                   "flex size-9 items-center justify-center rounded-full",
                   channel.on
                     ? "bg-[#e6efe4] text-[#2f6b3f]"
-                    : "bg-foreground/5 text-muted-foreground"
+                    : "bg-[#f6eedb] text-[#8a5a0a]"
                 )}
               >
                 <Icon className="size-4.5" />
               </span>
-              <span className="mt-2 text-[15px] font-semibold">
+              <span className="mt-2 flex items-center gap-2 text-[15px] font-semibold">
                 {channel.title}
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                    channel.on
+                      ? "bg-[#e6efe4] text-[#2f6b3f]"
+                      : "bg-[#f6eedb] text-[#8a5a0a]"
+                  )}
+                >
+                  {channel.on ? "On" : "Soon"}
+                </span>
               </span>
               <span className="text-muted-foreground text-[14px]">
                 {channel.sub}
@@ -310,15 +326,12 @@ function LeadChannels() {
             <Link
               key={channel.key}
               href={channel.href}
-              className="ring-foreground/7 hover:bg-foreground/3 flex flex-col rounded-[14px] p-4 ring-1"
+              className={cn(tile, "transition-opacity hover:opacity-90")}
             >
               {inner}
             </Link>
           ) : (
-            <div
-              key={channel.key}
-              className="ring-foreground/7 flex flex-col rounded-[14px] p-4 ring-1"
-            >
+            <div key={channel.key} className={tile}>
               {inner}
             </div>
           );

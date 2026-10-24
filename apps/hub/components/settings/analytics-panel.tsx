@@ -205,7 +205,7 @@ const formatDuration = (seconds: number) => {
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 };
 
-export function AnalyticsPanel() {
+export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const project = useProject();
@@ -284,7 +284,7 @@ export function AnalyticsPanel() {
   if (statusLoading) {
     return (
       <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
-        <PanelHeading />
+        {!hideHeading && <PanelHeading />}
         <div className="grid grid-cols-4 gap-3">
           <Skeleton className="h-[86px] rounded-lg" />
           <Skeleton className="h-[86px] rounded-lg" />
@@ -301,7 +301,7 @@ export function AnalyticsPanel() {
     const needsLink = propertiesQuery.isError;
     return (
       <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
-        <PanelHeading />
+        {!hideHeading && <PanelHeading />}
         <div className="rounded-lg border border-dashed px-6 py-16 text-center">
           <div className="bg-status-neutral-bg border-status-neutral/50 text-status-neutral mx-auto grid size-14 place-items-center rounded-2xl border">
             <ChartMark className="size-6" />
@@ -377,7 +377,7 @@ export function AnalyticsPanel() {
     // above keep the centered max-width.
     <div className="w-full max-w-none space-y-6 p-6">
       <div className="flex items-start justify-between gap-4">
-        <PanelHeading />
+        {!hideHeading && <PanelHeading />}
         <div className="flex items-center gap-2">
           <Select
             items={RANGES}
