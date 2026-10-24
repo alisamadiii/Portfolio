@@ -169,6 +169,11 @@ export const agencyClient = pgTable("agency_client", {
   // The client manages this in the hub; empty/unset = nothing allowed in prod.
   origins: jsonb("origins").$type<string[]>(),
 
+  // Per-client brand assets: resourceKey -> list of value options (business
+  // titles, descriptions, taglines, ...). Keys are driven by the hub's
+  // BUSINESS_RESOURCES config, so new lists need no schema change.
+  businessInfo: jsonb("business_info").$type<Record<string, string[]>>(),
+
   // Client account under the agency MCC, digits only ("1234567890").
   googleAdsCustomerId: text("google_ads_customer_id"),
   // "customers/<id>/conversionActions/<id>" for the closed-deal import.

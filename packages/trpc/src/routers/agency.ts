@@ -1200,6 +1200,43 @@ export const agencyRouter = createTRPCRouter({
       }),
   }),
 
+  // Per-client brand assets: a map of resourceKey -> list of value options.
+  // Keys/shape are driven by the hub's BUSINESS_RESOURCES config, so adding a
+  // new list is a config change only — no schema or router change here.
+  businessInfo: createTRPCRouter({
+    get: agencyProcedure.query(({ ctx }) => ctx.client.businessInfo ?? {}),
+    set: agencyWriteProcedure
+      .input(
+        z.object({
+          businessInfo: z.record(
+            z.string().max(64),
+            z.array(z.string().trim().max(2000)).max(50)
+          ),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        // Trim values but KEEP interior empties: several lists are positional
+        // (brand purpose answers, per-segment problem/solution/key message
+        // arrays aligned by index). Only trailing empties and lists with no
+        // content at all are dropped.
+        const cleaned = Object.fromEntries(
+          Object.entries(input.businessInfo)
+            .map(([key, values]) => {
+              const trimmed = values.map((v) => v.trim());
+              while (trimmed.length && !trimmed[trimmed.length - 1])
+                trimmed.pop();
+              return [key, trimmed] as const;
+            })
+            .filter(([, values]) => values.some(Boolean))
+        );
+        await db
+          .update(agencyClient)
+          .set({ businessInfo: cleaned })
+          .where(eq(agencyClient.id, ctx.client.id));
+        return cleaned;
+      }),
+  }),
+
   // Saved copies of the Monday report emails, newest week first.
   reports: createTRPCRouter({
     list: agencyProcedure.query(async ({ ctx }) => {
