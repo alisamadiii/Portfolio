@@ -94,6 +94,30 @@ Key Message: [Short marketing message – 8-12 words]`;
 
 const TAGLINES = `Write 10 taglines for my website called [WEBSITE], that sells [PRODUCT] to [AUDIENCE SEGMENTS].`;
 
+const SEARCH_AD_TEXT = `Create a complete set of Google Ads components for a search campaign designed to generate leads. Make sure each component uses the maximum characters allowed to optimize effectiveness and the highest possible conversion rate. Here's the info I want you to use:
+
+Keywords:
+[KEYWORDS]
+
+Product or Service Description:
+[DESCRIPTION]
+
+Niche:
+[NICHE]
+
+Target Audience:
+[TARGET AUDIENCE]
+
+Features & Benefits:
+[FEATURES & BENEFITS]
+
+Here's what I want you to do:
+Generate 7 Headlines: Each up to 30 characters, capturing different aspects like the offer, CTA, and unique features. Make sure you include the keywords.
+
+Generate 4 Descriptions: Each up to 90 characters, detailed and engaging, highlighting the offer, benefits, and why it's a must-have.
+
+Generate 4 Callouts: Each up to 25 characters, focusing on additional benefits like "Free Shipping", "24/7 Customer Support", etc based on the data I've given you.`;
+
 interface FieldBase {
   /** Stable storage key in the jsonb map. Never reuse or rename in place. */
   key: string;
@@ -162,6 +186,10 @@ export interface BusinessSection {
   lead: string;
   /** Short explanation paragraphs. */
   description?: string[];
+  /** Sub-sidebar group label; unset = the default "Business" group. */
+  group?: string;
+  /** Rendered by its own bespoke page, not the generic [section] route. */
+  custom?: boolean;
   fields: BusinessField[];
   prompts?: PromptSpec[];
 }
@@ -371,6 +399,68 @@ export const BUSINESS_SECTIONS: BusinessSection[] = [
           "Would your audience like that?",
           "What does your audience actually like?",
         ],
+      },
+    ],
+  },
+  {
+    key: "keywords",
+    num: "06",
+    title: "Keywords",
+    lead: "Keyword categories — each category is one campaign.",
+    description: [
+      "Group the keywords you want to bid on into categories, like the course's Keyword Research sheet. Each category becomes its own campaign with its own keywords, average monthly searches, and max CPC from Keyword Planner.",
+    ],
+    group: "Google Ads",
+    custom: true,
+    fields: [],
+  },
+  {
+    key: "search-ad",
+    num: "07",
+    title: "Search ad text",
+    lead: "Headlines, descriptions, and callouts for a lead-gen Google Ads search campaign.",
+    description: [
+      "Pick a category and the prompt pulls in its keywords and niche, plus your product description, features, and audience segments, then writes every ad component at its maximum length. The copy you keep is saved on that category.",
+    ],
+    group: "Google Ads",
+    custom: true,
+    fields: [],
+    prompts: [
+      {
+        title: "Prompt — search ad text",
+        template: SEARCH_AD_TEXT,
+        fills: {
+          KEYWORDS: {
+            // Pseudo-key injected from the selected campaign's keywords.
+            key: "campaignKeywords",
+            label: "Category keywords",
+            format: "lines",
+            section: "keywords",
+          },
+          DESCRIPTION: {
+            key: "productDescription",
+            label: "Product description",
+            section: "business",
+          },
+          NICHE: {
+            // Pseudo-key injected from the selected campaign's niche.
+            key: "campaignNiche",
+            label: "Category niche",
+            section: "keywords",
+          },
+          "TARGET AUDIENCE": {
+            key: "segments",
+            label: "Audience segments",
+            format: "lines",
+            section: "segments",
+          },
+          "FEATURES & BENEFITS": {
+            key: "features",
+            label: "Features",
+            format: "lines",
+            section: "business",
+          },
+        },
       },
     ],
   },

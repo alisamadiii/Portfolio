@@ -61,7 +61,7 @@ function seedDraft(fields: BusinessField[], saved: Draft): Draft {
 }
 
 /** Turn a stored list into the text that replaces a prompt token. */
-function fillText(values: Draft, fill: PromptFill): string {
+export function fillText(values: Draft, fill: PromptFill): string {
   const rows = (values[fill.key] ?? []).map((r) => r.trim()).filter(Boolean);
   if (rows.length === 0) return "";
   switch (fill.format) {
@@ -232,7 +232,7 @@ function Field({
   }
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+export function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-foreground/80 mb-1.5 text-[13px] font-medium">
       {children}
@@ -416,7 +416,17 @@ function GroupInput({
   );
 }
 
-function PromptCard({ prompt, values }: { prompt: PromptSpec; values: Draft }) {
+export function PromptCard({
+  prompt,
+  values,
+  links,
+}: {
+  prompt: PromptSpec;
+  values: Draft;
+  /** Per-section overrides for the missing-info links (e.g. deep-link the
+   * keywords section to the selected category's page). */
+  links?: Record<string, string>;
+}) {
   const [open, setOpen] = useState(false);
 
   // Split the template on this prompt's own tokens only (the course prompts
@@ -473,7 +483,7 @@ function PromptCard({ prompt, values }: { prompt: PromptSpec; values: Draft }) {
             <span key={fill.key}>
               {i > 0 && ", "}
               <Link
-                href={sectionUrl(fill.section)}
+                href={links?.[fill.section] ?? sectionUrl(fill.section)}
                 className="text-foreground underline underline-offset-2"
               >
                 {fill.label}

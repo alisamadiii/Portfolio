@@ -82,6 +82,22 @@ export type AgencyAdsActions = {
 };
 export type AgencyAdsBudget = { monthlyCents?: number };
 
+// One keyword category = one planned Google Ads campaign. Metrics are text,
+// pasted from Keyword Planner ("1K – 10K", "2.77"), never computed.
+export type AdCampaignKeyword = {
+  text: string;
+  avgMonthlySearches: string;
+  maxCpc: string;
+};
+export type AdCampaign = {
+  id: string;
+  name: string;
+  niche: string;
+  keywords: AdCampaignKeyword[];
+  // The kept search-ad copy generated for this campaign.
+  adText: { headlines: string[]; descriptions: string[]; callouts: string[] };
+};
+
 // ─── Booking ─────────────────────────────────────────────────────
 // Online appointment booking (b.js widget). Every meeting is 15 minutes;
 // availability comes from these hours minus Google Calendar busy times.
@@ -173,6 +189,10 @@ export const agencyClient = pgTable("agency_client", {
   // titles, descriptions, taglines, ...). Keys are driven by the hub's
   // BUSINESS_RESOURCES config, so new lists need no schema change.
   businessInfo: jsonb("business_info").$type<Record<string, string[]>>(),
+
+  // Planned ad campaigns: keyword categories with per-keyword metrics and the
+  // kept ad copy. Edited on the hub's Business Information pages.
+  adCampaigns: jsonb("ad_campaigns").$type<AdCampaign[]>(),
 
   // Client account under the agency MCC, digits only ("1234567890").
   googleAdsCustomerId: text("google_ads_customer_id"),

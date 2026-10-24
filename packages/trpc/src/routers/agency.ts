@@ -29,6 +29,7 @@ import {
   hubProject,
   subscriptions,
   user as userTable,
+  type AdCampaign,
   type CollaboratorRole,
 } from "@workspace/drizzle/schema";
 
@@ -1234,6 +1235,98 @@ export const agencyRouter = createTRPCRouter({
           .set({ businessInfo: cleaned })
           .where(eq(agencyClient.id, ctx.client.id));
         return cleaned;
+      }),
+  }),
+
+  // Planned ad campaigns: keyword categories with per-keyword metrics and the
+  // kept ad copy, stored as one jsonb list on the client.
+  campaigns: createTRPCRouter({
+    list: agencyProcedure.query(({ ctx }) => ctx.client.adCampaigns ?? []),
+    create: agencyWriteProcedure
+      .input(z.object({ name: z.string().trim().min(1).max(200) }))
+      .mutation(async ({ ctx, input }) => {
+        const campaign: AdCampaign = {
+          id: crypto.randomUUID(),
+          name: input.name,
+          niche: "",
+          keywords: [],
+          adText: { headlines: [], descriptions: [], callouts: [] },
+        };
+        await db
+          .update(agencyClient)
+          .set({ adCampaigns: [...(ctx.client.adCampaigns ?? []), campaign] })
+          .where(eq(agencyClient.id, ctx.client.id));
+        return campaign;
+      }),
+    update: agencyWriteProcedure
+      .input(
+        z.object({
+          id: z.string().max(64),
+          name: z.string().trim().min(1).max(200).optional(),
+          niche: z.string().trim().max(500).optional(),
+          keywords: z
+            .array(
+              z.object({
+                text: z.string().trim().max(200),
+                avgMonthlySearches: z.string().trim().max(50),
+                maxCpc: z.string().trim().max(50),
+              })
+            )
+            .max(100)
+            .optional(),
+          adText: z
+            .object({
+              headlines: z.array(z.string().trim().max(200)).max(30),
+              descriptions: z.array(z.string().trim().max(500)).max(30),
+              callouts: z.array(z.string().trim().max(200)).max(30),
+            })
+            .optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const campaigns = ctx.client.adCampaigns ?? [];
+        const current = campaigns.find((c) => c.id === input.id);
+        if (!current)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Category not found.",
+          });
+        const updated: AdCampaign = {
+          ...current,
+          ...(input.name !== undefined && { name: input.name }),
+          ...(input.niche !== undefined && { niche: input.niche }),
+          ...(input.keywords !== undefined && {
+            // Keep only rows with a keyword; metrics alone mean nothing.
+            keywords: input.keywords.filter((k) => k.text),
+          }),
+          ...(input.adText !== undefined && {
+            adText: {
+              headlines: input.adText.headlines.filter(Boolean),
+              descriptions: input.adText.descriptions.filter(Boolean),
+              callouts: input.adText.callouts.filter(Boolean),
+            },
+          }),
+        };
+        await db
+          .update(agencyClient)
+          .set({
+            adCampaigns: campaigns.map((c) => (c.id === input.id ? updated : c)),
+          })
+          .where(eq(agencyClient.id, ctx.client.id));
+        return updated;
+      }),
+    remove: agencyWriteProcedure
+      .input(z.object({ id: z.string().max(64) }))
+      .mutation(async ({ ctx, input }) => {
+        await db
+          .update(agencyClient)
+          .set({
+            adCampaigns: (ctx.client.adCampaigns ?? []).filter(
+              (c) => c.id !== input.id
+            ),
+          })
+          .where(eq(agencyClient.id, ctx.client.id));
+        return { ok: true };
       }),
   }),
 

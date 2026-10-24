@@ -1,0 +1,1 @@
+ALTER TABLE "agency_client" ADD COLUMN "ad_campaigns" jsonb;
