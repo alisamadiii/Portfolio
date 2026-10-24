@@ -18,6 +18,7 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { HoverInfo } from "@/components/agency/hover-info";
 import { formatMoney } from "@/components/agency/lead-status";
+import { PageShell, TableCard } from "@/components/agency/page-shell";
 import { useAgency } from "@/components/agency/use-agency";
 import { TriangleAlert } from "@/components/icon";
 
@@ -38,7 +39,7 @@ function Delta({
     <span
       className={cn(
         "ml-1.5 text-[11.5px] font-semibold whitespace-nowrap",
-        direction === goodWhen ? "text-chart-2" : "text-destructive"
+        direction === goodWhen ? "text-[#2f6b3f]" : "text-[#a3283a]"
       )}
     >
       {direction === "up" ? "▲" : "▼"} {pct}
@@ -51,44 +52,44 @@ export function ReportsPage() {
   const { repoId } = useAgency();
   const reports = useQuery(trpc.agency.reports.list.queryOptions({ repoId }));
 
-  if (reports.isPending)
-    return <Skeleton className="h-96 w-full rounded-2xl" />;
-  if (reports.error)
-    return (
-      <p className="text-destructive text-[14px]">{reports.error.message}</p>
-    );
-  if (!reports.data.length) {
-    return (
-      <div className="rounded-2xl border border-dashed p-8 text-center">
-        <p className="font-semibold">No reports yet</p>
-        <p className="text-muted-foreground mt-1 text-[14px]">
-          Every Monday morning you get an email with the week&apos;s numbers,
-          and a copy is saved here so you can compare weeks.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-card overflow-hidden rounded-2xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="pl-5">Week</TableHead>
-            <TableHead className="text-right">Leads</TableHead>
-            <TableHead className="text-right">Ad spend</TableHead>
-            <TableHead className="text-right">Cost per lead</TableHead>
-            <TableHead className="text-right">Won</TableHead>
-            <TableHead className="text-right">Revenue</TableHead>
-            <TableHead>Highlights</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reports.data.map((report) => {
-            const d = report.data;
-            return (
-              <TableRow key={report.id}>
-                <TableCell className="pl-5">
+    <PageShell
+      eyebrow="AGENCY"
+      title="Reports"
+      lead="Your Monday email reports, kept here week by week so you can compare how things move."
+    >
+      {reports.isPending ? (
+        <Skeleton className="h-96 w-full rounded-[18px]" />
+      ) : reports.error ? (
+        <p className="text-destructive text-[15px]">{reports.error.message}</p>
+      ) : !reports.data.length ? (
+        <div className="ring-foreground/10 rounded-[18px] p-8 text-center ring-1 ring-dashed">
+          <p className="text-[17px] font-semibold">No reports yet</p>
+          <p className="text-muted-foreground mt-1 text-[15px]">
+            Every Monday morning you get an email with the week&apos;s numbers,
+            and a copy is saved here so you can compare weeks.
+          </p>
+        </div>
+      ) : (
+        <TableCard>
+          <Table className="min-w-[820px]">
+            <TableHeader>
+              <TableRow className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
+                <TableHead className="pl-6">Week</TableHead>
+                <TableHead className="text-right">Leads</TableHead>
+                <TableHead className="text-right">Ad spend</TableHead>
+                <TableHead className="text-right">Cost per lead</TableHead>
+                <TableHead className="text-right">Won</TableHead>
+                <TableHead className="text-right">Revenue</TableHead>
+                <TableHead>Highlights</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reports.data.map((report) => {
+                const d = report.data;
+                return (
+                  <TableRow key={report.id} className="text-[15px]">
+                    <TableCell className="py-[18px] pl-6">
                   <span className="font-medium">{d.label}</span>
                   {report.emailedAt && (
                     <p className="text-muted-foreground text-[12px]">
@@ -164,11 +165,13 @@ export function ReportsPage() {
                     )}
                   </div>
                 </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableCard>
+      )}
+    </PageShell>
   );
 }

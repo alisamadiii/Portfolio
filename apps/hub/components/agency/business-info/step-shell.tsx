@@ -14,82 +14,17 @@ import {
 } from "@/components/agency/business-info-config";
 import { stepStatuses } from "@/components/agency/business-info/status";
 import { useAgency } from "@/components/agency/use-agency";
+import {
+  Eyebrow,
+  FieldHead,
+  FrameCard,
+  PageShell,
+} from "@/components/agency/page-shell";
 import { ArrowLeft, ArrowRight, Check } from "@/components/icon";
 
-/** Nested-frame card: tinted 6px outer frame, paper inner. */
-export function FrameCard({
-  className,
-  innerClassName,
-  children,
-}: {
-  className?: string;
-  innerClassName?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "bg-foreground/3 ring-foreground/4 rounded-[18px] p-1.5 ring-1",
-        className
-      )}
-    >
-      <div
-        className={cn(
-          "bg-card rounded-[14px] p-7 shadow-[0_6px_16px_rgba(27,26,23,0.05)]",
-          innerClassName
-        )}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-export function Eyebrow({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "text-muted-foreground font-mono text-[13px] tracking-[0.12em] uppercase",
-        className
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-/** Label + one-line hint above an input, handoff sizes. */
-export function FieldHead({
-  label,
-  hint,
-  optional,
-  htmlFor,
-}: {
-  label: string;
-  hint?: string;
-  optional?: boolean;
-  htmlFor?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={htmlFor} className="text-[16px] font-semibold">
-        {label}
-        {optional && (
-          <span className="text-muted-foreground font-normal"> · optional</span>
-        )}
-      </label>
-      {hint && (
-        <span className="text-muted-foreground text-[15px]">{hint}</span>
-      )}
-    </div>
-  );
-}
+// Primitives moved to page-shell.tsx; re-exported so existing importers of
+// step-shell (overview-page, step pages) keep working unchanged.
+export { Eyebrow, FieldHead, FrameCard, PageShell };
 
 /** Horizontal step pill bar with live done states. */
 function StepBar({ currentKey }: { currentKey: string }) {

@@ -32,9 +32,9 @@ import type {
   AgencyLeadStatus,
 } from "@workspace/drizzle/schema";
 
-import { StatCard } from "@/components/agency/ads-performance";
 import { useCampaignFilter } from "@/components/agency/campaign-filter";
 import { HoverInfo } from "@/components/agency/hover-info";
+import { InstallSnippet } from "@/components/agency/install-snippet";
 import {
   CHANNEL_HELP,
   CHANNEL_LABELS,
@@ -54,8 +54,13 @@ import {
   type RangeValue,
 } from "@/components/agency/lead-status";
 import { NewLeadDialog } from "@/components/agency/new-lead-dialog";
+import {
+  PageShell,
+  StatCardRow,
+  TableCard,
+} from "@/components/agency/page-shell";
 import { useAgency } from "@/components/agency/use-agency";
-import { Inbox, Search } from "@/components/icon";
+import { Calendar, Inbox, Phone, Search } from "@/components/icon";
 
 const PAGE_SIZE = 25;
 const ALL_SOURCES = "all";
@@ -114,12 +119,11 @@ function CampaignCell({ lead }: { lead: Parameters<typeof leadCampaign>[0] }) {
   );
 }
 
-/** KPIs and the channel mix for a date range, above the inbox. */
-function LeadsOverview() {
+/** KPIs + channel mix for a date range, as one divided stat card. */
+function LeadsOverview({ days }: { days: RangeValue }) {
   const trpc = useTRPC();
   const { repoId } = useAgency();
   const { campaignId } = useCampaignFilter();
-  const [days, setDays] = useState<RangeValue>("30");
   const range = useMemo(() => lastDays(Number(days)), [days]);
   const { data, isPlaceholderData } = useQuery(
     trpc.agency.leads.stats.queryOptions(
@@ -140,114 +144,62 @@ function LeadsOverview() {
   const value = (text: string) => (data ? text : null);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-muted-foreground text-[12px] font-medium tracking-wide uppercase">
-          Overview
-        </p>
-        <Select
-          items={RANGES}
-          value={days}
-          onValueChange={(next) => setDays(next as RangeValue)}
-        >
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {RANGES.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div
-        className={cn(
-          "space-y-3 transition-opacity duration-200",
-          isPlaceholderData && "opacity-50"
-        )}
-      >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
-          <StatCard
-            label="Leads"
-            value={value(String(total))}
-            info={
+    <StatCardRow
+      className={cn(
+        "transition-opacity duration-200",
+        isPlaceholderData && "opacity-50"
+      )}
+      cells={[
+        {
+          label: "Leads",
+          value: value(String(total)),
+          info: {
+            title: "Leads",
+            content: (
               <p>
                 Everyone who sent a form on your website in this period, plus
                 leads you added by hand. Spam is left out.
               </p>
-            }
-          />
-          <StatCard
-            label="From Google Ads"
-            value={value(String(ads))}
-            hint={data ? `${percent(ads, total)} of leads` : undefined}
-            info={<ChannelHelp channel="google_ads" />}
-          />
-          <StatCard
-            label="Organic search"
-            value={value(String(organic))}
-            hint={data ? `${percent(organic, total)} of leads` : undefined}
-            info={<ChannelHelp channel="organic_search" />}
-          />
-          <StatCard
-            label="Other sources"
-            value={value(String(total - ads - organic))}
-            hint={data ? "Social, referral, direct…" : undefined}
-            info={
-              <>
-                <p>
-                  Every lead that didn&apos;t come from Google Ads or organic
-                  search.
-                </p>
-                <ul className="text-muted-foreground list-disc space-y-1 pl-4">
-                  {CHANNEL_ORDER.filter(
-                    (channel) =>
-                      channel !== "google_ads" && channel !== "organic_search"
-                  ).map((channel) => (
-                    <li key={channel}>
-                      <span className="text-foreground font-medium">
-                        {CHANNEL_LABELS[channel]}:
-                      </span>{" "}
-                      {CHANNEL_HELP[channel].what}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            }
-          />
-          <StatCard
-            label="Won"
-            value={value(String(data?.won ?? 0))}
-            info={
-              <p>
-                Leads marked as Won in this period, counted by the day they were
-                won, not the day they came in.
-              </p>
-            }
-          />
-          <StatCard
-            label="Win rate"
-            value={value(percent(data?.won ?? 0, total))}
-            info={<p>Won deals divided by leads in this period.</p>}
-          />
-          <StatCard
-            label="Won revenue"
-            value={value(formatMoney(data?.wonValueCents ?? 0))}
-            info={
-              <p>
-                The deal values you entered on leads marked as Won in this
-                period.
-              </p>
-            }
-          />
-        </div>
-
-        {mix.length > 0 && (
-          <div className="bg-card space-y-3 rounded-lg border p-4">
-            <p className="text-muted-foreground text-[12px] font-medium tracking-wide uppercase">
+            ),
+          },
+        },
+        {
+          label: "From Google Ads",
+          value: value(String(ads)),
+          sub: data ? `${percent(ads, total)} of leads` : undefined,
+          info: { title: "From Google Ads", content: <ChannelHelp channel="google_ads" /> },
+        },
+        {
+          label: "Organic search",
+          value: value(String(organic)),
+          sub: data ? `${percent(organic, total)} of leads` : undefined,
+          info: {
+            title: "Organic search",
+            content: <ChannelHelp channel="organic_search" />,
+          },
+        },
+        {
+          label: "Other sources",
+          value: value(String(total - ads - organic)),
+          sub: data ? "Social, referral, direct…" : undefined,
+        },
+        {
+          label: "Won",
+          value: value(String(data?.won ?? 0)),
+        },
+        {
+          label: "Win rate",
+          value: value(percent(data?.won ?? 0, total)),
+        },
+        {
+          label: "Won revenue",
+          value: value(formatMoney(data?.wonValueCents ?? 0)),
+        },
+      ]}
+      footer={
+        mix.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            <p className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
               Where leads came from
             </p>
             <div className="flex h-2.5 overflow-hidden rounded-full">
@@ -262,9 +214,7 @@ function LeadsOverview() {
             </div>
             <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-[13px]">
               {mix.map((row) => {
-                const won = data?.byChannel.find(
-                  (c) => c.channel === row.channel
-                );
+                const won = data?.byChannel.find((c) => c.channel === row.channel);
                 return (
                   <HoverInfo
                     key={row.channel}
@@ -273,10 +223,7 @@ function LeadsOverview() {
                   >
                     <span className="inline-flex cursor-help items-center gap-1.5">
                       <span
-                        className={cn(
-                          "size-2 rounded-full",
-                          CHANNEL_BAR[row.channel]
-                        )}
+                        className={cn("size-2 rounded-full", CHANNEL_BAR[row.channel])}
                       />
                       <span className="font-medium">
                         {CHANNEL_LABELS[row.channel]}
@@ -291,8 +238,93 @@ function LeadsOverview() {
               })}
             </div>
           </div>
-        )}
+        ) : undefined
+      }
+    />
+  );
+}
+
+/** How leads reach the hub: website forms, booking, phone (soon). */
+function LeadChannels() {
+  const { formKey } = useAgency();
+  const channels = [
+    {
+      key: "forms",
+      icon: Inbox,
+      title: "Website forms",
+      on: Boolean(formKey),
+      sub: formKey ? "Capturing submissions" : "Add the capture script",
+      href: undefined,
+    },
+    {
+      key: "booking",
+      icon: Calendar,
+      title: "Booking",
+      on: true,
+      sub: "Appointments booked on your site",
+      href: "/agency/booking",
+    },
+    {
+      key: "calls",
+      icon: Phone,
+      title: "Phone calls",
+      on: false,
+      sub: "Coming soon",
+      href: "/agency/calls",
+    },
+  ];
+  const onCount = channels.filter((c) => c.on).length;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[18px] font-semibold">How leads get here</p>
+        <span className="text-muted-foreground font-mono text-[13px]">
+          {onCount} of {channels.length} on
+        </span>
       </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
+        {channels.map((channel) => {
+          const Icon = channel.icon;
+          const inner = (
+            <>
+              <span
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-full",
+                  channel.on
+                    ? "bg-[#e6efe4] text-[#2f6b3f]"
+                    : "bg-foreground/5 text-muted-foreground"
+                )}
+              >
+                <Icon className="size-4.5" />
+              </span>
+              <span className="mt-2 text-[15px] font-semibold">
+                {channel.title}
+              </span>
+              <span className="text-muted-foreground text-[14px]">
+                {channel.sub}
+              </span>
+            </>
+          );
+          return channel.href ? (
+            <Link
+              key={channel.key}
+              href={channel.href}
+              className="ring-foreground/7 hover:bg-foreground/3 flex flex-col rounded-[14px] p-4 ring-1"
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div
+              key={channel.key}
+              className="ring-foreground/7 flex flex-col rounded-[14px] p-4 ring-1"
+            >
+              {inner}
+            </div>
+          );
+        })}
+      </div>
+      <InstallSnippet />
     </div>
   );
 }
@@ -303,6 +335,7 @@ export function LeadsInbox() {
   const { repoId, role } = useAgency();
   const { campaignId } = useCampaignFilter();
 
+  const [days, setDays] = useState<RangeValue>("30");
   const [status, setStatus] = useState<AgencyLeadStatus | undefined>();
   const [channel, setChannel] = useState<
     AgencyLeadChannel | typeof ALL_SOURCES
@@ -344,13 +377,40 @@ export function LeadsInbox() {
     ...CHANNEL_ORDER.map((value) => ({ value, label: CHANNEL_LABELS[value] })),
   ];
 
-  return (
-    <div className="space-y-6">
-      <LeadsOverview />
+  const controls = (
+    <>
+      <Select
+        items={RANGES}
+        value={days}
+        onValueChange={(next) => setDays(next as RangeValue)}
+      >
+        <SelectTrigger size="lg" className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {RANGES.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {role !== "view-only" && <NewLeadDialog />}
+    </>
+  );
 
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap gap-1">
+  return (
+    <PageShell
+      eyebrow="LEAD TRACKERS"
+      title="All leads"
+      lead="Everyone who reached out: website forms, booked appointments and leads you added by hand. Mark the ones that became customers as won."
+      controls={controls}
+    >
+      <LeadsOverview days={days} />
+
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="bg-foreground/5 flex flex-wrap gap-1 rounded-[12px] p-1">
             {[{ value: undefined, label: "All" }, ...LEAD_STATUSES].map(
               (option) => (
                 <button
@@ -361,13 +421,18 @@ export function LeadsInbox() {
                     setPage(1);
                   }}
                   className={cn(
-                    "rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors",
+                    "rounded-[9px] px-3.5 py-1.5 text-[14px] font-medium transition-colors",
                     status === option.value
-                      ? "bg-foreground text-background"
-                      : "text-muted-foreground hover:bg-muted"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {option.label}
+                  {option.value === undefined && data ? (
+                    <span className="ml-1 tabular-nums opacity-60">
+                      {data.total}
+                    </span>
+                  ) : null}
                 </button>
               )
             )}
@@ -401,21 +466,14 @@ export function LeadsInbox() {
                 className="h-10 w-64 py-0 pl-8"
               />
             </div>
-            {role !== "view-only" && <NewLeadDialog />}
           </div>
         </div>
 
-        <div
-          className={cn(
-            "bg-card overflow-hidden rounded-lg border transition-opacity duration-200",
-            isPlaceholderData && "opacity-50"
-          )}
-        >
-          <Table>
+        <TableCard className={cn(isPlaceholderData && "opacity-50")}>
+          <Table className="min-w-[900px]">
             <TableHeader>
-              <TableRow>
-                <TableHead>Lead</TableHead>
-                <TableHead>Contact</TableHead>
+              <TableRow className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
+                <TableHead className="pl-6">Lead</TableHead>
                 <TableHead>Source</TableHead>
                 <TableHead>Campaign</TableHead>
                 <TableHead>Landing page</TableHead>
@@ -428,7 +486,7 @@ export function LeadsInbox() {
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={8}>
+                    <TableCell colSpan={7}>
                       <Skeleton className="h-6 w-full rounded" />
                     </TableCell>
                   </TableRow>
@@ -436,35 +494,42 @@ export function LeadsInbox() {
               {data?.rows.map((lead) => (
                 <TableRow
                   key={lead.id}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-[15px]"
                   onClick={() => router.push(`/agency/${lead.id}`)}
                 >
-                  <TableCell>
-                    <Link
-                      href={`/agency/${lead.id}`}
-                      className="font-semibold"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      {lead.name ||
-                        lead.email ||
-                        lead.phone ||
-                        `Lead #${lead.id}`}
-                    </Link>
-                    {lead.source === "booking" && lead.bookingAt && (
-                      <p className="text-muted-foreground text-[12px]">
-                        Booked {format(new Date(lead.bookingAt), "MMM d, p")}
-                        {lead.bookingCanceledAt ? " (canceled)" : ""}
-                      </p>
-                    )}
-                    {lead.message && (
-                      <p className="text-muted-foreground line-clamp-1 max-w-[320px] text-[13px]">
-                        {lead.message}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-[13px]">
-                    <div>{lead.email}</div>
-                    <div className="text-muted-foreground">{lead.phone}</div>
+                  <TableCell className="py-[18px] pl-6">
+                    <div className="flex items-center gap-3">
+                      <span className="bg-foreground/6 grid size-10 shrink-0 place-items-center rounded-full text-[14px] font-semibold">
+                        {(lead.name ?? lead.email ?? "?").charAt(0).toUpperCase()}
+                      </span>
+                      <div className="min-w-0">
+                        <Link
+                          href={`/agency/${lead.id}`}
+                          className="font-semibold"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          {lead.name ||
+                            lead.email ||
+                            lead.phone ||
+                            `Lead #${lead.id}`}
+                        </Link>
+                        {lead.source === "booking" && lead.bookingAt ? (
+                          <p className="text-muted-foreground flex items-center gap-1 text-[13px]">
+                            <Calendar className="size-3.5" />
+                            Booked {format(new Date(lead.bookingAt), "MMM d, p")}
+                            {lead.bookingCanceledAt ? " (canceled)" : ""}
+                          </p>
+                        ) : lead.message ? (
+                          <p className="text-muted-foreground line-clamp-1 max-w-[320px] text-[13px]">
+                            {lead.message}
+                          </p>
+                        ) : lead.email ? (
+                          <p className="text-muted-foreground truncate text-[13px]">
+                            {lead.email}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <ChannelBadge channel={lead.channel} withInfo />
@@ -474,21 +539,21 @@ export function LeadsInbox() {
                       </p>
                     )}
                   </TableCell>
-                  <TableCell className="max-w-[260px] text-[13px]">
+                  <TableCell className="max-w-[260px] text-[14px]">
                     <CampaignCell lead={lead} />
                   </TableCell>
-                  <TableCell className="text-muted-foreground max-w-[180px] truncate text-[13px]">
+                  <TableCell className="text-muted-foreground max-w-[180px] truncate text-[14px]">
                     {urlPath(lead.landingPage ?? lead.pageUrl) ?? ""}
                   </TableCell>
                   <TableCell>
                     <LeadStatusBadge status={lead.status} />
                   </TableCell>
-                  <TableCell className="text-right text-[13px]">
+                  <TableCell className="text-right tabular-nums">
                     {lead.valueCents
                       ? formatMoney(lead.valueCents, lead.currency)
                       : ""}
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-right text-[13px]">
+                  <TableCell className="text-muted-foreground text-right text-[14px]">
                     {formatDistanceToNow(new Date(lead.createdAt), {
                       addSuffix: true,
                     })}
@@ -501,16 +566,16 @@ export function LeadsInbox() {
           {data && !data.rows.length && (
             <div className="px-6 py-14 text-center">
               <Inbox className="text-muted-foreground mx-auto size-8" />
-              <p className="mt-3 font-semibold">No leads yet</p>
-              <p className="text-muted-foreground mt-1 text-[14px]">
+              <p className="mt-3 text-[17px] font-semibold">No leads yet</p>
+              <p className="text-muted-foreground mt-1 text-[15px]">
                 Form submissions from your website show up here.
               </p>
             </div>
           )}
-        </div>
+        </TableCard>
 
         {pageCount > 1 && (
-          <div className="flex items-center justify-end gap-2 text-[13px]">
+          <div className="flex items-center justify-end gap-2 text-[14px]">
             <span className="text-muted-foreground">
               Page {page} of {pageCount}
             </span>
@@ -533,6 +598,8 @@ export function LeadsInbox() {
           </div>
         )}
       </div>
-    </div>
+
+      <LeadChannels />
+    </PageShell>
   );
 }

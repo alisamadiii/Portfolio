@@ -30,23 +30,18 @@ export function AdsAlerts() {
           key={alert.id}
           href={alert.href}
           className={cn(
-            "flex items-start gap-3 rounded-xl border p-3.5 transition-colors",
+            "flex items-start gap-3 rounded-[14px] p-4 transition-opacity hover:opacity-90",
             alert.severity === "critical"
-              ? "border-destructive/25 bg-destructive/6 hover:bg-destructive/10"
-              : "border-amber-500/30 bg-amber-500/8 hover:bg-amber-500/14"
+              ? "bg-[#f8e6e7] text-[#a3283a]"
+              : "bg-[#f6eedb] text-[#8a5a0a]"
           )}
         >
-          <TriangleAlert
-            className={cn(
-              "mt-0.5 size-4.5 shrink-0",
-              alert.severity === "critical"
-                ? "text-destructive"
-                : "text-amber-600 dark:text-amber-400"
-            )}
-          />
+          <TriangleAlert className="mt-0.5 size-4.5 shrink-0" />
           <div>
-            <p className="text-[14px] font-semibold">{alert.title}</p>
-            <p className="text-muted-foreground text-[13px]">{alert.detail}</p>
+            <p className="text-foreground text-[15px] font-semibold">
+              {alert.title}
+            </p>
+            <p className="text-muted-foreground text-[14px]">{alert.detail}</p>
           </div>
         </Link>
       ))}

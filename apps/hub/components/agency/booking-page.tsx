@@ -7,39 +7,26 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
-import { Checkbox } from "@workspace/ui/components/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Switch } from "@workspace/ui/components/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@workspace/ui/components/table";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { AgencyBookingSettings } from "@workspace/drizzle/schema";
-import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
+import {
+  type Booking,
+  CancelBookingDialog,
+  RescheduleDialog,
+} from "@/components/agency/booking-dialogs";
+import { FieldHead, FrameCard, PageShell } from "@/components/agency/page-shell";
+import { StatusPill } from "@/components/agency/lead-status";
 import { useAgency } from "@/components/agency/use-agency";
 import { Calendar, ChevronDown, Plus, Trash, Video, X } from "@/components/icon";
 import { connectGoogleCalendar } from "@/lib/integrations";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");
-
-type Booking = RouterOutputs["agency"]["booking"]["list"][number];
 
 // Mon..Sun display order; keys are JS weekday numbers (0 = Sunday).
 const WEEKDAYS: { key: string; label: string }[] = [
@@ -95,9 +82,9 @@ function SelectBox({
     <span className={cn("relative inline-flex items-center", className)}>
       <select
         {...props}
-        className="border-input bg-background h-8 w-full appearance-none rounded-md border pr-7 pl-2 text-[13px]"
+        className="border-foreground/15 bg-card h-9 w-full appearance-none rounded-[10px] border pr-8 pl-3 text-[15px]"
       />
-      <ChevronDown className="text-muted-foreground pointer-events-none absolute right-2.5 size-3.5" />
+      <ChevronDown className="text-muted-foreground pointer-events-none absolute right-2.5 size-4" />
     </span>
   );
 }
@@ -111,24 +98,46 @@ export function BookingPage() {
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: trpc.agency.booking.pathKey() });
 
-  if (status.isPending) return <Skeleton className="h-96 w-full rounded-2xl" />;
-  if (status.error)
-    return <p className="text-destructive text-[14px]">{status.error.message}</p>;
-
-  const { connected, needsReconnect, settings, formKey } = status.data;
+  const taking = Boolean(status.data?.connected && status.data?.settings);
 
   return (
-    <div className="space-y-6">
-      {!connected && <ConnectCard needsReconnect={needsReconnect} />}
-      <SettingsCard
-        key={JSON.stringify(settings)}
-        saved={settings}
-        repoId={repoId}
-        onSaved={refresh}
-      />
-      {formKey && settings && <BookingSnippet formKey={formKey} />}
-      {connected && settings && <BookingsCard repoId={repoId} />}
-    </div>
+    <PageShell
+      eyebrow="LEAD TRACKERS"
+      title="Booking"
+      lead="Let people book a time straight into your calendar from the website, and manage upcoming appointments here."
+      controls={
+        status.data &&
+        (taking ? (
+          <StatusPill tone="success">Taking bookings</StatusPill>
+        ) : (
+          <StatusPill tone="neutral">Off</StatusPill>
+        ))
+      }
+    >
+      {status.isPending ? (
+        <Skeleton className="h-96 w-full rounded-[18px]" />
+      ) : status.error ? (
+        <p className="text-destructive text-[15px]">{status.error.message}</p>
+      ) : (
+        <div className="flex flex-col gap-6">
+          {status.data.connected && status.data.settings && (
+            <BookingsCard repoId={repoId} />
+          )}
+          {!status.data.connected && (
+            <ConnectCard needsReconnect={status.data.needsReconnect} />
+          )}
+          <SettingsCard
+            key={JSON.stringify(status.data.settings)}
+            saved={status.data.settings}
+            repoId={repoId}
+            onSaved={refresh}
+          />
+          {status.data.formKey && status.data.settings && (
+            <BookingSnippet formKey={status.data.formKey} />
+          )}
+        </div>
+      )}
+    </PageShell>
   );
 }
 
@@ -137,16 +146,16 @@ export function BookingPage() {
 function ConnectCard({ needsReconnect }: { needsReconnect: boolean }) {
   const [busy, setBusy] = useState(false);
   return (
-    <div className="bg-card flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-5">
+    <FrameCard innerClassName="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-start gap-3">
         <Calendar className="text-muted-foreground mt-0.5 size-5" />
         <div>
-          <p className="font-semibold">
+          <p className="text-[17px] font-semibold">
             {needsReconnect
               ? "Reconnect Google Calendar"
               : "Connect Google Calendar"}
           </p>
-          <p className="text-muted-foreground mt-0.5 max-w-xl text-[13.5px]">
+          <p className="text-muted-foreground mt-0.5 max-w-xl text-[15px]">
             {needsReconnect
               ? "Booking also needs permission to read when you're busy. One more consent adds it to your existing connection."
               : "Booked appointments land on your calendar, invites go out automatically, and busy times never show as free."}
@@ -166,7 +175,7 @@ function ConnectCard({ needsReconnect }: { needsReconnect: boolean }) {
       >
         {needsReconnect ? "Reconnect" : "Connect"}
       </Button>
-    </div>
+    </FrameCard>
   );
 }
 
@@ -203,32 +212,24 @@ function SettingsCard({
     })
   );
 
-  const timezones = useMemo(
-    () => Intl.supportedValuesOf("timeZone"),
-    []
-  );
+  const timezones = useMemo(() => Intl.supportedValuesOf("timeZone"), []);
 
   return (
-    <div className="bg-card space-y-5 rounded-2xl border p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="bg-card ring-foreground/7 flex flex-col gap-6 rounded-[18px] p-7 shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-semibold">Availability</p>
-          <p className="text-muted-foreground text-[13.5px]">
+          <p className="text-[18px] font-semibold">Availability</p>
+          <p className="text-muted-foreground text-[15px]">
             Every meeting is 15 minutes. Visitors only see times inside these
             hours that are also free on your calendar.
           </p>
         </div>
-        <Button
-          disabled={!dirty || save.isPending}
-          onClick={() => save.mutate({ repoId, settings: form })}
-        >
-          {saved ? "Save changes" : "Turn on booking"}
-        </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-[13.5px]">
-        <label className="flex items-center gap-2">
-          <span className="text-muted-foreground">Timezone</span>
+      {/* Booking rules */}
+      <div className="flex flex-wrap gap-x-6 gap-y-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-muted-foreground text-[14px]">Timezone</span>
           <SelectBox
             className="max-w-56"
             value={form.timezone}
@@ -241,8 +242,10 @@ function SettingsCard({
             ))}
           </SelectBox>
         </label>
-        <label className="flex items-center gap-2">
-          <span className="text-muted-foreground">Earliest booking</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-muted-foreground text-[14px]">
+            Earliest booking
+          </span>
           <SelectBox
             value={form.noticeHours ?? 4}
             onChange={(e) => patch({ noticeHours: Number(e.target.value) })}
@@ -254,8 +257,8 @@ function SettingsCard({
             ))}
           </SelectBox>
         </label>
-        <label className="flex items-center gap-2">
-          <span className="text-muted-foreground">Open up to</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-muted-foreground text-[14px]">Open up to</span>
           <SelectBox
             value={form.horizonDays ?? 30}
             onChange={(e) => patch({ horizonDays: Number(e.target.value) })}
@@ -267,8 +270,10 @@ function SettingsCard({
             ))}
           </SelectBox>
         </label>
-        <label className="flex items-center gap-2">
-          <span className="text-muted-foreground">Gap after meetings</span>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-muted-foreground text-[14px]">
+            Gap after meetings
+          </span>
           <SelectBox
             value={form.bufferMinutes ?? 0}
             onChange={(e) => patch({ bufferMinutes: Number(e.target.value) })}
@@ -282,25 +287,32 @@ function SettingsCard({
         </label>
       </div>
 
-      <div className="space-y-2">
+      {/* Weekly hours */}
+      <div className="border-foreground/7 flex flex-col gap-2 border-t pt-5">
+        <p className="text-[16px] font-semibold">Weekly hours</p>
         {WEEKDAYS.map((day) => {
           const ranges = form.hours[day.key] ?? [];
+          const open = ranges.length > 0;
           const setRanges = (next: { from: string; to: string }[]) =>
             patch({ hours: { ...form.hours, [day.key]: next } });
           return (
-            <div key={day.key} className="flex flex-wrap items-center gap-3">
-              <label className="flex w-32 items-center gap-2 text-[13.5px] font-medium">
-                <Checkbox
-                  checked={ranges.length > 0}
+            <div
+              key={day.key}
+              className={cn(
+                "flex flex-wrap items-center gap-3 py-1",
+                !open && "text-muted-foreground"
+              )}
+            >
+              <label className="flex w-36 items-center gap-2.5 text-[15px] font-medium">
+                <Switch
+                  checked={open}
                   onCheckedChange={(checked) =>
                     setRanges(checked ? [{ from: "09:00", to: "17:00" }] : [])
                   }
                 />
                 {day.label}
               </label>
-              {ranges.length === 0 && (
-                <span className="text-muted-foreground text-[13px]">Closed</span>
-              )}
+              {!open && <span className="text-[14px]">Closed</span>}
               <div className="flex flex-wrap items-center gap-2">
                 {ranges.map((range, i) => (
                   <span key={i} className="flex items-center gap-1.5">
@@ -337,6 +349,7 @@ function SettingsCard({
                       <Button
                         variant="ghost"
                         size="icon-sm"
+                        aria-label="Remove range"
                         onClick={() => setRanges(ranges.filter((_, j) => j !== i))}
                       >
                         <X className="size-3.5" />
@@ -344,11 +357,11 @@ function SettingsCard({
                     )}
                   </span>
                 ))}
-                {ranges.length > 0 && ranges.length < 4 && (
+                {open && ranges.length < 4 && (
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    title="Add another range"
+                    aria-label="Add another range"
                     onClick={() => {
                       const last = ranges.at(-1)!;
                       setRanges([...ranges, { from: last.to, to: "23:45" }]);
@@ -363,10 +376,11 @@ function SettingsCard({
         })}
       </div>
 
-      <div className="space-y-3 border-t pt-4">
+      {/* Meeting types */}
+      <div className="border-foreground/7 flex flex-col gap-3 border-t pt-5">
         <div>
-          <p className="font-semibold">Meeting types</p>
-          <p className="text-muted-foreground text-[13.5px]">
+          <p className="text-[16px] font-semibold">Meeting types</p>
+          <p className="text-muted-foreground text-[15px]">
             What visitors pick from. All types share the hours above; the Meet
             switch adds a Google Meet link to the invite.
           </p>
@@ -379,21 +393,21 @@ function SettingsCard({
           return (
             <div
               key={type.id}
-              className="flex flex-wrap items-center gap-3 rounded-xl border p-3"
+              className="border-foreground/10 flex flex-wrap items-center gap-3 rounded-[14px] border p-3.5"
             >
               <Input
-                className="h-8 w-44 text-[13.5px]"
+                className="h-9 w-44 text-[15px]"
                 value={type.name}
                 placeholder="Name"
                 onChange={(e) => setType({ name: e.target.value })}
               />
               <Input
-                className="h-8 min-w-48 flex-1 text-[13.5px]"
+                className="h-9 min-w-48 flex-1 text-[15px]"
                 value={type.description ?? ""}
                 placeholder="Short description (optional)"
                 onChange={(e) => setType({ description: e.target.value })}
               />
-              <label className="flex items-center gap-1.5 text-[13px]">
+              <label className="flex items-center gap-1.5 text-[14px]">
                 <Video className="text-muted-foreground size-4" />
                 Meet
                 <Switch
@@ -401,7 +415,7 @@ function SettingsCard({
                   onCheckedChange={(meet) => setType({ meet })}
                 />
               </label>
-              <label className="flex items-center gap-1.5 text-[13px]">
+              <label className="flex items-center gap-1.5 text-[14px]">
                 Active
                 <Switch
                   checked={type.active !== false}
@@ -412,6 +426,7 @@ function SettingsCard({
                 <Button
                   variant="ghost"
                   size="icon-sm"
+                  aria-label="Remove meeting type"
                   onClick={() =>
                     patch({ types: form.types.filter((_, j) => j !== i) })
                   }
@@ -426,6 +441,7 @@ function SettingsCard({
           <Button
             variant="outline"
             size="sm"
+            className="self-start"
             onClick={() =>
               patch({
                 types: [
@@ -439,6 +455,19 @@ function SettingsCard({
           </Button>
         )}
       </div>
+
+      {/* Save bar */}
+      <div className="border-foreground/7 flex items-center justify-between gap-3 border-t pt-4">
+        <span className="text-muted-foreground text-[14px]">
+          {dirty ? "You have unsaved changes." : "No unsaved changes."}
+        </span>
+        <Button
+          disabled={!dirty || save.isPending}
+          onClick={() => save.mutate({ repoId, settings: form })}
+        >
+          {saved ? "Save changes" : "Turn on booking"}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -448,35 +477,35 @@ function SettingsCard({
 function BookingSnippet({ formKey }: { formKey: string }) {
   const snippet = `<script src="${API_URL}/b.js" data-key="${formKey}" defer></script>\n<button data-booking>Book an appointment</button>`;
   return (
-    <details className="bg-card rounded-lg border px-5 py-3 text-[14px]">
-      <summary className="cursor-pointer font-semibold">Put booking on the website</summary>
-      <div className="mt-3 space-y-3">
-        <p className="text-muted-foreground">
-          Add <code>data-booking</code> to any button or link on the site: the
-          site keeps its own button styling, and clicking it opens the booking
-          dialog on top of the page, booking straight into your calendar.
-          Optional attributes on that element:{" "}
-          <code>data-accent=&quot;#0f766e&quot;</code> recolors the dialog (the
-          default is our orange), <code>data-theme=&quot;dark&quot;</code>{" "}
-          makes it dark. If the capture script (f.js) is on the page too,
-          bookings are credited to the ad that brought the visitor.
-        </p>
-        <div className="flex items-start gap-2">
-          <code className="bg-muted flex-1 rounded-md p-3 text-[12.5px] whitespace-pre-wrap">
-            {snippet}
-          </code>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              navigator.clipboard.writeText(snippet).then(() => toast.success("Copied."))
-            }
-          >
-            Copy
-          </Button>
-        </div>
+    <FrameCard innerClassName="flex flex-col gap-3">
+      <p className="text-[17px] font-semibold">Put booking on the website</p>
+      <p className="text-muted-foreground text-[15px]">
+        Add <code>data-booking</code> to any button or link on the site: the
+        site keeps its own button styling, and clicking it opens the booking
+        dialog on top of the page, booking straight into your calendar. Optional
+        attributes on that element: <code>data-accent=&quot;#0f766e&quot;</code>{" "}
+        recolors the dialog (the default is our orange),{" "}
+        <code>data-theme=&quot;dark&quot;</code> makes it dark. If the capture
+        script (f.js) is on the page too, bookings are credited to the ad that
+        brought the visitor.
+      </p>
+      <div className="flex items-start gap-2">
+        <code className="flex-1 rounded-[11px] bg-[#171512] p-4 text-[13px] whitespace-pre-wrap text-[#ece9e2]">
+          {snippet}
+        </code>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            navigator.clipboard
+              .writeText(snippet)
+              .then(() => toast.success("Copied."))
+          }
+        >
+          Copy code
+        </Button>
       </div>
-    </details>
+    </FrameCard>
   );
 }
 
@@ -492,18 +521,8 @@ function BookingsCard({ repoId }: { repoId: number }) {
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
 
-  const cancel = useMutation(
-    trpc.agency.booking.cancel.mutationOptions({
-      onSuccess: () => {
-        toast.success("Booking canceled. The visitor was notified.");
-        setCancelTarget(null);
-        refresh();
-      },
-      onError: (error) => toast.error(error.message),
-    })
-  );
-
-  if (bookings.isPending) return <Skeleton className="h-40 w-full rounded-2xl" />;
+  if (bookings.isPending)
+    return <Skeleton className="h-40 w-full rounded-[18px]" />;
   if (bookings.error) return null;
 
   const upcoming = bookings.data.filter(
@@ -515,9 +534,9 @@ function BookingsCard({ repoId }: { repoId: number }) {
 
   if (!bookings.data.length) {
     return (
-      <div className="rounded-2xl border border-dashed p-8 text-center">
-        <p className="font-semibold">No bookings yet</p>
-        <p className="text-muted-foreground mt-1 text-[14px]">
+      <div className="ring-foreground/10 rounded-[18px] p-8 text-center ring-1 ring-dashed">
+        <p className="text-[17px] font-semibold">No bookings yet</p>
+        <p className="text-muted-foreground mt-1 text-[15px]">
           Appointments booked on your website appear here and in your leads,
           with where each one came from.
         </p>
@@ -525,72 +544,91 @@ function BookingsCard({ repoId }: { repoId: number }) {
     );
   }
 
-  const rows = [...upcoming].reverse().concat(past);
+  const sections = [
+    { label: "Upcoming", rows: [...upcoming].reverse() },
+    { label: "Past", rows: past },
+  ].filter((s) => s.rows.length);
 
   return (
-    <div className="bg-card overflow-hidden rounded-2xl border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="pl-5">When</TableHead>
-            <TableHead>Who</TableHead>
-            <TableHead>Meeting</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((booking) => {
-            const at = booking.bookingAt ? new Date(booking.bookingAt) : null;
-            const canceled = Boolean(booking.bookingCanceledAt);
-            const isPast = Boolean(at && at < new Date());
-            return (
-              <TableRow key={booking.id} className={cn(canceled && "opacity-55")}>
-                <TableCell className="pl-5 whitespace-nowrap">
-                  <span className="font-medium">
-                    {at ? format(at, "EEE, MMM d") : "–"}
-                  </span>
-                  <p className="text-muted-foreground text-[12.5px]">
-                    {at ? format(at, "p") : ""}
-                    {canceled ? " · Canceled" : ""}
-                  </p>
-                </TableCell>
-                <TableCell>
-                  <a className="font-medium hover:underline" href={`/agency/${booking.id}`}>
-                    {booking.name ?? booking.email ?? "Visitor"}
-                  </a>
-                  <p className="text-muted-foreground text-[12.5px]">{booking.email}</p>
-                </TableCell>
-                <TableCell>
-                  <span className="text-[13.5px]">{booking.booking?.typeName}</span>
-                  <span className="text-muted-foreground ml-2 inline-flex items-center gap-2 text-[12.5px]">
-                    {booking.booking?.meetUrl && (
-                      <a
-                        className="hover:underline"
-                        href={booking.booking.meetUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Meet link
-                      </a>
-                    )}
-                    {booking.booking?.htmlLink && (
-                      <a
-                        className="hover:underline"
-                        href={booking.booking.htmlLink}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Calendar
-                      </a>
-                    )}
-                    {booking.booking?.eventError && (
-                      <span className="text-destructive">Calendar event failed</span>
-                    )}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
+    <div className="flex flex-col gap-5">
+      {sections.map((section) => (
+        <div
+          key={section.label}
+          className="bg-card ring-foreground/7 overflow-hidden rounded-[18px] shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1"
+        >
+          <div className="border-foreground/7 flex items-center gap-2 border-b px-6 py-4">
+            <span className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
+              {section.label}
+            </span>
+            <span className="text-muted-foreground text-[13px]">
+              · {section.rows.length}
+            </span>
+          </div>
+          <div className="divide-foreground/7 divide-y">
+            {section.rows.map((booking) => {
+              const at = booking.bookingAt ? new Date(booking.bookingAt) : null;
+              const canceled = Boolean(booking.bookingCanceledAt);
+              const isPast = Boolean(at && at < new Date());
+              return (
+                <div
+                  key={booking.id}
+                  className={cn(
+                    "flex flex-wrap items-center gap-4 px-6 py-4",
+                    canceled && "opacity-55"
+                  )}
+                >
+                  <div className="w-32 shrink-0">
+                    <p className="font-medium">
+                      {at ? format(at, "EEE, MMM d") : "–"}
+                    </p>
+                    <p className="text-muted-foreground text-[13px]">
+                      {at ? format(at, "p") : ""}
+                      {canceled ? " · Canceled" : ""}
+                    </p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <a
+                      className="font-medium hover:underline"
+                      href={`/agency/${booking.id}`}
+                    >
+                      {booking.name ?? booking.email ?? "Visitor"}
+                    </a>
+                    <p className="text-muted-foreground truncate text-[13px]">
+                      {booking.email}
+                    </p>
+                  </div>
+                  <div className="min-w-0 flex-1 text-[14px]">
+                    <span>{booking.booking?.typeName}</span>
+                    <span className="text-muted-foreground ml-2 inline-flex items-center gap-2 text-[13px]">
+                      {booking.booking?.meetUrl && (
+                        <a
+                          className="hover:underline"
+                          href={booking.booking.meetUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Meet link
+                        </a>
+                      )}
+                      {booking.booking?.htmlLink && (
+                        <a
+                          className="hover:underline"
+                          href={booking.booking.htmlLink}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Calendar
+                        </a>
+                      )}
+                      {booking.booking?.eventError && (
+                        <span className="text-destructive">
+                          Calendar event failed
+                        </span>
+                      )}
+                    </span>
+                  </div>
                   {!canceled && !isPast && (
-                    <span className="flex justify-end gap-1.5">
+                    <span className="flex gap-1.5">
                       <Button
                         variant="outline"
                         size="sm"
@@ -607,39 +645,24 @@ function BookingsCard({ repoId }: { repoId: number }) {
                       </Button>
                     </span>
                   )}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
 
-      <Dialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Cancel this booking?</DialogTitle>
-            <DialogDescription>
-              {cancelTarget?.name ?? "The visitor"} gets a cancellation email
-              from Google Calendar and the slot opens up again.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCancelTarget(null)}>
-              Keep it
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={cancel.isPending}
-              onClick={() =>
-                cancelTarget && cancel.mutate({ repoId, leadId: cancelTarget.id })
-              }
-            >
-              Cancel booking
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      {cancelTarget && (
+        <CancelBookingDialog
+          repoId={repoId}
+          booking={cancelTarget}
+          onClose={() => setCancelTarget(null)}
+          onDone={() => {
+            setCancelTarget(null);
+            refresh();
+          }}
+        />
+      )}
       {rescheduleTarget && (
         <RescheduleDialog
           repoId={repoId}
@@ -652,116 +675,5 @@ function BookingsCard({ repoId }: { repoId: number }) {
         />
       )}
     </div>
-  );
-}
-
-// ─── Reschedule ──────────────────────────────────────────────────
-
-function RescheduleDialog({
-  repoId,
-  booking,
-  onClose,
-  onDone,
-}: {
-  repoId: number;
-  booking: Booking;
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const trpc = useTRPC();
-  const range = useMemo(() => {
-    const from = new Date();
-    const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000);
-    return { from: from.toISOString(), to: to.toISOString() };
-  }, []);
-  const slots = useQuery(
-    trpc.agency.booking.slots.queryOptions({ repoId, ...range })
-  );
-  const [day, setDay] = useState<string | null>(null);
-  const [slot, setSlot] = useState<string | null>(null);
-
-  const reschedule = useMutation(
-    trpc.agency.booking.reschedule.mutationOptions({
-      onSuccess: () => {
-        toast.success("Booking moved. Both sides were notified.");
-        onDone();
-      },
-      onError: (error) => toast.error(error.message),
-    })
-  );
-
-  const byDay = useMemo(() => {
-    const groups = new Map<string, string[]>();
-    for (const iso of slots.data?.slots ?? []) {
-      const key = format(new Date(iso), "yyyy-MM-dd");
-      groups.set(key, [...(groups.get(key) ?? []), iso]);
-    }
-    return groups;
-  }, [slots.data]);
-  const days = [...byDay.keys()];
-  const activeDay = day ?? days[0] ?? null;
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Reschedule {booking.booking?.typeName}</DialogTitle>
-          <DialogDescription>
-            Pick a new time for {booking.name ?? booking.email}. The calendar
-            invite moves and both of you get the update.
-          </DialogDescription>
-        </DialogHeader>
-        {slots.isPending ? (
-          <Skeleton className="h-40 w-full rounded-xl" />
-        ) : !days.length ? (
-          <p className="text-muted-foreground py-6 text-center text-[14px]">
-            No free times in the next two weeks.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-1.5">
-              {days.map((d) => (
-                <Button
-                  key={d}
-                  variant={d === activeDay ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setDay(d);
-                    setSlot(null);
-                  }}
-                >
-                  {format(new Date(`${d}T12:00:00`), "EEE d")}
-                </Button>
-              ))}
-            </div>
-            <div className="grid max-h-48 grid-cols-4 gap-1.5 overflow-y-auto">
-              {(activeDay ? (byDay.get(activeDay) ?? []) : []).map((iso) => (
-                <Button
-                  key={iso}
-                  variant={slot === iso ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSlot(iso)}
-                >
-                  {format(new Date(iso), "p")}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Back
-          </Button>
-          <Button
-            disabled={!slot || reschedule.isPending}
-            onClick={() =>
-              slot && reschedule.mutate({ repoId, leadId: booking.id, at: slot })
-            }
-          >
-            Move booking
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

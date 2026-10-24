@@ -1,5 +1,60 @@
+import type { ReactNode } from "react";
+
 import type { AgencyLeadStatus } from "@workspace/drizzle/schema";
 import { cn } from "@workspace/ui/lib/utils";
+
+export type PillTone =
+  | "info"
+  | "warning"
+  | "success"
+  | "danger"
+  | "neutral"
+  | "accent";
+
+// Handoff status tones (light-only hex, matching the shipped business-info half).
+const PILL_TONES: Record<PillTone, string> = {
+  info: "bg-[#e4edf1] text-[#2d5e7a]",
+  warning: "bg-[#f6eedb] text-[#8a5a0a]",
+  success: "bg-[#e6efe4] text-[#2f6b3f]",
+  danger: "bg-[#f8e6e7] text-[#a3283a]",
+  neutral: "bg-foreground/5 text-muted-foreground",
+  accent: "bg-primary/16 text-[#c2451f]",
+};
+
+/** Status pill: tone colour paired with a dot (spec rule 6). */
+export function StatusPill({
+  tone,
+  dot = true,
+  className,
+  children,
+}: {
+  tone: PillTone;
+  dot?: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold",
+        PILL_TONES[tone],
+        className
+      )}
+    >
+      {dot && <span className="size-1.5 rounded-full bg-current" />}
+      {children}
+    </span>
+  );
+}
+
+const LEAD_STATUS_TONE: Record<AgencyLeadStatus, PillTone> = {
+  new: "info",
+  contacted: "warning",
+  qualified: "accent",
+  won: "success",
+  lost: "neutral",
+  spam: "neutral",
+};
 
 export const LEAD_STATUSES: { value: AgencyLeadStatus; label: string }[] = [
   { value: "new", label: "New" },
@@ -15,18 +70,9 @@ export const leadStatusLabel = (status: AgencyLeadStatus) =>
 
 export function LeadStatusBadge({ status }: { status: AgencyLeadStatus }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-semibold",
-        status === "new" && "bg-sky-500/12 text-sky-700 dark:text-sky-300",
-        status === "contacted" && "bg-amber-500/12 text-amber-700 dark:text-amber-300",
-        status === "qualified" && "bg-violet-500/12 text-violet-700 dark:text-violet-300",
-        status === "won" && "bg-emerald-500/14 text-emerald-700 dark:text-emerald-300",
-        (status === "lost" || status === "spam") && "bg-muted text-muted-foreground"
-      )}
-    >
+    <StatusPill tone={LEAD_STATUS_TONE[status]}>
       {leadStatusLabel(status)}
-    </span>
+    </StatusPill>
   );
 }
 

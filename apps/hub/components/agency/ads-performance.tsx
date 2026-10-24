@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
@@ -16,8 +16,6 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import {
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -48,13 +46,20 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { HoverInfo } from "@/components/agency/hover-info";
 import {
   formatMoney,
   lastDays,
   RANGES,
   type RangeValue,
+  StatusPill,
 } from "@/components/agency/lead-status";
+import { AdsAlerts } from "@/components/agency/ads-alerts";
+import { MarketingTabs } from "@/components/agency/marketing-tabs";
+import {
+  PageShell,
+  StatCardRow,
+  TableCard,
+} from "@/components/agency/page-shell";
 import { useCampaignFilter } from "@/components/agency/campaign-filter";
 import { useAgency } from "@/components/agency/use-agency";
 import { CampaignUrlDialog } from "@/components/agency/campaign-url-dialog";
@@ -159,12 +164,9 @@ function CampaignMenu({
 function CampaignStatus({ status }: { status: string }) {
   if (!status) return null;
   return (
-    <span
-      data-status={status}
-      className="bg-muted text-muted-foreground data-[status=ENABLED]:bg-chart-2/15 data-[status=ENABLED]:text-chart-2 rounded px-1.5 py-0.5 text-[11px] font-medium"
-    >
+    <StatusPill tone={status === "ENABLED" ? "success" : "neutral"} dot={false}>
       {status === "ENABLED" ? "Active" : titleCase(status)}
-    </span>
+    </StatusPill>
   );
 }
 
@@ -172,40 +174,6 @@ const chartConfig = {
   cost: { label: "Ad spend", color: "var(--chart-1)" },
   leads: { label: "Leads", color: "var(--chart-3)" },
 } satisfies ChartConfig;
-
-export function StatCard({
-  label,
-  value,
-  hint,
-  info,
-}: {
-  label: string;
-  value: string | null;
-  hint?: string;
-  /** Hover explanation of what the number means and how it's counted. */
-  info?: ReactNode;
-}) {
-  return (
-    <div className="bg-card rounded-lg border p-4">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-muted-foreground text-[12px] font-medium tracking-wide uppercase">
-          {label}
-        </p>
-        {info && <HoverInfo title={label} content={info} />}
-      </div>
-      {value === null ? (
-        <Skeleton className="mt-2 h-7 w-16 rounded" />
-      ) : (
-        <p className="mt-1 text-[24px] font-extrabold tracking-tight">
-          {value}
-        </p>
-      )}
-      {hint && (
-        <p className="text-muted-foreground mt-0.5 text-[12px]">{hint}</p>
-      )}
-    </div>
-  );
-}
 
 /**
  * Leads + Google Ads numbers for a range, shared by Home and Marketing.
@@ -284,122 +252,124 @@ export function AdsPerformance() {
     }));
   }, [ads.data, leads.data]);
 
-  // Null from the server: no account linked, or the Ads API isn't set up yet.
-  if (!adsConnected || (ads.isSuccess && !ads.data)) {
-    return (
-      <div className="rounded-lg border border-dashed px-6 py-14 text-center">
-        <Megaphone className="text-muted-foreground mx-auto size-8" />
-        <h3 className="mt-3 text-[18px] font-extrabold tracking-tight">
-          Your ads aren&apos;t connected yet
-        </h3>
-        <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14px]">
-          Once your Google Ads campaigns are live, spend, clicks and cost per
-          lead show up here.
-        </p>
-      </div>
-    );
-  }
-
-  const totals = ads.data?.totals;
   const money = (value: number) =>
     formatMoney(Math.round(value * 100), currency);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-[14px]">
-          {ads.data ? (
-            <>
-              <span className="text-muted-foreground">Google Ads account </span>
-              <span className="font-semibold">
-                {ads.data.account.name || "Unnamed"}
-              </span>
-              <span className="text-muted-foreground">
-                {" "}
-                · {formatCustomerId(ads.data.account.id)} ·{" "}
-                {ads.data.campaigns.length}{" "}
-                {ads.data.campaigns.length === 1 ? "campaign" : "campaigns"}
-              </span>
-            </>
-          ) : (
-            <Skeleton className="h-5 w-64 rounded" />
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Select
-            items={RANGES}
-            value={days}
-            onValueChange={(value) => setDays(value as RangeValue)}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RANGES.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+  const controls = (
+    <>
+      {ads.data && (
+        <span className="ring-foreground/10 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[14px] ring-1">
+          <span className="size-2 rounded-full bg-[#2f6b3f]" />
+          <span className="font-medium">
+            {ads.data.account.name || "Unnamed"}
+          </span>
+          <span className="text-muted-foreground font-mono text-[12px]">
+            {formatCustomerId(ads.data.account.id)}
+          </span>
+        </span>
+      )}
+      <Select
+        items={RANGES}
+        value={days}
+        onValueChange={(value) => setDays(value as RangeValue)}
+      >
+        <SelectTrigger size="lg" className="w-40">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {RANGES.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
 
-      {ads.error ? (
-        <p className="text-destructive text-[14px]">{ads.error.message}</p>
+  // Null from the server: no account linked, or the Ads API isn't set up yet.
+  const notConnected = !adsConnected || (ads.isSuccess && !ads.data);
+  const totals = ads.data?.totals;
+
+  return (
+    <PageShell
+      eyebrow="MARKETING · GOOGLE ADS"
+      title="Overview"
+      lead="What your Google Ads cost, and what they brought in."
+      controls={notConnected ? undefined : controls}
+      tabs={<MarketingTabs />}
+    >
+      {notConnected ? (
+        <div className="ring-foreground/10 rounded-[18px] px-6 py-14 text-center ring-1 ring-dashed">
+          <Megaphone className="text-muted-foreground mx-auto size-8" />
+          <h3 className="mt-3 text-[20px] font-semibold tracking-[-0.02em]">
+            Your ads aren&apos;t connected yet
+          </h3>
+          <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[15px]">
+            Once your Google Ads campaigns are live, spend, clicks and cost per
+            lead show up here.
+          </p>
+        </div>
+      ) : ads.error ? (
+        <p className="text-destructive text-[15px]">{ads.error.message}</p>
       ) : (
         <div
           className={cn(
-            "space-y-6 transition-opacity duration-200",
+            "flex flex-col gap-6 transition-opacity duration-200",
             (ads.isPlaceholderData || leads.isPlaceholderData) && "opacity-50"
           )}
         >
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-            <StatCard
-              label="Ad spend"
-              value={totals ? money(totals.cost) : null}
-            />
-            <StatCard
-              label="Clicks"
-              value={totals ? totals.clicks.toLocaleString() : null}
-            />
-            <StatCard
-              label="Ad leads"
-              value={adLeads === null ? null : String(adLeads)}
-              hint={
-                leads.data
-                  ? `${leads.data.leads} leads from all sources`
-                  : undefined
-              }
-            />
-            <StatCard
-              label="Cost per ad lead"
-              value={
-                ads.isLoading || leads.isLoading ? null : (costPerLead ?? "–")
-              }
-            />
-            <StatCard
-              label="Won from ads"
-              value={
-                leads.data
+          <AdsAlerts />
+          <StatCardRow
+            cells={[
+              { label: "Ad spend", value: totals ? money(totals.cost) : null },
+              {
+                label: "Clicks",
+                value: totals ? totals.clicks.toLocaleString() : null,
+              },
+              {
+                label: "Ad leads",
+                value: adLeads === null ? null : String(adLeads),
+                sub: leads.data
+                  ? `${leads.data.leads} from all sources`
+                  : undefined,
+              },
+              {
+                label: "Cost per ad lead",
+                value:
+                  ads.isLoading || leads.isLoading ? null : (costPerLead ?? "–"),
+              },
+              {
+                label: "Won from ads",
+                value: leads.data
                   ? String(
                       leads.data.byChannel.find(
                         (row) => row.channel === "google_ads"
                       )?.won ?? 0
                     )
-                  : null
-              }
-            />
-            <StatCard
-              label="Return on ads"
-              value={ads.isLoading || leads.isLoading ? null : (roas ?? "–")}
-            />
-          </div>
+                  : null,
+              },
+              {
+                label: "Return on ads",
+                value: ads.isLoading || leads.isLoading ? null : (roas ?? "–"),
+              },
+            ]}
+          />
 
-          <div className="bg-card rounded-lg border p-4">
-            <p className="text-muted-foreground mb-3 text-[12px] font-medium tracking-wide uppercase">
-              Spend vs leads
-            </p>
+          <div className="bg-card ring-foreground/7 rounded-[18px] p-6 shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
+                Spend vs leads, by day
+              </p>
+              <div className="flex items-center gap-4 text-[13px]">
+                <span className="flex items-center gap-1.5">
+                  <span className="bg-primary size-2.5 rounded-[3px]" /> Ad spend
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="bg-foreground size-2.5 rounded-full" /> Leads
+                </span>
+              </div>
+            </div>
             {ads.isLoading ? (
               <Skeleton className="h-[280px] w-full rounded" />
             ) : (
@@ -447,7 +417,6 @@ export function AdsPerformance() {
                       />
                     }
                   />
-                  <ChartLegend content={<ChartLegendContent />} />
                   <Bar
                     yAxisId="cost"
                     dataKey="cost"
@@ -467,11 +436,11 @@ export function AdsPerformance() {
             )}
           </div>
 
-          <div className="bg-card overflow-hidden rounded-lg border">
-            <Table>
+          <TableCard>
+            <Table className="min-w-[720px]">
               <TableHeader>
-                <TableRow>
-                  <TableHead>Campaign</TableHead>
+                <TableRow className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
+                  <TableHead className="pl-6">Campaign</TableHead>
                   <TableHead className="text-right">Spend</TableHead>
                   <TableHead className="text-right">Clicks</TableHead>
                   <TableHead className="text-right">Impressions</TableHead>
@@ -484,39 +453,39 @@ export function AdsPerformance() {
                   <TableRow
                     key={campaign.id}
                     data-selected={campaign.id === campaignId || undefined}
-                    className="data-[selected]:bg-muted cursor-pointer"
+                    className="cursor-pointer text-[15px] data-[selected]:bg-foreground/4"
                     onClick={() =>
                       setCampaignId(
                         campaign.id === campaignId ? null : campaign.id
                       )
                     }
                   >
-                    <TableCell>
+                    <TableCell className="py-[18px] pl-6">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{campaign.name}</span>
                         <CampaignStatus status={campaign.status} />
                       </div>
                       {campaign.channel && (
-                        <p className="text-muted-foreground text-[12px]">
+                        <p className="text-muted-foreground text-[13px]">
                           {CHANNEL_LABELS[campaign.channel] ??
                             titleCase(campaign.channel)}
                         </p>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right tabular-nums">
                       {money(campaign.cost)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right tabular-nums">
                       {campaign.clicks.toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right tabular-nums">
                       {campaign.impressions.toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right tabular-nums">
                       {Math.round(campaign.conversions).toLocaleString()}
                     </TableCell>
                     <TableCell
-                      className="pr-3 text-right"
+                      className="pr-4 text-right"
                       onClick={(event) => event.stopPropagation()}
                     >
                       <CampaignMenu campaign={campaign} currency={currency} />
@@ -535,9 +504,9 @@ export function AdsPerformance() {
                 )}
               </TableBody>
             </Table>
-          </div>
+          </TableCard>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
