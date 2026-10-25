@@ -10,8 +10,7 @@ import { cn } from "@workspace/ui/lib/utils";
 // its other sections re-apply the narrow width themselves.
 export function HubContainer({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isWide =
-    pathname.startsWith("/emails") || pathname.startsWith("/agency-clients");
+  const isWide = pathname.startsWith("/emails");
   const isHome = pathname === "/";
 
   return (

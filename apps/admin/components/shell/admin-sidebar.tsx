@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Gauge,
   ImageIcon,
+  Megaphone,
   Package,
   Users,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const groups = [
       { label: "Overview", href: "/", icon: Gauge },
       { label: "Users", href: "/users", icon: Users },
       { label: "Products", href: "/products", icon: Package },
+      { label: "Agency clients", href: "/agency-clients", icon: Megaphone },
       { label: "Media", href: "/media", icon: ImageIcon },
     ],
   },

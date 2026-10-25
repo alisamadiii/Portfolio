@@ -12,7 +12,6 @@ import {
   Globe,
   HelpCircle,
   House,
-  Inbox,
   LogOut,
   Settings,
 } from "@/components/icon";
@@ -35,7 +34,6 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-import { isAdminUser } from "@/lib/authz-shared";
 
 import { signOut } from "@/lib/auth-client";
 import { getInitialsFromName } from "@/lib/utils/avatar";
@@ -143,17 +141,7 @@ const WebsiteGroup = () => {
   );
 };
 
-const adminPages = [
-  {
-    title: "Agency clients",
-    url: "/agency-clients",
-    icon: Inbox,
-  },
-];
-
 export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const user = useCurrentUser().data?.user ?? null;
-
   return (
     <Sidebar {...props}>
       <SidebarHeader className="px-5 pt-6 pb-5">
@@ -179,7 +167,6 @@ export function HubSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavPages label="Overview" pages={overviewPages} />
         <WebsiteGroup />
         <NavPages label="Account" pages={accountPages} />
-        {isAdminUser(user) && <NavPages label="Admin" pages={adminPages} />}
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel className="text-sidebar-foreground/60 px-3 text-[11px] font-semibold tracking-[0.06em] uppercase">
             Support
