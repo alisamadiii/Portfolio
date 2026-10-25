@@ -1,16 +1,1077 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script
-      src="http://localhost:3000/b.js"
-      data-key="8zDV9s7s3Zx1usC2"
-      defer
-    ></script>
-  </head>
-  <body>
-    <button data-booking>Book an appointment</button>
-  </body>
-</html>
+<title>Local Ads Playbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one reading column of "stations". Each phase = number + headline, then an animated scene beside plain-language cards. Stacks to one column on phones. */
+:root{
+  --bg:#F2F3F4; --surface:#FFFFFF; --surface-2:#E9EBED; --ink:#221F1C; --muted:#5F5B57; --line:#D9DCDF;
+  --accent:#FC8464; --accent-ink:#B4482B; --accent-soft:#FDE3DA;
+  --good:#23845F; --good-soft:#D7EFE5; --bad:#C73C32; --bad-soft:#F8DCD9; --blue:#2F62C9; --blue-soft:#DCE6F8;
+  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141312; --surface:#1E1C1A; --surface-2:#282523; --ink:#F2EEEA; --muted:#A8A19A; --line:#38342F;
+  --accent:#FC8464; --accent-ink:#FFA488; --accent-soft:#3D2620;
+  --good:#5CC79C; --good-soft:#18352A; --bad:#F2766C; --bad-soft:#3E1F1C; --blue:#86A8F2; --blue-soft:#1E2A42;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#141312; --surface:#1E1C1A; --surface-2:#282523; --ink:#F2EEEA; --muted:#A8A19A; --line:#38342F;
+  --accent:#FC8464; --accent-ink:#FFA488; --accent-soft:#3D2620;
+  --good:#5CC79C; --good-soft:#18352A; --bad:#F2766C; --bad-soft:#3E1F1C; --blue:#86A8F2; --blue-soft:#1E2A42;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:16px; line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:0 48px}
+.wrap{max-width:1100px; margin:0 auto}
+h1,h2,h3{font-family:var(--f-display); line-height:1.08; text-wrap:balance; margin:0; letter-spacing:-.01em}
+h1{font-size:clamp(2.4rem, 6vw, 4.4rem); font-weight:800}
+h2{font-size:clamp(1.6rem, 3.4vw, 2.3rem); font-weight:700}
+h3{font-size:1.15rem; font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); font-weight:700}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+.ic{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none}
+.stack{display:flex; flex-direction:column; gap:12px}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+
+/* ---------- hero ---------- */
+.hero{display:grid; grid-template-columns:1.25fr 1fr; gap:32px; align-items:center; padding-block:48px 32px}
+.hero p.lede{font-size:1.15rem; max-width:52ch; margin-top:16px; color:var(--muted)}
+.hero p.lede b{color:var(--ink)}
+.loop{width:100%; max-width:360px; justify-self:center}
+.loop .ring{fill:none; stroke:var(--line); stroke-width:2}
+.loop .runner{fill:none; stroke:var(--accent); stroke-width:4; stroke-linecap:round; stroke-dasharray:70 560; transform-box:view-box; transform-origin:180px 180px; animation:spin 8s linear infinite}
+.loop .node circle{fill:var(--surface); stroke:var(--ink); stroke-width:2}
+.loop .node text{fill:var(--ink); font-family:var(--f-display); font-weight:700; font-size:15px; text-anchor:middle}
+.loop .node .n{font-family:var(--f-mono); font-size:11px; fill:var(--accent-ink)}
+.loop .node circle{animation:nodePulse 8s ease-in-out infinite}
+.loop .node:nth-of-type(2) circle{animation-delay:2s}.loop .node:nth-of-type(3) circle{animation-delay:4s}.loop .node:nth-of-type(4) circle{animation-delay:6s}
+.loop .center{fill:var(--muted); font-family:var(--f-mono); font-size:11px; text-anchor:middle; letter-spacing:.1em}
+.loop .center-b{fill:var(--ink); font-family:var(--f-display); font-size:20px; font-weight:800; text-anchor:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes nodePulse{0%,20%{fill:var(--accent-soft); stroke:var(--accent)}30%,100%{fill:var(--surface); stroke:var(--ink)}}
+
+/* ---------- index ---------- */
+.index{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:8px; margin-block:8px 56px}
+.index a{display:flex; gap:10px; align-items:baseline; padding:12px 14px; background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--ink); text-decoration:none; font-weight:600; transition:border-color .2s, transform .2s}
+.index a:hover{border-color:var(--accent); transform:translateY(-2px)}
+.index a span{font-family:var(--f-mono); font-size:.75rem; color:var(--accent-ink)}
+
+/* ---------- sections ---------- */
+section{padding-block:40px; border-top:1px solid var(--line)}
+.sec-head{display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:start; margin-bottom:28px}
+.num{font-family:var(--f-display); font-weight:800; font-size:clamp(2.6rem,6vw,4rem); line-height:.9; color:var(--accent); font-variant-numeric:tabular-nums}
+.sec-head .lede{margin-top:10px; font-size:1.08rem; color:var(--muted); max-width:62ch}
+.sec-head .lede b{color:var(--ink)}
+.body{display:grid; grid-template-columns:1.1fr 1fr; gap:20px; align-items:start}
+.body > *{min-width:0}
+.scene{margin:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:20px; display:flex; flex-direction:column; gap:14px}
+.scene figcaption{font-size:.88rem; color:var(--muted)}
+.scene svg.art{width:100%; height:auto; display:block}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:18px 20px}
+.card h3{display:flex; gap:10px; align-items:center; margin-bottom:8px}
+.card h3 .ic{color:var(--accent-ink)}
+.card ul{margin:0; padding-left:1.1em; display:flex; flex-direction:column; gap:4px}
+.card li::marker{color:var(--accent)}
+.note{background:var(--accent-soft); border-radius:12px; padding:14px 16px; font-size:.95rem}
+.note b{color:var(--accent-ink)}
+.tag{display:inline-flex; align-items:center; gap:6px; font-family:var(--f-mono); font-size:.72rem; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:999px; background:var(--surface-2); color:var(--muted)}
+.tag.good{background:var(--good-soft); color:var(--good)} .tag.bad{background:var(--bad-soft); color:var(--bad)} .tag.hot{background:var(--accent-soft); color:var(--accent-ink)}
+
+/* ---------- concept: auction ---------- */
+.query{display:flex; gap:10px; align-items:center; padding:10px 14px; border:1px solid var(--line); border-radius:999px; background:var(--bg); font-weight:600}
+.query .ic{color:var(--muted)}
+.bidder{display:grid; grid-template-columns:96px 1fr; gap:6px 12px; align-items:center}
+.bidder .who{font-weight:700; font-size:.92rem}
+.bidder .who small{display:block; font-family:var(--f-mono); font-weight:500; color:var(--muted); font-size:.72rem}
+.bar-track{height:28px; background:var(--surface-2); border-radius:8px; overflow:hidden}
+.bar-fill{height:100%; border-radius:8px; background:var(--muted); display:flex; align-items:center; justify-content:flex-end; padding-right:8px; color:var(--surface); font-family:var(--f-mono); font-size:.75rem; font-weight:700; width:var(--w); animation:grow 6s ease-in-out infinite}
+.bidder.win .bar-fill{background:var(--accent); color:#221F1C}
+.bidder.win .who::after{content:"WINS TOP SPOT"; display:block; font-family:var(--f-mono); font-size:.62rem; color:var(--accent-ink); letter-spacing:.08em; margin-top:2px; animation:blink 6s infinite}
+@keyframes grow{0%{width:6%}25%,85%{width:var(--w)}100%{width:6%}}
+@keyframes blink{0%,24%{opacity:.2}30%,85%{opacity:1}100%{opacity:.2}}
+.formula{display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-family:var(--f-mono); font-size:.85rem}
+.formula span{padding:6px 10px; border-radius:8px; background:var(--surface-2)}
+.formula span.hl{background:var(--accent-soft); color:var(--accent-ink); font-weight:700}
+
+/* ---------- concept: cpc compare ---------- */
+.versus{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.vs{border-radius:12px; padding:16px; border:1px solid var(--line); display:flex; flex-direction:column; gap:10px}
+.vs.bad{background:var(--bad-soft); border-color:transparent} .vs.good{background:var(--good-soft); border-color:transparent}
+.vs .big{font-family:var(--f-display); font-size:1.9rem; font-weight:800; line-height:1}
+.vs .row{display:flex; justify-content:space-between; gap:8px; font-size:.9rem; border-top:1px dashed color-mix(in srgb, var(--ink) 20%, transparent); padding-top:6px}
+.vs .row b{font-family:var(--f-mono)}
+.dots{display:flex; flex-wrap:wrap; gap:3px}
+.dots i{width:7px; height:7px; border-radius:50%; background:color-mix(in srgb, var(--ink) 30%, transparent)}
+.dots i.lead{background:var(--good); animation:pop 3s ease-in-out infinite}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.6)}}
+
+/* ---------- concept: lemonade CPA ---------- */
+.people{display:flex; flex-wrap:wrap; gap:8px; justify-content:center}
+.person{width:34px; height:46px; color:color-mix(in srgb, var(--ink) 35%, transparent)}
+.person.buy{color:var(--accent); animation:buy 4s ease-in-out infinite}
+.person.buy:nth-child(7){animation-delay:.4s}
+@keyframes buy{0%,30%{color:color-mix(in srgb, var(--ink) 35%, transparent); transform:translateY(0)}45%,90%{color:var(--accent); transform:translateY(-6px)}100%{transform:translateY(0)}}
+.eq{display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; font-family:var(--f-display); font-weight:800; font-size:1.5rem}
+.eq .chip{background:var(--surface-2); border-radius:10px; padding:6px 12px}
+.eq .chip.out{background:var(--accent); color:#221F1C}
+.eq small{display:block; font-family:var(--f-body); font-size:.7rem; font-weight:600; color:var(--muted); text-align:center}
+.eq .chip.out small{color:#221F1C}
+
+/* ---------- calculators ---------- */
+.calc{display:grid; gap:14px}
+.slider{display:grid; grid-template-columns:1fr auto; gap:4px 12px; align-items:center}
+.slider label{font-weight:600; font-size:.92rem}
+.slider output{font-family:var(--f-mono); font-weight:700; color:var(--accent-ink)}
+.slider input{grid-column:1 / -1; width:100%; accent-color:var(--accent)}
+.results{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.res{background:var(--surface-2); border-radius:12px; padding:10px 12px}
+.res .k{font-size:.75rem; color:var(--muted); font-weight:600}
+.res .v{font-family:var(--f-display); font-weight:800; font-size:1.5rem; font-variant-numeric:tabular-nums}
+.res.hl{background:var(--accent-soft)} .res.hl .v{color:var(--accent-ink)}
+.month-grid{display:flex; flex-wrap:wrap; gap:3px; min-height:40px}
+.month-grid i{width:8px; height:8px; border-radius:2px; background:color-mix(in srgb, var(--ink) 22%, transparent)}
+.month-grid i.lead{background:var(--accent)}
+.legend{display:flex; flex-wrap:wrap; gap:14px; font-size:.8rem; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:10px; height:10px; border-radius:2px; display:inline-block}
+
+/* ---------- LSA vs Search phone ---------- */
+.phone{width:100%; max-width:300px; margin:0 auto; border:2px solid var(--ink); border-radius:28px; padding:14px 12px 18px; background:var(--bg); display:flex; flex-direction:column; gap:8px; position:relative}
+.phone .notch{width:80px; height:6px; border-radius:6px; background:var(--ink); margin:0 auto 4px; opacity:.8}
+.slot{border-radius:12px; padding:10px; background:var(--surface); border:1px solid var(--line); font-size:.8rem; position:relative}
+.slot .lbl{font-family:var(--f-mono); font-size:.62rem; letter-spacing:.06em; color:var(--muted); text-transform:uppercase; margin-bottom:6px; display:flex; justify-content:space-between}
+.pro{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 0}
+.pro + .pro{border-top:1px solid var(--line)}
+.pro b{display:block; font-size:.82rem}
+.pro .stars{color:var(--accent-ink); font-size:.7rem; font-family:var(--f-mono)}
+.pro .badge{font-size:.6rem; color:var(--good); font-weight:700}
+.callbtn{width:30px; height:30px; border-radius:50%; background:var(--good); color:#fff; display:grid; place-items:center; flex:none; position:relative}
+.callbtn .ic{width:15px; height:15px; stroke:#fff}
+.callbtn::after{content:""; position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--good); opacity:0; animation:ring 6s infinite}
+@keyframes ring{0%,8%{opacity:0; transform:scale(.8)}14%{opacity:1; transform:scale(1)}26%,100%{opacity:0; transform:scale(1.6)}}
+.slot.lsa{border:2px solid var(--good)}
+.slot.ads{border:2px solid var(--blue)}
+.slot .t{color:var(--blue); font-weight:700; font-size:.85rem}
+.paid{position:absolute; right:-6px; top:-10px; font-family:var(--f-mono); font-size:.62rem; font-weight:700; padding:3px 7px; border-radius:999px; color:#fff; opacity:0}
+.slot.lsa .paid{background:var(--good); animation:paidA 6s infinite}
+.slot.ads .paid{background:var(--blue); animation:paidB 6s infinite}
+@keyframes paidA{0%,12%{opacity:0; transform:translateY(4px)}18%,42%{opacity:1; transform:none}50%,100%{opacity:0}}
+@keyframes paidB{0%,58%{opacity:0; transform:translateY(4px)}64%,90%{opacity:1; transform:none}100%{opacity:0}}
+.cursor{position:absolute; width:18px; height:18px; color:var(--ink); right:30%; top:20px; animation:tap 6s infinite}
+.cursor .ic{width:18px; height:18px; fill:var(--surface)}
+@keyframes tap{0%,55%{opacity:0; transform:translate(20px,20px)}60%{opacity:1; transform:none}63%{transform:scale(.8)}66%,90%{transform:none; opacity:1}100%{opacity:0}}
+.ghost{height:8px; border-radius:4px; background:var(--surface-2); margin-top:5px}
+.compare{display:grid; grid-template-columns:auto 1fr 1fr; border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:.9rem}
+.compare > div{padding:9px 12px; border-top:1px solid var(--line)}
+.compare > div:nth-child(-n+3){border-top:0; font-weight:700; background:var(--surface-2)}
+.compare .k{font-weight:600; color:var(--muted)}
+
+/* ---------- phase scenes ---------- */
+.venn{display:block; width:100%; max-width:340px; margin:0 auto}
+.venn circle{fill-opacity:.22; stroke-width:2}
+.venn .c1{fill:var(--accent); stroke:var(--accent); animation:v1 7s ease-in-out infinite}
+.venn .c2{fill:var(--blue); stroke:var(--blue); animation:v2 7s ease-in-out infinite}
+.venn .c3{fill:var(--good); stroke:var(--good); animation:v3 7s ease-in-out infinite}
+.venn text{fill:var(--ink); font-family:var(--f-display); font-weight:700; font-size:14px; text-anchor:middle}
+.venn .mid{font-size:11px; font-family:var(--f-mono); fill:var(--accent-ink); animation:fadeMid 7s infinite}
+@keyframes v1{0%,100%{transform:translate(-22px,-14px)}40%,80%{transform:none}}
+@keyframes v2{0%,100%{transform:translate(22px,-14px)}40%,80%{transform:none}}
+@keyframes v3{0%,100%{transform:translate(0,22px)}40%,80%{transform:none}}
+@keyframes fadeMid{0%,30%{opacity:.15}45%,80%{opacity:1}100%{opacity:.15}}
+
+.seq{display:flex; flex-direction:column; gap:8px}
+.seq .step{display:flex; gap:12px; align-items:center; padding:10px 12px; border-radius:12px; background:var(--surface-2); font-weight:600; font-size:.92rem; animation:lit 10s ease-in-out infinite both; animation-delay:calc(var(--i) * 1.1s)}
+.seq .step .ic{color:var(--muted)}
+.seq .step .ok{margin-left:auto; color:var(--good); opacity:.25}
+.seq .step{--c:var(--surface-2)}
+@keyframes lit{0%{background:var(--surface-2)}8%,82%{background:var(--good-soft)}100%{background:var(--surface-2)}}
+.seq .step .ok{animation:okk 10s infinite both; animation-delay:calc(var(--i) * 1.1s)}
+@keyframes okk{0%{opacity:.25}8%,82%{opacity:1}100%{opacity:.25}}
+.launch{margin-top:6px; display:flex; justify-content:center; align-items:center; gap:10px; padding:12px; border-radius:12px; border:2px dashed var(--line); font-family:var(--f-display); font-weight:800; font-size:1.1rem; color:var(--muted); animation:launch 10s infinite both}
+@keyframes launch{0%,62%{border-color:var(--line); color:var(--muted); background:transparent}68%,84%{border-color:var(--accent); color:#221F1C; background:var(--accent); border-style:solid}100%{border-color:var(--line)}}
+
+.tree text{font-family:var(--f-body); font-size:11.5px; fill:var(--ink); font-weight:600}
+.tree .lvl{font-family:var(--f-mono); font-size:9px; fill:var(--muted); letter-spacing:.08em}
+.tree rect{fill:var(--surface-2); stroke:var(--line)}
+.tree rect.main{fill:var(--accent-soft); stroke:var(--accent)}
+.tree path{fill:none; stroke:var(--muted); stroke-width:1.2; stroke-dasharray:4 4; animation:dash 2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-16}}
+.maps{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.map{border-radius:12px; background:var(--surface-2); padding:10px}
+.map svg{width:100%; height:auto; display:block}
+.map .area{fill:var(--good-soft); stroke:var(--good); stroke-width:1.5; stroke-dasharray:5 4}
+.map .in{fill:var(--good)} .map .out{fill:color-mix(in srgb, var(--ink) 25%, transparent)} .map .waste{fill:var(--bad); animation:pop 2.4s ease-in-out infinite}
+.map .city{fill:var(--ink); font-family:var(--f-mono); font-size:8px; text-anchor:middle}
+.map h4{margin:0 0 4px; font-size:.82rem; font-family:var(--f-display)}
+.map p{font-size:.75rem; color:var(--muted)}
+
+.admock{border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--bg); display:flex; flex-direction:column; gap:6px; font-size:.85rem}
+.admock > *{animation:build 9s ease-in-out infinite both; animation-delay:calc(var(--i) * .7s)}
+@keyframes build{0%{opacity:.18; transform:translateY(4px)}8%,86%{opacity:1; transform:none}100%{opacity:.18}}
+.admock .sp{font-family:var(--f-mono); font-size:.65rem; color:var(--muted)}
+.admock .hd{color:var(--blue); font-weight:700; font-size:1.02rem; line-height:1.25}
+.admock .chips{display:flex; flex-wrap:wrap; gap:6px}
+.admock .chips span{border:1px solid var(--line); border-radius:999px; padding:3px 9px; font-size:.75rem; background:var(--surface)}
+.admock .callrow{display:flex; align-items:center; gap:8px; font-weight:700; color:var(--good)}
+.admock .anno{font-family:var(--f-mono); font-size:.6rem; color:var(--accent-ink); letter-spacing:.06em; text-transform:uppercase}
+
+.stairs text{font-family:var(--f-body); font-size:11px; font-weight:700; fill:var(--ink)}
+.stairs .sub{font-family:var(--f-mono); font-size:9px; font-weight:500; fill:var(--muted)}
+.stairs rect{fill:var(--surface-2); stroke:var(--line)}
+.stairs rect.top{fill:var(--accent-soft); stroke:var(--accent)}
+.stairs .climber{fill:var(--accent)}
+
+.loopflow .box rect{fill:var(--surface-2); stroke:var(--line)}
+.loopflow .box.k rect{fill:var(--accent-soft); stroke:var(--accent)}
+.loopflow .box text{font-family:var(--f-body); font-size:12px; font-weight:700; fill:var(--ink); text-anchor:middle}
+.loopflow .box .s{font-family:var(--f-mono); font-size:9px; font-weight:500; fill:var(--muted)}
+.loopflow .track{fill:none; stroke:var(--line); stroke-width:2}
+.loopflow .pulse{fill:var(--accent)}
+.loopflow .pulse2{fill:var(--good)}
+
+/* sieve */
+.sieve{position:relative; height:300px; border-radius:12px; background:var(--surface-2); overflow:hidden}
+.sieve .net{position:absolute; left:0; right:0; top:46%; height:26px; background:repeating-linear-gradient(90deg, var(--accent) 0 10px, transparent 10px 16px); opacity:.85}
+.sieve .netlbl{position:absolute; left:10px; top:calc(46% + 30px); font-family:var(--f-mono); font-size:.62rem; letter-spacing:.08em; color:var(--accent-ink); font-weight:700}
+.sieve .goal{position:absolute; left:0; right:0; bottom:0; padding:8px; text-align:center; font-family:var(--f-mono); font-size:.68rem; color:var(--good); font-weight:700; letter-spacing:.06em; background:var(--good-soft)}
+.term{position:absolute; left:var(--x); top:-12%; white-space:nowrap; font-size:.75rem; font-weight:600; padding:4px 9px; border-radius:999px; background:var(--surface); border:1px solid var(--line); animation:var(--anim) 8s linear infinite; animation-delay:calc(var(--i) * -1s)}
+.term.no{animation-name:fallBad} .term.yes{animation-name:fallGood}
+@keyframes fallGood{0%{top:-12%; opacity:0}5%{opacity:1}80%{top:84%; border-color:var(--good)}90%,100%{top:84%; opacity:0}}
+@keyframes fallBad{0%{top:-12%; opacity:0}5%{opacity:1}40%{top:36%; color:var(--ink)}44%{top:36%; color:var(--bad); border-color:var(--bad); transform:translateX(-4px); text-decoration:line-through}48%{transform:translateX(4px)}52%{transform:none}70%{top:36%; opacity:1; color:var(--bad); text-decoration:line-through}80%,100%{top:36%; opacity:0}}
+
+.match{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:.88rem}
+.match code{font-family:var(--f-mono); font-size:.8rem; background:var(--surface-2); padding:2px 7px; border-radius:6px; white-space:nowrap}
+.layers{display:flex; flex-direction:column; gap:6px}
+.layer{display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; background:var(--surface-2); font-size:.88rem; margin-left:calc(var(--d) * 14px)}
+.layer b{font-family:var(--f-mono); font-size:.7rem; color:var(--accent-ink); min-width:16px}
+
+/* tabs */
+.tabs{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px}
+.tabs button{font:inherit; font-size:.85rem; font-weight:600; padding:7px 13px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+.cloud{display:flex; flex-wrap:wrap; gap:6px}
+.cloud span{font-family:var(--f-mono); font-size:.76rem; padding:4px 9px; border-radius:8px; background:var(--bad-soft); color:var(--bad)}
+.cloud span.keep{background:var(--good-soft); color:var(--good)}
+.btn{font:inherit; font-weight:700; font-size:.85rem; display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:10px; border:1px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer}
+.btn .ic{width:16px; height:16px}
+.toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-top:12px}
+.checks{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px}
+.checks label{display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-radius:10px; background:var(--surface-2); cursor:pointer; font-size:.92rem}
+.checks input{accent-color:var(--accent); margin-top:4px; width:16px; height:16px; flex:none}
+.checks input:checked + span{text-decoration:line-through; color:var(--muted)}
+.rhythm{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px}
+.rhythm div{border-radius:12px; padding:12px; background:var(--surface-2); text-align:center}
+.rhythm b{display:block; font-family:var(--f-display); font-size:1.3rem}
+.rhythm span{font-size:.75rem; color:var(--muted)}
+
+/* chart */
+.chart{display:flex; flex-direction:column; gap:8px}
+.crow{display:grid; grid-template-columns:150px 1fr; gap:10px; align-items:center; font-size:.85rem}
+.crow .lab{font-weight:600; line-height:1.2}
+.crow .lab small{display:block; font-family:var(--f-mono); color:var(--muted); font-size:.65rem; font-weight:500}
+.ctrack{position:relative; height:24px; background:repeating-linear-gradient(90deg, transparent 0 calc(25% - 1px), var(--line) calc(25% - 1px) 25%)}
+.cbar{height:100%; border-radius:0 6px 6px 0; background:color-mix(in srgb, var(--ink) 55%, transparent); width:var(--w); display:flex; align-items:center; justify-content:flex-end; padding-right:7px; font-family:var(--f-mono); font-size:.72rem; font-weight:700; color:var(--bg); animation:barIn 1.2s cubic-bezier(.2,.8,.2,1) both}
+.cbar.hot{background:var(--accent); color:#221F1C}
+@keyframes barIn{from{width:0}}
+.axis{display:grid; grid-template-columns:150px 1fr; gap:10px}
+.axis div{display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:.65rem; color:var(--muted)}
+.kpis{display:flex; flex-direction:column; gap:6px}
+.kpi{display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:12px; background:var(--surface-2); font-weight:600}
+.kpi b{font-family:var(--f-mono); color:var(--accent-ink); min-width:22px}
+.kpi.dim{opacity:.6; font-weight:500}
+
+/* pricing + timeline */
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+.grid2{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+.price .amt{font-family:var(--f-display); font-weight:800; font-size:1.35rem; margin-block:4px 6px}
+.price.rec{border:2px solid var(--accent)}
+.timeline{display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative; margin-top:6px}
+.timeline::before{content:""; position:absolute; left:0; right:0; top:9px; height:2px; background:var(--line)}
+.tl{position:relative; padding:28px 12px 0 0; font-size:.88rem}
+.tl::before{content:""; position:absolute; left:0; top:2px; width:16px; height:16px; border-radius:50%; background:var(--surface); border:3px solid var(--muted)}
+.tl.now::before{border-color:var(--accent); background:var(--accent); animation:pop 2s infinite}
+.tl b{display:block; font-family:var(--f-mono); font-size:.75rem; color:var(--accent-ink)}
+.mistakes{counter-reset:m; list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(2,1fr); gap:8px}
+.mistakes li{counter-increment:m; display:flex; gap:10px; padding:10px 12px; border-radius:10px; background:var(--bad-soft); font-size:.9rem}
+.mistakes li::before{content:counter(m); font-family:var(--f-mono); font-weight:700; color:var(--bad)}
+
+.ind .head{display:flex; gap:10px; align-items:center; margin-bottom:10px}
+.ind .icon{width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent-ink)}
+.ind dl{margin:0; display:grid; gap:8px; font-size:.88rem}
+.ind dt{font-family:var(--f-mono); font-size:.65rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.ind dd{margin:0}
+
+.plan{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
+.plan li{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:16px; font-size:.9rem; display:flex; flex-direction:column; gap:6px}
+.plan li b{font-family:var(--f-mono); font-size:.72rem; color:var(--accent-ink)}
+.plan li h3{font-size:1rem}
+
+footer{padding-top:32px; border-top:1px solid var(--line); font-size:.85rem; color:var(--muted); display:grid; gap:12px}
+footer a{color:var(--accent-ink)}
+footer .src{display:flex; flex-wrap:wrap; gap:6px 14px}
+
+/* responsive */
+@media (max-width: 880px){
+  .hero, .body{grid-template-columns:1fr}
+  .grid3, .grid4, .plan{grid-template-columns:repeat(2,1fr)}
+  .mistakes{grid-template-columns:1fr}
+  .rhythm{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width: 520px){
+  .grid2, .grid3, .grid4, .plan, .versus, .maps{grid-template-columns:1fr}
+  .results{grid-template-columns:1fr 1fr}
+  .crow, .axis{grid-template-columns:96px 1fr}
+  .timeline{grid-template-columns:1fr 1fr; row-gap:16px}
+  .sec-head{grid-template-columns:1fr; gap:6px}
+  .bidder{grid-template-columns:78px 1fr}
+  .compare{font-size:.8rem}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important}
+  .term{animation:none !important; top:var(--rest) !important; opacity:1}
+  .term.no{color:var(--bad); text-decoration:line-through; border-color:var(--bad)}
+  .paid{opacity:1}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5z"/><path d="M2 13l10 5 10-5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-dollar" viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 12 0v1"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M22 21v-1a6 6 0 0 0-4-5.6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-bug" viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="5" ry="6"/><path d="M12 8v12M7 12l-4-1M17 12l4-1M7 16l-4 1M17 16l4 1M9 7a3 3 0 0 1 6 0"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M15 4a5 5 0 0 0-4.6 6.9L3 18.3 5.7 21l7.4-7.4A5 5 0 0 0 20 9l-3 1-2-2 1-3a5 5 0 0 0-1-1z"/></symbol>
+  <symbol id="i-food" viewBox="0 0 24 24"><path d="M7 2v20M4 2v6a3 3 0 0 0 6 0V2M17 2c-2 2-3 5-3 8h3v12"/></symbol>
+  <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></symbol>
+  <symbol id="i-cursor" viewBox="0 0 24 24"><path d="M4 3l7 17 2.5-7.5L21 10z"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 21h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></symbol>
+  <symbol id="i-person" viewBox="0 0 34 46"><circle cx="17" cy="10" r="8" fill="currentColor" stroke="none"/><path d="M3 44c0-10 6-17 14-17s14 7 14 17z" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<div class="wrap">
+
+<header class="hero">
+  <div>
+    <p class="eyebrow">Ali Samadi Agency · Google Ads system</p>
+    <h1>The Local Ads Playbook</h1>
+    <p class="lede">How agencies use Google Ads to grow local businesses, explained with pictures. The whole system is one loop: <b>track</b> every lead, <b>launch</b> tight local campaigns, <b>filter</b> out bad searches, and let Google <b>learn</b> from real booked jobs. Then repeat.</p>
+  </div>
+  <svg class="loop" viewBox="0 0 360 360" role="img" aria-label="The loop: Track, Launch, Filter, Learn, repeating">
+    <circle class="ring" cx="180" cy="180" r="120"/>
+    <circle class="runner" cx="180" cy="180" r="120" fill="none"/>
+    <text class="center" x="180" y="172">THE SYSTEM</text>
+    <text class="center-b" x="180" y="198">repeat weekly</text>
+    <g class="node"><circle cx="180" cy="60" r="40"/><text class="n" x="180" y="52">01</text><text x="180" y="70">Track</text></g>
+    <g class="node"><circle cx="300" cy="180" r="40"/><text class="n" x="300" y="172">02</text><text x="300" y="190">Launch</text></g>
+    <g class="node"><circle cx="180" cy="300" r="40"/><text class="n" x="180" y="292">03</text><text x="180" y="310">Filter</text></g>
+    <g class="node"><circle cx="60" cy="180" r="40"/><text class="n" x="60" y="172">04</text><text x="60" y="190">Learn</text></g>
+  </svg>
+</header>
+
+<nav class="index" aria-label="Sections">
+  <a href="#basics"><span>A</span>The 5 basics</a>
+  <a href="#p0"><span>00</span>Your offer</a>
+  <a href="#p1"><span>01</span>Onboarding</a>
+  <a href="#p2"><span>02</span>Tracking first</a>
+  <a href="#p3"><span>03</span>Campaigns</a>
+  <a href="#p4"><span>04</span>Ads &amp; assets</a>
+  <a href="#p5"><span>05</span>Bidding ladder</a>
+  <a href="#p6"><span>06</span>Tracking loop</a>
+  <a href="#p7"><span>07</span>Negative keywords</a>
+  <a href="#p8"><span>08</span>Weekly rhythm</a>
+  <a href="#p9"><span>09</span>Reporting</a>
+  <a href="#p10"><span>10</span>Scaling the agency</a>
+  <a href="#industries"><span>B</span>Your 4 industries</a>
+  <a href="#plan"><span>C</span>30-day plan</a>
+</nav>
+
+<!-- ================= BASICS ================= -->
+<section id="basics">
+  <div class="sec-head"><div class="num">A</div><div><p class="eyebrow">Start here</p><h2>The 5 basics behind everything</h2><p class="lede">Learn these five ideas first. Every other part of the system uses them.</p></div></div>
+
+  <div class="stack" style="gap:20px">
+    <!-- Bidding -->
+    <div class="body">
+      <figure class="scene">
+        <div class="query"><svg class="ic"><use href="#i-search"/></svg>pest control jacksonville</div>
+        <div class="bidder"><div class="who">Company A<small>bid $6 · quality 3</small></div><div class="bar-track"><div class="bar-fill" style="--w:56%">18</div></div></div>
+        <div class="bidder win"><div class="who">Your client<small>bid $4 · quality 8</small></div><div class="bar-track"><div class="bar-fill" style="--w:100%">32</div></div></div>
+        <div class="bidder"><div class="who">Company C<small>bid $5 · quality 5</small></div><div class="bar-track"><div class="bar-fill" style="--w:78%">25</div></div></div>
+        <div class="formula"><span>bid</span>×<span>quality</span>=<span class="hl">ad rank</span></div>
+        <figcaption>A simplified auction. Your client bids the least but wins, because a better ad and landing page raise their quality.</figcaption>
+      </figure>
+      <div class="stack">
+        <div class="card"><h3><svg class="ic"><use href="#i-dollar"/></svg>1. Bidding</h3><p>Your bid is the most you'll pay for one click. Every search runs a tiny auction. Google ranks ads by <b>bid and quality</b>, so the highest bidder doesn't always win, and you usually pay less than your maximum.</p></div>
+        <div class="card"><h3><svg class="ic"><use href="#i-target"/></svg>Manual vs. automatic</h3>
+          <ul><li><b>Manual:</b> you set the price, like "up to $5 a click."</li>
+          <li><b>Smart bidding:</b> you set a goal and Google sets the bid for every search. Examples: Maximize Clicks, Maximize Conversions, Target CPA.</li>
+          <li>Smart bidding learns from your tracking. Bad tracking teaches it the wrong thing.</li></ul></div>
+      </div>
+    </div>
+
+    <!-- CPC -->
+    <div class="body">
+      <figure class="scene">
+        <div class="versus">
+          <div class="vs bad">
+            <span class="tag bad">LOOKS GOOD</span>
+            <div class="big">800 clicks</div>
+            <div class="dots" id="dotsBad" aria-hidden="true"></div>
+            <div class="row"><span>Cost</span><b>$30</b></div>
+            <div class="row"><span>Per click</span><b>$0.04</b></div>
+            <div class="row"><span>Leads</span><b>0</b></div>
+          </div>
+          <div class="vs good">
+            <span class="tag good">IS GOOD</span>
+            <div class="big">50 clicks</div>
+            <div class="dots" id="dotsGood" aria-hidden="true"></div>
+            <div class="row"><span>Cost</span><b>$250</b></div>
+            <div class="row"><span>Per click</span><b>$5.00</b></div>
+            <div class="row"><span>Leads</span><b>8 → $31 each</b></div>
+          </div>
+        </div>
+        <figcaption>Each dot is about 10 clicks on the left and 1 click on the right. Green dots are leads.</figcaption>
+      </figure>
+      <div class="stack">
+        <div class="card"><h3><svg class="ic"><use href="#i-cursor"/></svg>2. Cost per click (CPC)</h3><p>For Search ads, showing the ad is free. You pay only when someone clicks. <b>Cost ÷ clicks = cost per click.</b></p></div>
+        <div class="card"><h3><svg class="ic"><use href="#i-alert"/></svg>Why super-cheap clicks are a trap</h3><p>Clicks at a few cents usually come from banner ads in apps and games, YouTube, Performance Max, or bots, not from people searching for a service. Always check the <b>Conversions</b> column, not the Clicks column.</p></div>
+      </div>
+    </div>
+
+    <!-- CPA -->
+    <div class="body">
+      <figure class="scene">
+        <p class="eyebrow">The lemonade stand</p>
+        <div class="people" aria-label="10 people heard about the stand, 2 bought">
+          <svg class="person"><use href="#i-person"/></svg><svg class="person"><use href="#i-person"/></svg><svg class="person buy"><use href="#i-person"/></svg><svg class="person"><use href="#i-person"/></svg><svg class="person"><use href="#i-person"/></svg>
+          <svg class="person"><use href="#i-person"/></svg><svg class="person buy"><use href="#i-person"/></svg><svg class="person"><use href="#i-person"/></svg><svg class="person"><use href="#i-person"/></svg><svg class="person"><use href="#i-person"/></svg>
+        </div>
+        <div class="eq"><span class="chip">$10<small>spent</small></span>÷<span class="chip">2<small>customers</small></span>=<span class="chip out">$5<small>CPA</small></span></div>
+        <figcaption>You paid $1 for each of 10 people to hear about your stand. Two bought, so each customer cost you $5.</figcaption>
+      </figure>
+      <div class="stack">
+        <div class="card"><h3><svg class="ic"><use href="#i-users"/></svg>3. Cost per acquisition (CPA)</h3><p>How much money you spent to get <b>one customer or one lead</b>. In Google Ads: $300 spent ÷ 10 calls = <b>$30 CPA</b>.</p></div>
+        <div class="note"><b>Lower CPA is better.</b> If a customer pays the business $200, a $30 CPA is a great deal. If a customer only pays $20, it loses money. Your job is to push this number down.</div>
+      </div>
+    </div>
+
+    <!-- $30/day -->
+    <div class="body">
+      <figure class="scene">
+        <p class="eyebrow">Try it: what does a budget really buy?</p>
+        <div class="calc">
+          <div class="slider"><label for="cBudget">Daily budget</label><output id="oBudget">$30</output><input id="cBudget" type="range" min="10" max="150" step="5" value="30"></div>
+          <div class="slider"><label for="cCpc">Cost per click</label><output id="oCpc">$5.00</output><input id="cCpc" type="range" min="0.5" max="15" step="0.25" value="5"></div>
+          <div class="slider"><label for="cConv">Clicks that become leads</label><output id="oConv">7%</output><input id="cConv" type="range" min="1" max="20" step="1" value="7"></div>
+          <div class="results">
+            <div class="res"><div class="k">Clicks a day</div><div class="v" id="rDay">6</div></div>
+            <div class="res"><div class="k">Leads a month</div><div class="v" id="rLeads">13</div></div>
+            <div class="res hl"><div class="k">Cost per lead</div><div class="v" id="rCpl">$71</div></div>
+          </div>
+          <div class="month-grid" id="monthGrid" aria-hidden="true"></div>
+          <div class="legend"><span><i style="background:color-mix(in srgb, var(--ink) 22%, transparent)"></i><span id="dotScale">1 click</span></span><span><i style="background:var(--accent)"></i>a lead</span><span>One month (30 days)</span></div>
+        </div>
+      </figure>
+      <div class="stack">
+        <div class="card"><h3><svg class="ic"><use href="#i-cal"/></svg>4. The "$30 a day" math</h3><p>At $5 a click, $30 buys about <b>6 clicks a day</b>, and many days bring zero leads. Over a month, that adds up to about 180 clicks and roughly 9–18 leads at 5–10%.</p></div>
+        <div class="card"><h3><svg class="ic"><use href="#i-check"/></svg>The honest pitch</h3><p>"Give it 60–90 days. Judge it by cost per lead and booked jobs, not daily clicks." A better landing page or stronger negative keywords can double the leads for the same money.</p></div>
+      </div>
+    </div>
+
+    <!-- LSA vs Search -->
+    <div class="body">
+      <figure class="scene">
+        <div class="phone" aria-label="Search results on a phone: Local Services Ads on top, then a Search ad">
+          <div class="notch"></div>
+          <div class="query" style="font-size:.78rem; padding:7px 12px"><svg class="ic" style="width:15px;height:15px"><use href="#i-search"/></svg>exterminator near me</div>
+          <div class="slot lsa"><span class="paid">CALL = $ CHARGED</span>
+            <div class="lbl"><span>Local services · sponsored</span></div>
+            <div class="pro"><div><b>Bayside Pest Co.</b><span class="stars">★ 4.9 (312)</span> <span class="badge">✓ Screened</span></div><span class="callbtn"><svg class="ic"><use href="#i-phone"/></svg></span></div>
+            <div class="pro"><div><b>Coastal Bug Pros</b><span class="stars">★ 4.7 (128)</span> <span class="badge">✓ Screened</span></div><span class="callbtn" style="opacity:.5"><svg class="ic"><use href="#i-phone"/></svg></span></div>
+          </div>
+          <div class="slot ads"><span class="paid">CLICK = $ CHARGED</span><span class="cursor"><svg class="ic"><use href="#i-cursor"/></svg></span>
+            <div class="lbl"><span>Sponsored</span></div>
+            <div class="t">Jacksonville Pest Control | Same-Day Service</div>
+            <div class="ghost" style="width:90%"></div><div class="ghost" style="width:70%"></div>
+          </div>
+          <div class="slot"><div class="lbl"><span>Map results</span></div><div class="ghost"></div><div class="ghost" style="width:60%"></div></div>
+        </div>
+        <figcaption>Example businesses. The LSA box sits above everything and charges only when someone calls, messages, or books. The Search ad charges for every click.</figcaption>
+      </figure>
+      <div class="stack">
+        <div class="card"><h3><svg class="ic"><use href="#i-phone"/></svg>5. Local Services Ads vs. Search ads</h3><p>Both are local, because both target only your service area. The difference is <b>what you pay for</b>.</p></div>
+        <div class="compare">
+          <div></div><div>LSA</div><div>Search</div>
+          <div class="k">You pay for</div><div>a lead</div><div>a click</div>
+          <div class="k">Position</div><div>very top</div><div>below LSA</div>
+          <div class="k">Control</div><div>low</div><div>full</div>
+          <div class="k">Landing page</div><div>none</div><div>yours</div>
+          <div class="k">Risk on small budgets</div><div>low</div><div>higher</div>
+          <div class="k">Who can use it</div><div>eligible categories</div><div>everyone</div>
+        </div>
+        <div class="note"><b>Best package:</b> start pest control and handyman clients on LSA (low risk, easy yes). Once it works, add Search ads pointing to a landing page you build.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 0 ================= -->
+<section id="p0">
+  <div class="sec-head"><div class="num">00</div><div><p class="eyebrow">What you sell</p><h2>A lead system, not "ad management"</h2><p class="lede">Owners don't buy clicks. They buy <b>phone calls that turn into jobs</b>. You already build the websites, which is the part most ad-only agencies can't do.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <svg class="venn" viewBox="0 0 340 280" role="img" aria-label="Website, Ads and Tracking overlap into one bundle">
+        <circle class="c1" cx="135" cy="115" r="80"/><circle class="c2" cx="205" cy="115" r="80"/><circle class="c3" cx="170" cy="175" r="80"/>
+        <text x="100" y="95">Website</text><text x="240" y="95">Ads</text><text x="170" y="232">Tracking</text>
+        <text class="mid" x="170" y="145">THE BUNDLE</text>
+      </svg>
+      <figcaption>"We build the site and run the ads, and we track every call to a booked job." Local owners rarely get all three from one company.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-wrench"/></svg>Setup (one time)</h3><p>Tracking build, landing page, Google Business Profile cleanup, account build, LSA signup.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-clock"/></svg>Every month</h3><p>Search term cleanup, bidding, ad testing, budget pacing, lead quality review, landing page improvements.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-chart"/></svg>Reporting</h3><p>A monthly report and call: leads, cost per lead, booked jobs, return on investment.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-layers"/></svg>Add-ons</h3><p>LSA management, Facebook/Instagram ads, review requests, CRM automation, SEO, and your newsletter platform.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 1 ================= -->
+<section id="p1">
+  <div class="sec-head"><div class="num">01</div><div><p class="eyebrow">Onboarding</p><h2>Learn the business, then do the math</h2><p class="lede">Before you sign a client, find out <b>how much they can afford to pay for one lead</b>. This number sets expectations from day one.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <p class="eyebrow">Try it: max cost per lead</p>
+      <div class="calc">
+        <div class="slider"><label for="mJob">Average job value</label><output id="oJob">$250</output><input id="mJob" type="range" min="50" max="3000" step="25" value="250"></div>
+        <div class="slider"><label for="mMargin">Profit margin</label><output id="oMargin">60%</output><input id="mMargin" type="range" min="10" max="90" step="5" value="60"></div>
+        <div class="slider"><label for="mClose">Leads that become jobs</label><output id="oClose">40%</output><input id="mClose" type="range" min="5" max="90" step="5" value="40"></div>
+        <div class="slider"><label for="mRoi">Return they want</label><output id="oRoi">2×</output><input id="mRoi" type="range" min="1" max="5" step="0.5" value="2"></div>
+        <div class="formula"><span id="fJob">$250</span>×<span id="fMargin">60%</span>×<span id="fClose">40%</span>÷<span id="fRoi">2</span>=<span class="hl" id="fOut">$30 per lead</span></div>
+        <div class="note" id="maxNote"></div>
+      </div>
+      <figcaption>Pest control example. If the answer is far below normal lead costs, sell on <b>yearly plan value</b>, not the first visit.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-form"/></svg>Questions to ask</h3>
+        <ul><li><b>Money:</b> average job value, lifetime value, close rate, margin.</li>
+        <li><b>Capacity:</b> how many new jobs a week can they handle?</li>
+        <li><b>Services:</b> top 3 money-makers, and what they <b>don't</b> do (your first negative keywords).</li>
+        <li><b>Area:</b> exact ZIP codes they serve, and ones they refuse.</li>
+        <li><b>Leads:</b> who answers the phone, how fast, which CRM.</li>
+        <li><b>Goals:</b> monthly ad budget and what "success in 90 days" means.</li></ul></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-shield"/></svg>Ownership rules</h3>
+        <ul><li>The <b>client creates and owns</b> the Google Ads account and billing.</li>
+        <li>They link it to <b>your manager account</b> and give you Standard access.</li>
+        <li>Same for GA4, Tag Manager and Business Profile: you're a manager, not the owner.</li>
+        <li>Put it in the contract. This avoids fights if they ever leave.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 2 ================= -->
+<section id="p2">
+  <div class="sec-head"><div class="num">02</div><div><p class="eyebrow">The real first step</p><h2>Tracking goes in before a single dollar</h2><p class="lede">If Google can't see which clicks became calls, smart bidding is guessing. <b>Nothing launches until every box is green.</b></p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <div class="seq">
+        <div class="step" style="--i:0"><svg class="ic"><use href="#i-shield"/></svg>Client-owned ad account, linked to you<svg class="ic ok"><use href="#i-check"/></svg></div>
+        <div class="step" style="--i:1"><svg class="ic"><use href="#i-layers"/></svg>Tag Manager + GA4 on every page<svg class="ic ok"><use href="#i-check"/></svg></div>
+        <div class="step" style="--i:2"><svg class="ic"><use href="#i-phone"/></svg>Call tracking number on the site<svg class="ic ok"><use href="#i-check"/></svg></div>
+        <div class="step" style="--i:3"><svg class="ic"><use href="#i-form"/></svg>Form and booking tracked as conversions<svg class="ic ok"><use href="#i-check"/></svg></div>
+        <div class="step" style="--i:4"><svg class="ic"><use href="#i-pin"/></svg>Business Profile linked<svg class="ic ok"><use href="#i-check"/></svg></div>
+        <div class="step" style="--i:5"><svg class="ic"><use href="#i-target"/></svg>Test call + test form show up<svg class="ic ok"><use href="#i-check"/></svg></div>
+        <div class="launch"><svg class="ic"><use href="#i-send"/></svg>Launch ads</div>
+      </div>
+      <figcaption>The launch button only lights up after all six checks pass.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-form"/></svg>Landing pages beat the homepage</h3>
+        <ul><li>One page per main service, e.g. "Termite Treatment in Jacksonville".</li>
+        <li>Service + city in the big headline. Tap-to-call button at the top on phones.</li>
+        <li>Short form: name, phone, ZIP, service.</li>
+        <li>Reviews, license and insurance, real photos, service area list.</li>
+        <li>Tracking number swapped in, and a hidden field that saves the Google click ID.</li></ul></div>
+      <div class="note"><b>Your advantage:</b> build one landing page template per industry and reuse it for every client.</div>
+      <div class="card"><h3><svg class="ic"><use href="#i-search"/></svg>Taking over an existing account?</h3><p>Audit first: who owns it, what counts as a conversion, location settings, wasted search terms, and whether AI Max was switched on automatically.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 3 ================= -->
+<section id="p3">
+  <div class="sec-head"><div class="num">03</div><div><p class="eyebrow">Running the campaigns</p><h2>Group by service, target only the real area</h2><p class="lede">Organize Search campaigns into a few <b>themes</b>, one per service, each with its own landing page. Show ads only to people who are actually in the service area.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <svg class="art tree" viewBox="0 0 360 230" role="img" aria-label="Account with three campaigns; the core campaign has four ad groups">
+        <text class="lvl" x="8" y="14">ACCOUNT</text><text class="lvl" x="8" y="74">CAMPAIGNS</text><text class="lvl" x="8" y="154">AD GROUPS</text>
+        <rect class="main" x="125" y="20" width="110" height="30" rx="8"/><text x="180" y="40" text-anchor="middle">Pest client</text>
+        <path d="M180 50 V64 H55 V80 M180 64 V80 M180 64 H305 V80"/>
+        <rect class="main" x="10" y="80" width="95" height="30" rx="8"/><text x="57" y="99" text-anchor="middle">Search: Core</text>
+        <rect x="132" y="80" width="95" height="30" rx="8"/><text x="180" y="99" text-anchor="middle">Search: Brand</text>
+        <rect x="258" y="80" width="95" height="30" rx="8"/><text x="305" y="99" text-anchor="middle">LSA</text>
+        <path d="M57 110 V128 H45 V160 M57 128 H130 V160 M57 128 H215 V160 M57 128 H300 V160"/>
+        <rect x="8" y="160" width="76" height="30" rx="8"/><text x="46" y="179" text-anchor="middle">General</text>
+        <rect x="92" y="160" width="76" height="30" rx="8"/><text x="130" y="179" text-anchor="middle">Termites</text>
+        <rect x="177" y="160" width="76" height="30" rx="8"/><text x="215" y="179" text-anchor="middle">Rodents</text>
+        <rect x="262" y="160" width="76" height="30" rx="8"/><text x="300" y="179" text-anchor="middle">Mosquito</text>
+        <text class="lvl" x="8" y="214">EACH AD GROUP = 1 THEME · 1 MESSAGE · 1 LANDING PAGE</text>
+      </svg>
+      <div class="maps">
+        <div class="map"><h4>Presence <span class="tag good">USE THIS</span></h4>
+          <svg viewBox="0 0 160 120" aria-label="Only people inside the service area see the ad"><circle class="area" cx="80" cy="60" r="40"/><text class="city" x="80" y="63">JAX</text>
+            <circle class="in" cx="65" cy="45" r="4"/><circle class="in" cx="95" cy="50" r="4"/><circle class="in" cx="75" cy="78" r="4"/><circle class="in" cx="100" cy="72" r="4"/>
+            <circle class="out" cx="18" cy="20" r="4"/><circle class="out" cx="145" cy="25" r="4"/><circle class="out" cx="140" cy="105" r="4"/><circle class="out" cx="20" cy="100" r="4"/></svg>
+          <p>Only people in or often in the area.</p></div>
+        <div class="map"><h4>Presence or interest <span class="tag bad">DEFAULT</span></h4>
+          <svg viewBox="0 0 160 120" aria-label="People outside the area also see the ad, wasting money"><circle class="area" cx="80" cy="60" r="40"/><text class="city" x="80" y="63">JAX</text>
+            <circle class="in" cx="65" cy="45" r="4"/><circle class="in" cx="95" cy="50" r="4"/><circle class="in" cx="75" cy="78" r="4"/><circle class="in" cx="100" cy="72" r="4"/>
+            <circle class="waste" cx="18" cy="20" r="4"/><circle class="waste" cx="145" cy="25" r="4"/><circle class="waste" cx="140" cy="105" r="4"/><circle class="out" cx="20" cy="100" r="4"/></svg>
+          <p>Red dots live far away but still get the ad.</p></div>
+      </div>
+      <figcaption>Google's default location setting is wrong for local businesses. Switch it to "Presence" on every campaign.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-layers"/></svg>Themes, not single keywords</h3><p>Old advice was one keyword per ad group. Today, experts group keywords that share the <b>same intent, message and page</b>. Aim for about 3–10 ad groups per campaign. Too many splits and Google never gets enough data.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-target"/></svg>Match types</h3>
+        <ul><li>Small new accounts: <b>phrase and exact match</b> on high-intent keywords.</li>
+        <li>Broad match only with smart bidding, strong negatives, and about 30 conversions a month.</li>
+        <li><b>AI Max</b> replaced old broad-match campaigns in September 2026. Check inherited accounts and test it with a 50/50 experiment.</li></ul></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-clock"/></svg>Schedule, devices, budget</h3>
+        <ul><li>Run ads when someone can answer the phone. Missed calls waste paid clicks.</li>
+        <li>Most local searches are on phones, so the page needs a sticky call button.</li>
+        <li>Rough floors: <b>$1,000–$1,500/month</b> for handyman or barber, <b>$1,500–$3,000+</b> for pest control. Focus on one or two services.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 4 ================= -->
+<section id="p4">
+  <div class="sec-head"><div class="num">04</div><div><p class="eyebrow">Ads &amp; assets</p><h2>Make the ad bigger than the competition</h2><p class="lede">An ad is a headline and a description, plus <b>assets</b>: extra rows like call buttons, links and callouts. More assets mean a bigger ad and more taps.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <div class="admock">
+        <div class="sp" style="--i:0">Sponsored · baysidepest.com <span class="anno">· example ad</span></div>
+        <div class="hd" style="--i:1">Jacksonville Pest Control | Licensed &amp; Insured | 4.9★ 600+ Reviews</div>
+        <div style="--i:2">Same-day service. Pet-safe treatments. Call for a free inspection today.</div>
+        <div class="anno" style="--i:3">Callouts</div>
+        <div class="chips" style="--i:3"><span>Locally Owned</span><span>Free Estimates</span><span>Same-Day Service</span></div>
+        <div class="anno" style="--i:4">Sitelinks</div>
+        <div class="chips" style="--i:4"><span>Termites</span><span>Rodents</span><span>Reviews</span><span>Service Area</span></div>
+        <div class="anno" style="--i:5">Structured snippet</div>
+        <div style="--i:5; font-size:.8rem">Services: Ants, Termites, Roaches, Rodents, Mosquitoes</div>
+        <div class="callrow" style="--i:6"><svg class="ic"><use href="#i-phone"/></svg>Call (904) 555-0142 <span class="anno">· tracking number</span></div>
+        <div style="--i:7; font-size:.8rem; display:flex; gap:6px; align-items:center; color:var(--muted)"><svg class="ic" style="width:15px;height:15px"><use href="#i-pin"/></svg>Location from the Business Profile</div>
+      </div>
+      <figcaption>Watch the ad grow as each asset is added. Example business and number.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-form"/></svg>Responsive Search Ads</h3>
+        <ul><li>1–2 ads per ad group, using all 15 headlines and 4 descriptions.</li>
+        <li>Mix: service + city, an offer, trust, speed, and a call to action.</li>
+        <li>Pin as little as possible. Judge ads on leads, not on "ad strength".</li></ul></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-check"/></svg>Assets to set up every time</h3>
+        <ul><li><b>Call</b> with the tracking number, during business hours.</li>
+        <li><b>Location</b> from the Business Profile.</li>
+        <li><b>Sitelinks</b> (4–8), <b>callouts</b>, <b>structured snippets</b>, real <b>images</b>, logo.</li>
+        <li><b>Price</b> or <b>promotion</b> assets for barbers and restaurants.</li></ul></div>
+      <div class="note"><b>Count a call only after about 60 seconds.</b> Short calls are often wrong numbers or spam.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 5 ================= -->
+<section id="p5">
+  <div class="sec-head"><div class="num">05</div><div><p class="eyebrow">Bidding ladder</p><h2>Climb one step at a time</h2><p class="lede">Smart bidding needs data. Each step up the ladder needs <b>more conversions in the last 30 days</b>.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <svg class="art stairs" viewBox="0 0 360 220" role="img" aria-label="Bidding ladder from Maximize Clicks to Target ROAS">
+        <rect x="10" y="170" width="90" height="40" rx="6"/><text x="18" y="187">Max Clicks</text><text class="sub" x="18" y="201">0–15 conv.</text>
+        <rect x="95" y="130" width="90" height="80" rx="6"/><text x="103" y="147">Max Conv.</text><text class="sub" x="103" y="161">15–30 conv.</text>
+        <rect x="180" y="90" width="90" height="120" rx="6"/><text x="188" y="107">Target CPA</text><text class="sub" x="188" y="121">30+ conv.</text>
+        <rect class="top" x="265" y="50" width="88" height="160" rx="6"/><text x="273" y="67">Target ROAS</text><text class="sub" x="273" y="81">with job values</text>
+        <circle class="climber" r="8"><animateMotion dur="7s" repeatCount="indefinite" path="M30 160 H100 V120 H185 V80 H270 V40 H330" keyPoints="0;0.15;0.35;0.55;0.8;1;1" keyTimes="0;0.15;0.35;0.55;0.8;0.95;1" calcMode="linear"/></circle>
+      </svg>
+      <figcaption>Conversions counted per campaign over the last 30 days. Target ROAS is only for clients who share job values from their CRM.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-cursor"/></svg>1. Launch: Maximize Clicks</h3><p>Set a max cost per click cap. It builds data cheaply while there are no conversions yet.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-target"/></svg>2–3. Maximize Conversions, then Target CPA</h3><p>Switch once leads start coming in. Move to Target CPA after about <b>30 conversions in 30 days</b>, and start the target near the real recent CPA.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-clock"/></svg>Learning period rules</h3>
+        <ul><li>Don't judge a change in the first 1–2 weeks.</li>
+        <li>Move targets by 15–20% at a time, 7–10 days apart.</li>
+        <li>Small local accounts rarely reach 30 conversions, which is another reason to keep campaigns few.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 6 ================= -->
+<section id="p6">
+  <div class="sec-head"><div class="num">06</div><div><p class="eyebrow">Tracking the data</p><h2>Teach Google which leads became jobs</h2><p class="lede">Counting form fills isn't enough. The best agencies send <b>booked and sold jobs back to Google</b>, so it hunts for real customers, not tire-kickers.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <svg class="art loopflow" viewBox="0 0 360 250" role="img" aria-label="Loop: ad click, call or form, CRM marks booked, Google learns">
+        <path id="flowPath" class="track" d="M70 55 H290 V185 H70 Z"/>
+        <g class="box"><rect x="10" y="30" width="120" height="50" rx="10"/><text x="70" y="52">Ad click</text><text class="s" x="70" y="68">click ID saved</text></g>
+        <g class="box"><rect x="230" y="30" width="120" height="50" rx="10"/><text x="290" y="52">Call or form</text><text class="s" x="290" y="68">call tracking + GA4</text></g>
+        <g class="box"><rect x="230" y="160" width="120" height="50" rx="10"/><text x="290" y="182">CRM tag</text><text class="s" x="290" y="198">spam · qualified · booked</text></g>
+        <g class="box k"><rect x="10" y="160" width="120" height="50" rx="10"/><text x="70" y="182">Google learns</text><text class="s" x="70" y="198">bids more on buyers</text></g>
+        <circle class="pulse" r="7"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#flowPath"/></animateMotion></circle>
+        <circle class="pulse2" r="5"><animateMotion dur="6s" begin="-3s" repeatCount="indefinite"><mpath href="#flowPath"/></animateMotion></circle>
+        <text x="180" y="125" text-anchor="middle" style="font-family:var(--f-mono); font-size:10px; fill:var(--muted)">enhanced conversions</text>
+        <text x="180" y="139" text-anchor="middle" style="font-family:var(--f-mono); font-size:10px; fill:var(--muted)">for leads</text>
+      </svg>
+      <figcaption>Each loop makes the next ad dollar smarter. Upload booked or sold leads through Google Ads Data Manager, Zapier, or a CRM integration.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-target"/></svg>Count these (Primary)</h3>
+        <ul><li>Calls from ads, about 60 seconds or longer.</li>
+        <li>Calls from the website through the tracking number.</li>
+        <li>Form submissions and completed bookings.</li>
+        <li>Later: <b>qualified lead</b> or <b>booked job</b> imports.</li></ul></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-chart"/></svg>Just watch these (Secondary)</h3><p>Clicks on the phone number, GA4 engagement. For restaurants and barbers, <b>directions</b> can be Primary because that's the goal.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-link"/></svg>The tools</h3>
+        <ul><li><b>Tag Manager + GA4</b> on every page.</li>
+        <li><b>CallRail or WhatConverts</b>: swaps the phone number per visitor so each call is tied to the ad.</li>
+        <li>Hidden form field for the click ID (GCLID) and UTM tags.</li>
+        <li>Client tags every lead in the CRM. You import the good ones.</li></ul></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-check"/></svg>Test before launch, and monthly</h3><p>Submit a test form and make a test call from an ad click. Both must appear in Google Ads, GA4 and the CRM, with no double counting.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 7 ================= -->
+<section id="p7">
+  <div class="sec-head"><div class="num">07</div><div><p class="eyebrow">Excluding keywords</p><h2>Negative keywords: the filter that saves money</h2><p class="lede">A negative keyword tells Google <b>"never show my ad for searches with this word"</b>. People searching "pest control jobs" want a job, not an exterminator.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <div class="sieve" aria-label="Search terms fall; bad ones are stopped by the negative keyword filter, good ones reach the ad">
+        <span class="term yes" style="--x:6%; --i:0; --rest:72%">pest control near me</span>
+        <span class="term no" style="--x:44%; --i:1; --rest:12%">pest control jobs</span>
+        <span class="term yes" style="--x:22%; --i:2; --rest:62%">termite treatment cost</span>
+        <span class="term no" style="--x:58%; --i:3; --rest:24%">diy roach spray</span>
+        <span class="term yes" style="--x:40%; --i:4; --rest:76%">exterminator jacksonville</span>
+        <span class="term no" style="--x:8%; --i:5; --rest:4%">pest control license florida</span>
+        <span class="term yes" style="--x:56%; --i:6; --rest:60%">rat removal</span>
+        <span class="term no" style="--x:26%; --i:7; --rest:30%">free pest control</span>
+        <div class="net"></div><div class="netlbl">NEGATIVE KEYWORDS: jobs · diy · license · free</div>
+        <div class="goal">✓ YOUR AD SHOWS ONLY FOR THESE</div>
+      </div>
+      <figcaption>Searches drop in from the top. Junk gets caught and crossed out. Buyers fall through to your ad.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-filter"/></svg>The 3 negative match types</h3>
+        <div class="match">
+          <code>jobs</code><span><b>Broad:</b> blocks any search with all the words, any order.</span>
+          <code>"bug spray"</code><span><b>Phrase:</b> blocks searches with those words in that order.</span>
+          <code>[cheap exterminator]</code><span><b>Exact:</b> blocks only that exact search.</span>
+        </div>
+        <p class="muted" style="margin-top:10px; font-size:.88rem">Negatives don't catch plurals or synonyms. Add "job" and "jobs", "career" and "careers" yourself.</p></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-layers"/></svg>Build them in layers</h3>
+        <div class="layers">
+          <div class="layer" style="--d:0"><b>1</b>Account-level "never" list (also protects Performance Max)</div>
+          <div class="layer" style="--d:1"><b>2</b>Shared "Universal Local" list on every campaign</div>
+          <div class="layer" style="--d:2"><b>3</b>Shared industry list: pest, handyman, barber, restaurant</div>
+          <div class="layer" style="--d:3"><b>4</b>Out-of-area cities list</div>
+          <div class="layer" style="--d:4"><b>5</b>Ad group negatives to route traffic to the right group</div>
+        </div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:20px">
+    <h3><svg class="ic"><use href="#i-copy"/></svg>Starter negative lists</h3>
+    <p class="muted" style="margin-bottom:12px; font-size:.92rem">Pick a list, copy it, and paste it into Google Ads. Remove anything the client actually sells. Green words are <b>buyers</b>, so never block them.</p>
+    <div class="tabs" role="tablist" id="negTabs"></div>
+    <div class="cloud" id="negCloud" role="tabpanel"></div>
+    <div class="toolbar"><p class="muted" id="negNote" style="font-size:.88rem; max-width:60ch"></p><button class="btn" id="negCopy" type="button"><svg class="ic"><use href="#i-copy"/></svg>Copy list</button></div>
+  </div>
+
+  <div class="grid3" style="margin-top:12px">
+    <div class="card"><h3><svg class="ic"><use href="#i-cal"/></svg>Weeks 1–4</h3><p>Check the search terms report <b>every 2–3 days</b>. New accounts leak the most money.</p></div>
+    <div class="card"><h3><svg class="ic"><use href="#i-cal"/></svg>First 90 days</h3><p><b>Weekly.</b> Sort by cost, block bad patterns, look for new keyword ideas.</p></div>
+    <div class="card"><h3><svg class="ic"><use href="#i-cal"/></svg>After that</h3><p>Weekly with broad match or AI Max. Every two weeks for small exact/phrase accounts.</p></div>
+  </div>
+  <div class="note" style="margin-top:12px"><b>Golden rule:</b> never add a negative from imagination. "Free estimate" and "price" often come from buyers. Start with the obvious list, then let real search terms guide you.</div>
+</section>
+
+<!-- ================= PHASE 8 ================= -->
+<section id="p8">
+  <div class="sec-head"><div class="num">08</div><div><p class="eyebrow">Ongoing work</p><h2>The weekly rhythm</h2><p class="lede">Managing ads is a routine. Use these checklists for every client. Tick items as you go.</p></div></div>
+  <div class="rhythm">
+    <div><b>5 min</b><span>daily</span></div><div><b>30–45 min</b><span>weekly</span></div><div><b>1–2 hrs</b><span>monthly</span></div><div><b>half day</b><span>quarterly</span></div>
+  </div>
+  <div class="body">
+    <div class="card">
+      <div class="tabs" role="tablist" id="rhythmTabs"></div>
+      <ul class="checks" id="rhythmList"></ul>
+    </div>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-chart"/></svg>Scale only when all three are true</h3>
+        <ul><li>Cost per lead is at or under target.</li>
+        <li>Impression share is being lost because of <b>budget</b>.</li>
+        <li>The client can handle more jobs.</li></ul></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-layers"/></svg>Growth order</h3>
+        <ul><li>Raise budgets 15–20% at a time, a week apart.</li>
+        <li>Then add nearby services, then nearby areas with their own pages.</li>
+        <li>Then test broad match or AI Max, then Performance Max for storefronts.</li></ul></div>
+      <div class="note"><b>Testing:</b> use Google Ads Experiments (50/50 split). Change one thing at a time and wait about 30 conversions per side, or 4+ weeks.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 9 ================= -->
+<section id="p9">
+  <div class="sec-head"><div class="num">09</div><div><p class="eyebrow">Reporting</p><h2>Talk in jobs and dollars, not clicks</h2><p class="lede">Owners care about <b>how many customers they got and what each one cost</b>. Click-through rate and Quality Score are for you, not for them.</p></div></div>
+  <div class="body">
+    <figure class="scene">
+      <p class="eyebrow">Average cost per lead from Search ads</p>
+      <div class="chart" id="bench"></div>
+      <div class="axis"><span></span><div><span>$0</span><span>$40</span><span>$80</span><span>$120</span><span>$160</span></div></div>
+      <figcaption>LocaliQ 2026 benchmarks (handyman: LocaliQ 2025). Pest control figures from Coalmarch's 2025 data. Use these only to set expectations, then replace them with the client's own numbers after 60–90 days.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card"><h3><svg class="ic"><use href="#i-target"/></svg>What to report, in order</h3>
+        <div class="kpis">
+          <div class="kpi"><b>1</b>Leads: calls + forms + bookings, qualified vs. not</div>
+          <div class="kpi"><b>2</b>Cost per lead and cost per booked job</div>
+          <div class="kpi"><b>3</b>Booked jobs and revenue from ads</div>
+          <div class="kpi"><b>4</b>Return: revenue ÷ (ad spend + your fee)</div>
+          <div class="kpi dim"><b>5</b>Supporting: spend, impression share, top searches</div>
+        </div></div>
+      <div class="card"><h3><svg class="ic"><use href="#i-cal"/></svg>Cadence</h3>
+        <ul><li>A live dashboard (Looker Studio is free, AgencyAnalytics is white-label).</li>
+        <li><b>First 90 days:</b> a 3-line weekly email: leads, cost per lead, what changed.</li>
+        <li><b>Monthly:</b> report + 20–30 minute call. Play 1–2 real call recordings.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PHASE 10 ================= -->
+<section id="p10">
+  <div class="sec-head"><div class="num">10</div><div><p class="eyebrow">Scaling your agency</p><h2>Pricing, templates, and traps to avoid</h2><p class="lede">Build everything once as a template, then reuse it for every client. That's how a small agency handles many accounts.</p></div></div>
+
+  <div class="grid3">
+    <div class="card price"><h3><svg class="ic"><use href="#i-bag"/></svg>Flat monthly fee</h3><div class="amt">~$500–$2,000</div><p class="muted">Most common: about 83% of PPC firms in one survey. Define the deliverables to avoid scope creep.</p></div>
+    <div class="card price"><h3><svg class="ic"><use href="#i-chart"/></svg>% of ad spend</h3><div class="amt">10–20%</div><p class="muted">Usually with a minimum fee. You earn more when they spend more, which some clients distrust.</p></div>
+    <div class="card price"><h3><svg class="ic"><use href="#i-wrench"/></svg>Setup fee</h3><div class="amt">$500–$2,500</div><p class="muted">One time, for tracking, landing page and account build. Your web work can be priced separately.</p></div>
+  </div>
+  <div class="card price rec" style="margin-top:12px"><h3><svg class="ic"><use href="#i-star"/></svg><span class="tag hot">RECOMMENDED FOR YOU</span></h3>
+    <p><b>Setup fee + flat monthly fee</b> ($500–$1,000 for budgets under ~$5k). Switch to a percentage above ~$10k/month in spend. Require at least <b>$1,000–$1,500/month</b> in ad budget (pest control $2,000+). Start with a <b>3-month term</b>, because the first 60–90 days build the data.</p></div>
+
+  <div class="card" style="margin-top:20px">
+    <h3><svg class="ic"><use href="#i-alert"/></svg>Local Services Ads are moving into Google Ads</h3>
+    <div class="timeline">
+      <div class="tl"><b>Aug 2026</b>First phase starts. <b>Pest control is included.</b></div>
+      <div class="tl now"><b>Now</b>Export every client's LSA reports. History does not move over.</div>
+      <div class="tl"><b>Late 2026</b>Service-area businesses without a storefront.</div>
+      <div class="tl"><b>2027</b>Remaining categories and countries.</div>
+    </div>
+    <p class="muted" style="margin-top:14px; font-size:.9rem">After moving: daily budgets instead of weekly, one Target CPA per campaign, no manual bids. New LSA accounts are still created in the separate LSA signup for now.</p>
+  </div>
+
+  <div class="grid2" style="margin-top:20px">
+    <div class="card"><h3><svg class="ic"><use href="#i-layers"/></svg>Templates to build, in order</h3>
+      <ul><li>Onboarding form, access checklist, ownership clause.</li>
+      <li>Tag Manager template with form, call and booking triggers.</li>
+      <li>Account build per industry in Google Ads Editor.</li>
+      <li>Landing page template per industry.</li>
+      <li>Weekly and monthly checklists in your project tool.</li>
+      <li>Looker Studio report template.</li>
+      <li>Offboarding steps.</li></ul></div>
+    <div class="card"><h3><svg class="ic"><use href="#i-shield"/></svg>Tools and automation</h3>
+      <ul><li>One manager account (MCC) for all clients.</li>
+      <li>Free Google Ads scripts for alerts and search term analysis.</li>
+      <li>AI for drafting ad variations and summarizing calls, always human-checked.</li>
+      <li><b>Turn off auto-applied recommendations</b> in every client account.</li></ul></div>
+  </div>
+
+  <h3 style="margin-block:24px 12px">The 11 most common mistakes</h3>
+  <ol class="mistakes">
+    <li>Creating the client's ad account inside your manager account.</li>
+    <li>Launching before tracking works, or counting every click as a lead.</li>
+    <li>Leaving location on "Presence or interest".</li>
+    <li>Broad match, AI Max or Performance Max on tiny budgets with no negatives.</li>
+    <li>Sending every ad to the homepage.</li>
+    <li>Too many campaigns, so none reach 30 conversions.</li>
+    <li>Blocking "free" when the client offers free estimates.</li>
+    <li>Never importing booked jobs, so Google optimizes for junk forms.</li>
+    <li>Ignoring missed calls and after-hours handling.</li>
+    <li>Not exporting LSA history before the move.</li>
+    <li>Accepting Google's recommendations blindly.</li>
+  </ol>
+</section>
+
+<!-- ================= INDUSTRIES ================= -->
+<section id="industries">
+  <div class="sec-head"><div class="num">B</div><div><p class="eyebrow">Your four industries</p><h2>Same system, different goals</h2><p class="lede">Pest control and handyman clients want <b>quote calls</b>. Restaurants and barbershops want <b>visits and bookings</b>.</p></div></div>
+  <div class="grid4">
+    <div class="card ind"><div class="head"><span class="icon"><svg class="ic"><use href="#i-bug"/></svg></span><h3>Pest control</h3></div>
+      <dl><dt>Goal</dt><dd>Calls and inspection bookings</dd><dt>Run</dt><dd>LSA first, then Search (termites, rodents, general)</dd><dt>Lead cost</dt><dd>Search ~$148, LSA ~$96. Highest in December.</dd><dt>Sell on</dt><dd>Yearly plan value, not the first visit</dd></dl></div>
+    <div class="card ind"><div class="head"><span class="icon"><svg class="ic"><use href="#i-wrench"/></svg></span><h3>Handyman</h3></div>
+      <dl><dt>Goal</dt><dd>Quote calls and forms for the right job size</dd><dt>Run</dt><dd>LSA + Search grouped by job type</dd><dt>Lead cost</dt><dd>~$54, one of the cheapest home services</dd><dt>Watch</dt><dd>Block jobs they don't do (roofing, HVAC)</dd></dl></div>
+    <div class="card ind"><div class="head"><span class="icon"><svg class="ic"><use href="#i-food"/></svg></span><h3>Restaurant</h3></div>
+      <dl><dt>Goal</dt><dd>Directions, calls, reservations, orders, catering</dd><dt>Run</dt><dd>Search + Performance Max with store goals</dd><dt>Lead cost</dt><dd>~$31</dd><dt>Watch</dt><dd>Small radius, meal-time schedule, great photos</dd></dl></div>
+    <div class="card ind"><div class="head"><span class="icon"><svg class="ic"><use href="#i-cut"/></svg></span><h3>Barbershop</h3></div>
+      <dl><dt>Goal</dt><dd>Bookings and walk-ins</dd><dt>Run</dt><dd>Small-radius Search + location and promo assets</dd><dt>Lead cost</dt><dd>~$39</dd><dt>Watch</dt><dd>Confirm LSA eligibility at signup. Block barber school and supplies.</dd></dl></div>
+  </div>
+</section>
+
+<!-- ================= PLAN ================= -->
+<section id="plan">
+  <div class="sec-head"><div class="num">C</div><div><p class="eyebrow">Next 30 days</p><h2>Your action plan</h2></div></div>
+  <ol class="plan">
+    <li><b>WEEK 1</b><h3>Set up your base</h3><p>Manager account, onboarding form, ownership clause, Tag Manager template.</p></li>
+    <li><b>WEEK 1–2</b><h3>Package the offer</h3><p>Setup fee + flat monthly + minimum ad budget + 3-month term.</p></li>
+    <li><b>WEEK 2</b><h3>Build templates</h3><p>Negative keyword library, landing page per industry, report template.</p></li>
+    <li><b>WEEK 3</b><h3>First client</h3><p>Start with pest control or handyman: LSA first, tracking verified.</p></li>
+    <li><b>WEEK 4+</b><h3>Run the loop</h3><p>Weekly search terms, import booked jobs, Target CPA after 30 conversions.</p></li>
+  </ol>
+</section>
+
+<footer>
+  <p><b>Keep in mind:</b> benchmarks vary a lot by source and city, and some come from small samples or companies selling the service. Google's own claims for AI Max (+14% conversions) are not independent. Google changes features often, so confirm details in your own account. Thresholds like 60-second calls and 15–20% budget steps are common practice, not Google rules.</p>
+  <div class="src">
+    <a href="https://localiq.com/blog/search-advertising-benchmarks/">LocaliQ 2026 benchmarks</a>
+    <a href="https://localiq.com/blog/home-services-search-advertising-benchmarks/">LocaliQ home services</a>
+    <a href="https://marketingexterminator.com/pest-control-lead-economics-benchmarks/">Pest control lead benchmarks</a>
+    <a href="https://support.google.com/google-ads/answer/2453972?hl=en">Google: negative keywords</a>
+    <a href="https://support.google.com/google-ads/answer/15713840?hl=en">Google: enhanced conversions for leads</a>
+    <a href="https://support.google.com/google-ads/answer/17213585?hl=en">Google: LSA migration</a>
+    <a href="https://searchengineland.com/google-sets-ai-max-migration-timeline-for-search-campaigns-485006">AI Max migration timeline</a>
+    <a href="https://www.searchenginejournal.com/hard-truths-about-ppc-insights-from-last-years-best-debates/563955/">SEJ: themes vs. SKAGs</a>
+  </div>
+  <p>Built for Ali Samadi Agency · October 2026</p>
+</footer>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol></svg>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const money = v => '$' + (v >= 100 ? Math.round(v).toLocaleString() : v.toFixed(v < 10 ? 2 : 0));
+
+  // CPC dots
+  const fill = (el, total, leads) => { let h=''; for(let i=0;i<total;i++) h += '<i' + (i < leads ? ' class="lead"' : '') + '></i>'; el.innerHTML = h; };
+  fill($('#dotsBad'), 80, 0);
+  const g = $('#dotsGood'); let h=''; const leadIdx=[3,9,15,22,28,34,41,47];
+  for(let i=0;i<50;i++) h += '<i' + (leadIdx.includes(i) ? ' class="lead"' : '') + '></i>'; g.innerHTML = h;
+
+  // Budget calculator
+  const cB=$('#cBudget'), cC=$('#cCpc'), cV=$('#cConv'), grid=$('#monthGrid');
+  function budget(){
+    const b=+cB.value, cpc=+cC.value, conv=+cV.value/100;
+    const day=b/cpc, month=day*30, leads=month*conv, cpl= leads>0 ? (b*30)/leads : 0;
+    $('#oBudget').textContent='$'+b; $('#oCpc').textContent='$'+cpc.toFixed(2); $('#oConv').textContent=cV.value+'%';
+    $('#rDay').textContent = day < 10 ? day.toFixed(1) : Math.round(day);
+    $('#rLeads').textContent = Math.round(leads);
+    $('#rCpl').textContent = money(cpl);
+    const per = Math.max(1, Math.ceil(month/240));
+    const dots = Math.round(month/per), leadDots = Math.round(leads/per);
+    $('#dotScale').textContent = per === 1 ? '1 click' : per + ' clicks';
+    const step = leadDots > 0 ? dots/leadDots : Infinity; const set = new Set();
+    for(let k=0;k<leadDots;k++) set.add(Math.floor(k*step + step/2));
+    let s=''; for(let i=0;i<dots;i++) s += set.has(i) ? '<i class="lead"></i>' : '<i></i>'; grid.innerHTML = s;
+  }
+  [cB,cC,cV].forEach(el => el.addEventListener('input', budget)); budget();
+
+  // Max CPL calculator
+  const mJ=$('#mJob'), mM=$('#mMargin'), mC=$('#mClose'), mR=$('#mRoi');
+  function maxcpl(){
+    const j=+mJ.value, m=+mM.value/100, c=+mC.value/100, r=+mR.value;
+    const out = j*m*c/r;
+    $('#oJob').textContent='$'+j.toLocaleString(); $('#oMargin').textContent=mM.value+'%'; $('#oClose').textContent=mC.value+'%'; $('#oRoi').textContent=r+'×';
+    $('#fJob').textContent='$'+j.toLocaleString(); $('#fMargin').textContent=mM.value+'%'; $('#fClose').textContent=mC.value+'%'; $('#fRoi').textContent=r;
+    $('#fOut').textContent = money(out) + ' per lead';
+    let msg;
+    if(out < 50) msg = '<b>Tight.</b> Most local Search leads cost more than ' + money(out) + '. Lean on LSA and sell on repeat or yearly value.';
+    else if(out < 100) msg = '<b>Workable.</b> ' + money(out) + ' is close to typical local lead costs. Strong tracking and landing pages matter.';
+    else msg = '<b>Healthy.</b> The client can afford ' + money(out) + ' per lead, so Search ads have room to work.';
+    $('#maxNote').innerHTML = msg;
+  }
+  [mJ,mM,mC,mR].forEach(el => el.addEventListener('input', maxcpl)); maxcpl();
+
+  // Negative lists
+  const NEG = {
+    'Jobs': {words:['jobs','job','careers','career','"now hiring"','hiring','employment','salary','salaries','wage','"pay rate"','apprentice','apprenticeship','internship','resume','indeed','glassdoor','ziprecruiter','"job openings"','"how to become"','"license exam"','certification','school','course','classes','training'], keep:['hire a handyman'], note:'Use "now hiring" as a phrase. A plain "hire" would block buyers who type "hire a handyman".'},
+    'DIY & research': {words:['diy','"do it yourself"','yourself','myself','"how to"','tutorial','youtube','video','reddit','forum','guide','homemade','"what is"','definition','pdf','manual'], keep:[], note:'People doing it themselves or just reading. They rarely call.'},
+    'Price shoppers': {words:['"free pest control"','"for free"','"free service"','cheapest','wholesale'], keep:['free estimate','free inspection','price'], note:'Never block "free" alone if the client offers free estimates. Block specific free phrases instead.'},
+    'Pest control': {words:['"pest control spray"','"bug spray"','"home depot"','lowes','walmart','amazon','ortho','raid','terro','spectracide','"mouse trap"','"rat trap"','poison','"pest control license"','"pest control technician"','"pest control products"','"pest control supplies"','chemical'], keep:['pet safe pest control','exterminator near me'], note:'Product and store searches are people buying sprays and traps, not hiring a pro. Remove wildlife or bee terms only if the client handles them.'},
+    'Handyman': {words:['"handyman app"','"handyman tools"','"handyman jobs"','"handyman salary"','"handyman license"','"home depot"','lowes','"tool rental"','rental','supplies','parts','roofing','roofer','hvac','"general contractor license"'], keep:['handyman near me','tv mounting'], note:'Add plumbing or electrical only if the client doesn\'t do them. TaskRabbit, Angi and Thumbtack are optional, since some agencies bid on competitor names.'},
+    'Barbershop': {words:['"barber school"','"barber license"','"barber college"','"barber jobs"','"barber chair"','"barber supplies"','clippers','trimmer','andis','wahl','babyliss','"barber shop for sale"','"barbershop music"','"barbershop quartet"','"how to cut"','"fade tutorial"'], keep:['haircut near me open now','fade haircut'], note:'Only block "kids haircut" or "salon" if the shop doesn\'t serve those customers.'},
+    'Restaurant': {words:['jobs','hiring','server','cook','dishwasher','recipe','recipes','"how to make"','copycat','calories','nutrition','frozen','grocery','"meal kit"','"restaurant for sale"','"restaurant equipment"','"restaurant supply"','"health inspection"'], keep:['near me open now','catering'], note:'Decide competitor chain names case by case.'},
+    'Out of area': {words:['gainesville','tallahassee','orlando','savannah','daytona','brunswick','"palm coast"','"st augustine"'], keep:[], note:'Example for a Jacksonville client. Adjust to the real service area, and also exclude these places in location settings.'}
+  };
+  const tabs=$('#negTabs'), cloud=$('#negCloud'); let current='Jobs';
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  function renderNeg(){
+    tabs.innerHTML = Object.keys(NEG).map(k => '<button type="button" role="tab" aria-selected="'+(k===current)+'" data-k="'+k+'">'+k+'</button>').join('');
+    const d = NEG[current];
+    cloud.innerHTML = d.words.map(w => '<span>'+esc(w)+'</span>').join('') + d.keep.map(w => '<span class="keep">keep: '+esc(w)+'</span>').join('');
+    $('#negNote').textContent = d.note;
+  }
+  tabs.addEventListener('click', e => { const b=e.target.closest('button'); if(!b) return; current=b.dataset.k; renderNeg(); });
+  $('#negCopy').addEventListener('click', async function(){
+    const text = NEG[current].words.join('\n'); const btn=this;
+    try { await navigator.clipboard.writeText(text); btn.lastChild.textContent='Copied'; }
+    catch(err){ const r=document.createRange(); r.selectNodeContents(cloud); const s=getSelection(); s.removeAllRanges(); s.addRange(r); btn.lastChild.textContent='Selected, press Ctrl+C'; }
+    setTimeout(()=>{ btn.lastChild.textContent='Copy list'; }, 2200);
+  });
+  renderNeg();
+
+  // Rhythm checklists
+  const RH = {
+    'Daily': ['Spend is on pace with the budget','No campaigns limited or disapproved','Conversions came in yesterday and call tracking is receiving calls','No cost spikes or sudden jumps in cost per click'],
+    'Weekly': ['Review search terms, add negatives and new keyword ideas','Cost per lead vs. target, by campaign','Listen to a few call recordings: spam, wrong service, out of area?','LSA inbox: mark leads and request credits for bad ones','Find budget-limited campaigns that are hitting target (scale candidates)','If AI Max is on, check its generated text and pages'],
+    'Monthly': ['Impression share: lost to budget or lost to rank?','Quality Score on top keywords','Replace the weakest ad headlines','Landing page conversion rate, and one page test','Location, device and hour reports','Booked job imports match the CRM','Auction Insights: any new competitors?','Client report and call'],
+    'Quarterly': ['Upgrade bidding if ready (Max Conversions to Target CPA)','New services or areas to add','Plan for seasonality (pest control peaks)','Test AI Max or Performance Max with an experiment','Full account audit against your checklist','Refresh negative lists across all clients']
+  };
+  const rt=$('#rhythmTabs'), rl=$('#rhythmList'); let rc='Weekly';
+  function renderRh(){
+    rt.innerHTML = Object.keys(RH).map(k => '<button type="button" role="tab" aria-selected="'+(k===rc)+'" data-k="'+k+'">'+k+'</button>').join('');
+    rl.innerHTML = RH[rc].map((t,i) => '<li><label for="chk-'+rc+'-'+i+'"><input type="checkbox" id="chk-'+rc+'-'+i+'"><span>'+t+'</span></label></li>').join('');
+  }
+  rt.addEventListener('click', e => { const b=e.target.closest('button'); if(!b) return; rc=b.dataset.k; renderRh(); });
+  renderRh();
+
+  // Benchmarks chart (scale 0–160)
+  const B = [
+    ['Restaurants', 'LocaliQ 2026', 30.57, 0],
+    ['Beauty / barbers', 'LocaliQ 2026', 39.25, 0],
+    ['Handyman', 'LocaliQ 2025', 54.05, 0],
+    ['All industries', 'LocaliQ 2026', 66.69, 0],
+    ['Home improvement', 'LocaliQ 2026', 90.92, 0],
+    ['Pest control: LSA', 'Coalmarch 2025', 96, 1],
+    ['Pest control: Search', 'Coalmarch 2025', 148, 1]
+  ];
+  $('#bench').innerHTML = B.map((r,i) => '<div class="crow"><div class="lab">'+r[0]+'<small>'+r[1]+'</small></div><div class="ctrack"><div class="cbar'+(r[3]?' hot':'')+'" style="--w:'+(r[2]/160*100).toFixed(1)+'%; animation-delay:'+(i*.08)+'s">$'+Math.round(r[2])+'</div></div></div>').join('');
+
+  // Respect reduced motion for SVG (SMIL) animations
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('svg').forEach(s => { try { s.pauseAnimations && s.pauseAnimations(); } catch(e){} });
+  }
+})();
+</script>

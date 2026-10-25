@@ -88,7 +88,8 @@ export async function reportLeadStage(
       customerId,
       conversionAction: action,
       currency: lead.currency,
-      convertedAt: stage === "lead" ? lead.createdAt : new Date(),
+      convertedAt:
+        stage === "lead" ? lead.createdAt : (lead.qualifiedAt ?? new Date()),
       transactionId: `lead-${lead.id}-${stage}`,
       gclid: lead.gclid,
       gbraid: lead.gbraid,

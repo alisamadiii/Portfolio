@@ -5,6 +5,7 @@ import {
 } from "@workspace/ui/components/sidebar";
 
 import { AgencyMain } from "@/components/agency/agency-main";
+import { AdsProductProvider } from "@/components/agency/ads-product";
 import { CampaignFilterProvider } from "@/components/agency/campaign-filter";
 import { AgencySidebar } from "@/components/agency/sidebar";
 
@@ -17,6 +18,7 @@ export default function AgencyLayout({
     <SidebarProvider
       style={{ "--sidebar-width": "18.5rem" } as React.CSSProperties}
     >
+      <AdsProductProvider>
       <CampaignFilterProvider>
         <AgencySidebar />
         <SidebarInset className="bg-shell min-h-screen">
@@ -28,6 +30,7 @@ export default function AgencyLayout({
           </main>
         </SidebarInset>
       </CampaignFilterProvider>
+      </AdsProductProvider>
     </SidebarProvider>
   );
 }

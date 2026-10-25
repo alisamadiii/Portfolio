@@ -50,6 +50,7 @@ import {
 } from "@/components/agency/lead-status";
 import { MarketingTabs } from "@/components/agency/marketing-tabs";
 import { PageShell, TableCard } from "@/components/agency/page-shell";
+import { StarterNegativeLists } from "@/components/agency/starter-negative-lists";
 import { TriangleAlert, X } from "@/components/icon";
 import { useAgency } from "@/components/agency/use-agency";
 
@@ -147,6 +148,8 @@ export function SearchTermsPage() {
           onExclude={setExcluding}
         />
       )}
+
+      <StarterNegativeLists />
 
       <AlertDialog
         open={Boolean(excluding)}

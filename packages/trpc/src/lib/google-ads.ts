@@ -159,7 +159,8 @@ export async function uploadConversion(deal: ConversionUpload) {
   else if (deal.gbraid) event.adIdentifiers = { gbraid: deal.gbraid };
   else if (deal.wbraid) event.adIdentifiers = { wbraid: deal.wbraid };
   if (userIdentifiers.length) event.userData = { userIdentifiers };
-  if (deal.valueCents) {
+  // != null: a $0 win still reports its value so Google counts the deal.
+  if (deal.valueCents != null) {
     event.conversionValue = deal.valueCents / 100;
     event.currency = deal.currency;
   }
@@ -549,6 +550,236 @@ export async function addNegativeKeyword(
   );
 }
 
+// ─── Shared negative keyword sets ────────────────────────────────
+
+type MutateResponse = {
+  results?: { resourceName?: string }[];
+  partialFailureError?: { message?: string };
+};
+
+/** Non-removed NEGATIVE_KEYWORDS shared sets whose name starts with `prefix`. */
+export async function listSharedNegativeSets(
+  customerId: string,
+  prefix: string
+) {
+  const rows = await query<{
+    sharedSet?: { name?: string; resourceName?: string };
+  }>(
+    customerId,
+    `SELECT shared_set.name, shared_set.resource_name
+     FROM shared_set
+     WHERE shared_set.type = 'NEGATIVE_KEYWORDS'
+       AND shared_set.status != 'REMOVED'
+       AND shared_set.name LIKE '${prefix.replace(/'/g, "\\'")}%'`
+  );
+  return rows.map((row) => ({
+    name: row.sharedSet?.name ?? "",
+    resourceName: row.sharedSet?.resourceName ?? "",
+  }));
+}
+
+/**
+ * Create (or reuse) a shared NEGATIVE_KEYWORDS set, fill it with keywords and
+ * attach it to every enabled Search/Shopping campaign. Safe to re-run: an
+ * existing set is reused, and duplicate criteria or attachments partial-fail
+ * quietly while new campaigns still get attached.
+ */
+export async function applySharedNegativeList(
+  customerId: string,
+  name: string,
+  keywords: { text: string; matchType: "BROAD" | "PHRASE" }[]
+): Promise<{ attachedCampaigns: number }> {
+  const id = normalizeCustomerId(customerId);
+  const safeName = name.replace(/'/g, "\\'");
+
+  const existing = await query<{ sharedSet?: { resourceName?: string } }>(
+    customerId,
+    `SELECT shared_set.resource_name
+     FROM shared_set
+     WHERE shared_set.type = 'NEGATIVE_KEYWORDS'
+       AND shared_set.status != 'REMOVED'
+       AND shared_set.name = '${safeName}'`
+  );
+  let sharedSet = existing[0]?.sharedSet?.resourceName;
+  if (!sharedSet) {
+    const created = await ads<MutateResponse>(
+      `customers/${id}/sharedSets:mutate`,
+      { operations: [{ create: { name, type: "NEGATIVE_KEYWORDS" } }] }
+    );
+    sharedSet = created.results?.[0]?.resourceName;
+    if (!sharedSet) {
+      throw new GoogleAdsError("Could not create the negative keyword list.");
+    }
+  }
+
+  // partialFailure: re-applying an existing list makes every duplicate
+  // keyword fail individually instead of failing the whole batch.
+  const criteria = await ads<MutateResponse>(
+    `customers/${id}/sharedCriteria:mutate`,
+    {
+      partialFailure: true,
+      operations: keywords.map((keyword) => ({
+        create: {
+          sharedSet,
+          keyword: { text: keyword.text, matchType: keyword.matchType },
+        },
+      })),
+    }
+  );
+  if (criteria.partialFailureError?.message) {
+    console.warn(
+      `[google-ads] sharedCriteria partial failure (${name}): ${criteria.partialFailureError.message.slice(0, 500)}`
+    );
+  }
+
+  // Negative shared sets only attach to Search/Shopping; PMax and Display
+  // reject them, so filter here to keep the attached count honest. Paused
+  // campaigns are included so the list is already on when they're re-enabled.
+  const campaigns = await query<{ campaign?: { id?: string } }>(
+    customerId,
+    `SELECT campaign.id
+     FROM campaign
+     WHERE campaign.status IN ('ENABLED', 'PAUSED')
+       AND campaign.advertising_channel_type IN ('SEARCH', 'SHOPPING')`
+  );
+  const campaignIds = campaigns
+    .map((row) => row.campaign?.id)
+    .filter((cid): cid is string => Boolean(cid));
+  if (campaignIds.length === 0) return { attachedCampaigns: 0 };
+
+  const attached = await ads<MutateResponse>(
+    `customers/${id}/campaignSharedSets:mutate`,
+    {
+      partialFailure: true,
+      operations: campaignIds.map((campaignId) => ({
+        create: {
+          campaign: `customers/${id}/campaigns/${campaignId}`,
+          sharedSet,
+        },
+      })),
+    }
+  );
+  if (attached.partialFailureError?.message) {
+    console.warn(
+      `[google-ads] campaignSharedSets partial failure (${name}): ${attached.partialFailureError.message.slice(0, 500)}`
+    );
+  }
+
+  return { attachedCampaigns: campaignIds.length };
+}
+
+// ─── Local Services Ads ──────────────────────────────────────────
+// LSA leads and spend live in the same account once the LSA campaign is
+// migrated into Google Ads (one LOCAL_SERVICES campaign per account).
+
+/** LSA spend and impressions for a date range, daily and totalled. */
+export async function getLsaStats(customerId: string, from: string, to: string) {
+  const rows = await query<MetricsRow & { segments?: { date?: string } }>(
+    customerId,
+    `SELECT segments.date, metrics.cost_micros, metrics.impressions
+     FROM campaign
+     WHERE segments.date BETWEEN '${from}' AND '${to}'
+       AND campaign.advertising_channel_type = 'LOCAL_SERVICES'
+       AND campaign.status != 'REMOVED'
+     ORDER BY segments.date`
+  );
+  const days = rows.map((row) => ({
+    date: row.segments?.date ?? "",
+    cost: Number(row.metrics?.costMicros ?? 0) / 1_000_000,
+    impressions: Number(row.metrics?.impressions ?? 0),
+  }));
+  return {
+    days,
+    totals: days.reduce(
+      (sum, day) => ({
+        cost: sum.cost + day.cost,
+        impressions: sum.impressions + day.impressions,
+      }),
+      { cost: 0, impressions: 0 }
+    ),
+  };
+}
+
+export type LsaLead = {
+  id: string;
+  /** PHONE_CALL | MESSAGE | BOOKING */
+  leadType: string;
+  category: string;
+  service: string;
+  /** Null when Google wiped the details (lead_status WIPED_OUT). */
+  contact: { name?: string; phone?: string; email?: string } | null;
+  status: string;
+  chargedStatus: "charged" | "credited" | "credit_pending" | "not_charged";
+  createdAt: string;
+};
+
+type LsaLeadRow = {
+  localServicesLead?: {
+    id?: string;
+    leadType?: string;
+    categoryId?: string;
+    serviceId?: string;
+    contactDetails?: {
+      consumerName?: string;
+      phoneNumber?: string;
+      email?: string;
+    };
+    leadStatus?: string;
+    creationDateTime?: string;
+    leadCharged?: boolean;
+    creditDetails?: { creditState?: string };
+  };
+};
+
+/** Leads from the account's Local Services campaign, newest first. */
+export async function listLsaLeads(
+  customerId: string,
+  from: string,
+  to: string
+): Promise<LsaLead[]> {
+  const rows = await query<LsaLeadRow>(
+    customerId,
+    `SELECT local_services_lead.id, local_services_lead.lead_type,
+            local_services_lead.category_id, local_services_lead.service_id,
+            local_services_lead.contact_details, local_services_lead.lead_status,
+            local_services_lead.creation_date_time, local_services_lead.lead_charged,
+            local_services_lead.credit_details.credit_state
+     FROM local_services_lead
+     WHERE local_services_lead.creation_date_time BETWEEN '${from} 00:00:00' AND '${to} 23:59:59'
+     ORDER BY local_services_lead.creation_date_time DESC
+     LIMIT 300`
+  );
+  return rows
+    .map((row) => row.localServicesLead)
+    .filter((lead): lead is NonNullable<typeof lead> => Boolean(lead?.id))
+    .map((lead) => {
+      const credit = lead.creditDetails?.creditState;
+      return {
+        id: lead.id!,
+        leadType: lead.leadType ?? "",
+        category: lead.categoryId ?? "",
+        service: lead.serviceId ?? "",
+        contact: lead.contactDetails
+          ? {
+              name: lead.contactDetails.consumerName,
+              phone: lead.contactDetails.phoneNumber,
+              email: lead.contactDetails.email,
+            }
+          : null,
+        status: lead.leadStatus ?? "",
+        chargedStatus:
+          credit === "CREDITED"
+            ? "credited"
+            : credit === "PENDING"
+              ? "credit_pending"
+              : lead.leadCharged
+                ? "charged"
+                : "not_charged",
+        createdAt: lead.creationDateTime ?? "",
+      };
+    });
+}
+
 // ─── Alert signals ───────────────────────────────────────────────
 
 const dateOffset = (days: number) => {
@@ -567,19 +798,87 @@ export async function getAlertSignals(customerId: string) {
     return rows.reduce((sum, row) => sum + Number(row.metrics?.conversions ?? 0), 0);
   };
 
-  const [last7, prior7, disapproved] = await Promise.all([
-    conversionsIn(dateOffset(-7), dateOffset(-1)),
-    conversionsIn(dateOffset(-14), dateOffset(-8)),
-    query<{ adGroupAd?: { ad?: { id?: string } } }>(
-      customerId,
-      "SELECT ad_group_ad.ad.id FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status = 'DISAPPROVED' AND ad_group_ad.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED'"
-    ),
-  ]);
+  // Auto-apply recommendation subscriptions; resource may not exist on every
+  // API version, so a failure just means "unknown" rather than broken alerts.
+  const autoApply = async () => {
+    try {
+      const rows = await query<unknown>(
+        customerId,
+        "SELECT recommendation_subscription.type FROM recommendation_subscription WHERE recommendation_subscription.status = 'ENABLED'"
+      );
+      return rows.length;
+    } catch {
+      return 0;
+    }
+  };
+
+  const [last7, prior7, disapproved, geoRows, rankRows, negSets, negKeywords, autoApplyEnabled] =
+    await Promise.all([
+      conversionsIn(dateOffset(-7), dateOffset(-1)),
+      conversionsIn(dateOffset(-14), dateOffset(-8)),
+      query<{ adGroupAd?: { ad?: { id?: string } } }>(
+        customerId,
+        "SELECT ad_group_ad.ad.id FROM ad_group_ad WHERE ad_group_ad.policy_summary.approval_status = 'DISAPPROVED' AND ad_group_ad.status = 'ENABLED' AND ad_group.status = 'ENABLED' AND campaign.status = 'ENABLED'"
+      ),
+      // Google's default "presence or interest" shows ads outside the area.
+      query<{
+        campaign?: {
+          id?: string;
+          name?: string;
+          geoTargetTypeSetting?: { positiveGeoTargetType?: string };
+        };
+      }>(
+        customerId,
+        "SELECT campaign.id, campaign.name, campaign.geo_target_type_setting.positive_geo_target_type FROM campaign WHERE campaign.status = 'ENABLED' AND campaign.advertising_channel_type = 'SEARCH'"
+      ),
+      query<{
+        campaign?: { id?: string; name?: string };
+        metrics?: { searchRankLostImpressionShare?: number };
+      }>(
+        customerId,
+        `SELECT campaign.id, campaign.name, metrics.search_rank_lost_impression_share FROM campaign WHERE segments.date BETWEEN '${dateOffset(-7)}' AND '${dateOffset(-1)}' AND campaign.status = 'ENABLED' AND campaign.advertising_channel_type = 'SEARCH'`
+      ),
+      query<{ campaign?: { id?: string } }>(
+        customerId,
+        "SELECT campaign.id FROM campaign_shared_set WHERE campaign_shared_set.status != 'REMOVED' AND shared_set.type = 'NEGATIVE_KEYWORDS' AND campaign.status = 'ENABLED'"
+      ),
+      query<{ campaign?: { id?: string } }>(
+        customerId,
+        "SELECT campaign.id FROM campaign_criterion WHERE campaign_criterion.negative = TRUE AND campaign_criterion.type = 'KEYWORD' AND campaign.status = 'ENABLED'"
+      ),
+      autoApply(),
+    ]);
+
+  const geoInterest = geoRows
+    .filter(
+      (row) =>
+        row.campaign?.geoTargetTypeSetting?.positiveGeoTargetType &&
+        row.campaign.geoTargetTypeSetting.positiveGeoTargetType !== "PRESENCE"
+    )
+    .map((row) => ({ name: row.campaign?.name ?? "" }));
+
+  const rankLost = rankRows
+    .filter((row) => Number(row.metrics?.searchRankLostImpressionShare ?? 0) > 0)
+    .map((row) => ({
+      name: row.campaign?.name ?? "",
+      share: Number(row.metrics?.searchRankLostImpressionShare ?? 0),
+    }));
+
+  const withNegatives = new Set(
+    [...negSets, ...negKeywords].map((row) => row.campaign?.id).filter(Boolean)
+  );
+  const searchCampaignsWithoutNegatives = geoRows.filter(
+    (row) => row.campaign?.id && !withNegatives.has(row.campaign.id)
+  ).length;
 
   return {
     conversionsLast7: last7,
     conversionsPrior7: prior7,
     disapprovedAds: disapproved.length,
+    geoInterest,
+    rankLost,
+    searchCampaignsWithoutNegatives,
+    autoApplyEnabled,
   };
 }
 

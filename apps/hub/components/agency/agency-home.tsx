@@ -43,18 +43,36 @@ type Tile = {
   cta: string;
 };
 
-/** The "Finish setting up" checklist — 4 onboarding tiles. */
+/** The "Finish setting up" checklist — onboarding tiles. */
 function SetupChecklist() {
   const trpc = useTRPC();
-  const { repoId, repo, adsConnected } = useAgency();
+  const { repoId, repo, adsConnected, adsType, conversionsWired } = useAgency();
+  // Search-campaign tiles don't apply to an LSA-only client.
+  const searchAds = adsConnected && adsType !== "lsa";
 
   const booking = useQuery(trpc.agency.booking.status.queryOptions({ repoId }));
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ repoId }));
   const campaigns = useQuery(
     trpc.agency.campaigns.list.queryOptions({ repoId })
   );
+  const firstLead = useQuery(
+    trpc.agency.leads.list.queryOptions({ repoId, page: 1, pageSize: 1 })
+  );
+  const negativeLists = useQuery(
+    trpc.agency.ads.negativeLists.list.queryOptions(
+      { repoId },
+      { enabled: searchAds, retry: false }
+    )
+  );
 
-  if (booking.isPending || info.isPending || campaigns.isPending) return null;
+  if (
+    booking.isPending ||
+    info.isPending ||
+    campaigns.isPending ||
+    firstLead.isPending ||
+    (searchAds && negativeLists.isPending)
+  )
+    return null;
 
   const bookingOn = Boolean(booking.data?.connected && booking.data?.settings);
   const infoDone = doneCount(
@@ -95,6 +113,42 @@ function SetupChecklist() {
       href: "/business-info",
       cta: "Continue",
     },
+    {
+      key: "first-lead",
+      label: "First lead captured",
+      done: (firstLead.data?.total ?? 0) > 0,
+      sub:
+        (firstLead.data?.total ?? 0) > 0
+          ? "Leads are coming in"
+          : "Install the form script and send a test lead",
+      href: "/origins",
+      cta: "Set up",
+    },
+    ...(searchAds
+      ? [
+          {
+            key: "conversions",
+            label: "Conversion actions wired",
+            done: conversionsWired,
+            sub: conversionsWired
+              ? "Leads report to Google Ads"
+              : "Without this, Google optimizes blind",
+            href: "/marketing/conversions",
+            cta: "Wire up",
+          },
+          {
+            key: "negatives",
+            label: "Negative lists applied",
+            done: (negativeLists.data?.applied.length ?? 0) > 0,
+            sub:
+              (negativeLists.data?.applied.length ?? 0) > 0
+                ? "Blocking junk searches"
+                : "Block job seekers and DIYers",
+            href: "/marketing/search-terms",
+            cta: "Apply",
+          },
+        ]
+      : []),
   ];
 
   if (tiles.every((t) => t.done)) return null;

@@ -9,25 +9,31 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { useAdsProduct } from "@/components/agency/ads-product";
 import { lastDays } from "@/components/agency/lead-status";
 import { useAgency } from "@/components/agency/use-agency";
 
-const TABS = [
+const SEARCH_TABS = [
   { title: "Overview", href: "/marketing" },
   { title: "Conversions", href: "/marketing/conversions" },
   { title: "Budget", href: "/marketing/budget" },
   { title: "Search terms", href: "/marketing/search-terms" },
 ];
 
+const LSA_TABS = [
+  { title: "Overview", href: "/marketing" },
+  { title: "Local Services", href: "/marketing/lsa" },
+];
+
 /** Count of search terms with spend but no conversions — the red tab badge. */
-function useWastedCount() {
+function useWastedCount(enabled: boolean) {
   const trpc = useTRPC();
   const { repoId, adsConnected } = useAgency();
   const range = useMemo(() => lastDays(30), []);
   const list = useQuery(
     trpc.agency.ads.searchTerms.list.queryOptions(
       { repoId, ...range },
-      { enabled: adsConnected, retry: false, staleTime: 5 * 60_000 }
+      { enabled: enabled && adsConnected, retry: false, staleTime: 5 * 60_000 }
     )
   );
   return (
@@ -38,7 +44,9 @@ function useWastedCount() {
 
 export function MarketingTabs() {
   const pathname = usePathname();
-  const wasted = useWastedCount();
+  const { product } = useAdsProduct();
+  const TABS = product === "lsa" ? LSA_TABS : SEARCH_TABS;
+  const wasted = useWastedCount(product === "search");
 
   return (
     <nav

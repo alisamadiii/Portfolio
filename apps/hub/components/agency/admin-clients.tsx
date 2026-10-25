@@ -30,10 +30,22 @@ import {
 } from "@workspace/ui/components/table";
 
 import { useTRPC } from "@workspace/trpc/client";
+import {
+  INDUSTRIES,
+  INDUSTRY_LABELS,
+  type Industry,
+} from "@workspace/trpc/lib/agency/negative-lists";
 
 import { SearchPicker } from "@/components/agency/search-picker";
 
 const NO_WEBSITE = "none";
+const NO_INDUSTRY = "none";
+
+const ADS_TYPES = [
+  { value: "search", label: "Search only" },
+  { value: "lsa", label: "Local Services (LSA)" },
+  { value: "both", label: "Search + LSA" },
+] as const;
 
 // "1234567890" -> "123-456-7890"
 const formatCustomerId = (id: string) =>
@@ -42,6 +54,8 @@ const formatCustomerId = (id: string) =>
 const EMPTY = {
   email: "",
   repoId: "",
+  industry: "",
+  adsType: "search",
   googleAdsCustomerId: "",
   googleAdsConversionAction: "",
   leadNotifyEmail: "",
@@ -147,6 +161,11 @@ export function AdminAgencyClients() {
               form.repoId && form.repoId !== NO_WEBSITE
                 ? Number(form.repoId)
                 : null,
+            industry:
+              form.industry && form.industry !== NO_INDUSTRY
+                ? (form.industry as Industry)
+                : null,
+            adsType: (form.adsType || "search") as "search" | "lsa" | "both",
             googleAdsCustomerId: form.googleAdsCustomerId || null,
             googleAdsConversionAction: form.googleAdsConversionAction || null,
             leadNotifyEmail: form.leadNotifyEmail,
@@ -205,6 +224,56 @@ export function AdminAgencyClients() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>
+            Industry{" "}
+            <span className="text-muted-foreground font-normal">
+              (optional)
+            </span>
+          </Label>
+          <Select
+            value={form.industry || NO_INDUSTRY}
+            onValueChange={(value) => set("industry")(String(value))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_INDUSTRY}>No industry</SelectItem>
+              {INDUSTRIES.map((industry) => (
+                <SelectItem key={industry} value={industry}>
+                  {INDUSTRY_LABELS[industry]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-muted-foreground text-[12px]">
+            Adds that trade&apos;s starter negative list on the client&apos;s
+            Search terms page.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Ads products</Label>
+          <Select
+            value={form.adsType || "search"}
+            onValueChange={(value) => set("adsType")(String(value))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ADS_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-muted-foreground text-[12px]">
+            Controls which marketing pages the client sees. LSA shows Local
+            Services leads instead of Search terms and budgets.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="client-ads">Google Ads account</Label>
@@ -442,6 +511,8 @@ export function AdminAgencyClients() {
                       setForm({
                         email: client.email,
                         repoId: client.repoId ? String(client.repoId) : "",
+                        industry: client.industry ?? "",
+                        adsType: client.adsType ?? "search",
                         googleAdsCustomerId: client.googleAdsCustomerId ?? "",
                         googleAdsConversionAction:
                           client.googleAdsConversionAction ?? "",

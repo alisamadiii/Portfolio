@@ -93,6 +93,10 @@ export async function getAccountAlerts(client: Client): Promise<AdsAlert[] | nul
           })),
         trackingBroken,
         uploadFailures: failures?.count ?? 0,
+        geoInterest: signals.geoInterest,
+        rankLost: signals.rankLost,
+        searchCampaignsWithoutNegatives: signals.searchCampaignsWithoutNegatives,
+        autoApplyEnabled: signals.autoApplyEnabled,
       });
     });
   } catch (error) {

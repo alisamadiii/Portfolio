@@ -27,7 +27,7 @@ import { stripeRouter } from "../stripe/payments";
  * Returns the user's Stripe customer id, creating the customer (and
  * persisting the id on the user row) on first use.
  */
-const ensureStripeCustomer = async (sessionUser: {
+export const ensureStripeCustomer = async (sessionUser: {
   id: string;
   email: string;
   name: string;
@@ -48,11 +48,18 @@ const ensureStripeCustomer = async (sessionUser: {
     if (valid) return record.stripeCustomerId;
   }
 
-  const customer = await stripe.customers.create({
-    email: sessionUser.email,
-    name: sessionUser.name,
-    metadata: { externalId: sessionUser.id },
-  });
+  // Reuse an existing Stripe customer with the same email (created by an
+  // earlier checkout or by hand in the dashboard) instead of duplicating it.
+  const existing = await stripe.customers
+    .list({ email: sessionUser.email, limit: 1 })
+    .then((result) => result.data[0]);
+  const customer =
+    existing ??
+    (await stripe.customers.create({
+      email: sessionUser.email,
+      name: sessionUser.name,
+      metadata: { externalId: sessionUser.id },
+    }));
   await db
     .update(user)
     .set({ stripeCustomerId: customer.id })

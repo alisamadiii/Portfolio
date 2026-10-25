@@ -24,12 +24,21 @@ export type AlertSignals = {
   trackingBroken: { name: string; status: string }[];
   /** Leads whose conversion upload failed in the last 7 days. */
   uploadFailures: number;
+  /** Enabled Search campaigns not set to "Presence" location targeting. */
+  geoInterest: { name: string }[];
+  /** Enabled campaigns losing search impression share to ad rank (0..1). */
+  rankLost: { name: string; share: number }[];
+  /** Enabled Search campaigns with no negative keywords at all. */
+  searchCampaignsWithoutNegatives: number;
+  /** Auto-apply recommendation types Google has enabled on the account. */
+  autoApplyEnabled: number;
 };
 
 // Small accounts stay quiet: a 3 → 1 conversions week isn't a drop signal.
 const MIN_PRIOR_CONVERSIONS = 5;
 const DROP_RATIO = 0.5;
 const BUDGET_LIMITED_SHARE = 0.2;
+const RANK_LOST_SHARE = 0.4;
 // Underspend only alarms once the month is far enough along to mean something.
 const UNDERSPEND_FROM_DAY = 10;
 
@@ -115,6 +124,50 @@ export function evaluateAlerts(signals: AlertSignals): AdsAlert[] {
       title: `${signals.uploadFailures} conversion ${signals.uploadFailures === 1 ? "upload" : "uploads"} failing`,
       detail: "Some leads couldn't be reported to Google Ads in the last 7 days.",
       href: "/marketing/conversions",
+    });
+  }
+
+  if (signals.geoInterest.length) {
+    alerts.push({
+      id: "geo-targeting",
+      severity: "warning",
+      title: "Location setting wastes money outside the service area",
+      detail: `${signals.geoInterest[0]!.name} targets "presence or interest", so people far away still see the ads. Switch it to "Presence" in Google Ads.`,
+      href: "/marketing",
+    });
+  }
+
+  const rankLost = signals.rankLost.filter(
+    (campaign) => campaign.share > RANK_LOST_SHARE
+  );
+  if (rankLost.length) {
+    alerts.push({
+      id: "rank-lost",
+      severity: "warning",
+      title: `${rankLost.length} ${rankLost.length === 1 ? "campaign" : "campaigns"} losing impressions to ad rank`,
+      detail: `${rankLost[0]!.name} missed ${Math.round(rankLost[0]!.share * 100)}% of possible impressions because competitors outrank it. Better ads and landing pages raise rank without raising bids.`,
+      href: "/marketing",
+    });
+  }
+
+  if (signals.searchCampaignsWithoutNegatives > 0) {
+    alerts.push({
+      id: "no-negatives",
+      severity: "warning",
+      title: `${signals.searchCampaignsWithoutNegatives} Search ${signals.searchCampaignsWithoutNegatives === 1 ? "campaign has" : "campaigns have"} no negative keywords`,
+      detail:
+        "Without negatives, ads show for job seekers and DIYers. Apply a starter list.",
+      href: "/marketing/search-terms",
+    });
+  }
+
+  if (signals.autoApplyEnabled > 0) {
+    alerts.push({
+      id: "auto-apply",
+      severity: "warning",
+      title: "Google auto-apply recommendations are on",
+      detail: `${signals.autoApplyEnabled} recommendation ${signals.autoApplyEnabled === 1 ? "type" : "types"} auto-apply changes without review. Turn them off in Google Ads.`,
+      href: "/marketing",
     });
   }
 

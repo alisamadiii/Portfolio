@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, eq, gte, lt, ne, sql, sum } from "drizzle-orm";
+import { and, count, eq, gte, isNull, lt, ne, sql, sum } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/pool";
 import { agencyClient, agencyLead } from "@workspace/drizzle/schema";
@@ -26,9 +26,11 @@ export type WeeklyReportData = {
   adLeads: Compared;
   won: Compared;
   wonValueCents: Compared;
+  bookings: Compared;
   /** Null when no Google Ads account is linked. */
   spendCents: Compared | null;
   costPerLeadCents: { current: number | null; previous: number | null } | null;
+  costPerBookingCents: { current: number | null; previous: number | null } | null;
   topCampaign: { name: string; spendCents: number; leads: number } | null;
   topSearchTerm: { term: string; costCents: number } | null;
   /** Alert titles, worst first. */
@@ -70,11 +72,29 @@ async function leadNumbers(repoId: number, from: string, to: string) {
         lt(agencyLead.wonAt, end)
       )
     );
+  // Bookings count by meeting time; canceled ones drop out.
+  const [bookings] = await db
+    .select({
+      count: count(),
+      fromAds: sql<number>`count(*) filter (where ${agencyLead.channel} = 'google_ads')`.mapWith(Number),
+    })
+    .from(agencyLead)
+    .where(
+      and(
+        eq(agencyLead.repoId, repoId),
+        eq(agencyLead.source, "booking"),
+        isNull(agencyLead.bookingCanceledAt),
+        gte(agencyLead.bookingAt, start),
+        lt(agencyLead.bookingAt, end)
+      )
+    );
   return {
     leads: row?.leads ?? 0,
     adLeads: row?.adLeads ?? 0,
     won: won?.count ?? 0,
     wonValueCents: Number(won?.valueCents ?? 0),
+    bookings: bookings?.count ?? 0,
+    adBookings: bookings?.fromAds ?? 0,
   };
 }
 
@@ -153,6 +173,7 @@ export async function buildWeeklyReport(
       current: current.wonValueCents,
       previous: previous.wonValueCents,
     },
+    bookings: { current: current.bookings, previous: previous.bookings },
     spendCents: hasAds
       ? { current: spend(adsCurrent), previous: spend(adsPrevious) }
       : null,
@@ -160,6 +181,12 @@ export async function buildWeeklyReport(
       ? {
           current: cpl(spend(adsCurrent), current.adLeads),
           previous: cpl(spend(adsPrevious), previous.adLeads),
+        }
+      : null,
+    costPerBookingCents: hasAds
+      ? {
+          current: cpl(spend(adsCurrent), current.adBookings),
+          previous: cpl(spend(adsPrevious), previous.adBookings),
         }
       : null,
     topCampaign,

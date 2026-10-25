@@ -23,6 +23,10 @@ import {
   RescheduleDialog,
 } from "@/components/agency/booking-dialogs";
 import {
+  MarkLostDialog,
+  MarkWonDialog,
+} from "@/components/agency/lead-status-dialogs";
+import {
   CHANNEL_LABELS,
   ChannelBadge,
   urlPath,
@@ -72,6 +76,14 @@ const recorded = (lead: Lead): [string, string | null][] => [
   ["Meeting", lead.booking?.typeName ?? null],
   ["Meeting at", when(lead.bookingAt)],
   ["Meeting canceled at", when(lead.bookingCanceledAt)],
+  [
+    "Meeting outcome",
+    lead.bookingOutcome === "completed"
+      ? "Completed"
+      : lead.bookingOutcome === "no_show"
+        ? "No-show"
+        : null,
+  ],
   ["Meeting rescheduled from", when(lead.booking?.rescheduledFrom)],
   ["Meet link", lead.booking?.meetUrl ?? null],
   ["Calendar event", lead.booking?.htmlLink ?? null],
@@ -108,7 +120,11 @@ const recorded = (lead: Lead): [string, string | null][] => [
       : null,
   ],
   ["Currency", lead.currency],
+  ["Contacted at", when(lead.contactedAt)],
+  ["Qualified at", when(lead.qualifiedAt)],
   ["Won at", when(lead.wonAt)],
+  ["Lost at", when(lead.lostAt)],
+  ["Lost reason", lead.lostReason],
   ["New lead reported to Google Ads at", when(lead.adsUploads?.lead?.at)],
   ["New lead upload error", lead.adsUploads?.lead?.error ?? null],
   ["New lead accepted by Google", accepted(lead.adsUploads?.lead)],
@@ -168,7 +184,11 @@ function MeetingCard({ lead, repoId }: { lead: Lead; repoId: number }) {
                 ? "Canceled"
                 : upcoming
                   ? `Upcoming · ${formatDistanceToNow(at)}`
-                  : "Past"}
+                  : lead.bookingOutcome === "completed"
+                    ? "Past · Completed"
+                    : lead.bookingOutcome === "no_show"
+                      ? "Past · No-show"
+                      : "Past"}
             </p>
             <p className="mt-1 text-[18px] font-semibold">
               {lead.booking?.typeName ?? "Meeting"}
@@ -250,6 +270,7 @@ export function LeadDetail({ id }: { id: number }) {
 
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
+  const [statusDialog, setStatusDialog] = useState<"won" | "lost" | null>(null);
   useEffect(() => {
     if (!lead) return;
     setValue(lead.valueCents ? String(lead.valueCents / 100) : "");
@@ -297,6 +318,32 @@ export function LeadDetail({ id }: { id: number }) {
     update.mutate({ repoId, id, status, valueCents, notes: notes || null });
 
   const name = lead.name || lead.email || lead.phone || `Lead #${lead.id}`;
+
+  // Status milestones in the order they happened, for the timeline.
+  type StatusEvent = { at: string | Date; title: string; extra?: string };
+  const statusEvents: StatusEvent[] = [];
+  if (lead.contactedAt)
+    statusEvents.push({ at: lead.contactedAt, title: "Contacted" });
+  if (lead.qualifiedAt)
+    statusEvents.push({ at: lead.qualifiedAt, title: "Qualified" });
+  if (lead.wonAt)
+    statusEvents.push({
+      at: lead.wonAt,
+      title: "Won",
+      extra:
+        lead.valueCents != null
+          ? formatMoney(lead.valueCents, lead.currency)
+          : undefined,
+    });
+  if (lead.lostAt)
+    statusEvents.push({
+      at: lead.lostAt,
+      title: "Lost",
+      extra: lead.lostReason ?? undefined,
+    });
+  statusEvents.sort(
+    (a, b) => new Date(a.at).getTime() - new Date(b.at).getTime()
+  );
 
   return (
     <div className="flex flex-col gap-7">
@@ -452,9 +499,19 @@ export function LeadDetail({ id }: { id: number }) {
                   tone="accent"
                   title="Meeting"
                   detail={format(new Date(lead.bookingAt), "PPP 'at' p")}
-                  last
+                  last={statusEvents.length === 0}
                 />
               )}
+              {statusEvents.map((event, index) => (
+                <TimelineItem
+                  key={event.title}
+                  tone={event.title === "Won" ? "accent" : "neutral"}
+                  title={event.title}
+                  detail={format(new Date(event.at), "PPP 'at' p")}
+                  extra={event.extra}
+                  last={index === statusEvents.length - 1}
+                />
+              ))}
             </ol>
           </section>
 
@@ -493,7 +550,13 @@ export function LeadDetail({ id }: { id: number }) {
                     type="button"
                     aria-pressed={active}
                     disabled={!canEdit || update.isPending}
-                    onClick={() => save(option.value)}
+                    onClick={() =>
+                      option.value === "won" && !active
+                        ? setStatusDialog("won")
+                        : option.value === "lost" && !active
+                          ? setStatusDialog("lost")
+                          : save(option.value)
+                    }
                     className={cn(
                       "rounded-[10px] px-2 py-2 text-[13px] font-medium ring-1 transition-colors disabled:opacity-60",
                       active && option.value === "won"
@@ -577,7 +640,7 @@ export function LeadDetail({ id }: { id: number }) {
                     </Button>
                   )}
                 </div>
-              ) : !lead.valueCents ? (
+              ) : lead.valueCents == null ? (
                 <p className="text-muted-foreground">
                   Add a deal value to report this sale to Google Ads.
                 </p>
@@ -590,6 +653,29 @@ export function LeadDetail({ id }: { id: number }) {
           )}
         </aside>
       </div>
+
+      {statusDialog === "won" && (
+        <MarkWonDialog
+          repoId={repoId}
+          lead={lead}
+          onClose={() => setStatusDialog(null)}
+          onDone={(updated) => {
+            setStatusDialog(null);
+            onSaved(updated);
+          }}
+        />
+      )}
+      {statusDialog === "lost" && (
+        <MarkLostDialog
+          repoId={repoId}
+          lead={lead}
+          onClose={() => setStatusDialog(null)}
+          onDone={(updated) => {
+            setStatusDialog(null);
+            onSaved(updated);
+          }}
+        />
+      )}
     </div>
   );
 }

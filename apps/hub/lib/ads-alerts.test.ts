@@ -14,6 +14,10 @@ const quiet: AlertSignals = {
   budgetLimited: [],
   trackingBroken: [],
   uploadFailures: 0,
+  geoInterest: [],
+  rankLost: [],
+  searchCampaignsWithoutNegatives: 0,
+  autoApplyEnabled: 0,
 };
 
 describe("evaluateAlerts", () => {
@@ -85,6 +89,44 @@ describe("evaluateAlerts", () => {
   it("flags failing uploads", () => {
     const alerts = evaluateAlerts({ ...quiet, uploadFailures: 1 });
     expect(alerts[0]!.title).toBe("1 conversion upload failing");
+  });
+
+  it("flags campaigns on presence-or-interest geo targeting", () => {
+    const alerts = evaluateAlerts({
+      ...quiet,
+      geoInterest: [{ name: "Core Search" }],
+    });
+    expect(alerts.map((a) => a.id)).toContain("geo-targeting");
+    expect(alerts.find((a) => a.id === "geo-targeting")!.detail).toContain(
+      "Core Search"
+    );
+  });
+
+  it("only flags rank-lost impression share above the 40% threshold", () => {
+    expect(
+      evaluateAlerts({ ...quiet, rankLost: [{ name: "Core", share: 0.3 }] })
+    ).toEqual([]);
+    const alerts = evaluateAlerts({
+      ...quiet,
+      rankLost: [{ name: "Core", share: 0.55 }],
+    });
+    expect(alerts.map((a) => a.id)).toContain("rank-lost");
+  });
+
+  it("flags Search campaigns without any negative keywords", () => {
+    const alerts = evaluateAlerts({
+      ...quiet,
+      searchCampaignsWithoutNegatives: 2,
+    });
+    expect(alerts.map((a) => a.id)).toContain("no-negatives");
+    expect(alerts.find((a) => a.id === "no-negatives")!.href).toBe(
+      "/marketing/search-terms"
+    );
+  });
+
+  it("flags enabled auto-apply recommendations", () => {
+    const alerts = evaluateAlerts({ ...quiet, autoApplyEnabled: 3 });
+    expect(alerts.map((a) => a.id)).toContain("auto-apply");
   });
 
   it("sorts critical alerts before warnings", () => {

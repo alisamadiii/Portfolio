@@ -40,8 +40,12 @@ export interface AgencyWeeklyReportProps {
   leads?: Compared;
   won?: Compared;
   wonValueCents?: Compared;
+  bookings?: Compared;
   spendCents?: Compared | null;
   costPerLeadCents?: { current: number | null; previous: number | null } | null;
+  costPerBookingCents?:
+    | { current: number | null; previous: number | null }
+    | null;
   topCampaign?: { name: string; spendCents: number; leads: number } | null;
   topSearchTerm?: { term: string; costCents: number } | null;
   alerts?: string[];
@@ -128,8 +132,10 @@ export default function AgencyWeeklyReportEmail({
   leads = { current: 0, previous: 0 },
   won = { current: 0, previous: 0 },
   wonValueCents = { current: 0, previous: 0 },
+  bookings = { current: 0, previous: 0 },
   spendCents = null,
   costPerLeadCents = null,
+  costPerBookingCents = null,
   topCampaign = null,
   topSearchTerm = null,
   alerts = [],
@@ -175,6 +181,22 @@ export default function AgencyWeeklyReportEmail({
                 value={money(costPerLeadCents.current, currency)}
                 current={costPerLeadCents.current}
                 previous={costPerLeadCents.previous ?? 0}
+                goodWhen="down"
+              />
+            )}
+            {(bookings.current > 0 || bookings.previous > 0) && (
+              <StatRow
+                name="Bookings"
+                value={String(bookings.current)}
+                {...bookings}
+              />
+            )}
+            {costPerBookingCents && costPerBookingCents.current !== null && (
+              <StatRow
+                name="Cost per booking"
+                value={money(costPerBookingCents.current, currency)}
+                current={costPerBookingCents.current}
+                previous={costPerBookingCents.previous ?? 0}
                 goodWhen="down"
               />
             )}

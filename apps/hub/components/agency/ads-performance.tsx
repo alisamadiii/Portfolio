@@ -212,6 +212,10 @@ export function useAgencyNumbers(days: number) {
   const adLeads = leads.data ? (fromAds?.leads ?? 0) : null;
   const adWonValueCents = fromAds?.wonValueCents ?? 0;
   const currency = ads.data?.currency ?? "USD";
+  const perAdCount = (count: number | undefined) =>
+    cost !== null && count
+      ? formatMoney(Math.round((cost / count) * 100), currency)
+      : null;
 
   return {
     range,
@@ -224,6 +228,8 @@ export function useAgencyNumbers(days: number) {
       cost !== null && adLeads
         ? formatMoney(Math.round((cost / adLeads) * 100), currency)
         : null,
+    costPerBooking: perAdCount(leads.data?.bookings.fromAds),
+    costPerQualified: perAdCount(leads.data?.adQualified),
     // Revenue from deals won on ad leads per dollar of ad spend.
     roas:
       cost && leads.data
@@ -237,9 +243,16 @@ export function AdsPerformance() {
   const [days, setDays] = useState<RangeValue>("30");
   // Set from the sidebar; scopes leads and ad numbers together.
   const { campaignId, setCampaignId } = useCampaignFilter();
-  const { leads, ads, currency, costPerLead, roas, adLeads } = useAgencyNumbers(
-    Number(days)
-  );
+  const {
+    leads,
+    ads,
+    currency,
+    costPerLead,
+    costPerBooking,
+    costPerQualified,
+    roas,
+    adLeads,
+  } = useAgencyNumbers(Number(days));
 
   const chartData = useMemo(() => {
     const leadsByDay = new Map(
@@ -352,6 +365,42 @@ export function AdsPerformance() {
               {
                 label: "Return on ads",
                 value: ads.isLoading || leads.isLoading ? null : (roas ?? "–"),
+              },
+            ]}
+          />
+
+          <StatCardRow
+            cells={[
+              {
+                label: "Cost per booking",
+                value:
+                  ads.isLoading || leads.isLoading
+                    ? null
+                    : (costPerBooking ?? "–"),
+                sub: leads.data
+                  ? `${leads.data.bookings.fromAds} booked from ads · ${leads.data.bookings.total} total`
+                  : undefined,
+              },
+              {
+                label: "Cost per qualified lead",
+                value:
+                  ads.isLoading || leads.isLoading
+                    ? null
+                    : (costPerQualified ?? "–"),
+                sub: leads.data
+                  ? `${leads.data.adQualified} qualified or won from ads`
+                  : undefined,
+              },
+              {
+                label: "No-show rate",
+                value: leads.data
+                  ? leads.data.bookings.total > 0
+                    ? `${Math.round((leads.data.bookings.noShows / leads.data.bookings.total) * 100)}%`
+                    : "–"
+                  : null,
+                sub: leads.data?.bookings.noShows
+                  ? `${leads.data.bookings.noShows} no-shows`
+                  : undefined,
               },
             ]}
           />
@@ -505,8 +554,116 @@ export function AdsPerformance() {
               </TableBody>
             </Table>
           </TableCard>
+
+          <LeadsByCampaign
+            byCampaign={leads.data?.byCampaign ?? []}
+            campaigns={ads.data?.campaigns ?? []}
+            currency={currency}
+          />
+
+          {(leads.data?.landingPages.length ?? 0) > 0 && (
+            <TableCard>
+              <Table className="min-w-[480px]">
+                <TableHeader>
+                  <TableRow className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
+                    <TableHead className="pl-6">Landing page</TableHead>
+                    <TableHead className="pr-6 text-right">Leads</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {leads.data?.landingPages.map((row) => (
+                    <TableRow key={row.page} className="text-[15px]">
+                      <TableCell className="max-w-[420px] truncate py-[14px] pl-6 font-medium">
+                        {row.page}
+                      </TableCell>
+                      <TableCell className="pr-6 text-right tabular-nums">
+                        {row.leads.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableCard>
+          )}
         </div>
       )}
     </PageShell>
+  );
+}
+
+/** Captured leads joined with spend per campaign: the numbers owners care about. */
+function LeadsByCampaign({
+  byCampaign,
+  campaigns,
+  currency,
+}: {
+  byCampaign: {
+    campaignId: string;
+    campaignName: string;
+    leads: number;
+    won: number;
+    wonValueCents: number;
+  }[];
+  campaigns: { id: string; cost: number }[];
+  currency: string;
+}) {
+  if (!byCampaign.length) return null;
+  const spendById = new Map(campaigns.map((campaign) => [campaign.id, campaign.cost]));
+  const rows = [...byCampaign].sort((a, b) => b.leads - a.leads);
+
+  return (
+    <TableCard>
+      <Table className="min-w-[720px]">
+        <TableHeader>
+          <TableRow className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
+            <TableHead className="pl-6">Leads by campaign</TableHead>
+            <TableHead className="text-right">Spend</TableHead>
+            <TableHead className="text-right">Leads</TableHead>
+            <TableHead className="text-right">Cost per lead</TableHead>
+            <TableHead className="text-right">Won</TableHead>
+            <TableHead className="text-right">Close rate</TableHead>
+            <TableHead className="pr-6 text-right">Won value</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => {
+            const cost = spendById.get(row.campaignId);
+            return (
+              <TableRow key={row.campaignId} className="text-[15px]">
+                <TableCell className="max-w-[280px] truncate py-[16px] pl-6 font-medium">
+                  {row.campaignName}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {cost !== undefined
+                    ? formatMoney(Math.round(cost * 100), currency)
+                    : "–"}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {row.leads.toLocaleString()}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {cost !== undefined && row.leads > 0
+                    ? formatMoney(Math.round((cost / row.leads) * 100), currency)
+                    : "–"}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {row.won.toLocaleString()}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {row.leads > 0
+                    ? `${Math.round((row.won / row.leads) * 100)}%`
+                    : "–"}
+                </TableCell>
+                <TableCell className="pr-6 text-right tabular-nums">
+                  {row.wonValueCents > 0
+                    ? formatMoney(row.wonValueCents, currency)
+                    : "–"}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </TableCard>
   );
 }

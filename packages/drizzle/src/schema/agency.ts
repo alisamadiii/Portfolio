@@ -194,6 +194,15 @@ export const agencyClient = pgTable("agency_client", {
   // kept ad copy. Edited on the hub's Business Information pages.
   adCampaigns: jsonb("ad_campaigns").$type<AdCampaign[]>(),
 
+  // Client's trade, for the industry-specific starter negative list.
+  // Values match the trpc negative-lists INDUSTRIES; null = none.
+  industry: text("industry").$type<
+    "pest-control" | "handyman" | "barbershop" | "restaurant"
+  >(),
+
+  // Which Google ads products this client runs; null = classic Search.
+  adsType: text("ads_type").$type<"search" | "lsa" | "both">(),
+
   // Client account under the agency MCC, digits only ("1234567890").
   googleAdsCustomerId: text("google_ads_customer_id"),
   // "customers/<id>/conversionActions/<id>" for the closed-deal import.
@@ -254,6 +263,11 @@ export const agencyLead = pgTable(
     currency: text("currency").notNull().default("USD"),
     wonAt: timestamp("won_at"),
     notes: text("notes"),
+    // First time the lead entered each status; set once, never cleared on revert.
+    contactedAt: timestamp("contacted_at"),
+    qualifiedAt: timestamp("qualified_at"),
+    lostAt: timestamp("lost_at"),
+    lostReason: text("lost_reason"),
 
     // Offline conversion upload to Google Ads (closed deal).
     conversionUploadedAt: timestamp("conversion_uploaded_at"),
@@ -266,6 +280,8 @@ export const agencyLead = pgTable(
     bookingEnd: timestamp("booking_end"),
     bookingCanceledAt: timestamp("booking_canceled_at"),
     booking: jsonb("booking").$type<AgencyLeadBooking>(),
+    // Outcome of a past meeting, recorded by the owner. Null = not recorded.
+    bookingOutcome: text("booking_outcome").$type<"completed" | "no_show">(),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")

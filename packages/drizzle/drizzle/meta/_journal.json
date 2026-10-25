@@ -204,6 +204,20 @@
       "when": 1792841714677,
       "tag": "0028_reflective_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792936484970,
+      "tag": "0029_mature_zzzax",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792939077505,
+      "tag": "0030_ancient_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

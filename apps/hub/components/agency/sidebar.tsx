@@ -24,6 +24,10 @@ import { getInitialsFromName } from "@/lib/utils/avatar";
 import { useEntitlement } from "@/hooks/use-plans";
 
 import { AdsAlertCount } from "@/components/agency/ads-alerts";
+import {
+  AdsProductSwitch,
+  useAdsProduct,
+} from "@/components/agency/ads-product";
 import { CampaignFilterSelect } from "@/components/agency/campaign-filter";
 import { useAgency } from "@/components/agency/use-agency";
 import { ViewSwitch } from "@/components/hub-view";
@@ -113,6 +117,7 @@ export function AgencySidebar({
 }: React.ComponentProps<typeof Sidebar>) {
   const { repoId } = useAgency();
   const { can } = useEntitlement(repoId);
+  const { product } = useAdsProduct();
   const pages = overviewPages.filter(
     (page) => !page.feature || can(page.feature)
   );
@@ -139,7 +144,8 @@ export function AgencySidebar({
       </SidebarHeader>
 
       <SidebarContent className="px-1.5">
-        {can("ads") && <CampaignFilterSelect />}
+        {can("ads") && <AdsProductSwitch />}
+        {can("ads") && product === "search" && <CampaignFilterSelect />}
         <NavPages label="Overview" pages={pages} />
         <NavPages label="Account" pages={accountPages} />
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">

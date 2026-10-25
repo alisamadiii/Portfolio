@@ -521,6 +521,13 @@ function BookingsCard({ repoId }: { repoId: number }) {
   const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
 
+  const setOutcome = useMutation(
+    trpc.agency.booking.setOutcome.mutationOptions({
+      onSuccess: refresh,
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
   if (bookings.isPending)
     return <Skeleton className="h-40 w-full rounded-[18px]" />;
   if (bookings.error) return null;
@@ -645,6 +652,65 @@ function BookingsCard({ repoId }: { repoId: number }) {
                       </Button>
                     </span>
                   )}
+                  {!canceled &&
+                    isPast &&
+                    (booking.bookingOutcome ? (
+                      <button
+                        type="button"
+                        title="Click to undo"
+                        disabled={setOutcome.isPending}
+                        onClick={() =>
+                          setOutcome.mutate({
+                            repoId,
+                            leadId: booking.id,
+                            outcome: null,
+                          })
+                        }
+                      >
+                        <StatusPill
+                          tone={
+                            booking.bookingOutcome === "completed"
+                              ? "success"
+                              : "danger"
+                          }
+                        >
+                          {booking.bookingOutcome === "completed"
+                            ? "Completed"
+                            : "No-show"}
+                        </StatusPill>
+                      </button>
+                    ) : (
+                      <span className="flex gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={setOutcome.isPending}
+                          onClick={() =>
+                            setOutcome.mutate({
+                              repoId,
+                              leadId: booking.id,
+                              outcome: "completed",
+                            })
+                          }
+                        >
+                          Completed
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={setOutcome.isPending}
+                          onClick={() =>
+                            setOutcome.mutate({
+                              repoId,
+                              leadId: booking.id,
+                              outcome: "no_show",
+                            })
+                          }
+                        >
+                          No-show
+                        </Button>
+                      </span>
+                    ))}
                 </div>
               );
             })}
