@@ -139,6 +139,33 @@ const updated = "October 2026";
             >. On disconnection we delete the stored tokens. You can also email
             us to request deletion of any stored booking data.
           </p>
+          <h2>Google user data (Google Ads)</h2>
+          <p>
+            Our client dashboard also offers optional advertising reporting and
+            conversion tracking. To provide it, we request access to the
+            following Google scopes:
+          </p>
+          <ul>
+            <li>
+              <strong>Google Ads</strong> (<code>adwords</code>) &mdash; read
+              campaign, budget, and conversion reporting from Google Ads
+              accounts linked to our manager account, and apply the campaign
+              changes a client requests (for example budget updates or negative
+              keywords).
+            </li>
+            <li>
+              <strong>Data Manager</strong> (<code>datamanager</code>) &mdash;
+              upload offline conversion events (for example when a lead from a
+              client's own website becomes a customer) to the client's linked
+              Google Ads account so their campaigns can be measured accurately.
+            </li>
+          </ul>
+          <p>
+            We use this data solely to provide the reporting, alerting, and
+            conversion tracking features inside the client dashboard. We do not
+            sell it, do not use it for advertising of our own, and do not share
+            it with anyone outside the service providers listed above.
+          </p>
           <p>
             Our use and transfer of information received from Google APIs
             adheres to the
@@ -148,6 +175,55 @@ const updated = "October 2026";
               rel="noopener noreferrer"
               >Google API Services User Data Policy</a
             >, including the Limited Use requirements.
+          </p>
+
+          <h2>How we protect your data</h2>
+          <p>
+            We protect all personal information we hold, including sensitive
+            data received from Google APIs, with the following mechanisms:
+          </p>
+          <ul>
+            <li>
+              <strong>Encryption in transit:</strong> all data moves between
+              your browser, our servers, and Google over HTTPS using TLS 1.2 or
+              higher.
+            </li>
+            <li>
+              <strong>Encryption at rest:</strong> our database and its backups
+              are encrypted at rest, and the OAuth tokens Google issues to us
+              are additionally encrypted before storage.
+            </li>
+            <li>
+              <strong>Access controls:</strong> access to personal and Google
+              user data is restricted to authorized personnel who need it to
+              operate the service. Tokens are stored server-side only and are
+              never exposed to other users, browsers, or third parties.
+            </li>
+            <li>
+              <strong>Credential security:</strong> API keys and OAuth
+              credentials live in secured server configuration, never in
+              client-side code or version control.
+            </li>
+            <li>
+              <strong>Revocation and deletion:</strong> when you disconnect an
+              integration or close your account, we revoke and delete the
+              stored tokens, and we delete associated Google user data within
+              30 days on request.
+            </li>
+          </ul>
+          <p>
+            No method of transmission or storage is 100% secure, but we review
+            and update these safeguards on an ongoing basis.
+          </p>
+
+          <h2>Data retention</h2>
+          <p>
+            We keep personal information only as long as needed to provide our
+            services and meet legal and accounting obligations. Google user
+            data is retained only while the related integration stays
+            connected; disconnecting it removes the stored tokens immediately,
+            and you can email us to have any remaining related records deleted
+            within 30 days.
           </p>
 
           <h2>Your rights</h2>
