@@ -239,7 +239,10 @@ export const emailsRouter = createTRPCRouter({
       const emails = await projectEmails(project);
       if (!emails.some((e) => e.id === input.id)) throw NOT_FOUND();
 
-      const email = await getEmailById(input.id);
+      const email = await getEmailById(
+        input.id,
+        project.usesendApiKey ?? undefined
+      );
       if (!email) throw NOT_FOUND();
       if (!email.html) {
         throw new TRPCError({

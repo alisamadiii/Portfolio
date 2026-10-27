@@ -95,7 +95,8 @@ export async function getEmailsSnapshot(
 }
 
 export async function getEmailById(
-  id: string
+  id: string,
+  apiKey?: string
 ): Promise<UseSendEmailDetail | null> {
   type DetailResponse = ListedEmail & {
     html?: string | null;
@@ -105,8 +106,11 @@ export async function getEmailById(
 
   let data: DetailResponse;
   try {
+    // The detail endpoint is team-scoped: pass the project's own team key, or
+    // the lookup hits the shared team and 404s on the project's emails.
     data = await usesendFetch<DetailResponse>(
-      `/api/v1/emails/${encodeURIComponent(id)}`
+      `/api/v1/emails/${encodeURIComponent(id)}`,
+      { apiKey }
     );
   } catch (error) {
     if (error instanceof UseSendError && error.status === 404) return null;
