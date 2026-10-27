@@ -28,6 +28,7 @@ import {
   validateCustomHost,
   validateSlug,
 } from "../lib/domains";
+import { normalizeOrigin } from "../lib/agency/origins";
 
 /**
  * Domains for every project's live site (GitHub-linked and uploaded alike,
@@ -50,6 +51,7 @@ const projectRow = async (repoId: number) => {
       customDomainStatus: hubProject.customDomainStatus,
       customDomainCfId: hubProject.customDomainCfId,
       websiteUrl: hubProject.websiteUrl,
+      origins: hubProject.origins,
     })
     .from(hubProject)
     .where(eq(hubProject.repoId, repoId))
@@ -335,5 +337,29 @@ export const domainsRouter = createTRPCRouter({
       })
       .where(eq(hubProject.repoId, ctx.repoId));
     return { removed: true };
+  }),
+
+  /** Hostnames the project's embed scripts (lead form / booking / contact) may run on. */
+  origins: createTRPCRouter({
+    get: cmsFullAccessProcedure.query(
+      async ({ ctx }) => (await projectRow(ctx.repoId)).origins ?? []
+    ),
+    set: cmsFullAccessProcedure
+      .input(z.object({ origins: z.array(z.string().trim().max(253)).max(50) }))
+      .mutation(async ({ ctx, input }) => {
+        // Store bare hostnames, deduped; drop anything without a host.
+        const cleaned = [
+          ...new Set(
+            input.origins
+              .map((o) => normalizeOrigin(o))
+              .filter((h): h is string => Boolean(h))
+          ),
+        ];
+        await db
+          .update(hubProject)
+          .set({ origins: cleaned })
+          .where(eq(hubProject.repoId, ctx.repoId));
+        return cleaned;
+      }),
   }),
 });

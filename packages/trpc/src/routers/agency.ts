@@ -1290,9 +1290,17 @@ export const agencyRouter = createTRPCRouter({
 
   booking: bookingRouter,
 
-  // Domains the client's capture + booking scripts are allowed to run on.
+  // Domains the capture + booking scripts are allowed to run on. One list per
+  // project, stored on hub_project and shared with the website Domain card.
   origins: createTRPCRouter({
-    get: agencyProcedure.query(({ ctx }) => ctx.client.origins ?? []),
+    get: agencyProcedure.query(async ({ ctx }) => {
+      const [row] = await db
+        .select({ origins: hubProject.origins })
+        .from(hubProject)
+        .where(eq(hubProject.repoId, ctx.client.repoId))
+        .limit(1);
+      return row?.origins ?? [];
+    }),
     set: agencyWriteProcedure
       .input(z.object({ origins: z.array(z.string().trim().max(253)).max(50) }))
       .mutation(async ({ ctx, input }) => {
@@ -1305,9 +1313,9 @@ export const agencyRouter = createTRPCRouter({
           ),
         ];
         await db
-          .update(agencyClient)
+          .update(hubProject)
           .set({ origins: cleaned })
-          .where(eq(agencyClient.id, ctx.client.id));
+          .where(eq(hubProject.repoId, ctx.client.repoId));
         return cleaned;
       }),
   }),

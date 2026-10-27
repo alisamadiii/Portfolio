@@ -182,11 +182,7 @@ export const agencyClient = pgTable(
 
     // The embed scripts (leads.js / booking.js / contact.js) post keyed by the project's
     // repoId above (data-key=repoId) — no separate public key. Abuse is bounded
-    // by the origins allowlist below + the Postgres rate limiter.
-
-    // Hostnames the capture + booking scripts may run on (lead-source protection).
-    // The client manages this in the hub; empty/unset = nothing allowed in prod.
-    origins: jsonb("origins").$type<string[]>(),
+    // by the origins allowlist (now hub_project.origins) + the Postgres rate limiter.
 
     // Per-client brand assets: resourceKey -> list of value options (business
     // titles, descriptions, taglines, ...). Keys are driven by the hub's

@@ -31,6 +31,7 @@ import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
 
 import { Check, Copy } from "@/components/icon";
 import { ProjectFeatureGate } from "@/components/settings/project-paywall";
+import { OriginsCard } from "@/components/settings/origins-card";
 
 /** Site Settings › Domain. Content Pilot hosted projects (the default, and
  * every upload) get the free subdomain + custom domain flow. Projects hosted
@@ -95,6 +96,7 @@ export function DomainPanel() {
           </a>
         </div>
       )}
+      <OriginsCard repoId={repoId} />
     </div>
   );
 }
@@ -533,6 +535,8 @@ function SiteDomainPanel({
               )}
             </div>
           </ProjectFeatureGate>
+
+          <OriginsCard repoId={repoId} />
         </>
       )}
     </div>

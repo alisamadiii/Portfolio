@@ -80,7 +80,8 @@ export const isAllowedOrigin = (
   if (!host) return false;
   if (process.env.NODE_ENV !== "production") return true;
 
-  // The explicit allow-list the client manages in the hub.
+  // The explicit allow-list the user manages in the hub (hub_project.origins),
+  // shared by the website Domain card and the agency settings card.
   if (isOriginAllowed(client.origins, host)) return true;
 
   // Backward-compat: a client with a linked website keeps its site's domains.
@@ -113,7 +114,7 @@ export async function findClientByRepoId(repoId: number) {
     .select({
       repoId: agencyClient.repoId,
       userId: agencyClient.userId,
-      origins: agencyClient.origins,
+      origins: hubProject.origins,
       leadNotifyEmail: agencyClient.leadNotifyEmail,
       ownerEmail: userTable.email,
       websiteUrl: hubProject.websiteUrl,

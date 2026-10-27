@@ -198,6 +198,11 @@ export const hubProject = pgTable(
     customDomainStatus: text("custom_domain_status"),
     // Cloudflare custom-hostname id for status polls and deletes.
     customDomainCfId: text("custom_domain_cf_id"),
+    // Hostnames the project's embed scripts (lead form / booking / contact) may
+    // run on. One list per project, managed from both the website Domain card and
+    // the agency settings card. Bare hostnames, www-insensitive; empty/unset =
+    // nothing allowed in prod.
+    origins: jsonb("origins").$type<string[]>(),
     // Per-client GitHub. The Better Auth user.id who imported the project — owns
     // it (access filtering + full-access role) and whose stored GitHub OAuth
     // token backstops reads/commits when there's no interactive caller. Set at
