@@ -815,6 +815,35 @@ function ContactSnippet({ repoId }: { repoId: number }) {
           text, <code>data-redirect=&quot;/thanks&quot;</code> sends the visitor to
           a page, and the hidden <code>_hp</code> input filters out bots.
         </p>
+        <p className="text-muted-foreground">
+          <span className="text-foreground font-medium">
+            Advanced: keep your own validation &amp; messages.
+          </span>{" "}
+          The script dispatches three cancelable events on the form so your page
+          can validate before the send and show its own result UI while the
+          script still does the sending. Call{" "}
+          <code>preventDefault()</code> on an event to take over that step:
+        </p>
+        <ul className="text-muted-foreground list-disc space-y-1 pl-5">
+          <li>
+            <code>contact:beforesubmit</code> — fires before the request; cancel
+            it to run your own validation and block the send.
+          </li>
+          <li>
+            <code>contact:success</code> — fires on success; cancel it to show
+            your own thank-you instead of the built-in message.
+          </li>
+          <li>
+            <code>contact:error</code> — fires on failure; cancel it to show your
+            own error message.
+          </li>
+        </ul>
+        <p className="text-muted-foreground">
+          Fields are still sent by each input&apos;s <code>name</code>, and{" "}
+          <code>_hp</code>, <code>data-success</code> and{" "}
+          <code>data-redirect</code> work the same. Leave the events alone and the
+          built-in behavior above runs unchanged.
+        </p>
       </div>
     </details>
   );

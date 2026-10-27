@@ -81,6 +81,35 @@ export function InstallSnippet() {
           sends the visitor to a page instead, and the hidden{" "}
           <code>_hp</code> input quietly filters out bots.
         </p>
+        <p className="text-muted-foreground">
+          <span className="text-foreground font-medium">
+            Advanced: keep your own validation &amp; messages.
+          </span>{" "}
+          The script dispatches three cancelable events on the form so your page
+          can validate before the send and show its own result UI while the
+          script still captures the lead. Call <code>preventDefault()</code> on an
+          event to take over that step:
+        </p>
+        <ul className="text-muted-foreground list-disc space-y-1 pl-5">
+          <li>
+            <code>lead:beforesubmit</code> — fires before the request; cancel it
+            to run your own validation and block the send.
+          </li>
+          <li>
+            <code>lead:success</code> — fires on success; cancel it to show your
+            own thank-you instead of the built-in message.
+          </li>
+          <li>
+            <code>lead:error</code> — fires on failure; cancel it to show your own
+            error message.
+          </li>
+        </ul>
+        <p className="text-muted-foreground">
+          The attribution, the honeypot, and any <code>data-conversion</code>{" "}
+          still work the same — the conversion fires on every real success even
+          when you handle the UI yourself. Leave the events alone and the built-in
+          behavior above runs unchanged.
+        </p>
       </div>
     </details>
   );

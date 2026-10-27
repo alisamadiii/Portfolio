@@ -15,6 +15,12 @@
  *   data-success="Thanks!"        message shown after submit
  *   data-redirect="/thank-you"    go here after submit instead
  * A hidden input named "_hp" works as a spam honeypot.
+ *
+ * Lifecycle events (all bubble and are cancelable) let a page keep its own
+ * validation and result UI while the script still does the sending:
+ *   contact:beforesubmit   fires before the request; preventDefault() aborts the send
+ *   contact:success        fires on a 2xx; preventDefault() suppresses the built-in thank-you
+ *   contact:error          fires on failure; preventDefault() suppresses the built-in error
  */
 (function () {
   var script = document.currentScript;
@@ -45,6 +51,10 @@
         return;
       event.preventDefault();
       if (form.getAttribute("data-contact-sending")) return;
+
+      // Host page can validate first; preventDefault() on this event aborts the send.
+      if (!form.dispatchEvent(new CustomEvent("contact:beforesubmit", { bubbles: true, cancelable: true })))
+        return;
 
       var fields = {};
       var hp = "";
@@ -79,21 +89,27 @@
       })
         .then(function (res) {
           if (!res.ok) throw new Error(String(res.status));
-          form.dispatchEvent(new CustomEvent("contact:success", { bubbles: true }));
+          // preventDefault() on this event suppresses the built-in thank-you so the page can show its own.
+          var handled = !form.dispatchEvent(
+            new CustomEvent("contact:success", { bubbles: true, cancelable: true })
+          );
           var redirect = form.getAttribute("data-redirect");
           if (redirect) {
             location.href = redirect;
             return;
           }
           form.reset();
-          showMessage(
-            form,
-            form.getAttribute("data-success") || "Thanks! Your message has been sent.",
-            false
-          );
+          if (!handled)
+            showMessage(
+              form,
+              form.getAttribute("data-success") || "Thanks! Your message has been sent.",
+              false
+            );
         })
         .catch(function () {
-          showMessage(form, "Something went wrong. Please try again or call us.", true);
+          // preventDefault() on this event suppresses the built-in error message.
+          if (form.dispatchEvent(new CustomEvent("contact:error", { bubbles: true, cancelable: true })))
+            showMessage(form, "Something went wrong. Please try again or call us.", true);
         })
         .finally(function () {
           form.removeAttribute("data-contact-sending");

@@ -16,6 +16,12 @@
  *   data-redirect="/thank-you"   go here after submit instead
  *   data-conversion="AW-1/abc"   gtag conversion to fire on success
  * A hidden input named "_hp" works as a spam honeypot.
+ *
+ * Lifecycle events (all bubble and are cancelable) let a page keep its own
+ * validation and result UI while the script still does the sending:
+ *   lead:beforesubmit   fires before the request; preventDefault() aborts the send
+ *   lead:success        fires on a 2xx; preventDefault() suppresses the built-in thank-you
+ *   lead:error          fires on failure; preventDefault() suppresses the built-in error
  */
 (function () {
   var script = document.currentScript;
@@ -122,6 +128,10 @@
       event.preventDefault();
       if (form.getAttribute("data-lead-sending")) return;
 
+      // Host page can validate first; preventDefault() on this event aborts the send.
+      if (!form.dispatchEvent(new CustomEvent("lead:beforesubmit", { bubbles: true, cancelable: true })))
+        return;
+
       var fields = {};
       var hp = "";
       new FormData(form).forEach(function (value, name) {
@@ -174,7 +184,11 @@
           if (conversion && typeof window.gtag === "function") {
             window.gtag("event", "conversion", { send_to: conversion });
           }
-          form.dispatchEvent(new CustomEvent("lead:success", { bubbles: true }));
+          // preventDefault() on this event suppresses the built-in thank-you so the page can show its
+          // own. The conversion above still fires on every real success, regardless of custom UI.
+          var handled = !form.dispatchEvent(
+            new CustomEvent("lead:success", { bubbles: true, cancelable: true })
+          );
 
           var redirect = form.getAttribute("data-redirect");
           if (redirect) {
@@ -182,10 +196,13 @@
             return;
           }
           form.reset();
-          showMessage(form, form.getAttribute("data-success") || "Thanks! We'll be in touch soon.", false);
+          if (!handled)
+            showMessage(form, form.getAttribute("data-success") || "Thanks! We'll be in touch soon.", false);
         })
         .catch(function () {
-          showMessage(form, "Something went wrong. Please try again or call us.", true);
+          // preventDefault() on this event suppresses the built-in error message.
+          if (form.dispatchEvent(new CustomEvent("lead:error", { bubbles: true, cancelable: true })))
+            showMessage(form, "Something went wrong. Please try again or call us.", true);
         })
         .finally(function () {
           form.removeAttribute("data-lead-sending");
