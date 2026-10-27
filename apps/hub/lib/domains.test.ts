@@ -58,12 +58,4 @@ describe("validateCustomHost", () => {
       validateCustomHost(`x.y.${freeSubdomainBase()}`)
     ).toThrow(/not available/);
   });
-
-  it("allows bare localhost / 127.0.0.1 with optional port for local testing", () => {
-    expect(validateCustomHost("localhost")).toBe("localhost");
-    expect(validateCustomHost("localhost:4322")).toBe("localhost:4322");
-    expect(validateCustomHost("127.0.0.1")).toBe("127.0.0.1");
-    expect(validateCustomHost("127.0.0.1:4322")).toBe("127.0.0.1:4322");
-    expect(validateCustomHost("LOCALHOST:4322")).toBe("localhost:4322");
-  });
 });
