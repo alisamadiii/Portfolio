@@ -1,6 +1,6 @@
 /*
  * Ali Samadii LLC lead capture.
- * <script src="https://api.alisamadii.com/f.js" data-key="PROJECT_REPO_ID" defer></script>
+ * <script src="https://api.alisamadii.com/leads.js" data-key="PROJECT_REPO_ID" defer></script>
  * data-key is the project's repoId (shown in the Hub); posts to
  * /api/agency/forms/<repoId>.
  *

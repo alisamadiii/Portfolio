@@ -101,7 +101,7 @@ export const isAllowedOrigin = (
 
 /**
  * The agency client behind a public `repoId`; null when unknown. The embed
- * scripts (f.js / b.js / c.js) post keyed by the project's repoId — the tenant
+ * scripts (leads.js / booking.js / contact.js) post keyed by the project's repoId — the tenant
  * id (`agency_client.repoId`), which is the project (`hub_project.repoId`). The
  * website is left-joined to keep its domains + name, plus the project's useSend
  * team key for the contact-email endpoint (server-only, never returned past these

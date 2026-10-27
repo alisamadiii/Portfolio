@@ -475,7 +475,7 @@ function SettingsCard({
 // ─── Install snippet ─────────────────────────────────────────────
 
 function BookingSnippet({ repoId }: { repoId: number }) {
-  const snippet = `<script src="${API_URL}/b.js" data-key="${repoId}" defer></script>\n<button data-booking>Book an appointment</button>`;
+  const snippet = `<script src="${API_URL}/booking.js" data-key="${repoId}" defer></script>\n<button data-booking>Book an appointment</button>`;
   return (
     <FrameCard innerClassName="flex flex-col gap-3">
       <p className="text-[17px] font-semibold">Put booking on the website</p>
@@ -486,7 +486,7 @@ function BookingSnippet({ repoId }: { repoId: number }) {
         attributes on that element: <code>data-accent=&quot;#0f766e&quot;</code>{" "}
         recolors the dialog (the default is our orange),{" "}
         <code>data-theme=&quot;dark&quot;</code> makes it dark. If the capture
-        script (f.js) is on the page too, bookings are credited to the ad that
+        script (leads.js) is on the page too, bookings are credited to the ad that
         brought the visitor.
       </p>
       <div className="flex items-start gap-2">

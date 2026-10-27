@@ -45,7 +45,7 @@ export function InstallSnippet() {
   const { repoId, canInstall } = useAgency();
   if (!canInstall) return null;
 
-  const snippet = `<script src="${API_URL}/f.js" data-key="${repoId}" defer></script>`;
+  const snippet = `<script src="${API_URL}/leads.js" data-key="${repoId}" defer></script>`;
 
   return (
     <details className="bg-card rounded-lg border px-5 py-3 text-[14px]">

@@ -782,10 +782,10 @@ function CopyRow({ code }: { code: string }) {
 }
 
 // The copy-paste snippet for a client's website, shown on the Emails view. The
-// script (public/c.js) posts to /api/agency/contact/<repoId> and sends through
+// script (public/contact.js) posts to /api/agency/contact/<repoId> and sends through
 // this project's own team, so messages land in this list.
 function ContactSnippet({ repoId }: { repoId: number }) {
-  const snippet = `<script src="${API_URL}/c.js" data-key="${repoId}" defer></script>`;
+  const snippet = `<script src="${API_URL}/contact.js" data-key="${repoId}" defer></script>`;
   return (
     <details className="bg-card rounded-lg border px-5 py-3 text-[14px]">
       <summary className="cursor-pointer font-semibold">Contact form setup</summary>

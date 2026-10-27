@@ -23,13 +23,13 @@ import {
 } from "@/lib/agency-public";
 
 // ─── Contact email ──────────────────────────────────────────────
-// Public endpoint behind the contact script (public/c.js) on clients' websites.
+// Public endpoint behind the contact script (public/contact.js) on clients' websites.
 // Unlike the lead-capture endpoint, this just sends the site owner an email
 // through the PROJECT'S OWN useSend team (hub_project.usesendApiKey), from its
 // agency-managed sending subdomain — so every message shows up in that project's
 // Emails view. No lead row, no ad attribution.
 //
-// c.js posts JSON as text/plain (a "simple" CORS request, no preflight). The
+// contact.js posts JSON as text/plain (a "simple" CORS request, no preflight). The
 // Origin header is still checked against the client's own domains.
 
 // The shared agency sending domain (matches the useSend instance's

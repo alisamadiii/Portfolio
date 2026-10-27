@@ -17,8 +17,8 @@ const apiBase = import.meta.env.DEV
   ? "http://localhost:3000"
   : "https://api.alisamadii.com";
 const captureScripts =
-  `<script src="${apiBase}/f.js" data-key="nJCBP6mhoapkA4NE" defer></script>` +
-  `<script src="${apiBase}/b.js" data-key="nJCBP6mhoapkA4NE" defer></script>`;
+  `<script src="${apiBase}/leads.js" data-key="nJCBP6mhoapkA4NE" defer></script>` +
+  `<script src="${apiBase}/booking.js" data-key="nJCBP6mhoapkA4NE" defer></script>`;
 const url = new URL(PATH, SITE).href;
 const title = "Lead Generation Agency | Google Ads + Websites";
 const description =
@@ -1594,7 +1594,7 @@ const jsonLd = {
         })
       );
 
-      // Submission is handled by the shared lead-capture script (f.js) via the
+      // Submission is handled by the shared lead-capture script (leads.js) via the
       // form's data-lead-form attribute; nothing to wire up here.
 
       // Video dialog

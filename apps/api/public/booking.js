@@ -1,6 +1,6 @@
 /*
  * Ali Samadii LLC booking widget.
- * <script src="https://api.alisamadii.com/b.js" data-key="PROJECT_REPO_ID" defer></script>
+ * <script src="https://api.alisamadii.com/booking.js" data-key="PROJECT_REPO_ID" defer></script>
  * <button data-booking>Book an appointment</button>
  * data-key is the project's repoId (shown in the Hub).
  *
@@ -15,7 +15,7 @@
  *   data-accent="#0f766e"      dialog highlight color (default: brand orange)
  *   data-theme="dark"          dark dialog (default is light)
  *
- * Works alongside f.js: it reads the same attribution cookies, so bookings
+ * Works alongside leads.js: it reads the same attribution cookies, so bookings
  * are credited to the ad or link that brought the visitor. If booking is
  * not set up or the calendar can't be read, the dialog says so.
  */
@@ -29,7 +29,7 @@
   var loadedAt = Date.now();
   var DAY = 24 * 60 * 60 * 1000;
 
-  // ── Attribution (same cookies f.js writes; URL params as fallback) ──
+  // ── Attribution (same cookies leads.js writes; URL params as fallback) ──
   var PARAMS = ["gclid", "gbraid", "wbraid", "utm_source", "utm_medium", "utm_campaign", "utm_id", "utm_term", "utm_content"];
 
   function readCookie(name) {

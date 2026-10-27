@@ -30,11 +30,11 @@ import {
 } from "@/lib/agency-public";
 
 // ─── Agency lead capture ────────────────────────────────────────
-// Public endpoint behind the capture script (public/f.js) on agency clients'
+// Public endpoint behind the capture script (public/leads.js) on agency clients'
 // websites. Saves the submission as an agency_lead, with the ad click IDs
 // and UTMs the script kept in its cookie, and emails the client.
 //
-// f.js posts JSON as text/plain, a "simple" CORS request with no preflight.
+// leads.js posts JSON as text/plain, a "simple" CORS request with no preflight.
 // The Origin header is still checked against the client's own domains.
 
 export async function OPTIONS(req: Request) {

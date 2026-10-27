@@ -1,13 +1,13 @@
 /*
  * Ali Samadii LLC contact email.
- * <script src="https://api.alisamadii.com/c.js" data-key="PROJECT_REPO_ID" defer></script>
+ * <script src="https://api.alisamadii.com/contact.js" data-key="PROJECT_REPO_ID" defer></script>
  * data-key is the project's repoId (shown in the Hub); posts to
  * /api/agency/contact/<repoId>.
  *
  * - Takes over every <form data-contact-form>: posts its fields to the Hub,
  *   which sends the site owner a contact email through the project's own
  *   sending address. Every send shows up in the project's Emails view.
- * - Unlike f.js (lead capture + ad attribution), this only sends an email:
+ * - Unlike leads.js (lead capture + ad attribution), this only sends an email:
  *   no cookies, no tracking.
  *
  * Optional form attributes:

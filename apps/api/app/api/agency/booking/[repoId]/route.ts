@@ -44,13 +44,13 @@ import {
 } from "@/lib/agency-public";
 
 // ─── Public booking endpoint ────────────────────────────────────
-// Behind the booking widget (public/b.js) on agency clients' websites.
+// Behind the booking widget (public/booking.js) on agency clients' websites.
 // GET serves the widget's config and free slots; POST books one: saves the
 // visitor as an agency_lead (source "booking") and puts the meeting on the
 // owner's Google Calendar with the visitor as attendee, so Google emails
 // the invite and reminders to both sides.
 //
-// Like f.js, b.js posts JSON as text/plain (no preflight); GETs are plain
+// Like leads.js, booking.js posts JSON as text/plain (no preflight); GETs are plain
 // cross-origin fetches. Origin is checked against the client's own domains.
 
 const SLOT_MS = BOOKING_MINUTES * 60 * 1000;

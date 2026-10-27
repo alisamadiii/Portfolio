@@ -161,7 +161,7 @@ const labelClass =
           class={`${inputClass} resize-none`}></textarea>
       </div>
 
-      {/* Honeypot: hidden from people, bots fill it in (f.js drops those). */}
+      {/* Honeypot: hidden from people, bots fill it in (leads.js drops those). */}
       <input
         type="text"
         name="_hp"
@@ -181,7 +181,7 @@ const labelClass =
         >
           Request a Quote
         </button>
-        {/* f.js shows the thank-you here after a successful submit. */}
+        {/* leads.js shows the thank-you here after a successful submit. */}
         <p data-lead-message class="text-sm" role="status"></p>
       </div>
     </form>
@@ -190,7 +190,7 @@ const labelClass =
 
 <script is:inline data-astro-rerun>
   // Preselect the plan from ?plan= (pricing cards + offer CTAs deep-link here).
-  // Submission is handled by the shared lead-capture script (f.js); this form
+  // Submission is handled by the shared lead-capture script (leads.js); this form
   // just needs data-lead-form, which it has.
   (() => {
     const plan = new URLSearchParams(location.search).get("plan");

@@ -1,5 +1,5 @@
 // ─── Allowed origins for the capture + booking scripts ───────────
-// An agency client lists the hostnames its f.js / b.js may post from, so a
+// An agency client lists the hostnames its leads.js / booking.js may post from, so a
 // leaked form key can't be used from another site. Pure helpers, shared by the
 // public endpoints (apps/api) and the hub.
 

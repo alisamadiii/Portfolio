@@ -53,7 +53,7 @@ export type AgencyLeadUtm = {
   content?: string;
 };
 
-// The visitor's first visit to the site (f.js _lead_ft cookie).
+// The visitor's first visit to the site (leads.js _lead_ft cookie).
 export type AgencyLeadTouch = {
   referrer?: string;
   landing?: string;
@@ -99,7 +99,7 @@ export type AdCampaign = {
 };
 
 // ─── Booking ─────────────────────────────────────────────────────
-// Online appointment booking (b.js widget). Every meeting is 15 minutes;
+// Online appointment booking (booking.js widget). Every meeting is 15 minutes;
 // availability comes from these hours minus Google Calendar busy times.
 
 export type AgencyBookingHours = {
@@ -180,7 +180,7 @@ export const agencyClient = pgTable(
     // for leads/booking/entitlement. Opaque bigint key, no FK.
     repoId: bigint("repo_id", { mode: "number" }).notNull().unique(),
 
-    // The embed scripts (f.js / b.js / c.js) post keyed by the project's
+    // The embed scripts (leads.js / booking.js / contact.js) post keyed by the project's
     // repoId above (data-key=repoId) — no separate public key. Abuse is bounded
     // by the origins allowlist below + the Postgres rate limiter.
 
@@ -246,7 +246,7 @@ export const agencyLead = pgTable(
     formName: text("form_name"),
     source: text("source").$type<AgencyLeadSource>().notNull().default("form"),
 
-    // Attribution captured by the f.js cookie.
+    // Attribution captured by the leads.js cookie.
     pageUrl: text("page_url"),
     referrer: text("referrer"),
     utm: jsonb("utm").$type<AgencyLeadUtm>(),

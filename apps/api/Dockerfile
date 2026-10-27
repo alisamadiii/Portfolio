@@ -27,7 +27,7 @@ ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
 WORKDIR /app
 COPY --from=builder /app/apps/api/.next/standalone ./
 COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
-# Standalone output excludes public/ — copy it so static files (f.js, b.js) serve.
+# Standalone output excludes public/ — copy it so static files (leads.js, booking.js) serve.
 COPY --from=builder /app/apps/api/public ./apps/api/public
 EXPOSE 3000
 CMD ["node", "apps/api/server.js"]
