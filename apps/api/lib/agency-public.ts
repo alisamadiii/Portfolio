@@ -136,6 +136,36 @@ export async function findClientByRepoId(repoId: number) {
   return client as typeof client & { repoId: number };
 }
 
+/**
+ * The contact-form target behind a public `repoId`; null when the project is
+ * unknown. Unlike findClientByRepoId this does NOT require an agency_client row
+ * — the contact script is a plain per-project website feature, so it resolves
+ * from hub_project (origins, domains, the project's useSend team) and the
+ * project owner's email, with the agency lead-notify email as an optional
+ * override. Server-only; never returned past the contact route.
+ */
+export async function findContactClientByRepoId(repoId: number) {
+  const [client] = await db
+    .select({
+      repoId: hubProject.repoId,
+      origins: hubProject.origins,
+      websiteUrl: hubProject.websiteUrl,
+      customDomain: hubProject.customDomain,
+      freeSubdomain: hubProject.freeSubdomain,
+      repo: hubProject.repo,
+      usesendApiKey: hubProject.usesendApiKey,
+      ownerEmail: userTable.email,
+      leadNotifyEmail: agencyClient.leadNotifyEmail,
+    })
+    .from(hubProject)
+    .leftJoin(userTable, eq(userTable.id, hubProject.githubConnectedUserId))
+    .leftJoin(agencyClient, eq(agencyClient.repoId, hubProject.repoId))
+    .where(eq(hubProject.repoId, repoId))
+    .limit(1);
+  if (!client || client.repoId == null) return null;
+  return client as typeof client & { repoId: number };
+}
+
 /** Parse a public embed `data-key` (the project repoId) into a positive int. */
 export function parseRepoIdParam(value: string): number | null {
   if (!/^\d{1,19}$/.test(value)) return null;

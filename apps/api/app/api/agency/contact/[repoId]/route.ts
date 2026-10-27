@@ -14,7 +14,7 @@ import { urls } from "@workspace/ui/lib/company";
 import {
   clientIp,
   corsHeaders,
-  findClientByRepoId,
+  findContactClientByRepoId,
   hostOf,
   isAllowedOrigin,
   isRateLimited,
@@ -74,7 +74,7 @@ export async function POST(
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
 
-  const client = await findClientByRepoId(repoId);
+  const client = await findContactClientByRepoId(repoId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -87,6 +87,13 @@ export async function POST(
   if (!client.usesendApiKey) {
     return NextResponse.json(
       { error: "Email sending is not set up for this site yet." },
+      { status: 503, headers }
+    );
+  }
+  const recipient = client.leadNotifyEmail ?? client.ownerEmail;
+  if (!recipient) {
+    return NextResponse.json(
+      { error: "No recipient is set up for this site yet." },
       { status: 503, headers }
     );
   }
@@ -155,7 +162,7 @@ export async function POST(
       apiKey: client.usesendApiKey,
       body: {
         from: `${data.formName || "Contact"} <contact@${SENDING_DOMAIN}>`,
-        to: client.leadNotifyEmail ?? client.ownerEmail,
+        to: recipient,
         ...(replyTo ? { replyTo } : {}),
         subject: `${data.formName ? `${data.formName}: ` : ""}${title}`,
         html: leadEmailHtml(lines, `${urls.cms}/p/${repoId}`, siteName, {
