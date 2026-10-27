@@ -37,6 +37,7 @@ async function resolveProject(repoId: number) {
     .select({
       repo: hubProject.repo,
       usesendApiKey: hubProject.usesendApiKey,
+      notifyEmail: hubProject.notifyEmail,
     })
     .from(hubProject)
     .where(eq(hubProject.repoId, repoId))
@@ -117,8 +118,24 @@ export const emailsRouter = createTRPCRouter({
     const project = await resolveProject(ctx.repoId);
     // Team provisioned → the Emails view renders and the project can send
     // (sending runs on the shared agency domain, always available).
-    return { enabled: !!project.usesendApiKey };
+    return {
+      enabled: !!project.usesendApiKey,
+      notifyEmail: project.notifyEmail ?? null,
+    };
   }),
+
+  // Where form submissions (lead / booking / contact) are emailed. Empty = fall
+  // back to the project owner's account email.
+  setNotifyEmail: cmsFullAccessProcedure
+    .input(z.object({ email: z.string().trim().email().or(z.literal("")) }))
+    .mutation(async ({ ctx, input }) => {
+      await requireFeature(ctx.user, ctx.repoId, "emails");
+      await db
+        .update(hubProject)
+        .set({ notifyEmail: input.email || null })
+        .where(eq(hubProject.repoId, ctx.repoId));
+      return { notifyEmail: input.email || null };
+    }),
 
   // ─── One-click setup (full-access only) ────────────────────────────────
   // Ensures the project's useSend team exists. Idempotent — also the retry for

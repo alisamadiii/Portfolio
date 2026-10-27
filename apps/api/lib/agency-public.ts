@@ -115,7 +115,7 @@ export async function findClientByRepoId(repoId: number) {
       repoId: agencyClient.repoId,
       userId: agencyClient.userId,
       origins: hubProject.origins,
-      leadNotifyEmail: agencyClient.leadNotifyEmail,
+      notifyEmail: hubProject.notifyEmail,
       ownerEmail: userTable.email,
       websiteUrl: hubProject.websiteUrl,
       customDomain: hubProject.customDomain,
@@ -154,12 +154,11 @@ export async function findContactClientByRepoId(repoId: number) {
       freeSubdomain: hubProject.freeSubdomain,
       repo: hubProject.repo,
       usesendApiKey: hubProject.usesendApiKey,
+      notifyEmail: hubProject.notifyEmail,
       ownerEmail: userTable.email,
-      leadNotifyEmail: agencyClient.leadNotifyEmail,
     })
     .from(hubProject)
     .leftJoin(userTable, eq(userTable.id, hubProject.githubConnectedUserId))
-    .leftJoin(agencyClient, eq(agencyClient.repoId, hubProject.repoId))
     .where(eq(hubProject.repoId, repoId))
     .limit(1);
   if (!client || client.repoId == null) return null;

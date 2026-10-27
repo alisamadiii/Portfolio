@@ -65,7 +65,6 @@ const EMPTY = {
   adsType: "search",
   googleAdsCustomerId: "",
   googleAdsConversionAction: "",
-  leadNotifyEmail: "",
   weeklyReport: true,
 };
 
@@ -233,7 +232,6 @@ export default function AgencyClientsPage() {
               adsType: (form.adsType || "search") as "search" | "lsa" | "both",
               googleAdsCustomerId: form.googleAdsCustomerId || null,
               googleAdsConversionAction: form.googleAdsConversionAction || null,
-              leadNotifyEmail: form.leadNotifyEmail,
               weeklyReport: form.weeklyReport,
             });
           }}
@@ -491,16 +489,6 @@ export default function AgencyClientsPage() {
               Conversions page creates and links this for you.
             </p>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="client-notify">New-lead email (optional)</Label>
-            <Input
-              id="client-notify"
-              type="email"
-              placeholder="Defaults to the account email"
-              value={form.leadNotifyEmail}
-              onChange={(event) => set("leadNotifyEmail")(event.target.value)}
-            />
-          </div>
           <label className="flex items-center justify-between gap-4 rounded-lg border p-3">
             <span>
               <span className="block text-[14px] font-medium">
@@ -616,7 +604,6 @@ export default function AgencyClientsPage() {
                           googleAdsCustomerId: client.googleAdsCustomerId ?? "",
                           googleAdsConversionAction:
                             client.googleAdsConversionAction ?? "",
-                          leadNotifyEmail: client.leadNotifyEmail ?? "",
                           weeklyReport: client.weeklyReport,
                         })
                       }

@@ -90,7 +90,7 @@ export async function POST(
       { status: 503, headers }
     );
   }
-  const recipient = client.leadNotifyEmail ?? client.ownerEmail;
+  const recipient = client.notifyEmail ?? client.ownerEmail;
   if (!recipient) {
     return NextResponse.json(
       { error: "No recipient is set up for this site yet." },

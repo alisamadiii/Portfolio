@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useProject } from "@/hooks/use-project";
+import { NotifyEmailCard } from "@/components/settings/notify-email-card";
 import {
   keepPreviousData,
   useMutation,
@@ -218,6 +219,9 @@ export function EmailsPanel() {
 
       {/* ── Contact-form install snippet ── */}
       <ContactSnippet repoId={repoId} />
+
+      {/* ── Where submissions are emailed ── */}
+      <NotifyEmailCard repoId={repoId} />
 
       {/* ── KPI tiles ── */}
       <div

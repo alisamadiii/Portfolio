@@ -203,6 +203,10 @@ export const hubProject = pgTable(
     // the agency settings card. Bare hostnames, www-insensitive; empty/unset =
     // nothing allowed in prod.
     origins: jsonb("origins").$type<string[]>(),
+    // Where this project's embed-form submissions (lead / booking / contact) are
+    // emailed. Owner-set in the Emails tab; empty = fall back to the project
+    // owner's account email.
+    notifyEmail: text("notify_email"),
     // Per-client GitHub. The Better Auth user.id who imported the project — owns
     // it (access filtering + full-access role) and whose stored GitHub OAuth
     // token backstops reads/commits when there's no interactive caller. Set at

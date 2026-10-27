@@ -240,7 +240,7 @@ export async function POST(
     try {
       await sendEmail({
         from: "New Lead <noreply@alisamadii.com>",
-        to: client.leadNotifyEmail ?? client.ownerEmail,
+        to: client.notifyEmail ?? client.ownerEmail,
         ...(email ? { replyTo: email } : {}),
         subject: `New lead from ${name ?? email ?? phone ?? siteName}`,
         html: leadEmailHtml(lines, `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`, siteName),

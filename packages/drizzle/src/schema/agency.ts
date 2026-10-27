@@ -215,9 +215,6 @@ export const agencyClient = pgTable(
     // Working hours + meeting types for the booking widget; unset = booking off.
     bookingSettings: jsonb("booking_settings").$type<AgencyBookingSettings>(),
 
-    // New-lead notification address; falls back to the owner's email.
-    leadNotifyEmail: text("lead_notify_email"),
-
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()

@@ -30,6 +30,7 @@ import { useProject } from "@/hooks/use-project";
 import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
 
 import { OriginsPage } from "@/components/agency/origins-page";
+import { NotifyEmailCard } from "@/components/settings/notify-email-card";
 import { PageShell } from "@/components/agency/page-shell";
 import { Check, Copy } from "@/components/icon";
 import { ProjectFeatureGate } from "@/components/settings/project-paywall";
@@ -40,6 +41,7 @@ import { ProjectFeatureGate } from "@/components/settings/project-paywall";
  * the lead form / booking widget allowed origins, in one page.
  */
 export function AgencyDomainPage() {
+  const repoId = useProject()?.repoId ?? 0;
   return (
     <PageShell
       eyebrow="SITE SETTINGS"
@@ -63,6 +65,12 @@ export function AgencyDomainPage() {
           </p>
         </div>
         <OriginsPage />
+      </section>
+      <section className="flex flex-col gap-4">
+        <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
+          Notification email
+        </h2>
+        <NotifyEmailCard repoId={repoId} />
       </section>
     </PageShell>
   );

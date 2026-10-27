@@ -582,7 +582,6 @@ const adminRouter = createTRPCRouter({
         adsType: agencyClient.adsType,
         googleAdsCustomerId: agencyClient.googleAdsCustomerId,
         googleAdsConversionAction: agencyClient.googleAdsConversionAction,
-        leadNotifyEmail: agencyClient.leadNotifyEmail,
         weeklyReport: agencyClient.weeklyReport,
         email: userTable.email,
         name: userTable.name,
@@ -668,7 +667,6 @@ const adminRouter = createTRPCRouter({
         adsType: z.enum(["search", "lsa", "both"]).nullable(),
         googleAdsCustomerId: z.string().trim().max(20).nullable(),
         googleAdsConversionAction: z.string().trim().max(200).nullable(),
-        leadNotifyEmail: z.string().trim().email().nullable().or(z.literal("")),
         weeklyReport: z.boolean(),
       })
     )
@@ -729,7 +727,6 @@ const adminRouter = createTRPCRouter({
           ? normalizeCustomerId(input.googleAdsCustomerId)
           : null,
         googleAdsConversionAction: input.googleAdsConversionAction || null,
-        leadNotifyEmail: input.leadNotifyEmail || null,
         weeklyReport: input.weeklyReport,
       };
 
