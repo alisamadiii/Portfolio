@@ -21,7 +21,9 @@
  * validation and result UI while the script still does the sending:
  *   lead:beforesubmit   fires before the request; preventDefault() aborts the send
  *   lead:success        fires on a 2xx; preventDefault() suppresses the built-in thank-you
- *   lead:error          fires on failure; preventDefault() suppresses the built-in error
+ *   lead:error          fires on failure; event.detail = { status, message } (the server's
+ *                       reason, e.g. 429 "Too many requests."); preventDefault() suppresses
+ *                       the built-in error so the page can show detail.message itself
  */
 (function () {
   var script = document.currentScript;
@@ -170,6 +172,14 @@
       form.setAttribute("data-lead-sending", "1");
       if (button) button.disabled = true;
 
+      // The server's reason (status + message) is handed to the page via the event's detail.
+      function fail(status, message) {
+        var detail = { status: status || 0, message: message || "" };
+        // preventDefault() on this event suppresses the built-in error message.
+        if (form.dispatchEvent(new CustomEvent("lead:error", { bubbles: true, cancelable: true, detail: detail })))
+          showMessage(form, message || "Something went wrong. Please try again or call us.", true);
+      }
+
       // text/plain keeps this a simple CORS request (no preflight).
       fetch(endpoint, {
         method: "POST",
@@ -178,31 +188,37 @@
         keepalive: true,
       })
         .then(function (res) {
-          if (!res.ok) throw new Error(String(res.status));
+          if (res.ok) {
+            var conversion = form.getAttribute("data-conversion");
+            if (conversion && typeof window.gtag === "function") {
+              window.gtag("event", "conversion", { send_to: conversion });
+            }
+            // preventDefault() on this event suppresses the built-in thank-you so the page can show its
+            // own. The conversion above still fires on every real success, regardless of custom UI.
+            var handled = !form.dispatchEvent(
+              new CustomEvent("lead:success", { bubbles: true, cancelable: true })
+            );
 
-          var conversion = form.getAttribute("data-conversion");
-          if (conversion && typeof window.gtag === "function") {
-            window.gtag("event", "conversion", { send_to: conversion });
-          }
-          // preventDefault() on this event suppresses the built-in thank-you so the page can show its
-          // own. The conversion above still fires on every real success, regardless of custom UI.
-          var handled = !form.dispatchEvent(
-            new CustomEvent("lead:success", { bubbles: true, cancelable: true })
-          );
-
-          var redirect = form.getAttribute("data-redirect");
-          if (redirect) {
-            location.href = redirect;
+            var redirect = form.getAttribute("data-redirect");
+            if (redirect) {
+              location.href = redirect;
+              return;
+            }
+            form.reset();
+            if (!handled)
+              showMessage(form, form.getAttribute("data-success") || "Thanks! We'll be in touch soon.", false);
             return;
           }
-          form.reset();
-          if (!handled)
-            showMessage(form, form.getAttribute("data-success") || "Thanks! We'll be in touch soon.", false);
+          // Non-2xx: read the server's reason (JSON { error }) and hand it to the page.
+          return res.text().then(function (body) {
+            var message = "";
+            try { message = (JSON.parse(body) || {}).error || ""; } catch (e) {}
+            fail(res.status, message);
+          });
         })
         .catch(function () {
-          // preventDefault() on this event suppresses the built-in error message.
-          if (form.dispatchEvent(new CustomEvent("lead:error", { bubbles: true, cancelable: true })))
-            showMessage(form, "Something went wrong. Please try again or call us.", true);
+          // Network failure or no response at all.
+          fail(0, "");
         })
         .finally(function () {
           form.removeAttribute("data-lead-sending");

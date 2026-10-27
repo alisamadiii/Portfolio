@@ -835,7 +835,9 @@ function ContactSnippet({ repoId }: { repoId: number }) {
           </li>
           <li>
             <code>contact:error</code> — fires on failure; cancel it to show your
-            own error message.
+            own error message. <code>event.detail</code> is{" "}
+            <code>{"{ status, message }"}</code> — the server&apos;s reason (e.g.
+            429 &quot;Too many requests.&quot;) to display.
           </li>
         </ul>
         <p className="text-muted-foreground">

@@ -20,7 +20,9 @@
  * validation and result UI while the script still does the sending:
  *   contact:beforesubmit   fires before the request; preventDefault() aborts the send
  *   contact:success        fires on a 2xx; preventDefault() suppresses the built-in thank-you
- *   contact:error          fires on failure; preventDefault() suppresses the built-in error
+ *   contact:error          fires on failure; event.detail = { status, message } (the server's
+ *                          reason, e.g. 429 "Too many requests."); preventDefault() suppresses
+ *                          the built-in error so the page can show detail.message itself
  */
 (function () {
   var script = document.currentScript;
@@ -80,6 +82,14 @@
       form.setAttribute("data-contact-sending", "1");
       if (button) button.disabled = true;
 
+      // The server's reason (status + message) is handed to the page via the event's detail.
+      function fail(status, message) {
+        var detail = { status: status || 0, message: message || "" };
+        // preventDefault() on this event suppresses the built-in error message.
+        if (form.dispatchEvent(new CustomEvent("contact:error", { bubbles: true, cancelable: true, detail: detail })))
+          showMessage(form, message || "Something went wrong. Please try again or call us.", true);
+      }
+
       // text/plain keeps this a simple CORS request (no preflight).
       fetch(endpoint, {
         method: "POST",
@@ -88,28 +98,35 @@
         keepalive: true,
       })
         .then(function (res) {
-          if (!res.ok) throw new Error(String(res.status));
-          // preventDefault() on this event suppresses the built-in thank-you so the page can show its own.
-          var handled = !form.dispatchEvent(
-            new CustomEvent("contact:success", { bubbles: true, cancelable: true })
-          );
-          var redirect = form.getAttribute("data-redirect");
-          if (redirect) {
-            location.href = redirect;
+          if (res.ok) {
+            // preventDefault() on this event suppresses the built-in thank-you so the page can show its own.
+            var handled = !form.dispatchEvent(
+              new CustomEvent("contact:success", { bubbles: true, cancelable: true })
+            );
+            var redirect = form.getAttribute("data-redirect");
+            if (redirect) {
+              location.href = redirect;
+              return;
+            }
+            form.reset();
+            if (!handled)
+              showMessage(
+                form,
+                form.getAttribute("data-success") || "Thanks! Your message has been sent.",
+                false
+              );
             return;
           }
-          form.reset();
-          if (!handled)
-            showMessage(
-              form,
-              form.getAttribute("data-success") || "Thanks! Your message has been sent.",
-              false
-            );
+          // Non-2xx: read the server's reason (JSON { error }) and hand it to the page.
+          return res.text().then(function (body) {
+            var message = "";
+            try { message = (JSON.parse(body) || {}).error || ""; } catch (e) {}
+            fail(res.status, message);
+          });
         })
         .catch(function () {
-          // preventDefault() on this event suppresses the built-in error message.
-          if (form.dispatchEvent(new CustomEvent("contact:error", { bubbles: true, cancelable: true })))
-            showMessage(form, "Something went wrong. Please try again or call us.", true);
+          // Network failure or no response at all.
+          fail(0, "");
         })
         .finally(function () {
           form.removeAttribute("data-contact-sending");
