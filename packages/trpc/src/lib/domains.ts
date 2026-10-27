@@ -71,13 +71,10 @@ export const validateSlug = (slug: string): string => {
 const IPV4_RE = /^\d{1,3}(\.\d{1,3}){3}$/;
 
 export const validateCustomHost = (host: string): string => {
-  // Local dev only: allow localhost / 127.0.0.1 (optionally with a port) so the
-  // custom-domain flow can be tested against a local origin. Never in production.
+  // Allow localhost / 127.0.0.1 (optionally with a port) so the custom-domain
+  // flow can be tested against a local origin, including against prod hub.
   const rawHost = host.trim().toLowerCase();
-  if (
-    process.env.NODE_ENV === "development" &&
-    /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(rawHost)
-  ) {
+  if (/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(rawHost)) {
     return rawHost;
   }
   const value = normalizeHost(host);
