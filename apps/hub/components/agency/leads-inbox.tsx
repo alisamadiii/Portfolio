@@ -246,15 +246,15 @@ function LeadsOverview({ days }: { days: RangeValue }) {
 
 /** How leads reach the hub: website forms, booking, phone (soon). */
 function LeadChannels() {
-  const { formKey } = useAgency();
+  const { canInstall } = useAgency();
   const href = useAgencyHref();
   const channels = [
     {
       key: "forms",
       icon: Inbox,
       title: "Website forms",
-      on: Boolean(formKey),
-      sub: formKey ? "Capturing submissions" : "Add the capture script",
+      on: canInstall,
+      sub: canInstall ? "Capturing submissions" : "Add the capture script",
       href: undefined,
     },
     {

@@ -1,6 +1,8 @@
 /*
  * Ali Samadii LLC lead capture.
- * <script src="https://api.alisamadii.com/f.js" data-key="FORM_KEY" defer></script>
+ * <script src="https://api.alisamadii.com/f.js" data-key="PROJECT_REPO_ID" defer></script>
+ * data-key is the project's repoId (shown in the Hub); posts to
+ * /api/agency/forms/<repoId>.
  *
  * - Keeps Google Ads click IDs (gclid/gbraid/wbraid), utm_*, the outside
  *   referrer and the landing page in a 90-day first-party cookie (last touch),

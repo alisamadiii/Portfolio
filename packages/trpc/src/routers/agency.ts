@@ -1,4 +1,3 @@
-import { randomBytes } from "crypto";
 
 import { TRPCError } from "@trpc/server";
 import {
@@ -119,7 +118,7 @@ import { normalizeOrigin } from "../lib/agency/origins";
 
 // ─── Lead-generation agency ──────────────────────────────────────
 // Agency clients see the agency UI in the Hub: their one website, the leads
-// its forms capture (POST /api/agency/forms/[formKey] on apps/api), and their
+// its forms capture (POST /api/agency/forms/[repoId] on apps/api), and their
 // Google Ads results. Closing a lead as won reports it back to Google Ads.
 
 type SessionUser = { id: string; email: string; role?: string | null };
@@ -579,7 +578,6 @@ const adminRouter = createTRPCRouter({
       .select({
         id: agencyClient.id,
         repoId: agencyClient.repoId,
-        formKey: agencyClient.formKey,
         industry: agencyClient.industry,
         adsType: agencyClient.adsType,
         googleAdsCustomerId: agencyClient.googleAdsCustomerId,
@@ -745,7 +743,7 @@ const adminRouter = createTRPCRouter({
       }
       const [client] = await db
         .insert(agencyClient)
-        .values({ ...values, formKey: randomBytes(12).toString("base64url") })
+        .values(values)
         .returning();
       return client!;
     }),
@@ -1046,7 +1044,7 @@ async function unwireAction(client: typeof agencyClient.$inferSelect, resourceNa
 
 // ─── Booking ─────────────────────────────────────────────────────
 // Appointment settings + the owner's view of bookings. Visitors book through
-// the public widget endpoint (apps/api .../agency/booking/[formKey]); the
+// the public widget endpoint (apps/api .../agency/booking/[repoId]); the
 // calendar behind everything is the OWNER's Google account (client.userId),
 // no matter which hub member manages the booking.
 
@@ -1076,7 +1074,9 @@ const bookingRouter = createTRPCRouter({
       // Calendar linked before booking existed: one reconnect adds freebusy.
       needsReconnect: !booking && Boolean(calendar),
       settings: ctx.client.bookingSettings,
-      formKey: ctx.role === "full-access" ? ctx.client.formKey : null,
+      // The embed scripts key on repoId; full-access clients see it to build
+      // their install snippet.
+      repoId: ctx.role === "full-access" ? ctx.client.repoId : null,
     };
   }),
 
@@ -1280,8 +1280,9 @@ export const agencyRouter = createTRPCRouter({
         conversionsWired: Boolean(
           client.googleAdsActions?.lead && client.googleAdsConversionAction
         ),
-        // Only people who can edit the site need the install snippet.
-        formKey: role === "full-access" ? client.formKey : null,
+        // Only people who can edit the site need the install snippet; it keys
+        // on repoId (above), so no separate value is returned here.
+        canInstall: role === "full-access",
       };
     }),
 

@@ -150,13 +150,23 @@ export const hubProject = pgTable(
     // repository_dispatch.
     blogEditedAt: timestamp("blog_edited_at"),
     blogPublishedAt: timestamp("blog_published_at"),
-    // useSend domainId of this project's sending domain — scopes the hub
-    // Emails tab to that domain's sends. Null → tab is admin-only and shows
-    // every send on the instance. Set directly in the DB (no admin UI).
+    // ── useSend per-project team (workspace) ──
+    // Every project is its own useSend team, keyed by repoId (Team.externalId).
+    // Provisioned at import via POST /api/v1/workspaces. usesendTeamId is the
+    // useSend Team.id; usesendApiKey is that team's API key, returned once at
+    // creation and NOT re-derivable — server-only, never sent to the client.
+    // All team-scoped useSend calls (emails list, sending, this team's domains)
+    // use usesendApiKey; it being set is what "emails are provisioned" means.
+    usesendTeamId: integer("usesend_team_id"),
+    usesendApiKey: text("usesend_api_key"),
+    // Sending uses one shared, env-configured agency domain (alisamadii.com)
+    // that every team may send from — no per-project domain. Emails stay
+    // isolated per team because useSend records each send under the caller's
+    // team. So there's no per-project sending domain column here.
     usesendDomainId: text("usesend_domain_id"),
-    // Sending domain created in useSend but not yet DNS-verified — the Emails
-    // tab's connect flow parks the id here so setup survives refreshes and slow
-    // DNS propagation, then moves it into usesendDomainId once verified.
+    // Sending domain created in useSend but not yet DNS-verified — setup parks
+    // the id here so it survives refreshes and slow DNS propagation, then moves
+    // into usesendDomainId once verified.
     usesendPendingDomainId: text("usesend_pending_domain_id"),
     // Per-client Google Analytics. gaPropertyId is the numeric GA4 property id
     // (e.g. "123456789") the project's Analytics tab reports on; gaConnectedUserId

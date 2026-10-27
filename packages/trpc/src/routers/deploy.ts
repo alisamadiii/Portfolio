@@ -13,6 +13,7 @@ import {
   reserveUploadProject,
 } from "../lib/cms/upload-project";
 import { getImport } from "../lib/content-pilot";
+import { provisionProjectEmails } from "../lib/usesend-provision";
 import { checkGithubRepoFramework } from "../lib/detect-framework";
 import {
   HOSTING_VALUES,
@@ -118,6 +119,14 @@ async function upsertProject(
       ...fields,
     });
   }
+
+  // Provision this project's useSend email team + sending subdomain in the
+  // background. Idempotent and best-effort — never blocks or fails the import;
+  // the project's Emails view offers a manual retry if this doesn't finish.
+  void provisionProjectEmails({
+    repoId: ghRepo.id,
+    name: `${ghRepo.owner}/${ghRepo.repo}`,
+  });
 }
 
 const ghAppHeaders = (auth: string) => ({

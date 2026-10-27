@@ -11,7 +11,7 @@ import {
 import { IP_LIMIT } from "@workspace/trpc/lib/agency/lead-capture";
 
 // ─── Shared plumbing for the public agency endpoints ─────────────
-// The form capture (forms/[formKey]) and booking (booking/[formKey]) routes
+// The form capture (forms/[repoId]) and booking (booking/[repoId]) routes
 // are both reachable from visitors' browsers on clients' websites: same CORS
 // shape, same origin allowlist, same Postgres rate limiter, same client
 // lookup by form key, same notification email shell.
@@ -100,12 +100,15 @@ export const isAllowedOrigin = (
 // ─── Client lookup ──────────────────────────────────────────────
 
 /**
- * The agency client behind a public form key; null when unknown. The client's
- * tenant id is `agency_client.repoId` (website-less clients have a synthetic
- * one), so we no longer require a linked website — the website is left-joined
- * only to keep its domains + name when one exists.
+ * The agency client behind a public `repoId`; null when unknown. The embed
+ * scripts (f.js / b.js / c.js) post keyed by the project's repoId — the tenant
+ * id (`agency_client.repoId`), which is the project (`hub_project.repoId`). The
+ * website is left-joined to keep its domains + name, plus the project's useSend
+ * team key for the contact-email endpoint (server-only, never returned past these
+ * routes). There is no separate public key: abuse is bounded by the origins
+ * allowlist + the rate limiter.
  */
-export async function findClientByFormKey(formKey: string) {
+export async function findClientByRepoId(repoId: number) {
   const [client] = await db
     .select({
       repoId: agencyClient.repoId,
@@ -117,6 +120,7 @@ export async function findClientByFormKey(formKey: string) {
       customDomain: hubProject.customDomain,
       freeSubdomain: hubProject.freeSubdomain,
       repo: hubProject.repo,
+      usesendApiKey: hubProject.usesendApiKey,
       googleAdsCustomerId: agencyClient.googleAdsCustomerId,
       googleAdsActions: agencyClient.googleAdsActions,
       bookingSettings: agencyClient.bookingSettings,
@@ -124,11 +128,18 @@ export async function findClientByFormKey(formKey: string) {
     .from(agencyClient)
     .innerJoin(userTable, eq(userTable.id, agencyClient.userId))
     .leftJoin(hubProject, eq(hubProject.repoId, agencyClient.repoId))
-    .where(eq(agencyClient.formKey, formKey))
+    .where(eq(agencyClient.repoId, repoId))
     .limit(1);
   // A client with no tenant id can't store leads; treat as not found.
   if (!client || client.repoId == null) return null;
   return client as typeof client & { repoId: number };
+}
+
+/** Parse a public embed `data-key` (the project repoId) into a positive int. */
+export function parseRepoIdParam(value: string): number | null {
+  if (!/^\d{1,19}$/.test(value)) return null;
+  const n = Number(value);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
 }
 
 // ─── Attribution payload (shared zod fragment) ──────────────────

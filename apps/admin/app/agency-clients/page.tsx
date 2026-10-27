@@ -541,7 +541,7 @@ export default function AgencyClientsPage() {
                 <TableHead>Website</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Google Ads</TableHead>
-                <TableHead>Form key</TableHead>
+                <TableHead>Repo ID</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -590,7 +590,7 @@ export default function AgencyClientsPage() {
                       )}
                   </TableCell>
                   <TableCell>
-                    <code className="text-[12px]">{client.formKey}</code>
+                    <code className="text-[12px]">{client.repoId}</code>
                   </TableCell>
                   <TableCell className="space-x-1 text-right">
                     <Button

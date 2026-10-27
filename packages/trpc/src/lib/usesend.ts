@@ -56,12 +56,15 @@ const toRow = (row: ListedEmail): UseSendEmailRow => ({
 const snapshots = new Map<string, { at: number; emails: UseSendEmailRow[] }>();
 const inflight = new Map<string, Promise<UseSendEmailRow[]>>();
 
-async function fetchSnapshot(domainId?: string): Promise<UseSendEmailRow[]> {
+// Each project is its own useSend team, so the team's API key both scopes the
+// list (no domainId needed) and is the cache key. Omitting it falls back to the
+// shared instance key (admin view of every send).
+async function fetchSnapshot(apiKey?: string): Promise<UseSendEmailRow[]> {
   const rows: UseSendEmailRow[] = [];
   for (let page = 1; rows.length < LIST_CAP; page++) {
     const { data } = await usesendFetch<{ data: ListedEmail[]; count: number }>(
       "/api/v1/emails",
-      { query: { page, limit: PAGE_SIZE, domainId } }
+      { query: { page, limit: PAGE_SIZE }, apiKey }
     );
     if (!data || data.length === 0) break;
     rows.push(...data.map(toRow));
@@ -71,9 +74,9 @@ async function fetchSnapshot(domainId?: string): Promise<UseSendEmailRow[]> {
 }
 
 export async function getEmailsSnapshot(
-  domainId?: string
+  apiKey?: string
 ): Promise<UseSendEmailRow[]> {
-  const key = domainId ?? "*";
+  const key = apiKey ?? "*";
 
   const cached = snapshots.get(key);
   if (cached && Date.now() - cached.at < SNAPSHOT_TTL_MS) return cached.emails;
@@ -81,7 +84,7 @@ export async function getEmailsSnapshot(
   const pending = inflight.get(key);
   if (pending) return pending;
 
-  const promise = fetchSnapshot(domainId)
+  const promise = fetchSnapshot(apiKey)
     .then((emails) => {
       snapshots.set(key, { at: Date.now(), emails });
       return emails;
@@ -185,34 +188,46 @@ const toDomain = (raw: RawDomain): UseSendDomain => ({
   })),
 });
 
-export async function listUsesendDomains(): Promise<UseSendDomain[]> {
-  const rows = await usesendFetch<RawDomain[]>("/api/v1/domains");
+// Every helper takes an optional per-team `apiKey`; domains belong to the key's
+// team. Omitted → the shared instance key (the agency's own team).
+export async function listUsesendDomains(
+  apiKey?: string
+): Promise<UseSendDomain[]> {
+  const rows = await usesendFetch<RawDomain[]>("/api/v1/domains", { apiKey });
   return (Array.isArray(rows) ? rows : []).map(toDomain);
 }
 
 /** The list endpoint is the one confirmed route — resolve single domains via it. */
 export async function getUsesendDomain(
-  id: number
+  id: number,
+  apiKey?: string
 ): Promise<UseSendDomain | null> {
-  const domains = await listUsesendDomains();
+  const domains = await listUsesendDomains(apiKey);
   return domains.find((domain) => domain.id === id) ?? null;
 }
 
 // The instance's SES region — every existing domain on it is us-west-2.
-const USESEND_REGION = process.env.USESEND_REGION ?? "us-west-2";
+export const USESEND_REGION = process.env.USESEND_REGION ?? "us-west-2";
 
-export async function createUsesendDomain(name: string): Promise<UseSendDomain> {
+export async function createUsesendDomain(
+  name: string,
+  apiKey?: string
+): Promise<UseSendDomain> {
   const raw = await usesendFetch<RawDomain>("/api/v1/domains", {
     method: "POST",
     body: { name, region: USESEND_REGION },
+    apiKey,
   });
   return toDomain(raw);
 }
 
 /** Best-effort verification trigger — useSend re-checks SES on its own too. */
-export async function verifyUsesendDomain(id: number): Promise<void> {
+export async function verifyUsesendDomain(
+  id: number,
+  apiKey?: string
+): Promise<void> {
   try {
-    await usesendFetch(`/api/v1/domains/${id}/verify`, { method: "PUT" });
+    await usesendFetch(`/api/v1/domains/${id}/verify`, { method: "PUT", apiKey });
   } catch (error) {
     if (
       error instanceof UseSendError &&
@@ -223,9 +238,12 @@ export async function verifyUsesendDomain(id: number): Promise<void> {
   }
 }
 
-export async function deleteUsesendDomain(id: number): Promise<void> {
+export async function deleteUsesendDomain(
+  id: number,
+  apiKey?: string
+): Promise<void> {
   try {
-    await usesendFetch(`/api/v1/domains/${id}`, { method: "DELETE" });
+    await usesendFetch(`/api/v1/domains/${id}`, { method: "DELETE", apiKey });
   } catch (error) {
     if (
       error instanceof UseSendError &&

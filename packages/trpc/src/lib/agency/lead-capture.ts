@@ -1,5 +1,5 @@
 // ─── Lead capture guards ─────────────────────────────────────────
-// Pure checks for the public form endpoint (apps/api .../agency/forms/[formKey]).
+// Pure checks for the public form endpoint (apps/api .../agency/forms/[repoId]).
 // The endpoint is reachable by anyone who reads a client's page source, so
 // nothing a visitor sends is trusted: sizes are capped, URLs are stripped to
 // attribution params, and obvious bots are kept as spam.

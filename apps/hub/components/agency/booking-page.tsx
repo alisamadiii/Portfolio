@@ -132,8 +132,8 @@ export function BookingPage() {
             repoId={repoId}
             onSaved={refresh}
           />
-          {status.data.formKey && status.data.settings && (
-            <BookingSnippet formKey={status.data.formKey} />
+          {status.data.repoId && status.data.settings && (
+            <BookingSnippet repoId={status.data.repoId} />
           )}
         </div>
       )}
@@ -474,8 +474,8 @@ function SettingsCard({
 
 // ─── Install snippet ─────────────────────────────────────────────
 
-function BookingSnippet({ formKey }: { formKey: string }) {
-  const snippet = `<script src="${API_URL}/b.js" data-key="${formKey}" defer></script>\n<button data-booking>Book an appointment</button>`;
+function BookingSnippet({ repoId }: { repoId: number }) {
+  const snippet = `<script src="${API_URL}/b.js" data-key="${repoId}" defer></script>\n<button data-booking>Book an appointment</button>`;
   return (
     <FrameCard innerClassName="flex flex-col gap-3">
       <p className="text-[17px] font-semibold">Put booking on the website</p>

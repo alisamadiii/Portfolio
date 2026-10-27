@@ -35,11 +35,12 @@ import {
   attributionSchema,
   clientIp,
   corsHeaders,
-  findClientByFormKey,
+  findClientByRepoId,
   hostOf,
   isAllowedOrigin,
   isRateLimited,
   leadEmailHtml,
+  parseRepoIdParam,
 } from "@/lib/agency-public";
 
 // ─── Public booking endpoint ────────────────────────────────────
@@ -62,7 +63,7 @@ export async function OPTIONS(req: Request) {
   });
 }
 
-type PublicClient = NonNullable<Awaited<ReturnType<typeof findClientByFormKey>>>;
+type PublicClient = NonNullable<Awaited<ReturnType<typeof findClientByRepoId>>>;
 
 const activeTypes = (settings: AgencyBookingSettings) =>
   settings.types.filter((type) => type.active !== false);
@@ -79,13 +80,18 @@ const bookable = (settings: AgencyBookingSettings | null) =>
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ formKey: string }> }
+  { params }: { params: Promise<{ repoId: string }> }
 ) {
-  const { formKey } = await params;
+  const { repoId: repoIdParam } = await params;
   const origin = req.headers.get("origin");
   const headers = corsHeaders(origin, "GET, POST, OPTIONS");
 
-  const client = await findClientByFormKey(formKey);
+  const repoId = parseRepoIdParam(repoIdParam);
+  if (repoId === null) {
+    return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
+  }
+
+  const client = await findClientByRepoId(repoId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -94,7 +100,7 @@ export async function GET(
   }
   // Reads are cheap and the widget fetches per week browsed, so the cap is
   // far looser than the booking POST's.
-  if (await isRateLimited(`bookget:${formKey}:${clientIp(req)}`, 120)) {
+  if (await isRateLimited(`bookget:${repoId}:${clientIp(req)}`, 120)) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429, headers });
   }
 
@@ -171,13 +177,18 @@ const bodySchema = attributionSchema.extend({
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ formKey: string }> }
+  { params }: { params: Promise<{ repoId: string }> }
 ) {
-  const { formKey } = await params;
+  const { repoId: repoIdParam } = await params;
   const origin = req.headers.get("origin");
   const headers = corsHeaders(origin, "GET, POST, OPTIONS");
 
-  const client = await findClientByFormKey(formKey);
+  const repoId = parseRepoIdParam(repoIdParam);
+  if (repoId === null) {
+    return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
+  }
+
+  const client = await findClientByRepoId(repoId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -187,7 +198,7 @@ export async function POST(
   if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
     return NextResponse.json({ error: "Request too large" }, { status: 413, headers });
   }
-  if (await isRateLimited(`booking:${formKey}:${clientIp(req)}`)) {
+  if (await isRateLimited(`booking:${repoId}:${clientIp(req)}`)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }

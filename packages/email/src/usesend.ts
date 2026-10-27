@@ -28,11 +28,17 @@ type FetchInit = {
   method?: string;
   body?: unknown;
   query?: Record<string, string | number | undefined>;
+  /**
+   * Per-call API key. Each project is its own useSend team, so team-scoped
+   * calls (emails list, sending, that team's domains) pass the project's key.
+   * Omitted → the shared instance key (admin-level / domain-less operations).
+   */
+  apiKey?: string;
 };
 
 export async function usesendFetch<T>(
   path: string,
-  { method = "GET", body, query }: FetchInit = {}
+  { method = "GET", body, query, apiKey }: FetchInit = {}
 ): Promise<T> {
   const url = new URL(path, usesendUrl());
   for (const [key, value] of Object.entries(query ?? {})) {
@@ -42,7 +48,7 @@ export async function usesendFetch<T>(
   const res = await fetch(url, {
     method,
     headers: {
-      Authorization: `Bearer ${getApiKey()}`,
+      Authorization: `Bearer ${apiKey ?? getApiKey()}`,
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),

@@ -13,24 +13,19 @@ import {
   createTRPCRouter,
 } from "../init";
 import {
-  createUsesendDomain,
-  deleteUsesendDomain,
   getEmailById,
   getEmailsSnapshot,
-  getUsesendDomain,
-  isDomainVerified,
-  listUsesendDomains,
-  verifyUsesendDomain,
-  type UseSendDomain,
   type UseSendEmailRow,
 } from "../lib/usesend";
+import { ensureProjectWorkspace } from "../lib/usesend-provision";
 import { assertRepoAccessByRepoId } from "../lib/cms/authz";
 
-// Emails live in the self-hosted useSend instance. Per-project scoping works
-// through the sending domain: projects with hub_project.usesend_domain_id set
-// see that domain's sends; projects without one get nothing (the tab shows a
-// setup card). The useSend list API filters by domainId server-side; dates
-// and search are filtered in memory over the snapshot (../lib/usesend.ts).
+// Emails live in the self-hosted useSend instance. Each project is its own
+// useSend team (workspace), keyed by repoId; hub_project.usesendApiKey is that
+// team's key and scopes every list/send server-side. "Emails provisioned" ==
+// usesendApiKey set; "sending ready" == usesendDomainId set (the project's
+// subdomain is DNS-verified). Dates and search are filtered in memory over a
+// per-team snapshot (../lib/usesend.ts).
 
 const NOT_FOUND = () =>
   new TRPCError({ code: "NOT_FOUND", message: "Email not found" });
@@ -40,8 +35,8 @@ const emailId = z.string().min(1).max(100);
 async function resolveProject(repoId: number) {
   const [row] = await db
     .select({
-      usesendDomainId: hubProject.usesendDomainId,
-      usesendPendingDomainId: hubProject.usesendPendingDomainId,
+      repo: hubProject.repo,
+      usesendApiKey: hubProject.usesendApiKey,
     })
     .from(hubProject)
     .where(eq(hubProject.repoId, repoId))
@@ -49,24 +44,10 @@ async function resolveProject(repoId: number) {
   if (!row) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
   }
-  return {
-    usesendDomainId: row.usesendDomainId,
-    usesendPendingDomainId: row.usesendPendingDomainId,
-  };
+  return row;
 }
 
-const projectWhere = (repoId: number) => eq(hubProject.repoId, repoId);
-
-// The connect flow's public view of a pending domain.
-const toPendingDomain = (domain: UseSendDomain) => ({
-  id: domain.id,
-  name: domain.name,
-  verified: isDomainVerified(domain),
-  isVerifying: domain.isVerifying,
-  dnsRecords: domain.dnsRecords,
-});
-
-// Other domains' emails never leave the server — every response is narrowed
+// Other teams' emails never leave the server — every response is narrowed
 // to this shape.
 const toPublic = (e: UseSendEmailRow) => ({
   id: e.id,
@@ -77,17 +58,16 @@ const toPublic = (e: UseSendEmailRow) => ({
   lastEvent: e.lastEvent,
 });
 
-// Snapshot scoped by the project's sending domain. No domain configured →
-// nothing is fetched, for admins too (the UI shows a setup card instead —
-// see the `enabled` procedure).
-async function projectEmails(project: { usesendDomainId: string | null }) {
-  if (!project.usesendDomainId) {
+// Snapshot scoped by the project's own team key. No team provisioned →
+// nothing is fetched (the UI shows a setup button — see `enabled`).
+async function projectEmails(project: { usesendApiKey: string | null }) {
+  if (!project.usesendApiKey) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
       message: "Emails are not set up for this project.",
     });
   }
-  return getEmailsSnapshot(project.usesendDomainId);
+  return getEmailsSnapshot(project.usesendApiKey);
 }
 
 // Authorize a caller for a single email by id alone — powers the short
@@ -135,107 +115,23 @@ export const emailsRouter = createTRPCRouter({
   // domain configured.
   enabled: cmsProcedure.query(async ({ ctx }) => {
     const project = await resolveProject(ctx.repoId);
-    return { enabled: !!project.usesendDomainId };
+    // Team provisioned → the Emails view renders and the project can send
+    // (sending runs on the shared agency domain, always available).
+    return { enabled: !!project.usesendApiKey };
   }),
 
-  // ─── Sending-domain connect flow (full-access only) ────────────────────
-
-  // Current setup state: the pending domain with fresh per-record DNS
-  // statuses, or null when nothing is in flight.
-  domainSetup: cmsFullAccessProcedure.query(async ({ ctx }) => {
-    const project = await resolveProject(ctx.repoId);
-    if (!project.usesendPendingDomainId) return { pending: null };
-    const domain = await getUsesendDomain(
-      Number(project.usesendPendingDomainId)
-    );
-    if (!domain) {
-      // Deleted on the useSend side — clear the stale pointer.
-      await db
-        .update(hubProject)
-        .set({ usesendPendingDomainId: null })
-        .where(projectWhere(ctx.repoId));
-      return { pending: null };
-    }
-    return { pending: toPendingDomain(domain) };
-  }),
-
-  createDomain: cmsFullAccessProcedure
-    .input(
-      z.object({
-        domain: z
-          .string()
-          .trim()
-          .toLowerCase()
-          .transform((value) => value.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, ""))
-          .pipe(z.string().regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, "Enter a valid domain")),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "emails");
-      const project = await resolveProject(ctx.repoId);
-      if (project.usesendDomainId || project.usesendPendingDomainId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "A sending domain is already set up for this project.",
-        });
-      }
-      // Adopt an existing useSend domain with the same name instead of
-      // creating a duplicate (e.g. a retried setup).
-      const existing = (await listUsesendDomains()).find(
-        (domain) => domain.name === input.domain
-      );
-      const domain = existing ?? (await createUsesendDomain(input.domain));
-      await db
-        .update(hubProject)
-        .set({ usesendPendingDomainId: String(domain.id) })
-        .where(projectWhere(ctx.repoId));
-      return { pending: toPendingDomain(domain) };
-    }),
-
-  verifyDomain: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+  // ─── One-click setup (full-access only) ────────────────────────────────
+  // Ensures the project's useSend team exists. Idempotent — also the retry for
+  // projects imported before this existed, or whose background provisioning
+  // didn't finish. Sending needs no domain step (shared agency domain).
+  setup: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
     await requireFeature(ctx.user, ctx.repoId, "emails");
     const project = await resolveProject(ctx.repoId);
-    if (!project.usesendPendingDomainId) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "No domain setup in progress.",
-      });
-    }
-    const id = Number(project.usesendPendingDomainId);
-    await verifyUsesendDomain(id);
-    const domain = await getUsesendDomain(id);
-    if (!domain) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Domain no longer exists in useSend.",
-      });
-    }
-    if (isDomainVerified(domain)) {
-      // The only write path for usesendDomainId — always behind a
-      // confirmed-verified GET.
-      await db
-        .update(hubProject)
-        .set({
-          usesendDomainId: String(domain.id),
-          usesendPendingDomainId: null,
-        })
-        .where(projectWhere(ctx.repoId));
-      return { verified: true as const };
-    }
-    return { verified: false as const, pending: toPendingDomain(domain) };
-  }),
-
-  cancelDomainSetup: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    const project = await resolveProject(ctx.repoId);
-    // Never touches usesendDomainId — a connected domain can't be deleted here.
-    if (project.usesendPendingDomainId) {
-      await deleteUsesendDomain(Number(project.usesendPendingDomainId));
-      await db
-        .update(hubProject)
-        .set({ usesendPendingDomainId: null })
-        .where(projectWhere(ctx.repoId));
-    }
-    return { ok: true };
+    await ensureProjectWorkspace({
+      repoId: ctx.repoId,
+      name: project.repo || `project-${ctx.repoId}`,
+    });
+    return { enabled: true };
   }),
 
   list: cmsProcedure

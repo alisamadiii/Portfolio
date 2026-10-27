@@ -21,11 +21,12 @@ import {
   attributionSchema,
   clientIp,
   corsHeaders,
-  findClientByFormKey,
+  findClientByRepoId,
   hostOf,
   isAllowedOrigin,
   isRateLimited,
   leadEmailHtml,
+  parseRepoIdParam,
 } from "@/lib/agency-public";
 
 // ─── Agency lead capture ────────────────────────────────────────
@@ -96,13 +97,18 @@ const looksLikeSpam = (text: string) =>
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ formKey: string }> }
+  { params }: { params: Promise<{ repoId: string }> }
 ) {
-  const { formKey } = await params;
+  const { repoId: repoIdParam } = await params;
   const origin = req.headers.get("origin");
   const headers = corsHeaders(origin);
 
-  const client = await findClientByFormKey(formKey);
+  const repoId = parseRepoIdParam(repoIdParam);
+  if (repoId === null) {
+    return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
+  }
+
+  const client = await findClientByRepoId(repoId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -114,7 +120,7 @@ export async function POST(
     return NextResponse.json({ error: "Submission too large" }, { status: 413, headers });
   }
 
-  if (await isRateLimited(`form:${formKey}:${clientIp(req)}`)) {
+  if (await isRateLimited(`form:${repoId}:${clientIp(req)}`)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }

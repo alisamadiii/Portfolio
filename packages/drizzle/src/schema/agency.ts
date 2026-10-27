@@ -180,8 +180,9 @@ export const agencyClient = pgTable(
     // for leads/booking/entitlement. Opaque bigint key, no FK.
     repoId: bigint("repo_id", { mode: "number" }).notNull().unique(),
 
-    // Public key the capture script posts with (f.js / b.js data-key).
-    formKey: text("form_key").notNull().unique(),
+    // The embed scripts (f.js / b.js / c.js) post keyed by the project's
+    // repoId above (data-key=repoId) — no separate public key. Abuse is bounded
+    // by the origins allowlist below + the Postgres rate limiter.
 
     // Hostnames the capture + booking scripts may run on (lead-source protection).
     // The client manages this in the hub; empty/unset = nothing allowed in prod.
