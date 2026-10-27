@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useRepo } from "@/hooks/use-repo";
 
 import {
   AlertDialog,
@@ -17,8 +16,11 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
 
+import { repoPath } from "@/lib/paths";
+import { useRepo } from "@/hooks/use-repo";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
+import { SessionActions } from "@/components/canvas/session-actions";
 import {
   ArrowLeft,
   Info,
@@ -26,7 +28,6 @@ import {
   Settings2,
   type LucideProps,
 } from "@/components/icon";
-import { SessionActions } from "@/components/canvas/session-actions";
 import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
 import { User } from "@/components/user";
@@ -45,18 +46,23 @@ export function ShellHeader({
   onModeChange,
   onToggleDocs,
   chatWidth,
+  inAgency,
 }: {
   mode: ShellMode;
   onModeChange: (mode: ShellMode) => void;
   onToggleDocs: () => void;
   /** Chat-panel width (%) — offsets the tabs to the canvas panel's left edge. */
   chatWidth: number;
+  /** Agency project: no Settings tab (site settings live in the agency
+   *  sidebar) and Leave goes back to the project, not the projects list. */
+  inAgency: boolean;
 }) {
   const router = useRouter();
   const [leaveOpen, setLeaveOpen] = useState(false);
   const { repoId } = useCanvasEditor();
   const { myRole } = useRepo();
   const canManage = (myRole ?? "full-access") === "full-access";
+  const leaveHref = inAgency ? repoPath(repoId) : "/";
 
   const canvasActive = mode === "canvas";
   const settingsActive = mode === "settings";
@@ -68,7 +74,7 @@ export function ShellHeader({
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Back to projects"
+          aria-label={inAgency ? "Back to project" : "Back to projects"}
           onClick={() => setLeaveOpen(true)}
         >
           <ArrowLeft className="size-4" />
@@ -78,12 +84,14 @@ export function ShellHeader({
             <AlertDialogHeader>
               <AlertDialogTitle>Leave the editor?</AlertDialogTitle>
               <AlertDialogDescription>
-                You'll return to your projects list.
+                {inAgency
+                  ? "You'll return to this project."
+                  : "You'll return to your projects list."}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Stay</AlertDialogCancel>
-              <AlertDialogAction onClick={() => router.push("/")}>
+              <AlertDialogAction onClick={() => router.push(leaveHref)}>
                 Leave
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -104,26 +112,29 @@ export function ShellHeader({
 
       {/* Mode tabs — pinned to the canvas panel's left edge. `--chat-w` is
           the live chat-panel width (%) set by the resizable split, so the
-          tabs stay flush with the canvas at any splitter position. */}
-      <div
-        className="bg-muted absolute flex items-center gap-0.5 rounded-lg p-0.5"
-        style={{ left: `calc(${chatWidth}% + 12px)` }}
-      >
-        <SegButton
-          icon={LayoutGrid}
-          label="Canvas"
-          active={canvasActive}
-          onClick={() => onModeChange("canvas")}
-        />
-        {canManage && (
+          tabs stay flush with the canvas at any splitter position. Agency
+          projects have only the canvas, so no tabs. */}
+      {!inAgency && (
+        <div
+          className="bg-muted absolute flex items-center gap-0.5 rounded-lg p-0.5"
+          style={{ left: `calc(${chatWidth}% + 12px)` }}
+        >
           <SegButton
-            icon={Settings2}
-            label="Settings"
-            active={settingsActive}
-            onClick={() => onModeChange("settings")}
+            icon={LayoutGrid}
+            label="Canvas"
+            active={canvasActive}
+            onClick={() => onModeChange("canvas")}
           />
-        )}
-      </div>
+          {canManage && (
+            <SegButton
+              icon={Settings2}
+              label="Settings"
+              active={settingsActive}
+              onClick={() => onModeChange("settings")}
+            />
+          )}
+        </div>
+      )}
 
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">

@@ -38,7 +38,7 @@ import {
   leadStatusLabel,
 } from "@/components/agency/lead-status";
 import { FrameCard } from "@/components/agency/page-shell";
-import { useAgency } from "@/components/agency/use-agency";
+import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import {
   ArrowLeft,
   CircleCheck,
@@ -260,6 +260,7 @@ export function LeadDetail({ id }: { id: number }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { repoId, role } = useAgency();
+  const href = useAgencyHref();
   const canEdit = role !== "view-only";
 
   const {
@@ -348,7 +349,7 @@ export function LeadDetail({ id }: { id: number }) {
   return (
     <div className="flex flex-col gap-7">
       <Link
-        href="/agency"
+        href={href("/agency")}
         className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start text-[15px] font-medium"
       >
         <ArrowLeft className="size-4" />

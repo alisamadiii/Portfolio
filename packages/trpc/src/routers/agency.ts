@@ -26,6 +26,7 @@ import {
   agencyClient,
   agencyLead,
   agencyWeeklyReport,
+  hubCollaborator,
   hubProject,
   subscriptions,
   user as userTable,
@@ -113,7 +114,7 @@ import {
   updateConversionAction,
   uploadConversion,
 } from "../lib/google-ads";
-import { syntheticRepoId } from "../lib/cms/upload-slug";
+import { createStarterProject } from "../lib/cms/upload-project";
 import { normalizeOrigin } from "../lib/agency/origins";
 
 // ─── Lead-generation agency ──────────────────────────────────────
@@ -123,27 +124,18 @@ import { normalizeOrigin } from "../lib/agency/origins";
 
 type SessionUser = { id: string; email: string; role?: string | null };
 
-/** The agency client the user belongs to (owner first, then collaborator), with their role. */
-async function findAgencyMembership(user: SessionUser) {
-  const owned = await db.query.agencyClient.findFirst({
-    where: eq(agencyClient.userId, user.id),
+/** The caller's role on one agency client: admin/owner, else a collaborator on its project. */
+async function agencyRoleForClient(
+  user: SessionUser,
+  client: typeof agencyClient.$inferSelect
+): Promise<CollaboratorRole | null> {
+  if (isAdminUser(user) || client.userId === user.id) return "full-access";
+  if (!client.repoId) return null;
+  const collaboration = await db.query.hubCollaborator.findFirst({
+    where: and(collaboratorMatchesUser(user), eq(hubCollaborator.repoId, client.repoId)),
+    columns: { role: true },
   });
-  if (owned) return { client: owned, role: "full-access" as CollaboratorRole };
-
-  const collaborations = await db.query.hubCollaborator.findMany({
-    where: collaboratorMatchesUser(user),
-    columns: { repoId: true, role: true },
-  });
-  const repoIds = collaborations.flatMap((c) => (c.repoId ? [c.repoId] : []));
-  if (!repoIds.length) return null;
-
-  const client = await db.query.agencyClient.findFirst({
-    where: inArray(agencyClient.repoId, repoIds),
-  });
-  if (!client) return null;
-
-  const role = collaborations.find((c) => c.repoId === client.repoId)!.role;
-  return { client, role };
+  return collaboration?.role ?? null;
 }
 
 // Agency-scoped: requires `repoId`, resolves the caller's role on that agency
@@ -159,13 +151,7 @@ const agencyProcedure = authenticatedProcedure
       throw new TRPCError({ code: "NOT_FOUND", message: "Agency client not found." });
     }
 
-    let role: CollaboratorRole | null = null;
-    if (isAdminUser(user) || client.userId === user.id) {
-      role = "full-access";
-    } else {
-      const membership = await findAgencyMembership(user);
-      if (membership?.client.id === client.id) role = membership.role;
-    }
+    const role = await agencyRoleForClient(user, client);
     if (!role) {
       throw new TRPCError({ code: "FORBIDDEN", message: "No access to this account." });
     }
@@ -635,10 +621,9 @@ const adminRouter = createTRPCRouter({
           id: userTable.id,
           email: userTable.email,
           name: userTable.name,
-          agencyClientId: agencyClient.id,
+          agencyCount: sql<number>`(select count(*)::int from ${agencyClient} where ${agencyClient.userId} = ${userTable.id})`,
         })
         .from(userTable)
-        .leftJoin(agencyClient, eq(agencyClient.userId, userTable.id))
         .where(
           input.query
             ? or(ilike(userTable.email, pattern), ilike(userTable.name, pattern))
@@ -670,13 +655,17 @@ const adminRouter = createTRPCRouter({
     return accounts.map((account) => ({ ...account, usedBy: usedBy.get(account.id) ?? null }));
   }),
 
-  // Make a user an agency client, or update their website and Ads wiring.
-  // The website is optional: a new client may not have one until it's built.
+  // Create an agency workspace on a project, or update one (by `id`). One user
+  // can own many: each agency is its own project (repoId). No website yet →
+  // a starter project (placeholder index.html) is created for the client.
   upsertClient: adminProcedure
     .input(
       z.object({
+        id: z.number().int().positive().nullable(),
         email: z.string().trim().email(),
         repoId: z.number().int().positive().nullable(),
+        // Starter project name when there's no website yet.
+        businessName: z.string().trim().max(100).nullable(),
         industry: z.enum(INDUSTRIES).nullable(),
         adsType: z.enum(["search", "lsa", "both"]).nullable(),
         googleAdsCustomerId: z.string().trim().max(20).nullable(),
@@ -695,6 +684,13 @@ const adminRouter = createTRPCRouter({
           message: "No Hub account with that email. Have them sign up first.",
         });
       }
+      const existing = input.id
+        ? await db.query.agencyClient.findFirst({ where: eq(agencyClient.id, input.id) })
+        : null;
+      if (input.id && !existing) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Agency client not found." });
+      }
+
       if (input.repoId) {
         const project = await db.query.hubProject.findFirst({
           where: eq(hubProject.repoId, input.repoId),
@@ -703,25 +699,28 @@ const adminRouter = createTRPCRouter({
           throw new TRPCError({ code: "NOT_FOUND", message: "Website not found." });
         }
         const taken = await db.query.agencyClient.findFirst({
-          where: and(eq(agencyClient.repoId, input.repoId), ne(agencyClient.userId, owner.id)),
+          where: eq(agencyClient.repoId, input.repoId),
+          columns: { id: true },
         });
-        if (taken) {
+        if (taken && taken.id !== existing?.id) {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "That website already belongs to another agency client.",
+            message: "That project already has an agency workspace.",
           });
         }
       }
 
-      // Every client needs a tenant id for leads/booking/entitlement. Use the
-      // linked website's repoId when given, otherwise keep the existing one, or
-      // mint a standalone synthetic id for a website-less client.
-      const existing = await db.query.agencyClient.findFirst({
-        where: eq(agencyClient.userId, owner.id),
-        columns: { repoId: true },
-      });
+      // Every agency lives in a project: the picked one, the current one, or
+      // a fresh starter site.
       const repoId =
-        input.repoId ?? existing?.repoId ?? syntheticRepoId();
+        input.repoId ??
+        existing?.repoId ??
+        (
+          await createStarterProject({
+            userId: owner.id,
+            name: input.businessName || owner.name || "My business",
+          })
+        ).repoId;
 
       const values = {
         userId: owner.id,
@@ -736,10 +735,17 @@ const adminRouter = createTRPCRouter({
         weeklyReport: input.weeklyReport,
       };
 
+      if (existing) {
+        const [client] = await db
+          .update(agencyClient)
+          .set(values)
+          .where(eq(agencyClient.id, existing.id))
+          .returning();
+        return client!;
+      }
       const [client] = await db
         .insert(agencyClient)
         .values({ ...values, formKey: randomBytes(12).toString("base64url") })
-        .onConflictDoUpdate({ target: agencyClient.userId, set: values })
         .returning();
       return client!;
     }),
@@ -774,14 +780,6 @@ const adminRouter = createTRPCRouter({
       if (!client) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Agency client not found." });
       }
-      // The subscription is keyed on the website, so it has to exist first.
-      if (!client.repoId) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Link a website to this client before creating a payment link.",
-        });
-      }
-
       const customerId = await ensureStripeCustomer({
         id: client.userId,
         email: client.email,
@@ -1248,57 +1246,44 @@ export const agencyRouter = createTRPCRouter({
   // Null unless the user's agency website has an active agency subscription:
   // the Hub then shows the website UI (project gallery) instead. Admins get
   // the agency UI for any client they're set up on, no subscription needed.
-  me: authenticatedProcedure.query(async ({ ctx }) => {
-    const membership = await findAgencyMembership(ctx.session.user);
-    if (!membership) return null;
+  // The agency workspace for one project, or null when the project isn't an
+  // agency (no client row, no access, or no live agency subscription). The hub
+  // picks the agency UI over the website editor on this.
+  project: authenticatedProcedure
+    .input(z.object({ repoId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const user = ctx.session.user;
+      const client = await db.query.agencyClient.findFirst({
+        where: eq(agencyClient.repoId, input.repoId),
+      });
+      if (!client) return null;
+      const role = await agencyRoleForClient(user, client);
+      if (!role) return null;
 
-    const { client, role } = membership;
-    // Every agency client needs a tenant id (leads/booking/entitlement key),
-    // website or not. Older clients may have none; mint one on first visit so
-    // the agency UI works without requiring a linked website.
-    let repoId = client.repoId;
-    if (!repoId) {
-      const [updated] = await db
-        .update(agencyClient)
-        .set({ repoId: syntheticRepoId() })
-        .where(and(eq(agencyClient.id, client.id), isNull(agencyClient.repoId)))
-        .returning({ repoId: agencyClient.repoId });
-      // A concurrent request may have set it first; re-read to be safe.
-      repoId =
-        updated?.repoId ??
-        (
-          await db.query.agencyClient.findFirst({
-            where: eq(agencyClient.id, client.id),
-            columns: { repoId: true },
-          })
-        )?.repoId ??
-        null;
-      if (!repoId) return null;
-    }
-    const entitlement = await getEntitlement(repoId);
-    if (entitlement.product !== "agency" && !isAdminUser(ctx.session.user)) {
-      return null;
-    }
-    const project = await db.query.hubProject.findFirst({
-      where: eq(hubProject.repoId, repoId),
-      columns: { owner: true, repo: true, websiteUrl: true },
-    });
+      const entitlement = await getEntitlement(input.repoId);
+      if (entitlement.product !== "agency" && !isAdminUser(user)) return null;
 
-    return {
-      repoId,
-      role,
-      owner: project?.owner ?? "",
-      repo: project?.repo ?? "",
-      websiteUrl: project?.websiteUrl ?? null,
-      adsConnected: Boolean(client.googleAdsCustomerId),
-      adsType: (client.adsType ?? "search") as "search" | "lsa" | "both",
-      conversionsWired: Boolean(
-        client.googleAdsActions?.lead && client.googleAdsConversionAction
-      ),
-      // Only people who can edit the site need the install snippet.
-      formKey: role === "full-access" ? client.formKey : null,
-    };
-  }),
+      const project = await db.query.hubProject.findFirst({
+        where: eq(hubProject.repoId, input.repoId),
+        columns: { owner: true, repo: true, websiteUrl: true },
+      });
+
+      return {
+        repoId: input.repoId,
+        role,
+        owner: project?.owner ?? "",
+        repo: project?.repo ?? "",
+        websiteUrl: project?.websiteUrl ?? null,
+        hasSite: Boolean(project),
+        adsConnected: Boolean(client.googleAdsCustomerId),
+        adsType: (client.adsType ?? "search") as "search" | "lsa" | "both",
+        conversionsWired: Boolean(
+          client.googleAdsActions?.lead && client.googleAdsConversionAction
+        ),
+        // Only people who can edit the site need the install snippet.
+        formKey: role === "full-access" ? client.formKey : null,
+      };
+    }),
 
   leads: leadsRouter,
 

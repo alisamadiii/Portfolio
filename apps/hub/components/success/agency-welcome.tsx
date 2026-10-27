@@ -181,6 +181,8 @@ export const AgencyWelcome = () => {
   const total = formatAmount(data.amountTotal, data.currency);
   const subtotal = formatAmount(data.amountSubtotal, data.currency);
   const discount = formatAmount(data.amountDiscount, data.currency);
+  // Where the new agency lives once they sign in: its project, or the gallery.
+  const home = data.metadata.repoId ? `/p/${data.metadata.repoId}` : "/";
   const firstName = data.metadata.name.trim().split(/\s+/)[0] ?? "";
   const hasRecurring = data.lineItems.some((li) => li.interval);
   const boughtCms =
@@ -321,7 +323,7 @@ export const AgencyWelcome = () => {
               <Button
                 variant="outline"
                 className="rounded-full px-5"
-                render={<Link href="/sign-in?redirect=%2F" />}
+                render={<Link href={`/sign-in?redirect=${encodeURIComponent(home)}`} />}
               >
                 Sign in
               </Button>
@@ -329,7 +331,7 @@ export const AgencyWelcome = () => {
                 className="rounded-full px-5"
                 render={
                   <Link
-                    href={`/sign-up?redirect=%2F${
+                    href={`/sign-up?redirect=${encodeURIComponent(home)}${
                       data.customerEmail
                         ? `&email=${encodeURIComponent(data.customerEmail)}`
                         : ""

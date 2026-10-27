@@ -11,7 +11,7 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { useAdsProduct } from "@/components/agency/ads-product";
 import { lastDays } from "@/components/agency/lead-status";
-import { useAgency } from "@/components/agency/use-agency";
+import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 
 const SEARCH_TABS = [
   { title: "Overview", href: "/marketing" },
@@ -44,6 +44,7 @@ function useWastedCount(enabled: boolean) {
 
 export function MarketingTabs() {
   const pathname = usePathname();
+  const href = useAgencyHref();
   const { product } = useAdsProduct();
   const TABS = product === "lsa" ? LSA_TABS : SEARCH_TABS;
   const wasted = useWastedCount(product === "search");
@@ -54,12 +55,12 @@ export function MarketingTabs() {
       className="border-foreground/10 flex flex-wrap gap-7 border-b"
     >
       {TABS.map((tab) => {
-        const active = pathname === tab.href;
+        const active = pathname === href(tab.href);
         const badge = tab.href === "/marketing/search-terms" && wasted > 0;
         return (
           <Link
             key={tab.href}
-            href={tab.href}
+            href={href(tab.href)}
             aria-current={active ? "page" : undefined}
             className={cn(
               "-mb-px inline-flex items-center gap-2 border-b-2 pb-[14px] text-[16px]",

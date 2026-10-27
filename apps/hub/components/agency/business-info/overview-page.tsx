@@ -20,6 +20,7 @@ import {
   type StepStatus,
 } from "@/components/agency/business-info/status";
 import { Eyebrow, FrameCard } from "@/components/agency/business-info/step-shell";
+import { useRouteRepoId } from "@/hooks/use-repo";
 import { useAgency } from "@/components/agency/use-agency";
 import { ArrowRight, Check, ChevronRight } from "@/components/icon";
 
@@ -61,9 +62,10 @@ function StepRow({
   status: StepStatus;
   divider: boolean;
 }) {
+  const repoId = useRouteRepoId();
   return (
     <Link
-      href={sectionUrl(step.key)}
+      href={sectionUrl(repoId, step.key)}
       className={cn(
         "flex items-center gap-5 px-6 py-5.5",
         divider && "border-foreground/7 border-b",
@@ -236,7 +238,7 @@ export function BusinessInfoOverview() {
           )}
         </div>
         <Link
-          href={sectionUrl(next.key)}
+          href={sectionUrl(repoId, next.key)}
           className="bg-primary text-primary-foreground inline-flex shrink-0 items-center gap-2.5 rounded-[11px] px-6 py-3.5 text-[17px] font-semibold shadow-[0_8px_24px_rgba(252,132,100,0.32)]"
         >
           {done === total ? "Review answers" : "Continue setup"}{" "}

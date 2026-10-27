@@ -110,8 +110,8 @@ export function CampaignFilterSelect() {
     : ALL;
 
   return (
-    <div className="px-3.5 pt-2 pb-1">
-      <p className="text-sidebar-foreground/60 px-0.5 pb-1.5 text-[11px] font-semibold tracking-[0.06em] uppercase">
+    <div className="px-3 pt-1 pb-1">
+      <p className="text-sidebar-foreground/60 px-0.5 pb-1 text-[10.5px] font-semibold tracking-[0.06em] uppercase">
         Campaign
       </p>
       <Select
@@ -122,15 +122,15 @@ export function CampaignFilterSelect() {
         }
       >
         <SelectTrigger
-          size="lg"
+          size="sm"
           className={cn(
-            "bg-sidebar w-full rounded-[12px] text-[13.5px]",
+            "bg-sidebar w-full rounded-md text-[12.5px]",
             value !== ALL && "border-[#fc8464]/50 font-medium"
           )}
         >
           <Megaphone
             className={cn(
-              "size-4 shrink-0",
+              "size-3.5 shrink-0",
               value !== ALL ? "text-[#fc8464]" : "text-sidebar-foreground/50"
             )}
           />
@@ -145,7 +145,7 @@ export function CampaignFilterSelect() {
         </SelectContent>
       </Select>
       {value !== ALL && (
-        <p className="text-sidebar-foreground/60 mt-1.5 px-0.5 text-[11.5px]">
+        <p className="text-sidebar-foreground/60 mt-1 px-0.5 text-[11px]">
           Leads and marketing show this campaign only.
         </p>
       )}

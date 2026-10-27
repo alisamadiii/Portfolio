@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
@@ -7,10 +7,12 @@ import { githubInstallation, hubProject } from "@workspace/drizzle/schema";
 
 import { authenticatedProcedure, createTRPCRouter } from "../init";
 import { isAdminUser } from "../lib/authz-shared";
-import { signImportToken } from "../lib/cms/edit-token";
-import { syntheticRepoId, uploadSlug } from "../lib/cms/upload-slug";
+import {
+  cancelUploadProject,
+  finalizeUploadProject,
+  reserveUploadProject,
+} from "../lib/cms/upload-project";
 import { getImport } from "../lib/content-pilot";
-import { isUniqueViolation } from "../lib/db-errors";
 import { checkGithubRepoFramework } from "../lib/detect-framework";
 import {
   HOSTING_VALUES,
@@ -417,67 +419,7 @@ export const deployRouter = createTRPCRouter({
   // Step 1: reserve the project row (hidden) + mint the one-time import token.
   importUpload: authenticatedProcedure
     .input(z.object({ name: z.string().trim().min(1).max(100) }))
-    .mutation(async ({ ctx, input }) => {
-      const secret = process.env.EDIT_TOKEN_SECRET;
-      if (!secret) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Uploads are not configured on this server.",
-        });
-      }
-      const userId = ctx.session.user.id;
-      const base = uploadSlug(input.name);
-
-      // Uniquify against uq_hub_project_owner_repo_ci under the 'uploads'
-      // pseudo-owner, then insert with a synthetic repoId. Retried on the rare
-      // id collision (uq_hub_project_repo_id).
-      for (let attempt = 0; attempt < 5; attempt++) {
-        const repo = attempt === 0 ? base : `${base}-${attempt + 1}`;
-        const repoId = syntheticRepoId();
-        // A deleted upload project left before hard deletes existed still
-        // holds its name as a tombstone (hidden, no owner). Uploads never
-        // re-sync, so reclaim the name. A reserved in-progress import is also
-        // hidden but keeps its owner, so it's never touched.
-        await db
-          .delete(hubProject)
-          .where(
-            and(
-              eq(hubProject.source, "upload"),
-              eq(hubProject.owner, "uploads"),
-              sql`lower(${hubProject.repo}) = lower(${repo})`,
-              eq(hubProject.hidden, true),
-              isNull(hubProject.githubConnectedUserId),
-              isNull(hubProject.customDomainCfId)
-            )
-          );
-        try {
-          await db.insert(hubProject).values({
-            repoId,
-            source: "upload",
-            owner: "uploads",
-            repo,
-            private: true,
-            defaultBranch: "main",
-            githubUpdatedAt: new Date(),
-            syncedAt: new Date(),
-            githubConnectedUserId: userId,
-            hidden: true,
-          });
-          return {
-            repoId,
-            name: repo,
-            importToken: signImportToken({ repoId }, secret),
-          };
-        } catch (error) {
-          // Unique violation on owner/repo or repoId — try the next suffix/id.
-          if (!isUniqueViolation(error)) throw error;
-        }
-      }
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Could not reserve a project name. Try a different name.",
-      });
-    }),
+    .mutation(({ ctx, input }) => reserveUploadProject(ctx.session.user.id, input.name)),
 
   // Step 2 (after the browser's zip upload): verify the workspace landed on
   // content-pilot, then reveal the row and store the live URL.
@@ -485,22 +427,7 @@ export const deployRouter = createTRPCRouter({
     .input(z.object({ repoId: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const project = await requireOwnUploadRow(ctx.session.user, input.repoId);
-      const status = await getImport(input.repoId);
-      if (!status.exists) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "The upload did not reach the preview server. Try again.",
-        });
-      }
-      await db
-        .update(hubProject)
-        .set({
-          hidden: false,
-          websiteUrl: status.liveUrl ?? null,
-          githubUpdatedAt: new Date(),
-          syncedAt: new Date(),
-        })
-        .where(eq(hubProject.repoId, input.repoId));
+      await finalizeUploadProject(input.repoId);
       return { repoId: input.repoId, name: project.repo };
     }),
 
@@ -509,17 +436,7 @@ export const deployRouter = createTRPCRouter({
     .input(z.object({ repoId: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       await requireOwnUploadRow(ctx.session.user, input.repoId);
-      // Hard-delete only hidden rows — a visible project goes through
-      // project.delete (billing settle + pilot cleanup).
-      await db
-        .delete(hubProject)
-        .where(
-          and(
-            eq(hubProject.repoId, input.repoId),
-            eq(hubProject.source, "upload"),
-            eq(hubProject.hidden, true)
-          )
-        );
+      await cancelUploadProject(input.repoId);
       return { ok: true };
     }),
 });

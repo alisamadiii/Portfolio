@@ -406,7 +406,7 @@ export async function POST(
       to: client.leadNotifyEmail ?? client.ownerEmail,
       replyTo: data.email,
       subject: `New booking: ${type.name} with ${data.name}`,
-      html: leadEmailHtml(lines, `${urls.cms}/agency/${lead!.id}`, siteName, {
+      html: leadEmailHtml(lines, `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`, siteName, {
         tag: "New booking",
         title: `${data.name} booked ${type.name}`,
       }),
@@ -415,7 +415,7 @@ export async function POST(
         "",
         ...lines.map(([label, value]) => `${label}: ${value}`),
         "",
-        `${urls.cms}/agency/${lead!.id}`,
+        `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`,
       ].join("\n"),
     });
   } catch (error) {

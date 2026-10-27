@@ -11,7 +11,8 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { useAgency } from "@/components/agency/use-agency";
+import { projectSubpath } from "@/lib/paths";
+import { agencyHref, useAgency } from "@/components/agency/use-agency";
 
 export type AdsProduct = "search" | "lsa";
 
@@ -85,7 +86,7 @@ export function AdsProductProvider({
 
 /** Sidebar segmented switch between Google Ads and Local Services. */
 export function AdsProductSwitch() {
-  const { adsType } = useAgency();
+  const { repoId, adsType } = useAgency();
   const { product, setProduct } = useAdsProduct();
   const pathname = usePathname();
   const router = useRouter();
@@ -96,17 +97,17 @@ export function AdsProductSwitch() {
     setProduct(next);
     // Leave a page the other mode doesn't have.
     const hidden = next === "lsa" ? SEARCH_ONLY : LSA_ONLY;
-    if (hidden.some((route) => pathname.startsWith(route))) {
-      router.push("/marketing");
+    if (hidden.some((route) => projectSubpath(pathname).startsWith(route))) {
+      router.push(agencyHref(repoId, "/marketing"));
     }
   };
 
   return (
-    <div className="px-3.5 pt-2 pb-1">
-      <p className="text-sidebar-foreground/60 px-0.5 pb-1.5 text-[11px] font-semibold tracking-[0.06em] uppercase">
+    <div className="px-3 pt-1 pb-1">
+      <p className="text-sidebar-foreground/60 px-0.5 pb-1 text-[10.5px] font-semibold tracking-[0.06em] uppercase">
         Ads product
       </p>
-      <div className="bg-sidebar-accent/60 flex gap-1 rounded-[12px] p-1">
+      <div className="bg-sidebar-accent/60 flex gap-0.5 rounded-md p-0.5">
         {(
           [
             { value: "search", label: "Google Ads" },
@@ -119,7 +120,7 @@ export function AdsProductSwitch() {
             aria-pressed={product === option.value}
             onClick={() => switchTo(option.value)}
             className={cn(
-              "flex-1 rounded-[9px] px-2 py-1.5 text-[12.5px] font-medium transition-colors",
+              "flex-1 rounded-[5px] px-2 py-1 text-[12px] font-medium transition-colors",
               product === option.value
                 ? "bg-sidebar text-sidebar-accent-foreground shadow-sm"
                 : "text-sidebar-foreground/60 hover:text-sidebar-foreground"

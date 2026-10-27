@@ -16,7 +16,7 @@ import { repoPath } from "@/lib/paths";
 
 import { DeployButton } from "@/components/deploy/deploy-dialog";
 import { usePlans } from "@/hooks/use-plans";
-import { Globe, LockKeyhole } from "@/components/icon";
+import { Globe, LockKeyhole, Sparkles } from "@/components/icon";
 
 // Logical size the live site renders at inside the preview iframe before it's
 // scaled down to the card width. A desktop-ish viewport so previews look like
@@ -172,6 +172,50 @@ const ProjectCard = ({
   );
 };
 
+// Agency-plan project: dark framed card with a coral plan chip, so the
+// projects running leads + ads stand apart from plain websites.
+const AgencyProjectCard = ({
+  project,
+  site,
+  entitlement,
+}: {
+  project: Project;
+  site?: Site;
+  entitlement: Entitlement;
+}) => {
+  const url = project.websiteUrl ?? null;
+  // "Agency · Launch" → "Launch"
+  const tier = entitlement.label.split("·").pop()?.trim() ?? entitlement.label;
+  return (
+    <Link
+      href={repoPath(project.repoId)}
+      className="group flex flex-col overflow-hidden rounded-lg bg-[#141210] text-white shadow-[0_18px_50px_-20px_rgba(252,132,100,0.55)] ring-1 ring-white/10 transition hover:ring-[#fc8464]/50"
+    >
+      <div className="m-2 mb-0 overflow-hidden rounded-md ring-1 ring-white/10">
+        <PreviewFrame url={url} />
+      </div>
+      <div className="flex items-center gap-2 px-4 py-3">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">{project.repo}</p>
+          <p className="truncate text-xs text-white/55">
+            {url ? hostOf(url) : project.repo}
+          </p>
+          <p className="truncate pt-1.5 text-[11px] text-white/40">
+            Leads, ads and website
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-[#fc8464] to-[#f5a35c] px-2.5 py-0.5 text-[11.5px] font-semibold text-[#1c0f0a]">
+            <Sparkles className="size-3" />
+            {tier}
+          </span>
+          {site && <LivePill up={site.status.up} />}
+        </div>
+      </div>
+    </Link>
+  );
+};
+
 const CardSkeleton = () => (
   <div className="bg-card flex flex-col overflow-hidden rounded-lg border">
     <Skeleton className="aspect-[16/10] rounded-none" />
@@ -235,14 +279,19 @@ export function ProjectGallery() {
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {projects.map((p) => (
-            <ProjectCard
-              key={`${p.owner}/${p.repo}`}
-              project={p}
-              site={siteFor(p)}
-              entitlement={plans.forRepo(p.repoId)}
-            />
-          ))}
+          {projects.map((p) => {
+            const entitlement = plans.forRepo(p.repoId);
+            const Card =
+              entitlement.product === "agency" ? AgencyProjectCard : ProjectCard;
+            return (
+              <Card
+                key={`${p.owner}/${p.repo}`}
+                project={p}
+                site={siteFor(p)}
+                entitlement={entitlement}
+              />
+            );
+          })}
         </div>
       )}
     </section>

@@ -237,13 +237,13 @@ export async function POST(
         to: client.leadNotifyEmail ?? client.ownerEmail,
         ...(email ? { replyTo: email } : {}),
         subject: `New lead from ${name ?? email ?? phone ?? siteName}`,
-        html: leadEmailHtml(lines, `${urls.cms}/agency/${lead!.id}`, siteName),
+        html: leadEmailHtml(lines, `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`, siteName),
         text: [
           `New lead on ${siteName}`,
           "",
           ...lines.map(([label, value]) => `${label}: ${value}`),
           "",
-          `${urls.cms}/agency/${lead!.id}`,
+          `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`,
         ].join("\n"),
       });
     } catch (error) {

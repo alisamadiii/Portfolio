@@ -9,10 +9,12 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import {
   BUSINESS_STEPS,
+  businessInfoUrl,
   sectionUrl,
   stepFor,
 } from "@/components/agency/business-info-config";
 import { stepStatuses } from "@/components/agency/business-info/status";
+import { useRouteRepoId } from "@/hooks/use-repo";
 import { useAgency } from "@/components/agency/use-agency";
 import {
   Eyebrow,
@@ -48,7 +50,7 @@ function StepBar({ currentKey }: { currentKey: string }) {
               <span aria-hidden className="bg-foreground/16 h-px w-4" />
             )}
             <Link
-              href={sectionUrl(step.key)}
+              href={sectionUrl(repoId, step.key)}
               aria-current={current ? "step" : undefined}
               className={cn(
                 "inline-flex items-center gap-2 rounded-full py-2 pr-3.5 pl-2 text-[15px] font-medium",
@@ -109,6 +111,7 @@ export function StepShell({
   };
   children: React.ReactNode;
 }) {
+  const repoId = useRouteRepoId();
   const step = stepFor(stepKey)!;
   const index = BUSINESS_STEPS.findIndex((s) => s.key === stepKey);
   const prev = BUSINESS_STEPS[index - 1];
@@ -119,7 +122,7 @@ export function StepShell({
     <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-9">
       <div className="flex flex-col gap-5">
         <Link
-          href="/business-info"
+          href={businessInfoUrl(repoId)}
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 self-start text-[15px] font-medium"
         >
           <ArrowLeft className="size-4" /> Business info overview
@@ -149,7 +152,7 @@ export function StepShell({
           <div className="border-foreground/7 flex flex-wrap items-center justify-between gap-4 border-t pt-3">
             {prev ? (
               <Link
-                href={sectionUrl(prev.key)}
+                href={sectionUrl(repoId, prev.key)}
                 className="hover:text-foreground inline-flex items-center gap-2 py-3 text-[16px] font-medium"
               >
                 <ArrowLeft className="size-4" /> {prev.title}
@@ -171,7 +174,7 @@ export function StepShell({
                 <button
                   type="button"
                   disabled={footer.saving}
-                  onClick={() => footer.saveAnd("/business-info")}
+                  onClick={() => footer.saveAnd(businessInfoUrl(repoId))}
                   className="bg-foreground/5 hover:bg-foreground/8 rounded-[11px] px-5 py-3.5 text-[16px] font-medium disabled:opacity-60"
                 >
                   Save and exit
@@ -181,7 +184,7 @@ export function StepShell({
                   disabled={footer.saving}
                   onClick={() =>
                     footer.saveAnd(
-                      last ? "/business-info" : sectionUrl(next.key)
+                      last ? businessInfoUrl(repoId) : sectionUrl(repoId, next.key)
                     )
                   }
                   className="bg-primary text-primary-foreground inline-flex items-center gap-2.5 rounded-[11px] px-5.5 py-3.5 text-[16px] font-semibold shadow-[0_8px_24px_rgba(252,132,100,0.32)] disabled:opacity-60"
@@ -201,7 +204,7 @@ export function StepShell({
               </div>
             ) : next ? (
               <Link
-                href={sectionUrl(next.key)}
+                href={sectionUrl(repoId, next.key)}
                 className="bg-primary text-primary-foreground inline-flex items-center gap-2.5 rounded-[11px] px-5.5 py-3.5 text-[16px] font-semibold shadow-[0_8px_24px_rgba(252,132,100,0.32)]"
               >
                 Continue to {next.title.toLowerCase()}{" "}

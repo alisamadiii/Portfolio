@@ -22,7 +22,7 @@ import {
 } from "@/components/agency/booking-dialogs";
 import { FieldHead, FrameCard, PageShell } from "@/components/agency/page-shell";
 import { StatusPill } from "@/components/agency/lead-status";
-import { useAgency } from "@/components/agency/use-agency";
+import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import { Calendar, ChevronDown, Plus, Trash, Video, X } from "@/components/icon";
 import { connectGoogleCalendar } from "@/lib/integrations";
 
@@ -512,6 +512,7 @@ function BookingSnippet({ formKey }: { formKey: string }) {
 // ─── Bookings list ───────────────────────────────────────────────
 
 function BookingsCard({ repoId }: { repoId: number }) {
+  const href = useAgencyHref();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const bookings = useQuery(trpc.agency.booking.list.queryOptions({ repoId }));
@@ -596,7 +597,7 @@ function BookingsCard({ repoId }: { repoId: number }) {
                   <div className="min-w-0 flex-1">
                     <a
                       className="font-medium hover:underline"
-                      href={`/agency/${booking.id}`}
+                      href={href(`/agency/${booking.id}`)}
                     >
                       {booking.name ?? booking.email ?? "Visitor"}
                     </a>

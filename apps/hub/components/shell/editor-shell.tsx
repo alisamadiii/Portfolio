@@ -32,10 +32,10 @@ import { roleAtLeast } from "@/lib/authz-shared";
  * layer over it so the iframe never remounts. All editing state lives in
  * CanvasEditorProvider.
  */
-export function EditorShell() {
+export function EditorShell({ inAgency = false }: { inAgency?: boolean }) {
   return (
     <CanvasEditorProvider>
-      <ShellBody />
+      <ShellBody inAgency={inAgency} />
     </CanvasEditorProvider>
   );
 }
@@ -60,7 +60,7 @@ function readPersistedChatWidth(autoSaveId: string, fallback: number): number {
   }
 }
 
-function ShellBody() {
+function ShellBody({ inAgency }: { inAgency: boolean }) {
   const {
     pages,
     entryPages,
@@ -153,6 +153,7 @@ function ShellBody() {
       <ShellHeader
         mode={mode}
         onModeChange={setMode}
+        inAgency={inAgency}
         onToggleDocs={() => setDocsOpen((open) => !open)}
         chatWidth={chatWidth}
       />
@@ -232,7 +233,7 @@ function ShellBody() {
 
                 {/* Mode overlays — mounted AFTER the canvas layer so its tree
                     position (and the iframe) stays stable. */}
-                {mode === "settings" && (
+                {mode === "settings" && !inAgency && (
                   <div className="bg-background absolute inset-0 z-10 flex min-h-0">
                     <SettingsMode />
                   </div>

@@ -218,6 +218,13 @@
       "when": 1792939077505,
       "tag": "0030_ancient_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793095102781,
+      "tag": "0031_whole_komodo",
+      "breakpoints": true
     }
   ]
 }

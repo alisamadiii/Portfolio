@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@workspace/ui/lib/utils";
 
+import { projectSubpath } from "@/lib/paths";
+
 // Every agency page uses the shared centered shell now.
 const FULL_WIDTH: string[] = [];
 
@@ -11,7 +13,7 @@ const FULL_WIDTH: string[] = [];
 const FULL_WIDTH_PREFIX = ["/business-info"];
 
 export function AgencyMain({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = projectSubpath(usePathname());
   const fullWidth =
     FULL_WIDTH.includes(pathname) ||
     FULL_WIDTH_PREFIX.some((p) => pathname.startsWith(p));

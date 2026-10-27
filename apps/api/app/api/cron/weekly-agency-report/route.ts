@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
           topCampaign: report.topCampaign,
           topSearchTerm: report.topSearchTerm,
           alerts: report.alerts,
-          dashboardUrl: `${urls.cms}/marketing`,
+          dashboardUrl: `${urls.cms}/p/${client.repoId}/marketing`,
           unsubscribeUrl: `${urls.portfolio}/api/agency/report/unsubscribe?token=${encodeURIComponent(signToken(`report:${client.id}`, 0))}`,
         }),
       });

@@ -7,11 +7,12 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useAgency } from "@/components/agency/use-agency";
+import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import { TriangleAlert } from "@/components/icon";
 
 /** Account health checks, shown on top of the Marketing overview. */
 export function AdsAlerts() {
+  const href = useAgencyHref();
   const trpc = useTRPC();
   const { repoId, adsConnected } = useAgency();
   const alerts = useQuery(
@@ -28,7 +29,7 @@ export function AdsAlerts() {
       {alerts.data.map((alert) => (
         <Link
           key={alert.id}
-          href={alert.href}
+          href={href(alert.href)}
           className={cn(
             "flex items-start gap-3 rounded-[14px] p-4 transition-opacity hover:opacity-90",
             alert.severity === "critical"

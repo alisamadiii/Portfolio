@@ -25,6 +25,7 @@
     "client-only": "^0.0.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
+    "fflate": "^0.8.3",
     "lru-cache": "^11.2.6",
     "pg": "^8.23.1",
     "server-only": "^0.0.1",

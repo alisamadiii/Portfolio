@@ -330,8 +330,8 @@ export function StepSearchAd() {
             values={values}
             links={{
               keywords: campaign
-                ? `${sectionUrl("keywords")}/${campaign.id}`
-                : sectionUrl("keywords"),
+                ? `${sectionUrl(repoId, "keywords")}/${campaign.id}`
+                : sectionUrl(repoId, "keywords"),
             }}
           />
         </>
@@ -346,7 +346,7 @@ export function StepSearchAd() {
           <p className="text-muted-foreground text-[17px] leading-relaxed">
             No keyword groups yet. Add one on the{" "}
             <Link
-              href={sectionUrl("keywords")}
+              href={sectionUrl(repoId, "keywords")}
               className="text-foreground underline underline-offset-2"
             >
               Keywords

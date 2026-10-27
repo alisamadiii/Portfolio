@@ -24,7 +24,7 @@ import {
   PageShell,
   StatCardRow,
 } from "@/components/agency/page-shell";
-import { useAgency } from "@/components/agency/use-agency";
+import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import { ArrowRight, Calendar, Check, Megaphone } from "@/components/icon";
 
 const greeting = () => {
@@ -47,6 +47,7 @@ type Tile = {
 function SetupChecklist() {
   const trpc = useTRPC();
   const { repoId, repo, adsConnected, adsType, conversionsWired } = useAgency();
+  const href = useAgencyHref();
   // Search-campaign tiles don't apply to an LSA-only client.
   const searchAds = adsConnected && adsType !== "lsa";
 
@@ -94,7 +95,7 @@ function SetupChecklist() {
       label: "Booking on",
       done: bookingOn,
       sub: bookingOn ? "Taking bookings" : "Let people book a call",
-      href: "/agency/booking",
+      href: href("/agency/booking"),
       cta: "Set up",
     },
     {
@@ -102,7 +103,7 @@ function SetupChecklist() {
       label: "Connect website",
       done: Boolean(repo),
       sub: repo ? "Connected" : "Add our scripts, or ask us to build one",
-      href: "/origins",
+      href: href("/settings/domain"),
       cta: "Set up",
     },
     {
@@ -110,7 +111,7 @@ function SetupChecklist() {
       label: "Business info",
       done: infoDone >= totalSteps,
       sub: `${infoDone} of ${totalSteps} sections done`,
-      href: "/business-info",
+      href: href("/business-info"),
       cta: "Continue",
     },
     {
@@ -121,7 +122,7 @@ function SetupChecklist() {
         (firstLead.data?.total ?? 0) > 0
           ? "Leads are coming in"
           : "Install the form script and send a test lead",
-      href: "/origins",
+      href: href("/settings/domain"),
       cta: "Set up",
     },
     ...(searchAds
@@ -133,7 +134,7 @@ function SetupChecklist() {
             sub: conversionsWired
               ? "Leads report to Google Ads"
               : "Without this, Google optimizes blind",
-            href: "/marketing/conversions",
+            href: href("/marketing/conversions"),
             cta: "Wire up",
           },
           {
@@ -144,7 +145,7 @@ function SetupChecklist() {
               (negativeLists.data?.applied.length ?? 0) > 0
                 ? "Blocking junk searches"
                 : "Block job seekers and DIYers",
-            href: "/marketing/search-terms",
+            href: href("/marketing/search-terms"),
             cta: "Apply",
           },
         ]
@@ -203,6 +204,7 @@ function SetupChecklist() {
 }
 
 function RecentLeads() {
+  const href = useAgencyHref();
   const trpc = useTRPC();
   const { repoId } = useAgency();
   const { data } = useQuery(
@@ -216,7 +218,7 @@ function RecentLeads() {
           Latest leads
         </p>
         <Link
-          href="/agency"
+          href={href("/agency")}
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-[14px]"
         >
           View all
@@ -238,7 +240,7 @@ function RecentLeads() {
           {data.rows.map((lead) => (
             <li key={lead.id}>
               <Link
-                href={`/agency/${lead.id}`}
+                href={href(`/agency/${lead.id}`)}
                 className="hover:bg-foreground/2 flex items-center gap-3 px-6 py-3.5"
               >
                 <span className="bg-foreground/6 grid size-10 shrink-0 place-items-center rounded-full text-[14px] font-semibold">
@@ -269,6 +271,7 @@ function RecentLeads() {
 }
 
 function NextBooking() {
+  const href = useAgencyHref();
   const trpc = useTRPC();
   const { repoId } = useAgency();
   const bookings = useQuery(trpc.agency.booking.list.queryOptions({ repoId }));
@@ -303,14 +306,14 @@ function NextBooking() {
         <Button
           size="sm"
           className="bg-primary text-primary-foreground"
-          render={<Link href={`/agency/${next.id}`} />}
+          render={<Link href={href(`/agency/${next.id}`)} />}
         >
           View lead
         </Button>
         <Button
           size="sm"
           className="bg-[#ece9e2]/10 text-[#ece9e2]"
-          render={<Link href="/agency/booking" />}
+          render={<Link href={href("/agency/booking")} />}
         >
           All bookings
         </Button>
@@ -320,6 +323,7 @@ function NextBooking() {
 }
 
 function AdsThisMonth() {
+  const href = useAgencyHref();
   const { ads, currency } = useAgencyNumbers(30);
   if (!ads.data) return null;
   const paused = ads.data.campaigns.some((c) => c.status !== "ENABLED");
@@ -342,7 +346,7 @@ function AdsThisMonth() {
         </div>
       )}
       <Link
-        href="/marketing"
+        href={href("/marketing")}
         className="text-primary mt-auto text-[14px] font-medium"
       >
         Details →

@@ -56,7 +56,10 @@ const formatCustomerId = (id: string) =>
   id.replace(/\D/g, "").replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
 
 const EMPTY = {
+  // Set while editing an existing client; null = create a new agency project.
+  id: null as number | null,
   email: "",
+  businessName: "",
   repoId: "",
   industry: "",
   adsType: "search",
@@ -66,8 +69,9 @@ const EMPTY = {
   weeklyReport: true,
 };
 
-// Admin: turn a Hub user into an agency client (one website) and wire their
-// Google Ads account. Agency clients get the agency Hub instead of the website one.
+// Admin: give a project an agency workspace and wire its Google Ads account.
+// One user can own several (one per business); each lives inside its project
+// and the project shows the agency UI instead of the editor.
 export default function AgencyClientsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -163,7 +167,7 @@ export default function AgencyClientsPage() {
     })
   );
 
-  const set = (key: keyof typeof EMPTY) => (value: string) =>
+  const set = (key: Exclude<keyof typeof EMPTY, "id">) => (value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
 
   return (
@@ -171,8 +175,8 @@ export default function AgencyClientsPage() {
       <div className="mb-5">
         <h1 className="text-xl font-semibold tracking-tight">Agency clients</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Clients on a lead generation plan. They see the agency Hub instead of
-          the website one.
+          Projects on a lead generation plan. Opening one in the Hub shows the
+          agency workspace instead of the editor.
         </p>
       </div>
 
@@ -215,7 +219,9 @@ export default function AgencyClientsPage() {
           onSubmit={(event) => {
             event.preventDefault();
             upsert.mutate({
+              id: form.id,
               email: form.email,
+              businessName: form.businessName || null,
               repoId:
                 form.repoId && form.repoId !== NO_WEBSITE
                   ? Number(form.repoId)
@@ -246,7 +252,9 @@ export default function AgencyClientsPage() {
                 key: user.id,
                 title: user.name || user.email,
                 subtitle: user.name ? user.email : undefined,
-                note: user.agencyClientId ? "Agency client" : undefined,
+                note: user.agencyCount
+                  ? `${user.agencyCount} agency ${user.agencyCount === 1 ? "project" : "projects"}`
+                  : undefined,
                 selected: user.email === form.email,
                 onSelect: () => set("email")(user.email),
               }))}
@@ -262,7 +270,7 @@ export default function AgencyClientsPage() {
             </Label>
             <Select
               items={[
-                { value: NO_WEBSITE, label: "No website yet" },
+                { value: NO_WEBSITE, label: "No website yet (create starter site)" },
                 ...(projects.data ?? []).map((project) => ({
                   value: String(project.repoId),
                   label: `${project.owner}/${project.repo}`,
@@ -275,7 +283,9 @@ export default function AgencyClientsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_WEBSITE}>No website yet</SelectItem>
+                <SelectItem value={NO_WEBSITE}>
+                  No website yet (create starter site)
+                </SelectItem>
                 {projects.data?.map((project) => (
                   <SelectItem
                     key={project.repoId}
@@ -287,6 +297,20 @@ export default function AgencyClientsPage() {
               </SelectContent>
             </Select>
           </div>
+          {!form.id && (!form.repoId || form.repoId === NO_WEBSITE) && (
+            <div className="space-y-1.5">
+              <Label htmlFor="business-name">Business name</Label>
+              <Input
+                id="business-name"
+                value={form.businessName}
+                onChange={(event) => set("businessName")(event.target.value)}
+                placeholder="Acme Pest Control"
+              />
+              <p className="text-muted-foreground text-[12px]">
+                Names the starter project (a one-page placeholder site).
+              </p>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>
               Industry{" "}
@@ -504,7 +528,7 @@ export default function AgencyClientsPage() {
               </Button>
             )}
             <Button type="submit" disabled={upsert.isPending || !form.email}>
-              Save client
+              {form.id ? "Save changes" : "Add agency project"}
             </Button>
           </div>
         </form>
@@ -583,7 +607,9 @@ export default function AgencyClientsPage() {
                       variant="outline"
                       onClick={() =>
                         setForm({
+                          id: client.id,
                           email: client.email,
+                          businessName: "",
                           repoId: client.repoId ? String(client.repoId) : "",
                           industry: client.industry ?? "",
                           adsType: client.adsType ?? "search",

@@ -90,7 +90,7 @@ export function CampaignsIndex() {
         });
         setOpen(false);
         setName("");
-        router.push(`${sectionUrl("keywords")}/${campaign.id}`);
+        router.push(`${sectionUrl(repoId, "keywords")}/${campaign.id}`);
       },
       onError: (error) => toast.error(error.message),
     })
@@ -133,7 +133,7 @@ export function CampaignsIndex() {
               {campaigns.data.map((campaign, i) => (
                 <Link
                   key={campaign.id}
-                  href={`${sectionUrl("keywords")}/${campaign.id}`}
+                  href={`${sectionUrl(repoId, "keywords")}/${campaign.id}`}
                   className={
                     i < campaigns.data.length - 1
                       ? "border-foreground/7 flex items-center gap-5 border-b px-6 py-5"
@@ -248,7 +248,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
     trpc.agency.campaigns.remove.mutationOptions({
       onSuccess: () => {
         invalidate();
-        router.push(sectionUrl("keywords"));
+        router.push(sectionUrl(repoId, "keywords"));
       },
       onError: (error) => toast.error(error.message),
     })
@@ -302,7 +302,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
             Keyword group not found.
           </p>
           <Link
-            href={sectionUrl("keywords")}
+            href={sectionUrl(repoId, "keywords")}
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-[15px] font-medium"
           >
             <ArrowLeft className="size-4" /> Keywords
@@ -311,7 +311,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
       ) : (
         <FrameCard innerClassName="flex flex-col gap-7 p-7">
           <Link
-            href={sectionUrl("keywords")}
+            href={sectionUrl(repoId, "keywords")}
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start text-[15px] font-medium"
           >
             <ArrowLeft className="size-4" /> All keyword groups

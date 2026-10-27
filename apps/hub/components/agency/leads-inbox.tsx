@@ -59,7 +59,7 @@ import {
   StatCardRow,
   TableCard,
 } from "@/components/agency/page-shell";
-import { useAgency } from "@/components/agency/use-agency";
+import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import { Calendar, Inbox, Phone, Search } from "@/components/icon";
 
 const PAGE_SIZE = 25;
@@ -247,6 +247,7 @@ function LeadsOverview({ days }: { days: RangeValue }) {
 /** How leads reach the hub: website forms, booking, phone (soon). */
 function LeadChannels() {
   const { formKey } = useAgency();
+  const href = useAgencyHref();
   const channels = [
     {
       key: "forms",
@@ -262,7 +263,7 @@ function LeadChannels() {
       title: "Booking",
       on: true,
       sub: "Appointments booked on your site",
-      href: "/agency/booking",
+      href: href("/agency/booking"),
     },
     {
       key: "calls",
@@ -270,7 +271,7 @@ function LeadChannels() {
       title: "Phone calls",
       on: false,
       sub: "Coming soon",
-      href: "/agency/calls",
+      href: href("/agency/calls"),
     },
   ];
   const onCount = channels.filter((c) => c.on).length;
@@ -346,6 +347,7 @@ export function LeadsInbox() {
   const trpc = useTRPC();
   const router = useRouter();
   const { repoId, role } = useAgency();
+  const href = useAgencyHref();
   const { campaignId } = useCampaignFilter();
 
   const [days, setDays] = useState<RangeValue>("30");
@@ -508,7 +510,7 @@ export function LeadsInbox() {
                 <TableRow
                   key={lead.id}
                   className="cursor-pointer text-[15px]"
-                  onClick={() => router.push(`/agency/${lead.id}`)}
+                  onClick={() => router.push(href(`/agency/${lead.id}`))}
                 >
                   <TableCell className="py-[18px] pl-6">
                     <div className="flex items-center gap-3">
@@ -517,7 +519,7 @@ export function LeadsInbox() {
                       </span>
                       <div className="min-w-0">
                         <Link
-                          href={`/agency/${lead.id}`}
+                          href={href(`/agency/${lead.id}`)}
                           className="font-semibold"
                           onClick={(event) => event.stopPropagation()}
                         >

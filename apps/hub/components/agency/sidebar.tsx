@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+// Home + Reports use the plain line icons (lucide), matching the other nav
+// items; the hub-local House/FileText are the filled two-tone variants.
+import { FileText, House } from "lucide-react";
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -17,10 +19,8 @@ import {
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
 import type { Feature } from "@workspace/trpc/lib/payment/plans";
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-import { signOut } from "@/lib/auth-client";
-import { getInitialsFromName } from "@/lib/utils/avatar";
+import { repoPath } from "@/lib/paths";
 import { useEntitlement } from "@/hooks/use-plans";
 
 import { AdsAlertCount } from "@/components/agency/ads-alerts";
@@ -29,156 +29,138 @@ import {
   useAdsProduct,
 } from "@/components/agency/ads-product";
 import { CampaignFilterSelect } from "@/components/agency/campaign-filter";
-import { useAgency } from "@/components/agency/use-agency";
-import { ViewSwitch } from "@/components/hub-view";
 import {
-  Blocks,
-  BookOpen,
+  ProjectNav,
+  type ProjectNavPage,
+} from "@/components/agency/project-nav";
+import { SITE_SETTINGS } from "@/components/agency/settings/site-settings";
+import { useAgency } from "@/components/agency/use-agency";
+import {
+  ArrowLeft,
   Building2,
   ChartColumn,
-  CreditCard,
-  Globe,
   HelpCircle,
   Inbox,
-  LogOut,
   Mail,
   Megaphone,
-  Settings,
-  type LucideProps,
+  PenLine,
 } from "@/components/icon";
-// Home + Reports use the plain line icons (lucide), matching the other nav
-// items; the hub-local House/FileText are the filled two-tone variants.
-import { FileText, House } from "lucide-react";
-import { NavPages } from "@/components/nav-pages";
+
+type NavPage = ProjectNavPage & { feature?: Feature };
 
 // Pages tied to a plan feature only show when the client's tier includes it.
-const overviewPages: {
-  title: string;
-  url: string;
-  icon: React.ComponentType<LucideProps>;
-  feature?: Feature;
-  badge?: React.ReactNode;
-  items?: {
-    title: string;
-    url: string;
-    match?: (pathname: string) => boolean;
-  }[];
-}[] = [
-  { title: "Home", url: "/", icon: House },
-  {
-    title: "Lead trackers",
-    url: "/agency",
-    icon: Inbox,
-    feature: "leads",
-    items: [
-      {
-        // Forms, bookings and hand-added leads all land here.
-        title: "All leads",
-        url: "/agency",
-        // The inbox and each lead's detail page.
-        match: (pathname) =>
-          pathname === "/agency" || /^\/agency\/\d+$/.test(pathname),
-      },
-      { title: "Booking", url: "/agency/booking" },
-      { title: "Calls", url: "/agency/calls" },
-    ],
-  },
-  {
-    title: "Marketing",
-    url: "/marketing",
-    icon: Megaphone,
-    feature: "ads",
-    badge: <AdsAlertCount />,
-  },
-  { title: "Analytics", url: "/analytics", icon: ChartColumn },
-  { title: "Reports", url: "/reports", icon: FileText, feature: "leads" },
-  { title: "Business Info", url: "/business-info", icon: Building2 },
-  {
-    title: "Newsletter",
-    url: "/newsletter",
-    icon: Mail,
-    feature: "newsletter",
-  },
-];
-
-const accountPages = [
-  { title: "Account", url: "/account", icon: Settings },
-  { title: "Integrations", url: "/integrations", icon: Blocks },
-  { title: "Origins", url: "/origins", icon: Globe },
-  { title: "Billing", url: "/billing", icon: CreditCard },
-  { title: "Guide", url: "/guide", icon: BookOpen },
-];
-
-const menuButtonClass =
-  "h-auto gap-3 rounded-[14px] px-3.5 py-2.5 text-[14.5px] font-medium hover:bg-sidebar-foreground/8 hover:text-sidebar-accent-foreground [&>svg]:size-[19px]";
+// Every agency page lives under its project: /p/[repoId]/...
+const overviewPages = (repoId: number, hasSite: boolean): NavPage[] => {
+  const path = (...segments: string[]) => repoPath(repoId, ...segments);
+  return [
+    { title: "Home", url: path(), icon: House, exact: true },
+    {
+      title: "Lead trackers",
+      url: path("agency"),
+      icon: Inbox,
+      feature: "leads",
+      items: [
+        {
+          // Forms, bookings and hand-added leads all land here.
+          title: "All leads",
+          url: path("agency"),
+          // The inbox and each lead's detail page.
+          match: (pathname) =>
+            pathname === path("agency") ||
+            new RegExp(`^${path("agency")}/\\d+$`).test(pathname),
+        },
+        { title: "Booking", url: path("agency", "booking") },
+        { title: "Calls", url: path("agency", "calls") },
+      ],
+    },
+    {
+      title: "Marketing",
+      url: path("marketing"),
+      icon: Megaphone,
+      feature: "ads",
+      badge: <AdsAlertCount />,
+    },
+    { title: "Analytics", url: path("analytics"), icon: ChartColumn },
+    {
+      title: "Reports",
+      url: path("reports"),
+      icon: FileText,
+      feature: "leads",
+    },
+    { title: "Business Info", url: path("business-info"), icon: Building2 },
+    {
+      title: "Newsletter",
+      url: path("newsletter"),
+      icon: Mail,
+      feature: "newsletter",
+    },
+    ...(hasSite
+      ? [{ title: "Website", url: path("website"), icon: PenLine }]
+      : []),
+  ];
+};
 
 export function AgencySidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const { repoId } = useAgency();
-  const { can } = useEntitlement(repoId);
+  const { repoId, repo, hasSite, role } = useAgency();
+  const { entitlement, can } = useEntitlement(repoId);
   const { product } = useAdsProduct();
-  const pages = overviewPages.filter(
+  const pages = overviewPages(repoId, hasSite).filter(
     (page) => !page.feature || can(page.feature)
   );
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader className="px-5 pt-6 pb-5">
-        <div className="flex items-center gap-3.5">
-          <img
-            src="/agency-icon.png"
-            alt="Ali Samadi"
-            className="size-11.5 shrink-0 object-cover"
-          />
-          <div>
-            <p className="text-sidebar-accent-foreground text-xl leading-none font-extrabold tracking-tight">
-              Client Hub
+      <SidebarHeader className="gap-0 px-2 pt-3 pb-2">
+        <div className="flex items-center gap-2 rounded-md px-1 py-1">
+          <Link
+            href="/"
+            title="All projects"
+            aria-label="All projects"
+            className="text-sidebar-foreground/60 hover:bg-sidebar-foreground/6 hover:text-sidebar-accent-foreground grid size-7 shrink-0 place-items-center rounded-md"
+          >
+            <ArrowLeft className="size-4" />
+          </Link>
+          <span className="bg-sidebar-accent-foreground text-sidebar grid size-7 shrink-0 place-items-center rounded-md text-[12px] font-bold uppercase">
+            {repo?.[0] ?? "P"}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sidebar-accent-foreground truncate text-[13px] leading-tight font-semibold">
+              {repo}
             </p>
-            <p className="text-sidebar-foreground/70 mt-1 text-[11.5px]">
-              Your leads and ads, one place
+            <p className="text-sidebar-foreground/60 truncate text-[11px] leading-tight">
+              {entitlement.label}
             </p>
           </div>
         </div>
-        <ViewSwitch />
       </SidebarHeader>
 
-      <SidebarContent className="px-1.5">
+      <SidebarContent className="gap-1">
         {can("ads") && <AdsProductSwitch />}
         {can("ads") && product === "search" && <CampaignFilterSelect />}
-        <NavPages label="Overview" pages={pages} />
-        <NavPages label="Account" pages={accountPages} />
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel className="text-sidebar-foreground/60 px-3 text-[11px] font-semibold tracking-[0.06em] uppercase">
-            Support
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <RequestDialog>
-                <SidebarMenuButton className={menuButtonClass}>
-                  <HelpCircle />
-                  <span>Contact Support</span>
-                </SidebarMenuButton>
-              </RequestDialog>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
+        <ProjectNav pages={pages} />
+        {role === "full-access" && (
+          <ProjectNav
+            label="Site settings"
+            pages={SITE_SETTINGS.map((setting) => ({
+              title: setting.title,
+              url: repoPath(repoId, "settings", setting.key),
+              icon: setting.icon,
+            }))}
+          />
+        )}
       </SidebarContent>
 
-      <SidebarFooter className="border-sidebar-border gap-1 border-t p-3.5">
-        <SidebarUser />
+      <SidebarFooter className="px-2 pb-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              className={menuButtonClass}
-              onClick={async () => {
-                await signOut();
-                window.location.assign("/sign-in");
-              }}
-            >
-              <LogOut />
-              <span>Logout</span>
-            </SidebarMenuButton>
+            <RequestDialog>
+              <SidebarMenuButton className="text-sidebar-foreground/70 hover:bg-sidebar-foreground/6 hover:text-sidebar-accent-foreground h-8 gap-2 rounded-md px-2 text-[13px] font-medium [&>svg]:size-4">
+                <HelpCircle />
+                <span>Contact support</span>
+              </SidebarMenuButton>
+            </RequestDialog>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
@@ -186,25 +168,3 @@ export function AgencySidebar({
     </Sidebar>
   );
 }
-
-const SidebarUser = () => {
-  const { data: user } = useCurrentUser();
-
-  if (!user?.user) return null;
-
-  return (
-    <div className="flex items-center gap-3 px-2.5 py-2 group-data-[collapsible=icon]:hidden">
-      <div className="bg-sidebar-foreground/12 text-sidebar-accent-foreground grid size-10 shrink-0 place-items-center rounded-full text-sm font-bold">
-        {getInitialsFromName(user.user.name || user.user.email)}
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-sidebar-accent-foreground truncate text-sm font-semibold">
-          {user.user.name}
-        </p>
-        <p className="text-sidebar-foreground/70 truncate text-xs">
-          {user.user.email}
-        </p>
-      </div>
-    </div>
-  );
-};

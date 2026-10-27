@@ -29,18 +29,21 @@ export function SessionSeed({
   return children;
 }
 
-/** agency.me, from the (hub) layout when it picks the agency UI. */
+/** agency.project({ repoId }), from the /p/[repoId] layout when it picks the agency UI. */
 export function AgencySeed({
   agency,
   children,
 }: {
-  agency: NonNullable<RouterOutputs["agency"]["me"]>;
+  agency: NonNullable<RouterOutputs["agency"]["project"]>;
   children: React.ReactNode;
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   useState(() => {
-    queryClient.setQueryData(trpc.agency.me.queryKey(), agency);
+    queryClient.setQueryData(
+      trpc.agency.project.queryKey({ repoId: agency.repoId }),
+      agency
+    );
   });
   return children;
 }

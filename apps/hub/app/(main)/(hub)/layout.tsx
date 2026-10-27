@@ -1,43 +1,30 @@
-import { cookies, headers } from "next/headers";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@workspace/ui/components/sidebar";
 
-import { createHttpCaller } from "@workspace/trpc/http-caller";
+import { HubContainer } from "@/components/hub-container";
+import { HubSidebar } from "@/components/website/sidebar";
 
-import { AgencySeed } from "@/components/query-seeds";
-import { HubViewProvider } from "@/components/hub-view";
-import { HUB_VIEW_COOKIE, resolveHubView } from "@/lib/hub-view";
-
-// The Hub has two UIs: the website one (@website) and the lead-generation
-// agency one (@agency). Each slot is a full tree with its own shell, sidebar
-// and pages; this is the only place that decides which one a user gets.
-//
-// Agency clients choose between the two with the sidebar switch (saved in the
-// hub-view cookie); everyone else only ever gets the website UI.
-export default async function HubLayout({
-  agency,
-  website,
+export default function HubLayout({
+  children,
 }: {
   children: React.ReactNode;
-  agency: React.ReactNode;
-  website: React.ReactNode;
 }) {
-  const caller = createHttpCaller(await headers());
-  const agencyClient = await caller.agency.me.query();
-  const eligible = Boolean(agencyClient);
-
-  const cookieValue = (await cookies()).get(HUB_VIEW_COOKIE)?.value;
-  const view = resolveHubView(eligible, cookieValue);
-
-  if (view === "website") {
-    return (
-      <HubViewProvider view="website" eligible={eligible}>
-        {website}
-      </HubViewProvider>
-    );
-  }
-
   return (
-    <HubViewProvider view="agency">
-      <AgencySeed agency={agencyClient!}>{agency}</AgencySeed>
-    </HubViewProvider>
+    <SidebarProvider
+      style={{ "--sidebar-width": "18.5rem" } as React.CSSProperties}
+    >
+      <HubSidebar />
+      <SidebarInset className="bg-shell min-h-screen">
+        <header className="bg-shell sticky top-0 z-30 flex h-12 shrink-0 items-center px-4 md:hidden">
+          <SidebarTrigger />
+        </header>
+        <main className="w-full flex-1">
+          <HubContainer>{children}</HubContainer>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

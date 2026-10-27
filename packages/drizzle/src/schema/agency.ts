@@ -165,66 +165,70 @@ export type AgencyLeadUploads = {
   won?: AgencyLeadUpload;
 };
 
-// One row per agency client: their single website plus Google Ads wiring.
-export const agencyClient = pgTable("agency_client", {
-  id: serial("id").primaryKey(),
+// One row per agency workspace, living inside one project (hub_project), plus
+// its Google Ads wiring. A user can own several (one per business).
+export const agencyClient = pgTable(
+  "agency_client",
+  {
+    id: serial("id").primaryKey(),
 
-  userId: text("user_id")
-    .notNull()
-    .unique()
-    .references(() => user.id, { onDelete: "cascade" }),
-  // The client's tenant id for leads/booking/entitlement. When the client has
-  // a website it's that hub_project.repoId; a website-less client gets a
-  // standalone synthetic id (>= 1e12). Opaque bigint key, no FK.
-  repoId: bigint("repo_id", { mode: "number" }).unique(),
+    // The owner. Not unique: one user can run several agency projects.
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // The project this agency lives in (hub_project.repoId) and the tenant id
+    // for leads/booking/entitlement. Opaque bigint key, no FK.
+    repoId: bigint("repo_id", { mode: "number" }).notNull().unique(),
 
-  // Public key the capture script posts with (f.js / b.js data-key).
-  formKey: text("form_key").notNull().unique(),
+    // Public key the capture script posts with (f.js / b.js data-key).
+    formKey: text("form_key").notNull().unique(),
 
-  // Hostnames the capture + booking scripts may run on (lead-source protection).
-  // The client manages this in the hub; empty/unset = nothing allowed in prod.
-  origins: jsonb("origins").$type<string[]>(),
+    // Hostnames the capture + booking scripts may run on (lead-source protection).
+    // The client manages this in the hub; empty/unset = nothing allowed in prod.
+    origins: jsonb("origins").$type<string[]>(),
 
-  // Per-client brand assets: resourceKey -> list of value options (business
-  // titles, descriptions, taglines, ...). Keys are driven by the hub's
-  // BUSINESS_RESOURCES config, so new lists need no schema change.
-  businessInfo: jsonb("business_info").$type<Record<string, string[]>>(),
+    // Per-client brand assets: resourceKey -> list of value options (business
+    // titles, descriptions, taglines, ...). Keys are driven by the hub's
+    // BUSINESS_RESOURCES config, so new lists need no schema change.
+    businessInfo: jsonb("business_info").$type<Record<string, string[]>>(),
 
-  // Planned ad campaigns: keyword categories with per-keyword metrics and the
-  // kept ad copy. Edited on the hub's Business Information pages.
-  adCampaigns: jsonb("ad_campaigns").$type<AdCampaign[]>(),
+    // Planned ad campaigns: keyword categories with per-keyword metrics and the
+    // kept ad copy. Edited on the hub's Business Information pages.
+    adCampaigns: jsonb("ad_campaigns").$type<AdCampaign[]>(),
 
-  // Client's trade, for the industry-specific starter negative list.
-  // Values match the trpc negative-lists INDUSTRIES; null = none.
-  industry: text("industry").$type<
-    "pest-control" | "handyman" | "barbershop" | "restaurant"
-  >(),
+    // Client's trade, for the industry-specific starter negative list.
+    // Values match the trpc negative-lists INDUSTRIES; null = none.
+    industry: text("industry").$type<
+      "pest-control" | "handyman" | "barbershop" | "restaurant"
+    >(),
 
-  // Which Google ads products this client runs; null = classic Search.
-  adsType: text("ads_type").$type<"search" | "lsa" | "both">(),
+    // Which Google ads products this client runs; null = classic Search.
+    adsType: text("ads_type").$type<"search" | "lsa" | "both">(),
 
-  // Client account under the agency MCC, digits only ("1234567890").
-  googleAdsCustomerId: text("google_ads_customer_id"),
-  // "customers/<id>/conversionActions/<id>" for the closed-deal import.
-  googleAdsConversionAction: text("google_ads_conversion_action"),
-  googleAdsActions: jsonb("google_ads_actions").$type<AgencyAdsActions>(),
-  // Monthly ad spend target for budget pacing; unset = no pacing shown.
-  googleAdsBudget: jsonb("google_ads_budget").$type<AgencyAdsBudget>(),
-  // Monday email with the week's numbers; the email's unsubscribe link clears it.
-  weeklyReport: boolean("weekly_report").notNull().default(true),
+    // Client account under the agency MCC, digits only ("1234567890").
+    googleAdsCustomerId: text("google_ads_customer_id"),
+    // "customers/<id>/conversionActions/<id>" for the closed-deal import.
+    googleAdsConversionAction: text("google_ads_conversion_action"),
+    googleAdsActions: jsonb("google_ads_actions").$type<AgencyAdsActions>(),
+    // Monthly ad spend target for budget pacing; unset = no pacing shown.
+    googleAdsBudget: jsonb("google_ads_budget").$type<AgencyAdsBudget>(),
+    // Monday email with the week's numbers; the email's unsubscribe link clears it.
+    weeklyReport: boolean("weekly_report").notNull().default(true),
 
-  // Working hours + meeting types for the booking widget; unset = booking off.
-  bookingSettings: jsonb("booking_settings").$type<AgencyBookingSettings>(),
+    // Working hours + meeting types for the booking widget; unset = booking off.
+    bookingSettings: jsonb("booking_settings").$type<AgencyBookingSettings>(),
 
-  // New-lead notification address; falls back to the owner's email.
-  leadNotifyEmail: text("lead_notify_email"),
+    // New-lead notification address; falls back to the owner's email.
+    leadNotifyEmail: text("lead_notify_email"),
 
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at")
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (t) => [index("idx_agency_client_user").on(t.userId)]
+);
 
 export const agencyLead = pgTable(
   "agency_lead",
@@ -336,7 +340,9 @@ export const agencyRateLimit = pgTable(
     count: integer("count").notNull().default(0),
   },
   (table) => ({
-    idxWindowStart: index("agency_rate_limit_window_start_idx").on(table.windowStart),
+    idxWindowStart: index("agency_rate_limit_window_start_idx").on(
+      table.windowStart
+    ),
   })
 );
 

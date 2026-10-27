@@ -21,7 +21,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useAgency } from "@/components/agency/use-agency";
+import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import { Plus } from "@/components/icon";
 
 // Phone calls and walk-ins don't come through the website form; logging them
@@ -31,6 +31,7 @@ export function NewLeadDialog() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { repoId } = useAgency();
+  const href = useAgencyHref();
   const [open, setOpen] = useState(false);
 
   const create = useMutation(
@@ -38,7 +39,7 @@ export function NewLeadDialog() {
       onSuccess: (lead) => {
         queryClient.invalidateQueries({ queryKey: trpc.agency.leads.pathKey() });
         setOpen(false);
-        router.push(`/agency/${lead.id}`);
+        router.push(href(`/agency/${lead.id}`));
       },
       onError: (error) => toast.error(error.message),
     })

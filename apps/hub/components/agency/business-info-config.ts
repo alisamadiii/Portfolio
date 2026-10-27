@@ -155,9 +155,13 @@ export interface BusinessStep {
   prompts?: PromptSpec[];
 }
 
-/** The overview lives at /business-info; every step has its own slug. */
-export function sectionUrl(key: string): string {
-  return `/business-info/${key}`;
+/** The overview lives at /p/[repoId]/business-info; every step has its own slug. */
+export function businessInfoUrl(repoId: number): string {
+  return `/p/${repoId}/business-info`;
+}
+
+export function sectionUrl(repoId: number, key: string): string {
+  return `${businessInfoUrl(repoId)}/${key}`;
 }
 
 export function stepFor(key: string): BusinessStep | undefined {

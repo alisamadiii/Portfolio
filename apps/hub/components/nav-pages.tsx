@@ -92,6 +92,8 @@ export function NavPages({
     url: string;
     icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     badge?: React.ReactNode;
+    /** Only active on this exact URL (a section root like a project's home). */
+    exact?: boolean;
     items?: SubPage[];
   }[];
 }) {
@@ -118,6 +120,7 @@ export function NavPages({
                   "hover:bg-sidebar-foreground/8 hover:text-sidebar-accent-foreground",
                   (pathname === item.url ||
                     (item.url !== "/" &&
+                      !item.exact &&
                       pathname.startsWith(`${item.url}/`))) &&
                     "bg-sidebar-accent text-sidebar-accent-foreground border-l-sidebar-ring hover:bg-sidebar-accent font-semibold"
                 )}
