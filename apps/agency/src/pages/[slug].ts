@@ -11,7 +11,7 @@ export const prerender = false;
 
 const API_URL = process.env.API_URL ?? "https://api.alisamadii.com";
 
-export const GET: APIRoute = async ({ params, redirect }) => {
+export const GET: APIRoute = async ({ params, redirect, rewrite }) => {
   const slug = params.slug;
   if (slug) {
     try {
@@ -23,9 +23,10 @@ export const GET: APIRoute = async ({ params, redirect }) => {
         if (url) return redirect(url, 307);
       }
     } catch {
-      // fall through to home on any resolver error
+      // fall through to the 404 page on any resolver error
     }
   }
-  // Unknown slug → home, keeps mistyped links from dead-ending.
-  return redirect("/", 302);
+  // Unknown slug → real 404 page (redirecting home made every bad URL a
+  // soft 404 for crawlers); the 404 page links back home.
+  return rewrite("/404");
 };

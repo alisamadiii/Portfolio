@@ -27,4 +27,4 @@ WORKDIR /app
 COPY --from=builder /app ./
 WORKDIR /app/apps/agency
 EXPOSE 3004
-CMD ["node", "./dist/server/entry.mjs"]
+CMD ["node", "./server.mjs"]

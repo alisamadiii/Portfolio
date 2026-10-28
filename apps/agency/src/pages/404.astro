@@ -1,0 +1,35 @@
+---
+// 404 — served for unmatched URLs (static) and unknown short-link slugs
+// (rewritten from [slug].ts) so missing pages return a real 404, not a
+// redirect to home (crawlers treat that as a soft 404).
+import MockupLayout from "../layouts/MockupLayout.astro";
+
+// On-demand so [slug].ts can `rewrite("/404")` to it (rewrites can't target
+// prerendered pages in the Node adapter).
+export const prerender = false;
+---
+
+<MockupLayout
+  title="Page Not Found — Ali Samadi Agency"
+  description="The page you were looking for doesn't exist or has moved."
+  robots="noindex, follow"
+>
+  <main id="top">
+    <section style="padding: 160px 0 120px;">
+      <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;">
+        <p class="eyebrow"><span></span>404</p>
+        <h1 class="hero-h1" style="margin:0;max-width:18ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
+          Page <span style="color:rgb(194,69,31);font-style:italic;">not found</span>
+        </h1>
+        <p style="margin:0;max-width:46ch;font-size:17px;line-height:1.6;color:rgb(107,102,93);">
+          This page doesn't exist or has moved. Try one of these instead.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:10px;">
+          <a href="/" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgb(252,132,100);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;box-shadow:rgba(252,132,100,0.32) 0px 8px 24px;">Back to home</a>
+          <a href="/services" style="display:inline-flex;align-items:center;min-height:52px;padding:0 22px;border-radius:11px;border:1px solid rgba(27,26,23,0.15);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;">Services</a>
+          <a href="/contact" style="display:inline-flex;align-items:center;min-height:52px;padding:0 22px;border-radius:11px;border:1px solid rgba(27,26,23,0.15);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;">Contact</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</MockupLayout>
