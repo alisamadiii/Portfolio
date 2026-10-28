@@ -28,6 +28,7 @@ import {
   Settings2,
   type LucideProps,
 } from "@/components/icon";
+import { AdminViewSwitch } from "@/components/shell/admin-view-switch";
 import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { InviteButton } from "@/components/shell/invite-button";
 import { User } from "@/components/user";
@@ -138,6 +139,10 @@ export function ShellHeader({
 
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
+        <AdminViewSwitch
+          repoId={repoId}
+          current={inAgency ? "agency" : "website"}
+        />
         <AiIntroDialog />
         <Button
           variant="ghost"

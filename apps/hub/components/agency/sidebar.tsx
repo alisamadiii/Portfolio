@@ -45,6 +45,7 @@ import {
   Megaphone,
   PenLine,
 } from "@/components/icon";
+import { AdminViewSwitch } from "@/components/shell/admin-view-switch";
 
 type NavPage = ProjectNavPage & { feature?: Feature };
 
@@ -134,6 +135,11 @@ export function AgencySidebar({
             </p>
           </div>
         </div>
+        <AdminViewSwitch
+          repoId={repoId}
+          current="agency"
+          className="mx-1 mt-2"
+        />
       </SidebarHeader>
 
       <SidebarContent className="gap-1">

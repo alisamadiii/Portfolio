@@ -1,8 +1,9 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
 
+import { isAdminUser } from "@/lib/authz-shared";
 import { getServerSession } from "@/lib/session-server";
 
 import { AgencySeed } from "@/components/query-seeds";
@@ -40,6 +41,10 @@ export default async function Layout({
       ? `/sign-in?redirect=${encodeURIComponent(returnTo)}`
       : "/sign-in";
   if (!session?.user) return redirect(signInUrl);
+
+  // Admins can force the website UI on an agency project (AdminViewSwitch).
+  const view = (await cookies()).get(`hub-view-${repoId}`)?.value;
+  if (view === "website" && isAdminUser(session.user)) return website;
 
   const caller = createHttpCaller(requestHeaders);
   const agencyProject = await caller.agency.project.query({ repoId });

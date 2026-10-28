@@ -1,4 +1,3 @@
-
 import { TRPCError } from "@trpc/server";
 import {
   and,
@@ -18,6 +17,9 @@ import {
 } from "drizzle-orm";
 import z from "zod";
 
+import { urls } from "@workspace/ui/lib/company";
+
+import { stripe } from "@workspace/trpc/lib/payment/stripe";
 import { db } from "@workspace/drizzle/pool";
 import {
   AGENCY_LEAD_CHANNEL_VALUES,
@@ -33,43 +35,31 @@ import {
   type CollaboratorRole,
 } from "@workspace/drizzle/schema";
 
-import { stripe } from "@workspace/trpc/lib/payment/stripe";
-import { urls } from "@workspace/ui/lib/company";
-
 import {
   adminProcedure,
   authenticatedProcedure,
   createTRPCRouter,
 } from "../init";
-import { isAdminUser, roleAtLeast } from "../lib/authz-shared";
-import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
-import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
-import { ensureStripeCustomer } from "./payments";
-import { planForPrice, pricesFor } from "../lib/payment/plans";
-import { ADS_TTL, cachedAds, invalidateAds, ttlForRange } from "../lib/agency/ads-cache";
+import { getAccountAlerts, wiredActions } from "../lib/agency/account-alerts";
+import {
+  ADS_TTL,
+  cachedAds,
+  invalidateAds,
+  ttlForRange,
+} from "../lib/agency/ads-cache";
 import { getAvailability } from "../lib/agency/booking";
 import {
   BOOKING_MINUTES,
-  MAX_RANGE_DAYS,
   bookingSettingsSchema,
   isValidSlot,
+  MAX_RANGE_DAYS,
 } from "../lib/agency/booking-slots";
-import {
-  BOOKING_SCOPES,
-  CALENDAR_SCOPE,
-  getConnectedAccount,
-} from "../lib/integrations";
-import {
-  deleteLeadMeeting,
-  moveBookingEvent,
-} from "../lib/integrations/calendar";
-import { getAccountAlerts, wiredActions } from "../lib/agency/account-alerts";
 import { budgetPacing } from "../lib/agency/budget-pacing";
 import {
-  EDITABLE_CATEGORIES,
-  MANAGED_TYPES,
   buildUpdate,
+  EDITABLE_CATEGORIES,
   findPreset,
+  MANAGED_TYPES,
   planPreset,
 } from "../lib/agency/conversion-presets";
 import {
@@ -78,7 +68,6 @@ import {
   syncConversionUploads,
 } from "../lib/agency/conversion-uploads";
 import { enrichAdClicks } from "../lib/agency/enrich-ad-clicks";
-import type { WeeklyReportData } from "../lib/agency/weekly-report";
 import { classifyLead } from "../lib/agency/lead-channel";
 import {
   INDUSTRIES,
@@ -89,6 +78,11 @@ import {
   type Industry,
   type NegativeListKey,
 } from "../lib/agency/negative-lists";
+import { normalizeOrigin } from "../lib/agency/origins";
+import type { WeeklyReportData } from "../lib/agency/weekly-report";
+import { isAdminUser, roleAtLeast } from "../lib/authz-shared";
+import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
+import { createStarterProject } from "../lib/cms/upload-project";
 import {
   addNegativeKeyword,
   applySharedNegativeList,
@@ -99,22 +93,32 @@ import {
   getLsaStats,
   getSearchTerms,
   getUploadHealth,
-  listCampaigns,
-  listLsaLeads,
-  listSharedNegativeSets,
   GoogleAdsError,
-  listConversionActionNames,
   isGoogleAdsConfigured,
+  listCampaigns,
+  listConversionActionNames,
   listConversionActions,
+  listLsaLeads,
   listManagedAccounts,
+  listSharedNegativeSets,
   normalizeCustomerId,
   removeConversionAction,
   setCampaignBudget,
   updateConversionAction,
   uploadConversion,
 } from "../lib/google-ads";
-import { createStarterProject } from "../lib/cms/upload-project";
-import { normalizeOrigin } from "../lib/agency/origins";
+import {
+  BOOKING_SCOPES,
+  CALENDAR_SCOPE,
+  getConnectedAccount,
+} from "../lib/integrations";
+import {
+  deleteLeadMeeting,
+  moveBookingEvent,
+} from "../lib/integrations/calendar";
+import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
+import { planForPrice, pricesFor } from "../lib/payment/plans";
+import { ensureStripeCustomer } from "./payments";
 
 // ─── Lead-generation agency ──────────────────────────────────────
 // Agency clients see the agency UI in the Hub: their one website, the leads
@@ -131,7 +135,10 @@ async function agencyRoleForClient(
   if (isAdminUser(user) || client.userId === user.id) return "full-access";
   if (!client.repoId) return null;
   const collaboration = await db.query.hubCollaborator.findFirst({
-    where: and(collaboratorMatchesUser(user), eq(hubCollaborator.repoId, client.repoId)),
+    where: and(
+      collaboratorMatchesUser(user),
+      eq(hubCollaborator.repoId, client.repoId)
+    ),
     columns: { role: true },
   });
   return collaboration?.role ?? null;
@@ -147,23 +154,34 @@ const agencyProcedure = authenticatedProcedure
       where: eq(agencyClient.repoId, input.repoId),
     });
     if (!client) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Agency client not found." });
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Agency client not found.",
+      });
     }
 
     const role = await agencyRoleForClient(user, client);
     if (!role) {
-      throw new TRPCError({ code: "FORBIDDEN", message: "No access to this account." });
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "No access to this account.",
+      });
     }
     // Every agency screen is built on leads; the plan catalog decides who has them.
     await requireFeature(user, input.repoId, "leads");
 
     // Found by repoId, so the website is linked here.
-    return next({ ctx: { ...ctx, client: { ...client, repoId: input.repoId }, role } });
+    return next({
+      ctx: { ...ctx, client: { ...client, repoId: input.repoId }, role },
+    });
   });
 
 const agencyWriteProcedure = agencyProcedure.use(async ({ next, ctx }) => {
   if (!roleAtLeast(ctx.role, "content-editor")) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "You have view-only access." });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You have view-only access.",
+    });
   }
   return next({ ctx });
 });
@@ -182,7 +200,12 @@ async function reportWonLead(
   lead: typeof agencyLead.$inferSelect
 ) {
   // valueCents == null (old rows): skipped until a value is entered; 0 uploads.
-  if (lead.status !== "won" || lead.valueCents == null || lead.conversionUploadedAt) return;
+  if (
+    lead.status !== "won" ||
+    lead.valueCents == null ||
+    lead.conversionUploadedAt
+  )
+    return;
   if (!client.googleAdsCustomerId || !client.googleAdsConversionAction) return;
   if (!isGoogleAdsConfigured()) return;
 
@@ -207,7 +230,12 @@ async function reportWonLead(
         conversionError: null,
         // The async verify pass confirms the records with this request id.
         adsUploads: sql`coalesce(${agencyLead.adsUploads}, '{}'::jsonb) || ${JSON.stringify(
-          { won: { at: new Date().toISOString(), ...(requestId && { requestId }) } }
+          {
+            won: {
+              at: new Date().toISOString(),
+              ...(requestId && { requestId }),
+            },
+          }
         )}::jsonb`,
       })
       .where(eq(agencyLead.id, lead.id));
@@ -222,7 +250,8 @@ async function reportWonLead(
 // Rows captured before channels existed are classified on read.
 const withChannel = <T extends typeof agencyLead.$inferSelect>(lead: T) => ({
   ...lead,
-  channel: lead.channel ?? classifyLead({ ...lead, siteHost: hostOf(lead.pageUrl) }),
+  channel:
+    lead.channel ?? classifyLead({ ...lead, siteHost: hostOf(lead.pageUrl) }),
 });
 
 const hostOf = (url: string | null) => {
@@ -238,7 +267,8 @@ const getLead = async (repoId: number, id: number) => {
   const lead = await db.query.agencyLead.findFirst({
     where: and(eq(agencyLead.id, id), eq(agencyLead.repoId, repoId)),
   });
-  if (!lead) throw new TRPCError({ code: "NOT_FOUND", message: "Lead not found." });
+  if (!lead)
+    throw new TRPCError({ code: "NOT_FOUND", message: "Lead not found." });
   return withChannel(lead);
 };
 
@@ -265,7 +295,10 @@ const leadsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       if (input.page === 1) {
-        await Promise.all([enrichAdClicks(ctx.client), syncConversionUploads(ctx.client)]);
+        await Promise.all([
+          enrichAdClicks(ctx.client),
+          syncConversionUploads(ctx.client),
+        ]);
       }
       const where = and(
         eq(agencyLead.repoId, ctx.client.repoId),
@@ -274,7 +307,9 @@ const leadsRouter = createTRPCRouter({
           ? sql`${agencyLead.adClick}->>'campaignId' = ${input.campaignId}`
           : undefined,
         // Spam stays out of the inbox unless asked for.
-        input.status ? eq(agencyLead.status, input.status) : ne(agencyLead.status, "spam"),
+        input.status
+          ? eq(agencyLead.status, input.status)
+          : ne(agencyLead.status, "spam"),
         input.channel ? sql`${channelExpr} = ${input.channel}` : undefined,
         input.search
           ? or(
@@ -305,45 +340,60 @@ const leadsRouter = createTRPCRouter({
 
   // Counts, won value and leads per day for a date range (inclusive, UTC).
   stats: agencyProcedure
-    .input(dateRange.extend({ campaignId: z.string().regex(/^\d+$/).optional() }))
+    .input(
+      dateRange.extend({ campaignId: z.string().regex(/^\d+$/).optional() })
+    )
     .query(async ({ ctx, input }) => {
-    await Promise.all([enrichAdClicks(ctx.client), syncConversionUploads(ctx.client)]);
-    const from = new Date(`${input.from}T00:00:00Z`);
-    const to = new Date(`${input.to}T00:00:00Z`);
-    to.setUTCDate(to.getUTCDate() + 1);
-
-    // Only leads whose ad click was matched to this campaign.
-    const campaignFilter = input.campaignId
-      ? sql`${agencyLead.adClick}->>'campaignId' = ${input.campaignId}`
-      : undefined;
-    const inRange = and(
-      eq(agencyLead.repoId, ctx.client.repoId),
-      campaignFilter,
-      gte(agencyLead.createdAt, from),
-      lt(agencyLead.createdAt, to)
-    );
-
-    const notSpam = and(inRange, ne(agencyLead.status, "spam"));
-    const wonInRange = and(
-      eq(agencyLead.repoId, ctx.client.repoId),
-      campaignFilter,
-      eq(agencyLead.status, "won"),
-      gte(agencyLead.wonAt, from),
-      lt(agencyLead.wonAt, to)
-    );
-    const campaignId = sql<string>`${agencyLead.adClick}->>'campaignId'`;
-    const keyword = sql<string>`${agencyLead.adClick}->>'keyword'`;
-    const landing = sql<string>`split_part(split_part(${agencyLead.landingPage}, '?', 1), '#', 1)`;
-
-    const [byChannelLeads, byChannelWon, byDayChannel, byCampaign, byKeyword, landingPages] =
       await Promise.all([
+        enrichAdClicks(ctx.client),
+        syncConversionUploads(ctx.client),
+      ]);
+      const from = new Date(`${input.from}T00:00:00Z`);
+      const to = new Date(`${input.to}T00:00:00Z`);
+      to.setUTCDate(to.getUTCDate() + 1);
+
+      // Only leads whose ad click was matched to this campaign.
+      const campaignFilter = input.campaignId
+        ? sql`${agencyLead.adClick}->>'campaignId' = ${input.campaignId}`
+        : undefined;
+      const inRange = and(
+        eq(agencyLead.repoId, ctx.client.repoId),
+        campaignFilter,
+        gte(agencyLead.createdAt, from),
+        lt(agencyLead.createdAt, to)
+      );
+
+      const notSpam = and(inRange, ne(agencyLead.status, "spam"));
+      const wonInRange = and(
+        eq(agencyLead.repoId, ctx.client.repoId),
+        campaignFilter,
+        eq(agencyLead.status, "won"),
+        gte(agencyLead.wonAt, from),
+        lt(agencyLead.wonAt, to)
+      );
+      const campaignId = sql<string>`${agencyLead.adClick}->>'campaignId'`;
+      const keyword = sql<string>`${agencyLead.adClick}->>'keyword'`;
+      const landing = sql<string>`split_part(split_part(${agencyLead.landingPage}, '?', 1), '#', 1)`;
+
+      const [
+        byChannelLeads,
+        byChannelWon,
+        byDayChannel,
+        byCampaign,
+        byKeyword,
+        landingPages,
+      ] = await Promise.all([
         db
           .select({ channel: channelExpr, count: count() })
           .from(agencyLead)
           .where(notSpam)
           .groupBy(sql`1`),
         db
-          .select({ channel: channelExpr, count: count(), valueCents: sum(agencyLead.valueCents) })
+          .select({
+            channel: channelExpr,
+            count: count(),
+            valueCents: sum(agencyLead.valueCents),
+          })
           .from(agencyLead)
           .where(wonInRange)
           .groupBy(sql`1`),
@@ -362,8 +412,13 @@ const leadsRouter = createTRPCRouter({
             campaignId,
             campaignName: sql<string>`max(${agencyLead.adClick}->>'campaignName')`,
             leads: count(),
-            won: sql<number>`count(*) filter (where ${agencyLead.status} = 'won')`.mapWith(Number),
-            wonValueCents: sql<number>`coalesce(sum(${agencyLead.valueCents}) filter (where ${agencyLead.status} = 'won'), 0)`.mapWith(Number),
+            won: sql<number>`count(*) filter (where ${agencyLead.status} = 'won')`.mapWith(
+              Number
+            ),
+            wonValueCents:
+              sql<number>`coalesce(sum(${agencyLead.valueCents}) filter (where ${agencyLead.status} = 'won'), 0)`.mapWith(
+                Number
+              ),
           })
           .from(agencyLead)
           .where(and(notSpam, sql`${campaignId} is not null`))
@@ -373,7 +428,9 @@ const leadsRouter = createTRPCRouter({
             keyword,
             matchType: sql<string>`max(${agencyLead.adClick}->>'matchType')`,
             leads: count(),
-            won: sql<number>`count(*) filter (where ${agencyLead.status} = 'won')`.mapWith(Number),
+            won: sql<number>`count(*) filter (where ${agencyLead.status} = 'won')`.mapWith(
+              Number
+            ),
           })
           .from(agencyLead)
           .where(and(notSpam, sql`${keyword} is not null`))
@@ -389,102 +446,113 @@ const leadsRouter = createTRPCRouter({
           .limit(10),
       ]);
 
-    const wonByChannel = new Map(byChannelWon.map((row) => [row.channel, row]));
-    const byChannel = byChannelLeads.map((row) => ({
-      channel: row.channel as (typeof AGENCY_LEAD_CHANNEL_VALUES)[number],
-      leads: row.count,
-      won: wonByChannel.get(row.channel)?.count ?? 0,
-      wonValueCents: Number(wonByChannel.get(row.channel)?.valueCents ?? 0),
-    }));
-    // Won deals whose lead came in before the range still belong to a channel.
-    for (const row of byChannelWon) {
-      if (!byChannel.some((c) => c.channel === row.channel)) {
-        byChannel.push({
-          channel: row.channel as (typeof AGENCY_LEAD_CHANNEL_VALUES)[number],
-          leads: 0,
-          won: row.count,
-          wonValueCents: Number(row.valueCents ?? 0),
-        });
-      }
-    }
-
-    // Bookings count by meeting time, not capture time; canceled ones drop out.
-    const bookingInRange = and(
-      eq(agencyLead.repoId, ctx.client.repoId),
-      campaignFilter,
-      eq(agencyLead.source, "booking"),
-      isNull(agencyLead.bookingCanceledAt),
-      gte(agencyLead.bookingAt, from),
-      lt(agencyLead.bookingAt, to)
-    );
-
-    const [byStatus, byDay, [won], [bookings], [adQualifiedRow]] = await Promise.all([
-      db
-        .select({ status: agencyLead.status, count: count() })
-        .from(agencyLead)
-        .where(inRange)
-        .groupBy(agencyLead.status),
-      db
-        .select({
-          date: sql<string>`to_char(${agencyLead.createdAt} at time zone 'UTC', 'YYYY-MM-DD')`,
-          count: count(),
-        })
-        .from(agencyLead)
-        .where(and(inRange, ne(agencyLead.status, "spam")))
-        .groupBy(sql`1`)
-        .orderBy(sql`1`),
-      // Won value counts by when the deal closed, not when the lead came in.
-      db
-        .select({ count: count(), valueCents: sum(agencyLead.valueCents) })
-        .from(agencyLead)
-        .where(wonInRange),
-      db
-        .select({
-          total: count(),
-          fromAds: sql<number>`count(*) filter (where ${channelExpr} = 'google_ads')`.mapWith(Number),
-          noShows: sql<number>`count(*) filter (where ${agencyLead.bookingOutcome} = 'no_show')`.mapWith(Number),
-        })
-        .from(agencyLead)
-        .where(bookingInRange),
-      db
-        .select({ count: count() })
-        .from(agencyLead)
-        .where(
-          and(
-            notSpam,
-            sql`${channelExpr} = 'google_ads'`,
-            inArray(agencyLead.status, ["qualified", "won"])
-          )
-        ),
-    ]);
-
-    const counts = Object.fromEntries(byStatus.map((row) => [row.status, row.count]));
-    const leads = byStatus
-      .filter((row) => row.status !== "spam")
-      .reduce((total, row) => total + row.count, 0);
-
-    return {
-      leads,
-      counts,
-      won: won?.count ?? 0,
-      wonValueCents: Number(won?.valueCents ?? 0),
-      byDay,
-      byChannel,
-      byDayChannel: byDayChannel.map((row) => ({
-        ...row,
+      const wonByChannel = new Map(
+        byChannelWon.map((row) => [row.channel, row])
+      );
+      const byChannel = byChannelLeads.map((row) => ({
         channel: row.channel as (typeof AGENCY_LEAD_CHANNEL_VALUES)[number],
-      })),
-      byCampaign,
-      byKeyword,
-      landingPages,
-      bookings: {
-        total: bookings?.total ?? 0,
-        fromAds: bookings?.fromAds ?? 0,
-        noShows: bookings?.noShows ?? 0,
-      },
-      adQualified: adQualifiedRow?.count ?? 0,
-    };
-  }),
+        leads: row.count,
+        won: wonByChannel.get(row.channel)?.count ?? 0,
+        wonValueCents: Number(wonByChannel.get(row.channel)?.valueCents ?? 0),
+      }));
+      // Won deals whose lead came in before the range still belong to a channel.
+      for (const row of byChannelWon) {
+        if (!byChannel.some((c) => c.channel === row.channel)) {
+          byChannel.push({
+            channel: row.channel as (typeof AGENCY_LEAD_CHANNEL_VALUES)[number],
+            leads: 0,
+            won: row.count,
+            wonValueCents: Number(row.valueCents ?? 0),
+          });
+        }
+      }
+
+      // Bookings count by meeting time, not capture time; canceled ones drop out.
+      const bookingInRange = and(
+        eq(agencyLead.repoId, ctx.client.repoId),
+        campaignFilter,
+        eq(agencyLead.source, "booking"),
+        isNull(agencyLead.bookingCanceledAt),
+        gte(agencyLead.bookingAt, from),
+        lt(agencyLead.bookingAt, to)
+      );
+
+      const [byStatus, byDay, [won], [bookings], [adQualifiedRow]] =
+        await Promise.all([
+          db
+            .select({ status: agencyLead.status, count: count() })
+            .from(agencyLead)
+            .where(inRange)
+            .groupBy(agencyLead.status),
+          db
+            .select({
+              date: sql<string>`to_char(${agencyLead.createdAt} at time zone 'UTC', 'YYYY-MM-DD')`,
+              count: count(),
+            })
+            .from(agencyLead)
+            .where(and(inRange, ne(agencyLead.status, "spam")))
+            .groupBy(sql`1`)
+            .orderBy(sql`1`),
+          // Won value counts by when the deal closed, not when the lead came in.
+          db
+            .select({ count: count(), valueCents: sum(agencyLead.valueCents) })
+            .from(agencyLead)
+            .where(wonInRange),
+          db
+            .select({
+              total: count(),
+              fromAds:
+                sql<number>`count(*) filter (where ${channelExpr} = 'google_ads')`.mapWith(
+                  Number
+                ),
+              noShows:
+                sql<number>`count(*) filter (where ${agencyLead.bookingOutcome} = 'no_show')`.mapWith(
+                  Number
+                ),
+            })
+            .from(agencyLead)
+            .where(bookingInRange),
+          db
+            .select({ count: count() })
+            .from(agencyLead)
+            .where(
+              and(
+                notSpam,
+                sql`${channelExpr} = 'google_ads'`,
+                inArray(agencyLead.status, ["qualified", "won"])
+              )
+            ),
+        ]);
+
+      const counts = Object.fromEntries(
+        byStatus.map((row) => [row.status, row.count])
+      );
+      const leads = byStatus
+        .filter((row) => row.status !== "spam")
+        .reduce((total, row) => total + row.count, 0);
+
+      return {
+        leads,
+        counts,
+        won: won?.count ?? 0,
+        wonValueCents: Number(won?.valueCents ?? 0),
+        byDay,
+        byChannel,
+        byDayChannel: byDayChannel.map((row) => ({
+          ...row,
+          channel: row.channel as (typeof AGENCY_LEAD_CHANNEL_VALUES)[number],
+        })),
+        byCampaign,
+        byKeyword,
+        landingPages,
+        bookings: {
+          total: bookings?.total ?? 0,
+          fromAds: bookings?.fromAds ?? 0,
+          noShows: bookings?.noShows ?? 0,
+        },
+        adQualified: adQualifiedRow?.count ?? 0,
+      };
+    }),
 
   create: agencyWriteProcedure
     .input(
@@ -541,7 +609,9 @@ const leadsRouter = createTRPCRouter({
         .update(agencyLead)
         .set({
           status,
-          ...(input.valueCents !== undefined && { valueCents: input.valueCents }),
+          ...(input.valueCents !== undefined && {
+            valueCents: input.valueCents,
+          }),
           ...(input.notes !== undefined && { notes: input.notes }),
           ...(becameWon && { wonAt: new Date() }),
           ...(leftWon && { wonAt: null }),
@@ -551,7 +621,9 @@ const leadsRouter = createTRPCRouter({
           ...((status === "qualified" || status === "won") &&
             !current.qualifiedAt && { qualifiedAt: new Date() }),
           ...(status === "lost" && !current.lostAt && { lostAt: new Date() }),
-          ...(input.lostReason !== undefined && { lostReason: input.lostReason }),
+          ...(input.lostReason !== undefined && {
+            lostReason: input.lostReason,
+          }),
         })
         .where(eq(agencyLead.id, current.id))
         .returning();
@@ -567,7 +639,10 @@ const leadsRouter = createTRPCRouter({
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
       const lead = await getLead(ctx.client.repoId, input.id);
-      await Promise.all([reportWonLead(ctx.client, lead), reportLeadStages(ctx.client, lead)]);
+      await Promise.all([
+        reportWonLead(ctx.client, lead),
+        reportLeadStages(ctx.client, lead),
+      ]);
       return getLead(ctx.client.repoId, input.id);
     }),
 });
@@ -594,14 +669,19 @@ const adminRouter = createTRPCRouter({
       .leftJoin(hubProject, eq(hubProject.repoId, agencyClient.repoId))
       .leftJoin(
         subscriptions,
-        eq(sql`${subscriptions.metadata} ->> 'repoId'`, sql`${agencyClient.repoId}::text`)
+        eq(
+          sql`${subscriptions.metadata} ->> 'repoId'`,
+          sql`${agencyClient.repoId}::text`
+        )
       )
       .orderBy(desc(agencyClient.createdAt))
       .then((rows) =>
         rows.map(({ subscriptionStatus, subscriptionPriceId, ...row }) => ({
           ...row,
           // The agency plan is what switches the client to the agency UI.
-          agencyPlanStatus: planForPrice(subscriptionPriceId)?.startsWith("agency:")
+          agencyPlanStatus: planForPrice(subscriptionPriceId)?.startsWith(
+            "agency:"
+          )
             ? subscriptionStatus
             : null,
         }))
@@ -623,7 +703,10 @@ const adminRouter = createTRPCRouter({
         .from(userTable)
         .where(
           input.query
-            ? or(ilike(userTable.email, pattern), ilike(userTable.name, pattern))
+            ? or(
+                ilike(userTable.email, pattern),
+                ilike(userTable.name, pattern)
+              )
             : undefined
         )
         .orderBy(desc(userTable.createdAt))
@@ -642,14 +725,23 @@ const adminRouter = createTRPCRouter({
         listManagedAccounts
       );
     } catch (error) {
-      throw new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
+      throw new TRPCError({
+        code: "BAD_GATEWAY",
+        message: errorMessage(error),
+      });
     }
     const used = await db
-      .select({ customerId: agencyClient.googleAdsCustomerId, email: userTable.email })
+      .select({
+        customerId: agencyClient.googleAdsCustomerId,
+        email: userTable.email,
+      })
       .from(agencyClient)
       .innerJoin(userTable, eq(userTable.id, agencyClient.userId));
     const usedBy = new Map(used.map((row) => [row.customerId, row.email]));
-    return accounts.map((account) => ({ ...account, usedBy: usedBy.get(account.id) ?? null }));
+    return accounts.map((account) => ({
+      ...account,
+      usedBy: usedBy.get(account.id) ?? null,
+    }));
   }),
 
   // Create an agency workspace on a project, or update one (by `id`). One user
@@ -681,10 +773,15 @@ const adminRouter = createTRPCRouter({
         });
       }
       const existing = input.id
-        ? await db.query.agencyClient.findFirst({ where: eq(agencyClient.id, input.id) })
+        ? await db.query.agencyClient.findFirst({
+            where: eq(agencyClient.id, input.id),
+          })
         : null;
       if (input.id && !existing) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Agency client not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Agency client not found.",
+        });
       }
 
       if (input.repoId) {
@@ -692,7 +789,10 @@ const adminRouter = createTRPCRouter({
           where: eq(hubProject.repoId, input.repoId),
         });
         if (!project) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Website not found." });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Website not found.",
+          });
         }
         const taken = await db.query.agencyClient.findFirst({
           where: eq(agencyClient.repoId, input.repoId),
@@ -738,11 +838,56 @@ const adminRouter = createTRPCRouter({
           .returning();
         return client!;
       }
+      const [client] = await db.insert(agencyClient).values(values).returning();
+      return client!;
+    }),
+
+  // Admin Website ⇄ Agency switch: whether the project has an agency workspace
+  // yet (switching to Agency without one creates it first).
+  adminView: adminProcedure
+    .input(z.object({ repoId: z.number().int().positive() }))
+    .query(async ({ input }) => {
+      const client = await db.query.agencyClient.findFirst({
+        where: eq(agencyClient.repoId, input.repoId),
+        columns: { id: true },
+      });
+      return { hasAgency: Boolean(client) };
+    }),
+
+  // Give a project an agency workspace from the admin switch. Idempotent; the
+  // owner is whoever connected the project (the admin when unknown).
+  enableForProject: adminProcedure
+    .input(z.object({ repoId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await db.query.agencyClient.findFirst({
+        where: eq(agencyClient.repoId, input.repoId),
+      });
+      if (existing) return existing;
+      const project = await db.query.hubProject.findFirst({
+        where: eq(hubProject.repoId, input.repoId),
+        columns: { githubConnectedUserId: true },
+      });
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Project not found.",
+        });
+      }
       const [client] = await db
         .insert(agencyClient)
-        .values(values)
+        .values({
+          userId: project.githubConnectedUserId ?? ctx.session.user.id,
+          repoId: input.repoId,
+          weeklyReport: false,
+        })
+        .onConflictDoNothing({ target: agencyClient.repoId })
         .returning();
-      return client!;
+      return (
+        client ??
+        (await db.query.agencyClient.findFirst({
+          where: eq(agencyClient.repoId, input.repoId),
+        }))!
+      );
     }),
 
   // Stripe Checkout link for the Launch plan ($300 setup + $1,200/mo). Paying
@@ -758,7 +903,8 @@ const adminRouter = createTRPCRouter({
       if (!prices) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: "Agency Launch prices are not set for this Stripe mode (lib/payment/plans.ts).",
+          message:
+            "Agency Launch prices are not set for this Stripe mode (lib/payment/plans.ts).",
         });
       }
       const [client] = await db
@@ -773,7 +919,10 @@ const adminRouter = createTRPCRouter({
         .where(eq(agencyClient.id, input.id))
         .limit(1);
       if (!client) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Agency client not found." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Agency client not found.",
+        });
       }
       const customerId = await ensureStripeCustomer({
         id: client.userId,
@@ -819,7 +968,10 @@ const adminRouter = createTRPCRouter({
       try {
         return await listConversionActions(input.customerId);
       } catch (error) {
-        throw new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
+        throw new TRPCError({
+          code: "BAD_GATEWAY",
+          message: errorMessage(error),
+        });
       }
     }),
 });
@@ -834,16 +986,24 @@ const conversionsProcedure = agencyProcedure.use(async ({ next, ctx }) => {
 });
 
 // Changing the client's Ads account is limited to people with full access.
-const conversionsManageProcedure = conversionsProcedure.use(async ({ next, ctx }) => {
-  if (ctx.role !== "full-access") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Only the account owner can change conversion actions." });
+const conversionsManageProcedure = conversionsProcedure.use(
+  async ({ next, ctx }) => {
+    if (ctx.role !== "full-access") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Only the account owner can change conversion actions.",
+      });
+    }
+    const customerId = ctx.client.googleAdsCustomerId;
+    if (!customerId || !isGoogleAdsConfigured()) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "No Google Ads account is linked yet.",
+      });
+    }
+    return next({ ctx: { ...ctx, customerId } });
   }
-  const customerId = ctx.client.googleAdsCustomerId;
-  if (!customerId || !isGoogleAdsConfigured()) {
-    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No Google Ads account is linked yet." });
-  }
-  return next({ ctx: { ...ctx, customerId } });
-});
+);
 
 const stageInput = z.enum(["lead", "booking", "qualified", "won"]);
 
@@ -909,15 +1069,33 @@ const conversionsRouter = createTRPCRouter({
     // Our own uploads, per stage: count and the latest one.
     const [uploads] = await db
       .select({
-        lead: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null and ${agencyLead.source} <> 'booking')`.mapWith(Number),
-        leadAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'lead' ->> 'at') filter (where ${agencyLead.source} <> 'booking')`,
+        lead: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null and ${agencyLead.source} <> 'booking')`.mapWith(
+          Number
+        ),
+        leadAt: sql<
+          string | null
+        >`max(${agencyLead.adsUploads} -> 'lead' ->> 'at') filter (where ${agencyLead.source} <> 'booking')`,
         // Bookings share the "lead" upload stage but report to their own action.
-        booking: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null and ${agencyLead.source} = 'booking')`.mapWith(Number),
-        bookingAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'lead' ->> 'at') filter (where ${agencyLead.source} = 'booking')`,
-        qualified: sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'qualified' ->> 'at' is not null)`.mapWith(Number),
-        qualifiedAt: sql<string | null>`max(${agencyLead.adsUploads} -> 'qualified' ->> 'at')`,
-        won: sql<number>`count(${agencyLead.conversionUploadedAt})`.mapWith(Number),
-        wonAt: sql<string | null>`max(${agencyLead.conversionUploadedAt})::text`,
+        booking:
+          sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'lead' ->> 'at' is not null and ${agencyLead.source} = 'booking')`.mapWith(
+            Number
+          ),
+        bookingAt: sql<
+          string | null
+        >`max(${agencyLead.adsUploads} -> 'lead' ->> 'at') filter (where ${agencyLead.source} = 'booking')`,
+        qualified:
+          sql<number>`count(*) filter (where ${agencyLead.adsUploads} -> 'qualified' ->> 'at' is not null)`.mapWith(
+            Number
+          ),
+        qualifiedAt: sql<
+          string | null
+        >`max(${agencyLead.adsUploads} -> 'qualified' ->> 'at')`,
+        won: sql<number>`count(${agencyLead.conversionUploadedAt})`.mapWith(
+          Number
+        ),
+        wonAt: sql<
+          string | null
+        >`max(${agencyLead.conversionUploadedAt})::text`,
       })
       .from(agencyLead)
       .where(eq(agencyLead.repoId, ctx.client.repoId));
@@ -929,8 +1107,14 @@ const conversionsRouter = createTRPCRouter({
       wired: wiredActions(ctx.client),
       uploads: {
         lead: { count: uploads?.lead ?? 0, lastAt: uploads?.leadAt ?? null },
-        booking: { count: uploads?.booking ?? 0, lastAt: uploads?.bookingAt ?? null },
-        qualified: { count: uploads?.qualified ?? 0, lastAt: uploads?.qualifiedAt ?? null },
+        booking: {
+          count: uploads?.booking ?? 0,
+          lastAt: uploads?.bookingAt ?? null,
+        },
+        qualified: {
+          count: uploads?.qualified ?? 0,
+          lastAt: uploads?.qualifiedAt ?? null,
+        },
         won: { count: uploads?.won ?? 0, lastAt: uploads?.wonAt ?? null },
       },
       canManage: ctx.role === "full-access",
@@ -942,16 +1126,24 @@ const conversionsRouter = createTRPCRouter({
     .input(z.object({ presetId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const preset = findPreset(input.presetId);
-      if (!preset) throw new TRPCError({ code: "NOT_FOUND", message: "Unknown preset." });
+      if (!preset)
+        throw new TRPCError({ code: "NOT_FOUND", message: "Unknown preset." });
       try {
         const existing = await listConversionActionNames(ctx.customerId);
         const plan = planPreset(preset, existing);
-        const created = await createConversionActions(ctx.customerId, plan.create);
+        const created = await createConversionActions(
+          ctx.customerId,
+          plan.create
+        );
         const wired = [
           ...plan.reuse,
-          ...plan.create.map((action, i) => ({ key: action.key, resourceName: created[i]! })),
+          ...plan.create.map((action, i) => ({
+            key: action.key,
+            resourceName: created[i]!,
+          })),
         ];
-        for (const { key, resourceName } of wired) await wireStage(ctx.client, key, resourceName);
+        for (const { key, resourceName } of wired)
+          await wireStage(ctx.client, key, resourceName);
         await invalidateAds(ctx.customerId, "conversions:");
         return { created: plan.create.length, reused: plan.reuse.length };
       } catch (error) {
@@ -999,10 +1191,16 @@ const conversionsRouter = createTRPCRouter({
           input.before as Parameters<typeof buildUpdate>[0],
           input.after as Parameters<typeof buildUpdate>[1]
         );
-        if (update) await updateConversionAction(ctx.customerId, input.resourceName, update);
+        if (update)
+          await updateConversionAction(
+            ctx.customerId,
+            input.resourceName,
+            update
+          );
         if (input.stage !== undefined) {
           await unwireAction(ctx.client, input.resourceName);
-          if (input.stage) await wireStage(ctx.client, input.stage, input.resourceName);
+          if (input.stage)
+            await wireStage(ctx.client, input.stage, input.resourceName);
         }
         await invalidateAds(ctx.customerId, "conversions:");
       } catch (error) {
@@ -1026,15 +1224,31 @@ const conversionsRouter = createTRPCRouter({
 
 // Only actions in this client's own account can be changed.
 function assertOwnAction(customerId: string, resourceName: string) {
-  if (!new RegExp(`^customers/${normalizeCustomerId(customerId)}/conversionActions/\\d+$`).test(resourceName)) {
-    throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown conversion action." });
+  if (
+    !new RegExp(
+      `^customers/${normalizeCustomerId(customerId)}/conversionActions/\\d+$`
+    ).test(resourceName)
+  ) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Unknown conversion action.",
+    });
   }
 }
 
 /** Stop reporting any stage to this action. */
-async function unwireAction(client: typeof agencyClient.$inferSelect, resourceName: string) {
+async function unwireAction(
+  client: typeof agencyClient.$inferSelect,
+  resourceName: string
+) {
   const wired = wiredActions(client);
-  for (const stage of ["lead", "booking", "qualified", "won", "calls"] as const) {
+  for (const stage of [
+    "lead",
+    "booking",
+    "qualified",
+    "won",
+    "calls",
+  ] as const) {
     if (wired[stage] === resourceName) await wireStage(client, stage, null);
   }
 }
@@ -1196,7 +1410,10 @@ const bookingRouter = createTRPCRouter({
       const settings = ctx.client.bookingSettings;
       const lead = await findBookingLead(ctx.client.repoId, input.leadId);
       if (lead.bookingCanceledAt) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "This booking was canceled." });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This booking was canceled.",
+        });
       }
       const atMs = Date.parse(input.at);
       if (
@@ -1205,7 +1422,10 @@ const bookingRouter = createTRPCRouter({
         atMs % SLOT_MS !== 0 ||
         !isValidSlot(new Date(atMs).toISOString(), settings, new Date())
       ) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "That time is not available." });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "That time is not available.",
+        });
       }
       const at = new Date(atMs);
       const end = new Date(atMs + SLOT_MS);
@@ -1224,7 +1444,10 @@ const bookingRouter = createTRPCRouter({
       } catch (error) {
         // Unique (repo_id, booking_at): that slot is already booked.
         if ((error as { code?: string })?.code === "23505") {
-          throw new TRPCError({ code: "CONFLICT", message: "That time was just taken." });
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "That time was just taken.",
+          });
         }
         throw error;
       }
@@ -1426,7 +1649,9 @@ export const agencyRouter = createTRPCRouter({
         await db
           .update(agencyClient)
           .set({
-            adCampaigns: campaigns.map((c) => (c.id === input.id ? updated : c)),
+            adCampaigns: campaigns.map((c) =>
+              c.id === input.id ? updated : c
+            ),
           })
           .where(eq(agencyClient.id, ctx.client.id));
         return updated;
@@ -1468,20 +1693,27 @@ export const agencyRouter = createTRPCRouter({
   ads: createTRPCRouter({
     // Null when this client has no Google Ads account linked yet.
     stats: agencyProcedure
-      .input(dateRange.extend({ campaignId: z.string().regex(/^\d+$/).optional() }))
+      .input(
+        dateRange.extend({ campaignId: z.string().regex(/^\d+$/).optional() })
+      )
       .query(async ({ ctx, input }) => {
         await requireFeature(ctx.session.user, ctx.client.repoId, "ads");
-        if (!ctx.client.googleAdsCustomerId || !isGoogleAdsConfigured()) return null;
+        if (!ctx.client.googleAdsCustomerId || !isGoogleAdsConfigured())
+          return null;
         try {
           const customerId = ctx.client.googleAdsCustomerId;
           return await cachedAds(
             customerId,
             `stats:${input.from}:${input.to}:${input.campaignId ?? "all"}`,
             ttlForRange(input.to),
-            () => getAdsStats(customerId, input.from, input.to, input.campaignId)
+            () =>
+              getAdsStats(customerId, input.from, input.to, input.campaignId)
           );
         } catch (error) {
-          throw new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
+          throw new TRPCError({
+            code: "BAD_GATEWAY",
+            message: errorMessage(error),
+          });
         }
       }),
 
@@ -1575,7 +1807,13 @@ export const agencyRouter = createTRPCRouter({
               customerId,
               `searchTerms:${input.from}:${input.to}:${input.campaignId ?? "all"}`,
               ttlForRange(input.to),
-              () => getSearchTerms(customerId, input.from, input.to, input.campaignId)
+              () =>
+                getSearchTerms(
+                  customerId,
+                  input.from,
+                  input.to,
+                  input.campaignId
+                )
             );
             return { rows, canManage: ctx.role === "full-access" };
           } catch (error) {
@@ -1617,8 +1855,11 @@ export const agencyRouter = createTRPCRouter({
         let applied: NegativeListKey[] = [];
         if (adsConnected) {
           try {
-            const sets = await cachedAds(customerId!, "negativeLists", ADS_TTL.live, () =>
-              listSharedNegativeSets(customerId!, SHARED_SET_PREFIX)
+            const sets = await cachedAds(
+              customerId!,
+              "negativeLists",
+              ADS_TTL.live,
+              () => listSharedNegativeSets(customerId!, SHARED_SET_PREFIX)
             );
             const names = new Set(sets.map((set) => set.name));
             applied = STARTER_NEGATIVE_LISTS.filter((list) =>
@@ -1664,41 +1905,47 @@ export const agencyRouter = createTRPCRouter({
 
     // Local Services Ads: leads and spend from the account's LSA campaign.
     lsa: createTRPCRouter({
-      stats: conversionsProcedure.input(dateRange).query(async ({ ctx, input }) => {
-        const customerId = ctx.client.googleAdsCustomerId;
-        if (!customerId || !isGoogleAdsConfigured()) return null;
-        try {
-          return await cachedAds(
-            customerId,
-            `lsa:stats:${input.from}:${input.to}`,
-            ttlForRange(input.to),
-            () => getLsaStats(customerId, input.from, input.to)
-          );
-        } catch (error) {
-          throw adsError(error);
-        }
-      }),
+      stats: conversionsProcedure
+        .input(dateRange)
+        .query(async ({ ctx, input }) => {
+          const customerId = ctx.client.googleAdsCustomerId;
+          if (!customerId || !isGoogleAdsConfigured()) return null;
+          try {
+            return await cachedAds(
+              customerId,
+              `lsa:stats:${input.from}:${input.to}`,
+              ttlForRange(input.to),
+              () => getLsaStats(customerId, input.from, input.to)
+            );
+          } catch (error) {
+            throw adsError(error);
+          }
+        }),
 
-      leads: conversionsProcedure.input(dateRange).query(async ({ ctx, input }) => {
-        const customerId = ctx.client.googleAdsCustomerId;
-        if (!customerId || !isGoogleAdsConfigured()) return null;
-        try {
-          return await cachedAds(
-            customerId,
-            `lsa:leads:${input.from}:${input.to}`,
-            ttlForRange(input.to),
-            () => listLsaLeads(customerId, input.from, input.to)
-          );
-        } catch (error) {
-          throw adsError(error);
-        }
-      }),
+      leads: conversionsProcedure
+        .input(dateRange)
+        .query(async ({ ctx, input }) => {
+          const customerId = ctx.client.googleAdsCustomerId;
+          if (!customerId || !isGoogleAdsConfigured()) return null;
+          try {
+            return await cachedAds(
+              customerId,
+              `lsa:leads:${input.from}:${input.to}`,
+              ttlForRange(input.to),
+              () => listLsaLeads(customerId, input.from, input.to)
+            );
+          } catch (error) {
+            throw adsError(error);
+          }
+        }),
     }),
 
     // Health checks across budget, conversions, ads and uploads. Empty when
     // nothing needs attention; null when no account is linked. Cached 15 min.
     // Health checks shared with the weekly report email (lib/agency/account-alerts).
-    alerts: conversionsProcedure.query(({ ctx }) => getAccountAlerts(ctx.client)),
+    alerts: conversionsProcedure.query(({ ctx }) =>
+      getAccountAlerts(ctx.client)
+    ),
 
     // Light list for the sidebar campaign filter. Null when no account linked.
     campaigns: agencyProcedure.query(async ({ ctx }) => {
@@ -1710,7 +1957,10 @@ export const agencyRouter = createTRPCRouter({
           listCampaigns(customerId)
         );
       } catch (error) {
-        throw new TRPCError({ code: "BAD_GATEWAY", message: errorMessage(error) });
+        throw new TRPCError({
+          code: "BAD_GATEWAY",
+          message: errorMessage(error),
+        });
       }
     }),
 
