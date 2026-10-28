@@ -290,8 +290,8 @@ function LeadChannels() {
           const tile = cn(
             "flex flex-col rounded-[14px] p-4 ring-1",
             channel.on
-              ? "bg-[#e6efe4]/50 ring-[#2f6b3f]/45"
-              : "bg-[#f6eedb]/50 ring-[#b8860b]/50"
+              ? "bg-[#e6efe4]/50 ring-[#2f6b3f]/45 dark:bg-[#2f6b3f]/12 dark:ring-[#5fae74]/30"
+              : "bg-[#f6eedb]/50 ring-[#b8860b]/50 dark:bg-[#b8860b]/10 dark:ring-[#d4a43a]/30"
           );
           const inner = (
             <>
@@ -299,8 +299,8 @@ function LeadChannels() {
                 className={cn(
                   "flex size-9 items-center justify-center rounded-full",
                   channel.on
-                    ? "bg-[#e6efe4] text-[#2f6b3f]"
-                    : "bg-[#f6eedb] text-[#8a5a0a]"
+                    ? "bg-[#e6efe4] text-[#2f6b3f] dark:bg-[#2f6b3f]/30 dark:text-[#8fd19e]"
+                    : "bg-[#f6eedb] text-[#8a5a0a] dark:bg-[#b8860b]/25 dark:text-[#e8c06a]"
                 )}
               >
                 <Icon className="size-4.5" />
@@ -311,8 +311,8 @@ function LeadChannels() {
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[11px] font-semibold",
                     channel.on
-                      ? "bg-[#e6efe4] text-[#2f6b3f]"
-                      : "bg-[#f6eedb] text-[#8a5a0a]"
+                      ? "bg-[#e6efe4] text-[#2f6b3f] dark:bg-[#2f6b3f]/30 dark:text-[#8fd19e]"
+                      : "bg-[#f6eedb] text-[#8a5a0a] dark:bg-[#b8860b]/25 dark:text-[#e8c06a]"
                   )}
                 >
                   {channel.on ? "On" : "Soon"}
