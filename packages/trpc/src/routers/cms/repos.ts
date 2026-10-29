@@ -19,6 +19,7 @@ import {
   installationForRepo,
   isGithubAppConfigured,
 } from "@workspace/trpc/lib/github-app";
+import { fetchFramePolicy, type FramePolicy } from "@workspace/trpc/lib/frame-policy";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
@@ -59,6 +60,31 @@ export const reposRouter = createTRPCRouter({
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);
       }
+    }),
+
+  /**
+   * Whether each accessible project's website can be iframed on the hub
+   * (`origin`), for the gallery thumbnails. Sites whose security headers
+   * (X-Frame-Options / CSP frame-ancestors) refuse framing get "blocked", so
+   * the card shows a placeholder instead of a blank frame. Only the caller's
+   * own projects' stored URLs are fetched.
+   */
+  framePolicies: collaboratorProcedure
+    .input(z.object({ origin: z.string().url() }))
+    .query(async ({ ctx, input }) => {
+      const rows = await db
+        .select({ projectId: hubProject.id, websiteUrl: hubProject.websiteUrl })
+        .from(hubProject)
+        .where(accessibleProjectsWhere(ctx));
+      const entries = await Promise.all(
+        rows
+          .filter((row) => row.websiteUrl && /^https?:\/\//i.test(row.websiteUrl))
+          .map(async (row) => [
+            row.projectId,
+            await fetchFramePolicy(row.websiteUrl!, new URL(input.origin).origin),
+          ] as const)
+      );
+      return Object.fromEntries(entries) as Record<string, FramePolicy>;
     }),
 
   /**

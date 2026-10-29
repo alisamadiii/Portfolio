@@ -280,6 +280,14 @@ export function LockKeyhole(props: LucideProps) {
   return <Lucide.LockKeyhole {...props} />;
 }
 
+export function ShieldCheck(props: LucideProps) {
+  return <Lucide.ShieldCheck {...props} />;
+}
+
+export function CloudOff(props: LucideProps) {
+  return <Lucide.CloudOff {...props} />;
+}
+
 export function LogOut(props: LucideProps) {
   return <Lucide.LogOut {...props} />;
 }

@@ -10,13 +10,20 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { FREE_PLAN, type Entitlement } from "@workspace/trpc/lib/payment/plans";
+import type { FramePolicy } from "@workspace/trpc/lib/frame-policy";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { repoPath } from "@/lib/paths";
 
 import { DeployButton } from "@/components/deploy/deploy-dialog";
 import { usePlans } from "@/hooks/use-plans";
-import { Globe, LockKeyhole, Sparkles } from "@/components/icon";
+import {
+  CloudOff,
+  Globe,
+  LockKeyhole,
+  ShieldCheck,
+  Sparkles,
+} from "@/components/icon";
 
 // Logical size the live site renders at inside the preview iframe before it's
 // scaled down to the card width. A desktop-ish viewport so previews look like
@@ -39,9 +46,43 @@ type Site = {
   status: { up: boolean };
 };
 
+// Card face when the site can't be iframed: its security headers refuse
+// framing (blocked) or it didn't answer (unreachable).
+const PreviewNotice = ({
+  url,
+  policy,
+}: {
+  url: string;
+  policy: "blocked" | "unreachable";
+}) => {
+  const Icon = policy === "blocked" ? ShieldCheck : CloudOff;
+  return (
+    <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+      <span className="bg-background/70 grid size-10 place-items-center rounded-full">
+        <Icon className="size-5" />
+      </span>
+      <p className="text-foreground/80 truncate text-[13px] font-semibold">
+        {hostOf(url)}
+      </p>
+      <p className="text-[11.5px] leading-snug">
+        {policy === "blocked"
+          ? "Preview hidden by the site's security settings"
+          : "Site didn't respond"}
+      </p>
+    </div>
+  );
+};
+
 // Scaled, non-interactive live preview of the site. Measures its own width and
 // scales a fixed FRAME_W×FRAME_H iframe to fit, so it reads like a thumbnail.
-const PreviewFrame = ({ url }: { url: string | null }) => {
+// The iframe only mounts once the server confirmed the site allows framing.
+const PreviewFrame = ({
+  url,
+  policy,
+}: {
+  url: string | null;
+  policy: FramePolicy | undefined;
+}) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
 
@@ -60,7 +101,9 @@ const PreviewFrame = ({ url }: { url: string | null }) => {
       ref={boxRef}
       className="bg-accent pointer-events-none relative aspect-[16/10] overflow-hidden"
     >
-      {url && scale > 0 ? (
+      {url && (policy === "blocked" || policy === "unreachable") ? (
+        <PreviewNotice url={url} policy={policy} />
+      ) : url && policy === "frameable" && scale > 0 ? (
         <iframe
           src={url}
           title="preview"
@@ -76,6 +119,8 @@ const PreviewFrame = ({ url }: { url: string | null }) => {
             transform: `scale(${scale})`,
           }}
         />
+      ) : url && !policy ? (
+        <Skeleton className="h-full w-full rounded-none" />
       ) : (
         <div className="text-muted-foreground/50 grid h-full place-items-center">
           <Globe className="size-8" />
@@ -132,10 +177,12 @@ const ProjectCard = ({
   project,
   site,
   entitlement,
+  policy,
 }: {
   project: Project;
   site?: Site;
   entitlement: Entitlement;
+  policy: FramePolicy | undefined;
 }) => {
   const url = project.websiteUrl ?? null;
   return (
@@ -143,7 +190,7 @@ const ProjectCard = ({
       href={repoPath(project.projectId)}
       className="bg-card hover:border-foreground/20 group flex flex-col overflow-hidden rounded-lg border transition"
     >
-      <PreviewFrame url={url} />
+      <PreviewFrame url={url} policy={policy} />
       <div className="flex items-center gap-2 px-4 py-3">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 truncate text-sm font-semibold">
@@ -178,10 +225,12 @@ const AgencyProjectCard = ({
   project,
   site,
   entitlement,
+  policy,
 }: {
   project: Project;
   site?: Site;
   entitlement: Entitlement;
+  policy: FramePolicy | undefined;
 }) => {
   const url = project.websiteUrl ?? null;
   // "Agency · Launch" → "Launch"
@@ -192,7 +241,7 @@ const AgencyProjectCard = ({
       className="group flex flex-col overflow-hidden rounded-lg bg-[#141210] text-white shadow-[0_18px_50px_-20px_rgba(252,132,100,0.55)] ring-1 ring-white/10 transition hover:ring-[#fc8464]/50"
     >
       <div className="m-2 mb-0 overflow-hidden rounded-md ring-1 ring-white/10">
-        <PreviewFrame url={url} />
+        <PreviewFrame url={url} policy={policy} />
       </div>
       <div className="flex items-center gap-2 px-4 py-3">
         <div className="min-w-0 flex-1">
@@ -252,6 +301,30 @@ export function ProjectGallery() {
 
   const plans = usePlans();
 
+  // Which sites refuse to be iframed here (security headers); checked
+  // server-side since the browser hides why a cross-origin frame stays blank.
+  const framePolicyQuery = useQuery(
+    trpc.cms.repos.framePolicies.queryOptions(
+      {
+        origin:
+          typeof window === "undefined"
+            ? "https://hub.alisamadii.com"
+            : window.location.origin,
+      },
+      { enabled: !!user && projects.length > 0, staleTime: 30 * 60 * 1000 }
+    )
+  );
+  // Unknown (check failed, or a URL the server skipped) falls back to the
+  // plain iframe rather than a skeleton that never resolves.
+  const policyFor = (p: Project): FramePolicy | undefined =>
+    !p.websiteUrl
+      ? undefined
+      : framePolicyQuery.isError
+        ? "frameable"
+        : framePolicyQuery.data
+          ? (framePolicyQuery.data[p.projectId] ?? "frameable")
+          : undefined;
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -289,6 +362,7 @@ export function ProjectGallery() {
                 project={p}
                 site={siteFor(p)}
                 entitlement={entitlement}
+                policy={policyFor(p)}
               />
             );
           })}
