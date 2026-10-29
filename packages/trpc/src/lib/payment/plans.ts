@@ -18,7 +18,6 @@ const price = (live: string, sandbox: string) => (IS_PROD ? live : sandbox);
 // ─── Features ───────────────────────────────────────────────────
 
 export const FEATURES = {
-  domain: "Custom domain",
   emails: "Emails",
   analytics: "Analytics",
   speed: "Speed",
@@ -56,7 +55,6 @@ type TierDef = {
 };
 
 const WEBSITE_PAID_FEATURES = [
-  "domain",
   "emails",
   "analytics",
   "speed",

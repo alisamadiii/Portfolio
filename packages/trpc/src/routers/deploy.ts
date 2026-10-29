@@ -12,15 +12,9 @@ import {
   finalizeUploadProject,
   reserveUploadProject,
 } from "../lib/cms/upload-project";
-import { getImport } from "../lib/content-pilot";
 import { provisionProjectEmails } from "../lib/usesend-provision";
 import { checkGithubRepoFramework } from "../lib/detect-framework";
-import {
-  HOSTING_VALUES,
-  type Hosting,
-  isExternalHosting,
-  normalizeWebsiteUrl,
-} from "../lib/hosting";
+import { normalizeWebsiteUrl } from "../lib/website-url";
 import { createOctokitInstance } from "../lib/cms/octokit";
 import {
   appJwt,
@@ -62,8 +56,7 @@ async function upsertProject(
     defaultBranch: string;
     updatedAt: string | null;
   },
-  websiteUrl?: string | null,
-  hosting?: Hosting
+  websiteUrl?: string | null
 ) {
   const [existing] = await db
     .select({
@@ -91,7 +84,6 @@ async function upsertProject(
     // the project stays invisible (every listing and getToken filter hidden).
     hidden: false,
     ...(websiteUrl ? { websiteUrl } : {}),
-    ...(hosting ? { hosting } : {}),
   };
   if (existing) {
     await db
@@ -364,15 +356,13 @@ export const deployRouter = createTRPCRouter({
         }));
     }),
 
-  // GitHub source: link a repo. Same hosting as uploads: the pilot builds every
-  // publish and serves it, so websiteUrl is the pilot live URL (domains are set
-  // later in the Domain panel). Only static sites get in, checked BEFORE save.
+  // GitHub source: link a repo. The live site is hosted elsewhere (the client's
+  // Netlify); websiteUrl is its optional address. Only static sites get in,
+  // checked BEFORE save.
   importGithub: authenticatedProcedure
     .input(
       z.object({
         repoFullName: z.string().min(1),
-        // The live site stays on another host (push-only publish).
-        hosting: z.enum(HOSTING_VALUES).optional(),
         websiteUrl: z.string().trim().max(255).optional(),
       })
     )
@@ -400,22 +390,17 @@ export const deployRouter = createTRPCRouter({
       if (!check.ok) {
         throw new TRPCError({ code: "BAD_REQUEST", message: check.message });
       }
-      // The importer becomes the project owner, so they choose the hosting.
-      const hosting = input.hosting ?? "content-pilot";
-      let websiteUrl: string | null;
-      if (isExternalHosting(hosting)) {
-        websiteUrl = normalizeWebsiteUrl(input.websiteUrl ?? "");
+      let websiteUrl: string | null = null;
+      if (input.websiteUrl) {
+        websiteUrl = normalizeWebsiteUrl(input.websiteUrl);
         if (!websiteUrl) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Enter the live website, e.g. www.example.com",
           });
         }
-      } else {
-        websiteUrl =
-          (await getImport(ghRepo.id).catch(() => null))?.liveUrl ?? null;
       }
-      await upsertProject(userId, ghRepo, websiteUrl, hosting);
+      await upsertProject(userId, ghRepo, websiteUrl);
       return { repo: ghRepo.repo, repoId: ghRepo.id };
     }),
 

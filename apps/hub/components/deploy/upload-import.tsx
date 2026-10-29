@@ -247,8 +247,8 @@ export const UploadImport = ({
       <DialogHeader>
         <DialogTitle>Upload a folder or zip</DialogTitle>
         <DialogDescription>
-          Uploaded projects get an always-on live site hosted by us, plus the
-          same AI editing canvas. Publish updates your live site instantly.
+          Uploaded projects get the same AI editing canvas for previewing
+          changes. They aren't hosted or deployed anywhere.
         </DialogDescription>
       </DialogHeader>
 

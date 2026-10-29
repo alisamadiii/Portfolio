@@ -20,23 +20,10 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { Github } from "@workspace/ui/icons/social";
 
 import { useTRPC } from "@workspace/trpc/client";
-import {
-  HOSTING_LABELS,
-  HOSTING_VALUES,
-  type Hosting,
-  isExternalHosting,
-} from "@workspace/trpc/lib/hosting";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { FolderUp, LockKeyhole, Plus } from "@/components/icon";
@@ -280,7 +267,6 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [repo, setRepo] = useState<Repo | null>(null);
-  const [hosting, setHosting] = useState<Hosting>("content-pilot");
   const [websiteUrl, setWebsiteUrl] = useState("");
 
   const importMutation = useMutation(
@@ -299,9 +285,7 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
     return <RepoPicker title="Import from GitHub" onPick={setRepo} />;
   }
 
-  const external = isExternalHosting(hosting);
-  const canImport =
-    !importMutation.isPending && (!external || websiteUrl.trim().length > 0);
+  const canImport = !importMutation.isPending;
 
   return (
     <div>
@@ -312,45 +296,18 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
 
       <div className="mt-4 space-y-3">
         <div className="space-y-1.5">
-          <Label>Where is the live site hosted?</Label>
-          <Select
-            value={hosting}
-            onValueChange={(value) =>
-              setHosting((value as Hosting) ?? "content-pilot")
-            }
-          >
-            <SelectTrigger className="h-9 w-full">
-              <SelectValue>
-                {(v) =>
-                  v === "other" ? "Other" : HOSTING_LABELS[v as Hosting]
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {HOSTING_VALUES.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {value === "other" ? "Other" : HOSTING_LABELS[value]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Live website (optional)</Label>
+          <Input
+            value={websiteUrl}
+            placeholder="www.example.com"
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+          />
         </div>
-        {external && (
-          <div className="space-y-1.5">
-            <Label>Live website</Label>
-            <Input
-              value={websiteUrl}
-              placeholder="www.example.com"
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-            />
-          </div>
-        )}
       </div>
 
       <p className="text-muted-foreground mt-4 text-[13px]">
-        {external
-          ? `Every publish pushes the changes to GitHub and ${HOSTING_LABELS[hosting]} deploys them. It must be an Astro, Vite, or plain HTML site.`
-          : "We host the site for you. It must be an Astro, Vite, or plain HTML site. Every publish builds it and pushes the changes to GitHub."}
+        Every publish pushes the changes to GitHub and your host (e.g.
+        Netlify) deploys them. It must be an Astro, Vite, or plain HTML site.
       </p>
       <div className="mt-6 flex items-center justify-between">
         <Button variant="ghost" onClick={() => setRepo(null)}>
@@ -362,8 +319,7 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
           onClick={() =>
             importMutation.mutate({
               repoFullName: repo.fullName,
-              hosting,
-              websiteUrl,
+              websiteUrl: websiteUrl.trim() || undefined,
             })
           }
         >

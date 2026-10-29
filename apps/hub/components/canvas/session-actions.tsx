@@ -18,7 +18,6 @@ import {
 import { Button } from "@workspace/ui/components/button";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { HOSTING_LABELS, isExternalHosting } from "@workspace/trpc/lib/hosting";
 
 import { roleAtLeast } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
@@ -40,7 +39,7 @@ import { Loader2, UploadCloud } from "@/components/icon";
 export function SessionActions() {
   const { repoId, session, editToken, noteSessionEnded, onDefaultBranch } =
     useCanvasEditor();
-  const { myRole } = useRepo();
+  const { myRole, source } = useRepo();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const canPublish = (myRole ?? "full-access") === "full-access";
   const trpc = useTRPC();
@@ -57,22 +56,12 @@ export function SessionActions() {
       onSuccess: (result) => {
         noteSessionEnded(result.merged ? "published" : "closed");
         invalidateSession();
-        // The toolbar's Live site button starts polling the queued build.
-        queryClient.invalidateQueries({
-          queryKey: trpc.cms.previewSession.liveSite.queryOptions({ repoId })
-            .queryKey,
-        });
-        const host = isExternalHosting(result.hosting)
-          ? HOSTING_LABELS[result.hosting]
-          : null;
         toast.success(
           result.merged
-            ? host
-              ? `Published! Changes pushed to GitHub. ${host} will deploy them.`
-              : "Published! Building your site now."
-            : result.building
-              ? "Nothing new to publish. Building your site now."
-              : "Nothing to publish. Session closed."
+            ? source === "upload"
+              ? "Published."
+              : "Published! Changes pushed to GitHub."
+            : "Nothing to publish. Session closed."
         );
       },
       // PAYMENT_REQUIRED opens the purchase dialog instead of a toast.

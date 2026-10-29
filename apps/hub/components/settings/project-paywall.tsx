@@ -16,10 +16,6 @@ import { LockKeyhole } from "@/components/icon";
 
 // Headline per feature, so the lock screen sells what's behind it.
 const PITCH: Record<Feature, { title: string; body: string }> = {
-  domain: {
-    title: "Put your website on your own domain",
-    body: "Connect yourbusiness.com with SSL handled for you, so customers find you at an address they trust.",
-  },
   emails: {
     title: "Email from your own domain",
     body: "Send and track every message your website sends, from an address like hello@yourbusiness.com.",

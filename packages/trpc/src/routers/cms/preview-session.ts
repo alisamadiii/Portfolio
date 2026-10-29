@@ -17,12 +17,10 @@ import {
   createPreviewSession,
   getPreviewSession,
   listLivePreviewSessions,
-  getImport,
   publishPreviewSession,
   resetPreviewSession,
   type PreviewSession,
 } from "@workspace/trpc/lib/content-pilot";
-import { isExternalHosting, parseHosting } from "@workspace/trpc/lib/hosting";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
@@ -71,15 +69,6 @@ const deleteBranchRef = async (
     .catch(() => {
       // Branch may never have been pushed (no commits) — nothing to delete.
     });
-};
-
-const projectHosting = async (repoId: number) => {
-  const [project] = await db
-    .select({ hosting: hubProject.hosting })
-    .from(hubProject)
-    .where(eq(hubProject.repoId, repoId))
-    .limit(1);
-  return parseHosting(project?.hosting);
 };
 
 const projectDefaultBranch = async (repoId: number) => {
@@ -287,27 +276,6 @@ export const previewSessionRouter = createTRPCRouter({
   }),
 
   /**
-   * The live site: its URL and the latest build (every publish queues one on
-   * content-pilot; static output only, served from the built dist/). Null
-   * when the pilot is unreachable, so the header just hides the chip.
-   */
-  liveSite: cmsProcedure.query(async ({ ctx }) => {
-    const hosting = await projectHosting(ctx.repoId);
-    // Hosted elsewhere: no content-pilot live site or builds to report.
-    if (isExternalHosting(hosting)) {
-      return { hosting, liveUrl: null, live: false, build: null };
-    }
-    const status = await getImport(ctx.repoId).catch(() => null);
-    if (!status) return null;
-    return {
-      hosting,
-      liveUrl: status.liveUrl,
-      live: status.live ?? false,
-      build: status.build ?? null,
-    };
-  }),
-
-  /**
    * Branches the client can preview: the default branch first, then every
    * named branch on GitHub (preview/* hidden). Fetched fresh, not from the
    * repo snapshot cache — the list changes on every create/publish.
@@ -455,15 +423,9 @@ export const previewSessionRouter = createTRPCRouter({
       const session = await sessionForRepo(ctx.repoId, input.sessionId);
 
       // Throws CONFLICT when production moved under the session (the pilot
-      // restores the session branch, so nothing is lost).
-      // Also queues the live-site build on the pilot (GitHub projects are
-      // pushed first). The header's live-site chip tracks the build.
-      // Externally hosted (Netlify, Vercel, Cloudflare…): push only, their
-      // host deploys. No content-pilot build.
-      const hosting = await projectHosting(ctx.repoId);
-      const { sha, changed, build } = await publishPreviewSession(session.id, {
-        liveBuild: !isExternalHosting(hosting),
-      });
+      // restores the session branch, so nothing is lost). The client's host
+      // (Netlify) deploys the pushed commit.
+      const { sha, changed } = await publishPreviewSession(session.id);
 
       await closePreviewSession(session.id, "published");
       if (ctx.source === "upload") {
@@ -477,6 +439,6 @@ export const previewSessionRouter = createTRPCRouter({
         const token = requireGithubToken(ctx);
         await deleteBranchRef(token, ctx.owner, ctx.repo, session.branch);
       }
-      return { merged: changed, sha, building: !!build, hosting };
+      return { merged: changed, sha };
     }),
 });

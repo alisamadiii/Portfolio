@@ -127,7 +127,7 @@ export const hubConfig = pgTable(
 export const hubProject = pgTable(
   "hub_project",
   {
-    id: serial("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     // GitHub's numeric repo id for source='github'; a synthetic id >= 1e12 for
     // uploaded projects (no GitHub repo) — hence bigint.
     repoId: bigint("repo_id", { mode: "number" }).notNull(),
@@ -175,29 +175,12 @@ export const hubProject = pgTable(
     // set via the Analytics tab.
     gaPropertyId: text("ga_property_id"),
     gaConnectedUserId: text("ga_connected_user_id"),
-    // The project's live website URL, e.g. "https://acme.com". Shown across the
-    // hub (thumbnail preview, PageSpeed, suggested sending domain) and used as
-    // the canvas/SEO base URL. Set at import (add-project form) or directly in
-    // the DB.
+    // The client's live website URL, e.g. "https://acme.com" (hosted on their
+    // own Netlify etc.; the hub only previews + publishes). Shown across the
+    // hub (thumbnail preview, PageSpeed, suggested sending domain), used as the
+    // canvas/SEO base URL and auto-allowed for the embed scripts. Set at import
+    // or in Settings > Domain.
     websiteUrl: text("website_url"),
-    // Where the live website is served. 'content-pilot' (default): every publish
-    // builds the site on content-pilot and serves dist/. Anything else
-    // ('netlify' | 'vercel' | 'cloudflare' | 'other', GitHub projects only):
-    // publish just squashes + pushes to GitHub and that host deploys; no
-    // content-pilot build, live site or domains. Admin-set.
-    hosting: text("hosting").notNull().default("content-pilot"),
-    // ── Content Pilot hosted domains ──
-    // Free pick-a-name subdomain slug, e.g. "acme" -> acme.<preview wildcard>.
-    // content-pilot holds the serving map; this is the UI/orchestration state.
-    freeSubdomain: text("free_subdomain"),
-    // Customer-owned custom domain (full host, e.g. "www.client.com"),
-    // present from Add onward; status says pending vs live.
-    customDomain: text("custom_domain"),
-    // 'pending' (Cloudflare hostname created, waiting on the customer's CNAME)
-    // or 'active' (verified; pilot mapping + websiteUrl written).
-    customDomainStatus: text("custom_domain_status"),
-    // Cloudflare custom-hostname id for status polls and deletes.
-    customDomainCfId: text("custom_domain_cf_id"),
     // Hostnames the project's embed scripts (lead form / booking / contact) may
     // run on. One list per project, managed from both the website Domain card and
     // the agency settings card. Bare hostnames, www-insensitive; empty/unset =

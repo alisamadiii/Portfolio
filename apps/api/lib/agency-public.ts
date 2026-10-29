@@ -63,18 +63,12 @@ import { hostOf, isOriginAllowed } from "@workspace/trpc/lib/agency/origins";
 const withoutWww = (host: string) => host.replace(/^www\./, "");
 
 /**
- * The request may post from a host on the client's own `origins` list, or
- * (for clients that still have a linked website) one of the website's domains.
- * Dev bypasses the check entirely.
+ * The request may post from a host on the client's own `origins` list, or the
+ * host of its website URL (www-insensitive). Dev bypasses the check entirely.
  */
 export const isAllowedOrigin = (
   origin: string | null,
-  client: {
-    origins: string[] | null;
-    websiteUrl: string | null;
-    customDomain: string | null;
-    freeSubdomain: string | null;
-  }
+  client: { origins: string[] | null; websiteUrl: string | null }
 ) => {
   const host = hostOf(origin);
   if (!host) return false;
@@ -84,18 +78,8 @@ export const isAllowedOrigin = (
   // shared by the website Domain card and the agency settings card.
   if (isOriginAllowed(client.origins, host)) return true;
 
-  // Backward-compat: a client with a linked website keeps its site's domains.
-  const own = [hostOf(client.websiteUrl), hostOf(client.customDomain)]
-    .filter((h): h is string => Boolean(h))
-    .map(withoutWww);
-  if (own.includes(withoutWww(host))) return true;
-
-  // Free subdomains are "<slug>.<content-pilot wildcard>" on our own domain.
-  return Boolean(
-    client.freeSubdomain &&
-      host.startsWith(`${client.freeSubdomain}.`) &&
-      host.endsWith(".alisamadii.com")
-  );
+  const site = hostOf(client.websiteUrl);
+  return Boolean(site && withoutWww(site) === withoutWww(host));
 };
 
 // ─── Client lookup ──────────────────────────────────────────────
@@ -104,7 +88,7 @@ export const isAllowedOrigin = (
  * The agency client behind a public `repoId`; null when unknown. The embed
  * scripts (leads.js / booking.js / contact.js) post keyed by the project's repoId — the tenant
  * id (`agency_client.repoId`), which is the project (`hub_project.repoId`). The
- * website is left-joined to keep its domains + name, plus the project's useSend
+ * website is left-joined to keep its URL + name, plus the project's useSend
  * team key for the contact-email endpoint (server-only, never returned past these
  * routes). There is no separate public key: abuse is bounded by the origins
  * allowlist + the rate limiter.
@@ -118,8 +102,6 @@ export async function findClientByRepoId(repoId: number) {
       notifyEmail: hubProject.notifyEmail,
       ownerEmail: userTable.email,
       websiteUrl: hubProject.websiteUrl,
-      customDomain: hubProject.customDomain,
-      freeSubdomain: hubProject.freeSubdomain,
       repo: hubProject.repo,
       usesendApiKey: hubProject.usesendApiKey,
       googleAdsCustomerId: agencyClient.googleAdsCustomerId,
@@ -140,7 +122,7 @@ export async function findClientByRepoId(repoId: number) {
  * The contact-form target behind a public `repoId`; null when the project is
  * unknown. Unlike findClientByRepoId this does NOT require an agency_client row
  * — the contact script is a plain per-project website feature, so it resolves
- * from hub_project (origins, domains, the project's useSend team) and the
+ * from hub_project (origins, website URL, the project's useSend team) and the
  * project owner's email, with the agency lead-notify email as an optional
  * override. Server-only; never returned past the contact route.
  */
@@ -150,8 +132,6 @@ export async function findContactClientByRepoId(repoId: number) {
       repoId: hubProject.repoId,
       origins: hubProject.origins,
       websiteUrl: hubProject.websiteUrl,
-      customDomain: hubProject.customDomain,
-      freeSubdomain: hubProject.freeSubdomain,
       repo: hubProject.repo,
       usesendApiKey: hubProject.usesendApiKey,
       notifyEmail: hubProject.notifyEmail,

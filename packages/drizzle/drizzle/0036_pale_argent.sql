@@ -1,0 +1,1 @@
+ALTER TABLE "hub_project" DROP COLUMN "id";

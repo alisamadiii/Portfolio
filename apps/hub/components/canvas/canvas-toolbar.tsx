@@ -11,8 +11,6 @@ import {
 
 import { cn } from "@workspace/ui/lib/utils";
 
-import { useRepo } from "@/hooks/use-repo";
-import { LiveSiteButton } from "@/components/canvas/live-site-status";
 
 export type CanvasDevice = "desktop" | "tablet" | "mobile";
 
@@ -49,9 +47,6 @@ export function CanvasToolbar({
   /** Live AI-session preview URL for the current page, or null when no session. */
   previewUrl?: string | null;
 }) {
-  // The published site's URL (custom domain, or the pilot-hosted live site for
-  // uploaded projects) — distinct from the editing preview.
-  const { websiteUrl } = useRepo();
   return (
     <div className="flex min-w-0 items-center gap-2">
       {/* Device toggle */}
@@ -109,9 +104,6 @@ export function CanvasToolbar({
           Preview
         </a>
       )}
-
-      {/* Open the published site (what visitors see), or its build state */}
-      <LiveSiteButton websiteUrl={websiteUrl ?? null} />
     </div>
   );
 }

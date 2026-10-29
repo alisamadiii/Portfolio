@@ -131,37 +131,13 @@ export async function createPreviewSession(
 // Uploaded (no-GitHub) project workspaces
 // ---------------------------------------------------------------------------
 
-export type LiveBuildStatus =
-  | "queued"
-  | "building"
-  | "ready"
-  | "failed"
-  | "skipped";
-
-export type LiveBuild = {
-  id: number;
-  status: LiveBuildStatus;
-  sha: string;
-  error: string | null;
-  log: string | null;
-  createdAt: string;
-  finishedAt: string | null;
-};
-
 export type PilotProjectStatus = {
   /** Workspace on disk (uploads always; GitHub after the first session). */
   exists: boolean;
   framework: string | null;
-  /** The pilot's `site-<repoId>` live URL (serves "unpublished" until live). */
-  liveUrl: string | null;
-  /** Whether any build has gone live yet. */
-  live?: boolean;
-  /** Latest live-site build (publish or import), any status. */
-  build?: LiveBuild | null;
-  domains?: string[];
 };
 
-/** A project's pilot state: workspace, live site, latest build, domains. */
+/** A project's pilot workspace state. */
 export async function getImport(repoId: number): Promise<PilotProjectStatus> {
   const res = await pilotFetch(`/api/v1/imports/${repoId}`);
   if (!res.ok) await pilotError(res);
@@ -169,39 +145,8 @@ export async function getImport(repoId: number): Promise<PilotProjectStatus> {
 }
 
 /**
- * Registers (or replaces) a domain mapping on the pilot's serving map:
- * `{ slug }` = the free subdomain under the preview wildcard, `{ host }` = a
- * customer domain (called only AFTER Cloudflare verified it). The pilot
- * answers 409 (taken) with a client-facing message.
- */
-export async function setProjectDomain(
-  repoId: number,
-  body: { slug: string } | { host: string }
-): Promise<{ host: string; url: string }> {
-  const res = await pilotFetch(`/api/v1/imports/${repoId}/domains`, {
-    method: "PUT",
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) await pilotError(res);
-  return (await res.json()) as { host: string; url: string };
-}
-
-/** Removes one mapping (or all of the repo's, when host is omitted). */
-export async function removeProjectDomain(
-  repoId: number,
-  host?: string
-): Promise<void> {
-  const query = host ? `?host=${encodeURIComponent(host)}` : "";
-  const res = await pilotFetch(`/api/v1/imports/${repoId}/domains${query}`, {
-    method: "DELETE",
-  });
-  if (!res.ok && res.status !== 404) await pilotError(res);
-}
-
-/**
- * Removes an uploaded project's workspace AND its always-on live site. Hard
- * gate in project.delete — an upload project must never keep serving after
- * its hub row is tombstoned. Throws CONFLICT while a preview session is live.
+ * Removes an uploaded project's workspace. Hard gate in project.delete.
+ * Throws CONFLICT while a preview session is live.
  */
 export async function deleteImport(repoId: number): Promise<void> {
   const res = await pilotFetch(`/api/v1/imports/${repoId}`, {
@@ -230,23 +175,17 @@ export async function getPreviewSession(
 
 /**
  * Squashes the session branch into the repo's default branch as ONE commit
- * authored by the project owner, pushed by content-pilot (GitHub projects),
- * and queues the live-site build. Returns the new commit sha (null when the
- * branch added nothing) and the queued build (null when nothing to build). Throws CONFLICT when
+ * authored by the project owner, pushed by content-pilot (GitHub projects).
+ * Returns the new commit sha (null when the branch added nothing). Throws CONFLICT when
  * production moved and the squash can't apply cleanly — the session and its
  * branch stay intact.
  */
 export async function publishPreviewSession(
-  sessionId: string,
-  options: { liveBuild?: boolean } = {}
-): Promise<{
-  sha: string | null;
-  changed: boolean;
-  build: { id: number; status: LiveBuildStatus } | null;
-}> {
+  sessionId: string
+): Promise<{ sha: string | null; changed: boolean }> {
   const res = await pilotFetch(`/api/v1/sessions/${sessionId}`, {
     method: "POST",
-    body: JSON.stringify({ action: "publish", liveBuild: options.liveBuild }),
+    body: JSON.stringify({ action: "publish" }),
   });
   if (res.status === 409) {
     const body = (await res.json().catch(() => null)) as {
@@ -261,12 +200,7 @@ export async function publishPreviewSession(
     });
   }
   if (!res.ok) await pilotError(res);
-  const data = (await res.json()) as {
-    sha: string | null;
-    changed: boolean;
-    build?: { id: number; status: LiveBuildStatus } | null;
-  };
-  return { ...data, build: data.build ?? null };
+  return (await res.json()) as { sha: string | null; changed: boolean };
 }
 
 /** Marks a session terminal; the supervisor tears the dev server down. */

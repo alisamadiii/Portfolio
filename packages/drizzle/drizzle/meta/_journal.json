@@ -246,6 +246,27 @@
       "when": 1793135906812,
       "tag": "0034_complete_sway",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793268568943,
+      "tag": "0035_slow_nico_minoru",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793268983107,
+      "tag": "0036_pale_argent",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793268987146,
+      "tag": "0037_many_the_professor",
+      "breakpoints": true
     }
   ]
 }

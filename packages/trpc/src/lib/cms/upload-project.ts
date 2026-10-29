@@ -52,8 +52,7 @@ export async function reserveUploadProject(userId: string, name: string, repoId?
           eq(hubProject.owner, "uploads"),
           sql`lower(${hubProject.repo}) = lower(${repo})`,
           eq(hubProject.hidden, true),
-          isNull(hubProject.githubConnectedUserId),
-          isNull(hubProject.customDomainCfId)
+          isNull(hubProject.githubConnectedUserId)
         )
       );
     try {
@@ -81,7 +80,7 @@ export async function reserveUploadProject(userId: string, name: string, repoId?
   });
 }
 
-/** Verify the workspace landed on content-pilot, then reveal the row with its live URL. */
+/** Verify the workspace landed on content-pilot, then reveal the row. */
 export async function finalizeUploadProject(repoId: number) {
   const status = await getImport(repoId);
   if (!status.exists) {
@@ -94,7 +93,6 @@ export async function finalizeUploadProject(repoId: number) {
     .update(hubProject)
     .set({
       hidden: false,
-      websiteUrl: status.liveUrl ?? null,
       githubUpdatedAt: new Date(),
       syncedAt: new Date(),
     })
