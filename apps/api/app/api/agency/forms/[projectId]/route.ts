@@ -21,12 +21,12 @@ import {
   attributionSchema,
   clientIp,
   corsHeaders,
-  findClientByRepoId,
+  findClientByProjectId,
   hostOf,
   isAllowedOrigin,
   isRateLimited,
   leadEmailHtml,
-  parseRepoIdParam,
+  parseProjectIdParam,
 } from "@/lib/agency-public";
 
 // ─── Agency lead capture ────────────────────────────────────────
@@ -97,18 +97,18 @@ const looksLikeSpam = (text: string) =>
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ repoId: string }> }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { repoId: repoIdParam } = await params;
+  const { projectId: projectIdParam } = await params;
   const origin = req.headers.get("origin");
   const headers = corsHeaders(origin);
 
-  const repoId = parseRepoIdParam(repoIdParam);
-  if (repoId === null) {
+  const projectId = parseProjectIdParam(projectIdParam);
+  if (projectId === null) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
 
-  const client = await findClientByRepoId(repoId);
+  const client = await findClientByProjectId(projectId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -120,7 +120,7 @@ export async function POST(
     return NextResponse.json({ error: "Submission too large" }, { status: 413, headers });
   }
 
-  if (await isRateLimited(`form:${repoId}:${clientIp(req)}`)) {
+  if (await isRateLimited(`form:${projectId}:${clientIp(req)}`)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }
@@ -158,7 +158,7 @@ export async function POST(
     .from(agencyLead)
     .where(
       and(
-        eq(agencyLead.repoId, client.repoId),
+        eq(agencyLead.projectId, client.projectId),
         gte(agencyLead.createdAt, new Date(Date.now() - 60 * 60 * 1000))
       )
     );
@@ -194,7 +194,7 @@ export async function POST(
   const [lead] = await db
     .insert(agencyLead)
     .values({
-      repoId: client.repoId,
+      projectId: client.projectId,
       source: "form",
       status: isSpam ? "spam" : "new",
       name: name ?? null,
@@ -243,13 +243,13 @@ export async function POST(
         to: client.notifyEmail ?? client.ownerEmail,
         ...(email ? { replyTo: email } : {}),
         subject: `New lead from ${name ?? email ?? phone ?? siteName}`,
-        html: leadEmailHtml(lines, `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`, siteName),
+        html: leadEmailHtml(lines, `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`, siteName),
         text: [
           `New lead on ${siteName}`,
           "",
           ...lines.map(([label, value]) => `${label}: ${value}`),
           "",
-          `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`,
+          `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`,
         ].join("\n"),
       });
     } catch (error) {

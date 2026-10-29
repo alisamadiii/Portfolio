@@ -49,8 +49,8 @@ function Delta({
 
 export function ReportsPage() {
   const trpc = useTRPC();
-  const { repoId } = useAgency();
-  const reports = useQuery(trpc.agency.reports.list.queryOptions({ repoId }));
+  const { projectId } = useAgency();
+  const reports = useQuery(trpc.agency.reports.list.queryOptions({ projectId }));
 
   return (
     <PageShell

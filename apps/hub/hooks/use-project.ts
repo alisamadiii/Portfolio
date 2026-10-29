@@ -4,10 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useRouteRepoId } from "@/hooks/use-repo";
+import { useRouteProjectId } from "@/hooks/use-repo";
 
 export type Project = {
-  repoId: number;
+  projectId: string;
   /** Lowercased, as used for cache keys and visit tracking. */
   owner: string;
   repo: string;
@@ -16,31 +16,31 @@ export type Project = {
 };
 
 /**
- * The project the current /p/[repoId] screen is about. Agency pages read the
+ * The project the current /p/[projectId] screen is about. Agency pages read the
  * seeded agency.project cache (no repo snapshot there); the website editor
  * reads the seeded snapshot. Both are seeded on the server by the layouts.
  */
 export const useProject = (): Project | null => {
   const trpc = useTRPC();
-  const routeRepoId = useRouteRepoId();
+  const routeProjectId = useRouteProjectId();
 
   // Cache read only: AgencySeed fills it inside the @agency slot.
   const agency = useQuery(
-    trpc.agency.project.queryOptions({ repoId: routeRepoId }, { enabled: false })
+    trpc.agency.project.queryOptions({ projectId: routeProjectId }, { enabled: false })
   );
   const snapshot = useQuery(
     trpc.cms.repos.getSnapshot.queryOptions(
-      { repoId: routeRepoId },
-      { enabled: routeRepoId > 0 && !agency.data }
+      { projectId: routeProjectId },
+      { enabled: !!routeProjectId && !agency.data }
     )
   );
 
-  if (routeRepoId <= 0) return null;
+  if (!routeProjectId) return null;
 
   const repo = snapshot.data;
   if (repo) {
     return {
-      repoId: routeRepoId,
+      projectId: routeProjectId,
       owner: repo.owner.toLowerCase(),
       repo: repo.repo.toLowerCase(),
       branch: repo.defaultBranch ?? "",
@@ -50,7 +50,7 @@ export const useProject = (): Project | null => {
   const client = agency.data;
   if (!client) return null;
   return {
-    repoId: client.repoId,
+    projectId: client.projectId,
     owner: client.owner.toLowerCase(),
     repo: client.repo.toLowerCase(),
     branch: "",

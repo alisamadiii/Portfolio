@@ -45,8 +45,8 @@ export function CampaignFilterProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { repoId } = useAgency();
-  const key = `ads-campaign:${repoId}`;
+  const { projectId } = useAgency();
+  const key = `ads-campaign:${projectId}`;
   const [campaignId, setState] = useState<string | null>(null);
 
   // sessionStorage so the pick survives navigation but not a new visit.
@@ -86,11 +86,11 @@ const ALL = "all";
 /** The sidebar select. Renders nothing until the account has campaigns. */
 export function CampaignFilterSelect() {
   const trpc = useTRPC();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const { campaignId, setCampaignId } = useCampaignFilter();
   const campaigns = useQuery(
     trpc.agency.ads.campaigns.queryOptions(
-      { repoId },
+      { projectId },
       { staleTime: 15 * 60 * 1000, retry: false }
     )
   );

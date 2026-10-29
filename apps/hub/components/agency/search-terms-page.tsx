@@ -72,7 +72,7 @@ const SEGMENTS: { value: Segment; label: string }[] = [
 export function SearchTermsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const { campaignId } = useCampaignFilter();
   const [days, setDays] = useState<RangeValue>("30");
   const range = useMemo(() => lastDays(Number(days)), [days]);
@@ -81,7 +81,7 @@ export function SearchTermsPage() {
 
   const list = useQuery(
     trpc.agency.ads.searchTerms.list.queryOptions(
-      { repoId, ...range, campaignId: campaignId ?? undefined },
+      { projectId, ...range, campaignId: campaignId ?? undefined },
       { placeholderData: keepPreviousData }
     )
   );
@@ -195,7 +195,7 @@ export function SearchTermsPage() {
               onClick={() =>
                 excluding &&
                 exclude.mutate({
-                  repoId,
+                  projectId,
                   campaignId: excluding.campaignId,
                   term: excluding.term,
                   matchType: excluding.matchType,

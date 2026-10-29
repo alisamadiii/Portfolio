@@ -2,13 +2,9 @@ import { createHmac } from "crypto";
 import { describe, expect, it } from "vitest";
 
 import { signEditToken, signImportToken } from "@workspace/trpc/lib/cms/edit-token";
-import {
-  SYNTHETIC_REPO_ID_FLOOR,
-  syntheticRepoId,
-  uploadSlug,
-} from "@workspace/trpc/lib/cms/upload-slug";
+import { uploadSlug } from "@workspace/trpc/lib/cms/upload-slug";
 
-// Upload import flow (deploy.importUpload): slug + synthetic id helpers, and
+// Upload import flow (deploy.importUpload): slug helper, and
 // the import-token's scope separation from the edit token.
 
 describe("uploadSlug", () => {
@@ -32,16 +28,6 @@ describe("uploadSlug", () => {
   });
 });
 
-describe("syntheticRepoId", () => {
-  it("stays above the GitHub id range and within safe integers", () => {
-    for (let i = 0; i < 100; i++) {
-      const id = syntheticRepoId();
-      expect(id).toBeGreaterThanOrEqual(SYNTHETIC_REPO_ID_FLOOR);
-      expect(Number.isSafeInteger(id)).toBe(true);
-    }
-  });
-});
-
 const decodePayload = (token: string) =>
   JSON.parse(
     Buffer.from(token.split(".")[0]!, "base64url").toString("utf8")
@@ -49,17 +35,18 @@ const decodePayload = (token: string) =>
 
 describe("signImportToken", () => {
   const SECRET = "test-secret";
+  const PROJECT_ID = "6f1d3c1e-2b8a-4a57-9d0e-3c4b5a6d7e8f";
 
-  it("carries repoId, scope:'import' and an expiry", () => {
-    const token = signImportToken({ repoId: 1000000000042 }, SECRET);
+  it("carries projectId, scope:'import' and an expiry", () => {
+    const token = signImportToken({ projectId: PROJECT_ID }, SECRET);
     const payload = decodePayload(token);
-    expect(payload.repoId).toBe(1000000000042);
+    expect(payload.projectId).toBe(PROJECT_ID);
     expect(payload.scope).toBe("import");
     expect(payload.exp as number).toBeGreaterThan(Date.now() / 1000);
   });
 
   it("is signed with the same HMAC scheme as the edit token", () => {
-    const token = signImportToken({ repoId: 7 }, SECRET);
+    const token = signImportToken({ projectId: PROJECT_ID }, SECRET);
     const [body, sig] = token.split(".");
     const expected = createHmac("sha256", SECRET)
       .update(body!)
@@ -68,7 +55,7 @@ describe("signImportToken", () => {
   });
 
   it("edit tokens never carry a scope claim", () => {
-    const token = signEditToken({ repoId: 7 }, SECRET);
+    const token = signEditToken({ projectId: PROJECT_ID }, SECRET);
     expect("scope" in decodePayload(token)).toBe(false);
   });
 });

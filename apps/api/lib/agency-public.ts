@@ -11,7 +11,7 @@ import {
 import { IP_LIMIT } from "@workspace/trpc/lib/agency/lead-capture";
 
 // ─── Shared plumbing for the public agency endpoints ─────────────
-// The form capture (forms/[repoId]) and booking (booking/[repoId]) routes
+// The form capture (forms/[projectId]) and booking (booking/[projectId]) routes
 // are both reachable from visitors' browsers on clients' websites: same CORS
 // shape, same origin allowlist, same Postgres rate limiter, same client
 // lookup by form key, same notification email shell.
@@ -85,18 +85,18 @@ export const isAllowedOrigin = (
 // ─── Client lookup ──────────────────────────────────────────────
 
 /**
- * The agency client behind a public `repoId`; null when unknown. The embed
- * scripts (leads.js / booking.js / contact.js) post keyed by the project's repoId — the tenant
- * id (`agency_client.repoId`), which is the project (`hub_project.repoId`). The
+ * The agency client behind a public `projectId`; null when unknown. The embed
+ * scripts (leads.js / booking.js / contact.js) post keyed by the project's projectId — the tenant
+ * id (`agency_client.projectId`), which is the project (`hub_project.projectId`). The
  * website is left-joined to keep its URL + name, plus the project's useSend
  * team key for the contact-email endpoint (server-only, never returned past these
  * routes). There is no separate public key: abuse is bounded by the origins
  * allowlist + the rate limiter.
  */
-export async function findClientByRepoId(repoId: number) {
+export async function findClientByProjectId(projectId: string) {
   const [client] = await db
     .select({
-      repoId: agencyClient.repoId,
+      projectId: agencyClient.projectId,
       userId: agencyClient.userId,
       origins: hubProject.origins,
       notifyEmail: hubProject.notifyEmail,
@@ -110,26 +110,26 @@ export async function findClientByRepoId(repoId: number) {
     })
     .from(agencyClient)
     .innerJoin(userTable, eq(userTable.id, agencyClient.userId))
-    .leftJoin(hubProject, eq(hubProject.repoId, agencyClient.repoId))
-    .where(eq(agencyClient.repoId, repoId))
+    .leftJoin(hubProject, eq(hubProject.id, agencyClient.projectId))
+    .where(eq(agencyClient.projectId, projectId))
     .limit(1);
   // A client with no tenant id can't store leads; treat as not found.
-  if (!client || client.repoId == null) return null;
-  return client as typeof client & { repoId: number };
+  if (!client || client.projectId == null) return null;
+  return client as typeof client & { projectId: string };
 }
 
 /**
- * The contact-form target behind a public `repoId`; null when the project is
- * unknown. Unlike findClientByRepoId this does NOT require an agency_client row
+ * The contact-form target behind a public `projectId`; null when the project is
+ * unknown. Unlike findClientByProjectId this does NOT require an agency_client row
  * — the contact script is a plain per-project website feature, so it resolves
  * from hub_project (origins, website URL, the project's useSend team) and the
  * project owner's email, with the agency lead-notify email as an optional
  * override. Server-only; never returned past the contact route.
  */
-export async function findContactClientByRepoId(repoId: number) {
+export async function findContactClientByProjectId(projectId: string) {
   const [client] = await db
     .select({
-      repoId: hubProject.repoId,
+      projectId: hubProject.id,
       origins: hubProject.origins,
       websiteUrl: hubProject.websiteUrl,
       repo: hubProject.repo,
@@ -139,17 +139,17 @@ export async function findContactClientByRepoId(repoId: number) {
     })
     .from(hubProject)
     .leftJoin(userTable, eq(userTable.id, hubProject.githubConnectedUserId))
-    .where(eq(hubProject.repoId, repoId))
+    .where(eq(hubProject.id, projectId))
     .limit(1);
-  if (!client || client.repoId == null) return null;
-  return client as typeof client & { repoId: number };
+  if (!client || client.projectId == null) return null;
+  return client as typeof client & { projectId: string };
 }
 
-/** Parse a public embed `data-key` (the project repoId) into a positive int. */
-export function parseRepoIdParam(value: string): number | null {
-  if (!/^\d{1,19}$/.test(value)) return null;
-  const n = Number(value);
-  return Number.isSafeInteger(n) && n > 0 ? n : null;
+/** Parse a public embed `data-key` (the project's uuid, hub_project.id). */
+export function parseProjectIdParam(value: string): string | null {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+    ? value.toLowerCase()
+    : null;
 }
 
 // ─── Attribution payload (shared zod fragment) ──────────────────

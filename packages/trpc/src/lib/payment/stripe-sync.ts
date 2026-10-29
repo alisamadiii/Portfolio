@@ -26,7 +26,7 @@ import {
 // neither) all converge to the same final state instead of a stale payload
 // overwriting newer data.
 //
-// Per-project CMS subscriptions (metadata.repoId) are NOT handled here — they
+// Per-project CMS subscriptions (metadata.projectId) are NOT handled here — they
 // belong to hub_subscription via syncCmsSubscription.
 
 /** Every event type the mirror consumes — subscribe the endpoint to these. */
@@ -164,11 +164,11 @@ const syncStripePrice = async (price: Stripe.Price) => {
 
 /**
  * Upsert the subscription mirror row from a Stripe subscription. Skips
- * per-project CMS subscriptions (metadata.repoId) — those live in
+ * per-project CMS subscriptions (metadata.projectId) — those live in
  * hub_subscription.
  */
 const syncStripeSubscription = async (sub: Stripe.Subscription) => {
-  if (sub.metadata.repoId || sub.metadata.repo_id) return;
+  if (sub.metadata.projectId || sub.metadata.repoId) return;
 
   const customerId =
     typeof sub.customer === "string" ? sub.customer : sub.customer.id;
@@ -224,8 +224,8 @@ const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
   if (!invoice.id) return;
   // Per-project CMS subscription invoices belong to hub_subscription only.
   if (
-    invoice.parent?.subscription_details?.metadata?.repoId ||
-    invoice.metadata?.repoId
+    invoice.parent?.subscription_details?.metadata?.projectId ||
+    invoice.metadata?.projectId
   ) {
     return;
   }

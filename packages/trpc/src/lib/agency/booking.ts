@@ -20,7 +20,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Taken bookings in a window (what the unique index guards). */
 export async function getBookedIntervals(
-  repoId: number,
+  projectId: string,
   fromMs: number,
   toMs: number
 ): Promise<Interval[]> {
@@ -29,7 +29,7 @@ export async function getBookedIntervals(
     .from(agencyLead)
     .where(
       and(
-        eq(agencyLead.repoId, repoId),
+        eq(agencyLead.projectId, projectId),
         isNull(agencyLead.bookingCanceledAt),
         gte(agencyLead.bookingAt, new Date(fromMs - DAY_MS)),
         lt(agencyLead.bookingAt, new Date(toMs + DAY_MS))
@@ -49,7 +49,7 @@ export async function getBookedIntervals(
  * be read (disconnected / missing scope).
  */
 export async function getAvailability(input: {
-  repoId: number;
+  projectId: string;
   /** The owner whose calendar backs the booking. */
   userId: string;
   settings: AgencyBookingSettings;
@@ -62,7 +62,7 @@ export async function getAvailability(input: {
       new Date(input.fromMs - DAY_MS).toISOString(),
       new Date(input.toMs + DAY_MS).toISOString()
     ),
-    getBookedIntervals(input.repoId, input.fromMs, input.toMs),
+    getBookedIntervals(input.projectId, input.fromMs, input.toMs),
   ]);
   return computeSlots({
     settings: input.settings,

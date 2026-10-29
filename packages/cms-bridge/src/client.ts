@@ -12,7 +12,7 @@
 interface CmsBridgeConfig {
   project?: string;
   endpoint?: string;
-  repoId?: number;
+  projectId?: string;
   branch?: string;
 }
 
@@ -135,8 +135,8 @@ declare global {
     if (!token) {
       throw new Error("Edit session token missing — reopen from the editor.");
     }
-    if (!CFG.repoId) {
-      throw new Error("Site is missing repoId in its cms-bridge config.");
+    if (!CFG.projectId) {
+      throw new Error("Site is missing projectId in its cms-bridge config.");
     }
     let res: Response;
     try {
@@ -147,7 +147,7 @@ declare global {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({ repoId: CFG.repoId, ...body }),
+        body: JSON.stringify({ projectId: CFG.projectId, ...body }),
       });
     } catch (e) {
       // Network / CORS failures never reach the response stage.

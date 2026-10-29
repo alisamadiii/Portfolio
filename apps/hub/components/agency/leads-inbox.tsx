@@ -122,12 +122,12 @@ function CampaignCell({ lead }: { lead: Parameters<typeof leadCampaign>[0] }) {
 /** KPIs + channel mix for a date range, as one divided stat card. */
 function LeadsOverview({ days }: { days: RangeValue }) {
   const trpc = useTRPC();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const { campaignId } = useCampaignFilter();
   const range = useMemo(() => lastDays(Number(days)), [days]);
   const { data, isPlaceholderData } = useQuery(
     trpc.agency.leads.stats.queryOptions(
-      { repoId, ...range, campaignId: campaignId ?? undefined },
+      { projectId, ...range, campaignId: campaignId ?? undefined },
       { placeholderData: keepPreviousData }
     )
   );
@@ -346,7 +346,7 @@ function LeadChannels() {
 export function LeadsInbox() {
   const trpc = useTRPC();
   const router = useRouter();
-  const { repoId, role } = useAgency();
+  const { projectId, role } = useAgency();
   const href = useAgencyHref();
   const { campaignId } = useCampaignFilter();
 
@@ -373,7 +373,7 @@ export function LeadsInbox() {
   const { data, isLoading, isPlaceholderData } = useQuery(
     trpc.agency.leads.list.queryOptions(
       {
-        repoId,
+        projectId,
         status,
         channel: channel === ALL_SOURCES ? undefined : channel,
         campaignId: campaignId ?? undefined,

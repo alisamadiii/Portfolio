@@ -5,8 +5,8 @@ export default async function WebsiteLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ repoId: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-  const { repoId } = await params;
-  return <ProjectSnapshotGate repoId={Number(repoId)}>{children}</ProjectSnapshotGate>;
+  const { projectId } = await params;
+  return <ProjectSnapshotGate projectId={projectId}>{children}</ProjectSnapshotGate>;
 }

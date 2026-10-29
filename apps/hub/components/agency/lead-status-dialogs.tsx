@@ -28,12 +28,12 @@ type Lead = RouterOutputs["agency"]["leads"]["get"];
  * unsaved draft in the side rail isn't clobbered.
  */
 export function MarkWonDialog({
-  repoId,
+  projectId,
   lead,
   onClose,
   onDone,
 }: {
-  repoId: number;
+  projectId: string;
   lead: Lead;
   onClose: () => void;
   onDone: (updated: Lead) => void;
@@ -90,7 +90,7 @@ export function MarkWonDialog({
           <Button
             disabled={invalid || update.isPending}
             onClick={() =>
-              update.mutate({ repoId, id: lead.id, status: "won", valueCents })
+              update.mutate({ projectId, id: lead.id, status: "won", valueCents })
             }
           >
             Mark won
@@ -103,12 +103,12 @@ export function MarkWonDialog({
 
 /** Losing a lead takes an optional reason, kept for the funnel review. */
 export function MarkLostDialog({
-  repoId,
+  projectId,
   lead,
   onClose,
   onDone,
 }: {
-  repoId: number;
+  projectId: string;
   lead: Lead;
   onClose: () => void;
   onDone: (updated: Lead) => void;
@@ -153,7 +153,7 @@ export function MarkLostDialog({
             disabled={update.isPending}
             onClick={() =>
               update.mutate({
-                repoId,
+                projectId,
                 id: lead.id,
                 status: "lost",
                 lostReason: reason.trim() || null,

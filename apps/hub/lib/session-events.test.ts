@@ -253,10 +253,20 @@ describe("reduceClaude", () => {
 });
 
 describe("toolLabel", () => {
-  it("drops the numeric clone dir from paths", () => {
+  // DELIBERATE CHANGE (2026-10-29): clone dirs are keyed by the project uuid,
+  // not the numeric GitHub repo id, so a numeric dir is no longer stripped.
+  it("keeps a legacy numeric dir in the label", () => {
     expect(toolLabel("Read", { file_path: "/w/1290180826/_site.json" })).toBe(
-      "Reading _site.json"
+      "Reading 1290180826/_site.json"
     );
+  });
+
+  it("drops the uuid clone dir from paths", () => {
+    expect(
+      toolLabel("Read", {
+        file_path: "/w/3f2b6c1e-8d4a-4b7e-9c2d-1a5e6f7b8c9d/_site.json",
+      })
+    ).toBe("Reading _site.json");
   });
 
   it("keeps a two-segment tail for nested files", () => {

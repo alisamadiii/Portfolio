@@ -33,7 +33,7 @@ const BATCH = 10;
 type Stage = "lead" | "qualified";
 
 type Client = {
-  repoId: number;
+  projectId: string;
   googleAdsCustomerId: string | null;
   googleAdsActions: AgencyAdsActions | null;
 };
@@ -134,7 +134,7 @@ const VERIFY_STAGES = ["lead", "qualified", "won"] as const;
  * received. This pass asks Google what actually happened to sent uploads and
  * records verified / verifyError on the row. Never throws.
  */
-async function verifyConversionUploads(repoId: number) {
+async function verifyConversionUploads(projectId: string) {
   try {
     const pendingVerify = (stage: string) =>
       sql`(${agencyLead.adsUploads} -> ${stage} ->> 'requestId') is not null and (${agencyLead.adsUploads} -> ${stage} ->> 'verified') is null and (${agencyLead.adsUploads} -> ${stage} ->> 'verifyError') is null`;
@@ -142,7 +142,7 @@ async function verifyConversionUploads(repoId: number) {
     const leads = await db
       .select()
       .from(agencyLead)
-      .where(and(eq(agencyLead.repoId, repoId), or(...VERIFY_STAGES.map(pendingVerify))))
+      .where(and(eq(agencyLead.projectId, projectId), or(...VERIFY_STAGES.map(pendingVerify))))
       .limit(BATCH);
 
     for (const lead of leads) {
@@ -179,7 +179,7 @@ async function verifyConversionUploads(repoId: number) {
 export async function syncConversionUploads(client: Client) {
   if (!client.googleAdsCustomerId || !isGoogleAdsConfigured()) return;
   // Won uploads verify too, so this runs even when no stage is wired.
-  await verifyConversionUploads(client.repoId);
+  await verifyConversionUploads(client.projectId);
   const actions = client.googleAdsActions;
   if (!actions?.lead && !actions?.booking && !actions?.qualified) return;
 
@@ -192,7 +192,7 @@ export async function syncConversionUploads(client: Client) {
       .from(agencyLead)
       .where(
         and(
-          eq(agencyLead.repoId, client.repoId),
+          eq(agencyLead.projectId, client.projectId),
           ne(agencyLead.status, "spam"),
           gte(agencyLead.createdAt, new Date(Date.now() - MAX_AGE)),
           or(

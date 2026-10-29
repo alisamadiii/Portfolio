@@ -1,8 +1,8 @@
 /*
  * Ali Samadii LLC booking widget.
- * <script src="https://api.alisamadii.com/booking.js" data-key="PROJECT_REPO_ID" defer></script>
+ * <script src="https://api.alisamadii.com/booking.js" data-key="PROJECT_ID" defer></script>
  * <button data-booking>Book an appointment</button>
- * data-key is the project's repoId (shown in the Hub).
+ * data-key is the project's projectId (shown in the Hub).
  *
  * The site styles its own trigger; this script only handles the popup.
  * Clicking any element with data-booking opens a Cal.com-style booking

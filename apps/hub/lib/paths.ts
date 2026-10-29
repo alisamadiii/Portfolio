@@ -1,13 +1,19 @@
-/** Internal hub route base for a repo, keyed by the GitHub-stable numeric repoId
- *  (globally unique, unlike the repo name). Owner + branch are resolved
- *  server-side and never appear in the URL. */
-export const repoPath = (repoId: number, ...segments: string[]) =>
-  ["", "p", String(repoId), ...segments].join("/");
+/** A project id: hub_project.id, a uuid. */
+export const PROJECT_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** A /p/[repoId] pathname without its project prefix ("/p/1/marketing" → "/marketing", "/p/1" → "/"). */
+export const isProjectId = (value: unknown): value is string =>
+  typeof value === "string" && PROJECT_ID_RE.test(value);
+
+/** Internal hub route base for a project, keyed by its uuid (hub_project.id).
+ *  Owner + branch are resolved server-side and never appear in the URL. */
+export const repoPath = (projectId: string, ...segments: string[]) =>
+  ["", "p", projectId, ...segments].join("/");
+
+/** A /p/[projectId] pathname without its project prefix ("/p/<id>/marketing" → "/marketing", "/p/<id>" → "/"). */
 export const projectSubpath = (pathname: string) =>
-  pathname.replace(/^\/p\/\d+/, "") || "/";
+  pathname.replace(/^\/p\/[0-9a-f-]{36}/i, "") || "/";
 
 /** An agency page under its project: ("/agency/booking") → "/p/<id>/agency/booking", "/" → "/p/<id>". */
-export const agencyHref = (repoId: number, path: string) =>
-  repoPath(repoId) + (path === "/" ? "" : path);
+export const agencyHref = (projectId: string, path: string) =>
+  repoPath(projectId) + (path === "/" ? "" : path);

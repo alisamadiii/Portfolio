@@ -73,8 +73,8 @@ export function EmailsPanel() {
   const project = useProject();
   const { data: currentUser } = useCurrentUser();
 
-  const repoId = project?.repoId ?? 0;
-  const hasProject = !!repoId;
+  const projectId = project?.projectId ?? "";
+  const hasProject = !!projectId;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -106,7 +106,7 @@ export function EmailsPanel() {
   // setup card instead.
   const { data: gate, isLoading: gateLoading } = useQuery(
     trpc.emails.enabled.queryOptions(
-      { repoId },
+      { projectId },
       { enabled: hasProject }
     )
   );
@@ -115,7 +115,7 @@ export function EmailsPanel() {
   const { data, isLoading, error, isPlaceholderData } = useQuery(
     trpc.emails.list.queryOptions(
       {
-        repoId,
+        projectId,
         ...filterInput,
         page,
         limit: PAGE_SIZE,
@@ -127,7 +127,7 @@ export function EmailsPanel() {
   const { data: stats, isPlaceholderData: statsStale } = useQuery(
     trpc.emails.stats.queryOptions(
       {
-        repoId,
+        projectId,
         from: filterInput.from,
         to: filterInput.to,
       },
@@ -157,7 +157,7 @@ export function EmailsPanel() {
       ? `${format(range.from, "MMM d, yyyy")} – ${format(range.to, "MMM d, yyyy")}`
       : "All time";
 
-  if (!repoId) return null;
+  if (!projectId) return null;
 
   if (gateLoading) {
     return (
@@ -177,7 +177,7 @@ export function EmailsPanel() {
     return (
       <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
         <PanelHeading />
-        <EmailsSetup repoId={repoId} />
+        <EmailsSetup projectId={projectId} />
       </div>
     );
   }
@@ -186,7 +186,7 @@ export function EmailsPanel() {
     return (
       <div className="mx-auto w-full max-w-screen-md p-6">
         <EmailDetail
-          repoId={repoId}
+          projectId={projectId}
           id={selectedId}
           onBack={() => setSelectedId(null)}
         />
@@ -218,10 +218,10 @@ export function EmailsPanel() {
       <PanelHeading />
 
       {/* ── Contact-form install snippet ── */}
-      <ContactSnippet repoId={repoId} />
+      <ContactSnippet projectId={projectId} />
 
       {/* ── Where submissions are emailed ── */}
-      <NotifyEmailCard repoId={repoId} />
+      <NotifyEmailCard projectId={projectId} />
 
       {/* ── KPI tiles ── */}
       <div
@@ -328,7 +328,7 @@ export function EmailsPanel() {
         />
         {total > 0 && (
           <ExportEmailsPdfButton
-            repoId={repoId}
+            projectId={projectId}
             input={filterInput}
             meta={{
               clientName:
@@ -561,11 +561,11 @@ const BackButton = ({ onBack }: { onBack: () => void }) => (
 );
 
 function EmailDetail({
-  repoId,
+  projectId,
   id,
   onBack,
 }: {
-  repoId: number;
+  projectId: string;
   id: string;
   onBack: () => void;
 }) {
@@ -576,7 +576,7 @@ function EmailDetail({
     isLoading,
     error,
   } = useQuery(
-    trpc.emails.get.queryOptions({ repoId, id }, { enabled: !!id })
+    trpc.emails.get.queryOptions({ projectId, id }, { enabled: !!id })
   );
 
   // HTML fetched fresh from useSend — once for the inline preview, and again
@@ -585,14 +585,14 @@ function EmailDetail({
   const { mutate: loadPreview } = view;
 
   useEffect(() => {
-    if (email) loadPreview({ repoId, id: email.id });
+    if (email) loadPreview({ projectId, id: email.id });
   }, [email?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openInNewTab = () => {
     // Open synchronously so popup blockers don't eat the tab.
     const tab = window.open("", "_blank");
     view.mutate(
-      { repoId, id },
+      { projectId, id },
       {
         onSuccess: ({ html }) => {
           if (tab) {
@@ -736,7 +736,7 @@ function EmailDetail({
             <Button
               variant="outline"
               className="mt-4 rounded-full px-5"
-              onClick={() => loadPreview({ repoId, id: email.id })}
+              onClick={() => loadPreview({ projectId, id: email.id })}
             >
               Retry
             </Button>
@@ -786,10 +786,10 @@ function CopyRow({ code }: { code: string }) {
 }
 
 // The copy-paste snippet for a client's website, shown on the Emails view. The
-// script (public/contact.js) posts to /api/agency/contact/<repoId> and sends through
+// script (public/contact.js) posts to /api/agency/contact/<projectId> and sends through
 // this project's own team, so messages land in this list.
-function ContactSnippet({ repoId }: { repoId: number }) {
-  const snippet = `<script src="${API_URL}/contact.js" data-key="${repoId}" defer></script>`;
+function ContactSnippet({ projectId }: { projectId: string }) {
+  const snippet = `<script src="${API_URL}/contact.js" data-key="${projectId}" defer></script>`;
   return (
     <details className="bg-card rounded-lg border px-5 py-3 text-[14px]">
       <summary className="cursor-pointer font-semibold">Contact form setup</summary>
@@ -856,7 +856,7 @@ function ContactSnippet({ repoId }: { repoId: number }) {
 // One-click setup: creates the project's useSend team + an agency-managed,
 // auto-verified sending subdomain. No DNS for the user. Full-access only —
 // the mutation enforces it (non-full-access callers get a clear error).
-function EmailsSetup({ repoId }: { repoId: number }) {
+function EmailsSetup({ projectId }: { projectId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -865,7 +865,7 @@ function EmailsSetup({ repoId }: { repoId: number }) {
       onSuccess: () => {
         toast.success("Emails are set up for this project.");
         queryClient.invalidateQueries({
-          queryKey: trpc.emails.enabled.queryOptions({ repoId }).queryKey,
+          queryKey: trpc.emails.enabled.queryOptions({ projectId }).queryKey,
         });
       },
       onError: (error) => toast.error(error.message),
@@ -889,7 +889,7 @@ function EmailsSetup({ repoId }: { repoId: number }) {
         type="button"
         className="mt-6"
         disabled={setup.isPending}
-        onClick={() => setup.mutate({ repoId })}
+        onClick={() => setup.mutate({ projectId })}
       >
         {setup.isPending ? "Setting up…" : "Set up emails"}
       </Button>

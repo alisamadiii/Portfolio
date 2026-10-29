@@ -43,7 +43,7 @@ export type SessionEndReason = "published" | "closed" | { switched: string };
 
 export type PreviewSessionInfo = {
   id: string;
-  repoId: number;
+  projectId: string;
   status:
     | "starting"
     | "installing"
@@ -116,7 +116,7 @@ export type SitemapPageInfo = {
 type CanvasEditorValue = {
   owner: string;
   repo: string;
-  repoId: number;
+  projectId: string;
   branch: string;
   repoBase: string;
   pages: CanvasPageInfo[];
@@ -192,27 +192,27 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const owner = project?.owner ?? "";
   const repo = project?.repo ?? "";
   const branch = project?.branch ?? "";
-  const repoId = project?.repoId ?? 0;
-  const repoBase = repoPath(repoId);
+  const projectId = project?.projectId ?? "";
+  const repoBase = repoPath(projectId);
 
   const pagesQuery = useQuery(
     trpc.cms.pages.list.queryOptions(
-      { repoId, branch },
-      { enabled: Boolean(repoId && branch), staleTime: 60_000 }
+      { projectId, branch },
+      { enabled: Boolean(projectId && branch), staleTime: 60_000 }
     )
   );
 
   // Plans decide AI chat; skip the mint (and its 402) when the tier lacks it.
-  const canAiChat = useEntitlement(repoId).can("ai-chat");
+  const canAiChat = useEntitlement(projectId).can("ai-chat");
 
   // Short-lived, repo-scoped token for the edit iframe (server-minted by
   // cms.aiEdits.mintEditToken). Keeps the long-lived content-pilot key off the
   // browser; refetch inside the token's TTL so a long session stays valid.
   const editTokenQuery = useQuery(
     trpc.cms.aiEdits.mintEditToken.queryOptions(
-      { repoId },
+      { projectId },
       {
-        enabled: Boolean(repoId) && canEdit && canAiChat,
+        enabled: Boolean(projectId) && canEdit && canAiChat,
         staleTime: 25 * 60 * 1000,
         refetchInterval: 25 * 60 * 1000,
       }
@@ -235,9 +235,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // startup (install + boot take a while), slow heartbeat once ready.
   const sessionQuery = useQuery(
     trpc.cms.previewSession.get.queryOptions(
-      { repoId },
+      { projectId },
       {
-        enabled: Boolean(repoId) && canEdit,
+        enabled: Boolean(projectId) && canEdit,
         refetchInterval: (query) => {
           const status = query.state.data?.session?.status;
           return status === "starting" ||
@@ -264,7 +264,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
         setCapacityMessage(null);
         setAutoStartError(null);
         void queryClient.invalidateQueries({
-          queryKey: trpc.cms.previewSession.get.queryOptions({ repoId })
+          queryKey: trpc.cms.previewSession.get.queryOptions({ projectId })
             .queryKey,
         });
       },
@@ -309,13 +309,13 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   }, [sessionQuery.isSuccess, session]);
 
   useEffect(() => {
-    if (!canEdit || !repoId || !sessionQuery.isSuccess) return;
+    if (!canEdit || !projectId || !sessionQuery.isSuccess) return;
     if (session && session.status !== "paused") return;
-    const key = String(repoId);
+    const key = String(projectId);
     if (autoStartAttempted.current === key) return;
     autoStartAttempted.current = key;
-    autoStartMutate({ repoId });
-  }, [canEdit, repoId, sessionQuery.isSuccess, session, autoStartMutate]);
+    autoStartMutate({ projectId });
+  }, [canEdit, projectId, sessionQuery.isSuccess, session, autoStartMutate]);
 
   // Boot watchdog: if the session stays in a booting status past the timeout
   // (dev server never came up, supervisor wedged), stop spinning and offer a
@@ -341,8 +341,8 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     setBootTimedOut(false);
     autoStartAttempted.current = null;
     void sessionQuery.refetch();
-    autoStartMutate({ repoId });
-  }, [repoId, autoStartMutate, sessionQuery]);
+    autoStartMutate({ projectId });
+  }, [projectId, autoStartMutate, sessionQuery]);
 
   // The preview service is down when the status poll errors and we have no
   // session to show. Auto-start also can't fire (it waits on a successful
@@ -377,9 +377,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   // Each nests under the deepest manifest page prefixing its path.
   const sitemapQuery = useQuery(
     trpc.cms.pages.sitemap.queryOptions(
-      { repoId },
+      { projectId },
       {
-        enabled: Boolean(repoId && siteOrigin),
+        enabled: Boolean(projectId && siteOrigin),
         staleTime: 5 * 60 * 1000,
       }
     )
@@ -629,7 +629,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     () => ({
       owner,
       repo,
-      repoId,
+      projectId,
       branch,
       repoBase,
       pages,
@@ -664,7 +664,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
     [
       owner,
       repo,
-      repoId,
+      projectId,
       branch,
       repoBase,
       pages,

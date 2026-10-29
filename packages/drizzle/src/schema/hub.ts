@@ -32,11 +32,10 @@ export const hubCollaborator = pgTable(
     id: serial("id").primaryKey(),
     type: text("type").notNull(),
     // LEGACY: GitHub owner id from the old GitHub-backed invite flow. No code
-    // reads or writes it anymore — collaborators are scoped by repoId.
+    // reads or writes it anymore — collaborators are scoped by projectId.
     ownerId: integer("owner_id"),
-    // = hubProject.repoId. Cascade handled in application code (deleteProject).
-    // bigint: upload projects use synthetic ids >= 1e12 (see deploy.importUpload).
-    repoId: bigint("repo_id", { mode: "number" }),
+    // = hubProject.id. Cascade handled in application code (deleteProject).
+    projectId: uuid("project_id"),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     branch: text("branch"),
@@ -54,18 +53,14 @@ export const hubCollaborator = pgTable(
     idxHubCollaboratorUserId: index("idx_hub_collaborator_user_id").on(
       table.userId
     ),
-    // Identity/access match key: collaborators are scoped by repoId (owner/repo
-    // are display-only and can drift on GitHub rename/transfer).
-    idxHubCollaboratorRepoId: index("idx_hub_collaborator_repo_id").on(
-      table.repoId
+    // Identity/access match key: collaborators are scoped by projectId
+    // (owner/repo are display-only; one GitHub repo can back several projects).
+    idxHubCollaboratorProjectId: index("idx_hub_collaborator_project_id").on(
+      table.projectId
     ),
-    uqHubCollaboratorOwnerRepoEmailCi: uniqueIndex(
-      "uq_hub_collaborator_owner_repo_email_ci"
-    ).on(
-      sql`lower(${table.owner})`,
-      sql`lower(${table.repo})`,
-      sql`lower(${table.email})`
-    ),
+    uqHubCollaboratorProjectEmailCi: uniqueIndex(
+      "uq_hub_collaborator_project_email_ci"
+    ).on(table.projectId, sql`lower(${table.email})`),
   })
 );
 
@@ -75,10 +70,9 @@ export const hubCollaboratorInvite = pgTable(
     id: serial("id").primaryKey(),
     token: text("token").notNull(),
     email: text("email").notNull(),
-    // = hubProject.repoId. Invites are scoped by repoId; owner/repo stay for
-    // display + the destination path. Nullable only so drizzle-kit push +
-    // backfill are clean on the existing table.
-    repoId: bigint("repo_id", { mode: "number" }),
+    // = hubProject.id. Invites are scoped by projectId; owner/repo stay for
+    // display. Nullable only so the backfill migration is clean.
+    projectId: uuid("project_id"),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
     expiresAt: timestamp("expires_at").notNull(),
@@ -92,16 +86,12 @@ export const hubCollaboratorInvite = pgTable(
     idxHubCollaboratorInviteOwnerRepoEmail: index(
       "idx_hub_collaborator_invite_owner_repo_email"
     ).on(table.owner, table.repo, table.email),
-    idxHubCollaboratorInviteRepoId: index(
-      "idx_hub_collaborator_invite_repo_id"
-    ).on(table.repoId),
-    uqHubCollaboratorInviteOwnerRepoEmailCi: uniqueIndex(
-      "uq_hub_collaborator_invite_owner_repo_email_ci"
-    ).on(
-      sql`lower(${table.owner})`,
-      sql`lower(${table.repo})`,
-      sql`lower(${table.email})`
-    ),
+    idxHubCollaboratorInviteProjectId: index(
+      "idx_hub_collaborator_invite_project_id"
+    ).on(table.projectId),
+    uqHubCollaboratorInviteProjectEmailCi: uniqueIndex(
+      "uq_hub_collaborator_invite_project_email_ci"
+    ).on(table.projectId, sql`lower(${table.email})`),
   })
 );
 
@@ -128,9 +118,11 @@ export const hubProject = pgTable(
   "hub_project",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    // GitHub's numeric repo id for source='github'; a synthetic id >= 1e12 for
-    // uploaded projects (no GitHub repo) — hence bigint.
-    repoId: bigint("repo_id", { mode: "number" }).notNull(),
+    // GitHub's numeric repo id. Only used to get/push changes from/to GitHub;
+    // project identity is `id` everywhere else (one repo can back several
+    // projects). Null for uploads (legacy upload rows still hold a synthetic
+    // id until the follow-up cleanup).
+    repoId: bigint("repo_id", { mode: "number" }),
     // Where the project's files live: 'github' = App-installed repo (today's
     // flow), 'upload' = zip/folder imported straight into content-pilot's
     // workspace; GitHub-specific features are gated off for uploads.
@@ -151,7 +143,7 @@ export const hubProject = pgTable(
     blogEditedAt: timestamp("blog_edited_at"),
     blogPublishedAt: timestamp("blog_published_at"),
     // ── useSend per-project team (workspace) ──
-    // Every project is its own useSend team, keyed by repoId (Team.externalId).
+    // Every project is its own useSend team, keyed by projectId (Team.externalId).
     // Provisioned at import via POST /api/v1/workspaces. usesendTeamId is the
     // useSend Team.id; usesendApiKey is that team's API key, returned once at
     // creation and NOT re-derivable — server-only, never sent to the client.
@@ -195,17 +187,16 @@ export const hubProject = pgTable(
     // token backstops reads/commits when there's no interactive caller. Set at
     // import.
     githubConnectedUserId: text("github_connected_user_id"),
-    // Danger-tab tombstone. Set true when the project is deleted from the hub;
-    // the row stays (keyed by repoId) so it isn't recreated. Every project
-    // listing filters hidden=false.
+    // Hidden row: an upload reserved but not yet finalized (legacy: old
+    // delete tombstones). Every project listing filters hidden=false.
     hidden: boolean("hidden").notNull().default(false),
   },
   (table) => ({
-    uqHubProjectRepoId: uniqueIndex("uq_hub_project_repo_id").on(table.repoId),
-    uqHubProjectOwnerRepoCi: uniqueIndex("uq_hub_project_owner_repo_ci").on(
-      sql`lower(${table.owner})`,
-      sql`lower(${table.repo})`
-    ),
+    // Upload names must stay unique (owner='uploads'); GitHub repos may be
+    // imported more than once.
+    uqHubProjectOwnerRepoCi: uniqueIndex("uq_hub_project_owner_repo_ci")
+      .on(sql`lower(${table.owner})`, sql`lower(${table.repo})`)
+      .where(sql`${table.source} = 'upload'`),
   })
 );
 

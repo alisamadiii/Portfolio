@@ -131,11 +131,11 @@ export function StepSearchAd() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { repoId, websiteUrl } = useAgency();
+  const { projectId, websiteUrl } = useAgency();
 
-  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ repoId }));
+  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const campaigns = useQuery(
-    trpc.agency.campaigns.list.queryOptions({ repoId })
+    trpc.agency.campaigns.list.queryOptions({ projectId })
   );
 
   const [campaignId, setCampaignId] = useState("");
@@ -180,7 +180,7 @@ export function StepSearchAd() {
   const saveAnd = async (to?: string) => {
     if (!campaign || !adText) return;
     try {
-      await save.mutateAsync({ repoId, id: campaign.id, adText });
+      await save.mutateAsync({ projectId, id: campaign.id, adText });
       if (to) router.push(to);
     } catch {
       // onError toasted
@@ -330,8 +330,8 @@ export function StepSearchAd() {
             values={values}
             links={{
               keywords: campaign
-                ? `${sectionUrl(repoId, "keywords")}/${campaign.id}`
-                : sectionUrl(repoId, "keywords"),
+                ? `${sectionUrl(projectId, "keywords")}/${campaign.id}`
+                : sectionUrl(projectId, "keywords"),
             }}
           />
         </>
@@ -346,7 +346,7 @@ export function StepSearchAd() {
           <p className="text-muted-foreground text-[17px] leading-relaxed">
             No keyword groups yet. Add one on the{" "}
             <Link
-              href={sectionUrl(repoId, "keywords")}
+              href={sectionUrl(projectId, "keywords")}
               className="text-foreground underline underline-offset-2"
             >
               Keywords

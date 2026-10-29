@@ -74,7 +74,7 @@ export async function annotateAstroSource(
  * When disabled: nothing is injected at all.
  */
 export default function cmsBridge({
-  repoId,
+  projectId,
   enabled = true,
   project,
   endpoint = "https://pilot.alisamadii.com",
@@ -86,9 +86,9 @@ export default function cmsBridge({
     hooks: {
       "astro:config:setup": ({ config, injectScript, updateConfig, logger }) => {
         if (!enabled) return;
-        if (!repoId) {
+        if (!projectId) {
           logger.warn(
-            "cms-bridge: repoId is required — edit submissions will fail."
+            "cms-bridge: projectId is required — edit submissions will fail."
           );
         }
 
@@ -148,7 +148,7 @@ export default function cmsBridge({
         const runtime: BridgeRuntimeConfig = {
           project,
           endpoint,
-          repoId,
+          projectId,
           branch,
         };
         injectScript(

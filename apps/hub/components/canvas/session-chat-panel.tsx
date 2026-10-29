@@ -237,7 +237,7 @@ function MessageMeta({
 
 export function SessionChatPanel() {
   const {
-    repoId,
+    projectId,
     session,
     editToken,
     capacityMessage,
@@ -254,7 +254,7 @@ export function SessionChatPanel() {
   const queryClient = useQueryClient();
 
   const sessionQueryKey = trpc.cms.previewSession.get.queryOptions({
-    repoId,
+    projectId,
   }).queryKey;
   const invalidateSession = () =>
     queryClient.invalidateQueries({ queryKey: sessionQueryKey });
@@ -675,7 +675,7 @@ export function SessionChatPanel() {
   // into a pause control (below) instead.
   const pause = () => {
     if (!session || cancelMutation.isPending) return;
-    cancelMutation.mutate({ repoId, sessionId: session.id });
+    cancelMutation.mutate({ projectId, sessionId: session.id });
   };
 
   // `text` = one-click sends (skill chips); otherwise the composer input.
@@ -796,7 +796,7 @@ export function SessionChatPanel() {
             size="sm"
             variant="outline"
             onClick={() =>
-              closeMutation.mutate({ repoId, sessionId: session.id })
+              closeMutation.mutate({ projectId, sessionId: session.id })
             }
           >
             Close session

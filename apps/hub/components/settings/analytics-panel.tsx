@@ -210,15 +210,15 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
   const queryClient = useQueryClient();
   const project = useProject();
 
-  const repoId = project?.repoId ?? 0;
-  const hasProject = !!repoId;
+  const projectId = project?.projectId ?? "";
+  const hasProject = !!projectId;
 
   const [range, setRange] = useState<RangeValue>("28d");
   const [pickedProperty, setPickedProperty] = useState("");
 
   // Gate: property + connector stored on the project → dashboard; else setup.
   const { data: status, isLoading: statusLoading } = useQuery(
-    trpc.analytics.status.queryOptions({ repoId }, { enabled: hasProject })
+    trpc.analytics.status.queryOptions({ projectId }, { enabled: hasProject })
   );
   const connected = hasProject && status?.connected === true;
 
@@ -226,7 +226,7 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
   // PRECONDITION_FAILED until the caller has linked Google with the GA scope,
   // which is exactly the signal to show the Connect button instead.
   const propertiesQuery = useQuery(
-    trpc.analytics.properties.queryOptions({ repoId }, {
+    trpc.analytics.properties.queryOptions({ projectId }, {
       enabled: hasProject && status?.connected === false,
       retry: false,
     })
@@ -237,7 +237,7 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
       onSuccess: () => {
         toast.success("Google Analytics connected");
         queryClient.invalidateQueries({
-          queryKey: trpc.analytics.status.queryOptions({ repoId }).queryKey,
+          queryKey: trpc.analytics.status.queryOptions({ projectId }).queryKey,
         });
       },
       onError: (error) => toast.error(error.message),
@@ -249,7 +249,7 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
       onSuccess: () => {
         setPickedProperty("");
         queryClient.invalidateQueries({
-          queryKey: trpc.analytics.status.queryOptions({ repoId }).queryKey,
+          queryKey: trpc.analytics.status.queryOptions({ projectId }).queryKey,
         });
       },
       onError: (error) => toast.error(error.message),
@@ -258,7 +258,7 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
 
   const report = useQuery(
     trpc.analytics.report.queryOptions(
-      { repoId, range },
+      { projectId, range },
       { enabled: connected, retry: false, placeholderData: keepPreviousData }
     )
   );
@@ -279,7 +279,7 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
     if (error) toast.error(error.message ?? "Could not start Google sign-in");
   };
 
-  if (!repoId) return null;
+  if (!projectId) return null;
 
   if (statusLoading) {
     return (
@@ -351,7 +351,7 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
                 type="button"
                 disabled={!pickedProperty || connect.isPending}
                 onClick={() =>
-                  connect.mutate({ repoId, propertyId: pickedProperty })
+                  connect.mutate({ projectId, propertyId: pickedProperty })
                 }
               >
                 Connect
@@ -400,7 +400,7 @@ export function AnalyticsPanel({ hideHeading }: { hideHeading?: boolean } = {}) 
             variant="outline"
             size="sm"
             disabled={disconnect.isPending}
-            onClick={() => disconnect.mutate({ repoId })}
+            onClick={() => disconnect.mutate({ projectId })}
           >
             Disconnect
           </Button>

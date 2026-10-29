@@ -90,10 +90,10 @@ export const prices = pgTable(
 );
 
 // The single subscription table — product subscriptions (Motion etc.) AND
-// per-project CMS subscriptions live here, distinguished by `repoId`:
-//   repoId NULL     -> product subscription, keyed/upserted on `id` (sub_…)
-//   repoId NOT NULL -> per-project CMS subscription, one row per project,
-//                      upserted on the partial-unique repoId index by the
+// per-project CMS subscriptions live here, distinguished by metadata.projectId:
+//   projectId NULL     -> product subscription, keyed/upserted on `id` (sub_…)
+//   projectId NOT NULL -> per-project CMS subscription, one row per project,
+//                      upserted on the partial-unique projectId index by the
 //                      Stripe webhook's state-sync. Free access is a
 //                      100%-off Stripe promotion code, so every row is a
 //                      real Stripe subscription.
@@ -125,7 +125,7 @@ export const subscriptions = pgTable(
     customerCancellationReason: text("customer_cancellation_reason"),
     customerCancellationComment: text("customer_cancellation_comment"),
     // ── Per-project CMS columns (null on product rows) ──
-    // The tenant key lives in metadata.repoId now (service-agnostic). Plan tier
+    // The tenant key lives in metadata.projectId (hub_project.id, service-agnostic). Plan tier
     // drives gating + home badge; Stripe rows use "paid". The price id tells
     // the website plan apart from agency plans.
     plan: text("plan", { enum: ["paid"] }),
@@ -140,14 +140,14 @@ export const subscriptions = pgTable(
       table.stripeCustomerId
     ),
     // metadata is the service-agnostic access key. One row per tenant is
-    // enforced on the metadata repoId; the lookup index backs the entitlement
-    // query.
-    idxSubscriptionMetaRepo: index("idx_subscription_meta_repo").on(
-      sql`(${table.metadata} ->> 'repoId')`
+    // enforced on the metadata projectId (hub_project.id); the lookup index
+    // backs the entitlement query.
+    idxSubscriptionMetaProject: index("idx_subscription_meta_project").on(
+      sql`(${table.metadata} ->> 'projectId')`
     ),
-    uqSubscriptionMetaRepo: uniqueIndex("uq_subscription_meta_repo")
-      .on(sql`(${table.metadata} ->> 'repoId')`)
-      .where(sql`${table.metadata} ->> 'repoId' is not null`),
+    uqSubscriptionMetaProject: uniqueIndex("uq_subscription_meta_project")
+      .on(sql`(${table.metadata} ->> 'projectId')`)
+      .where(sql`${table.metadata} ->> 'projectId' is not null`),
   })
 );
 

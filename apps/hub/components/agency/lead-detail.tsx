@@ -159,7 +159,7 @@ const Field = ({
 );
 
 /** Reschedule / Cancel for a booking lead, reusing the booking dialogs. */
-function MeetingCard({ lead, repoId }: { lead: Lead; repoId: number }) {
+function MeetingCard({ lead, projectId }: { lead: Lead; projectId: string }) {
   const [rescheduling, setRescheduling] = useState(false);
   const [canceling, setCanceling] = useState(false);
   const at = lead.bookingAt ? new Date(lead.bookingAt) : null;
@@ -238,7 +238,7 @@ function MeetingCard({ lead, repoId }: { lead: Lead; repoId: number }) {
 
       {rescheduling && (
         <RescheduleDialog
-          repoId={repoId}
+          projectId={projectId}
           booking={lead}
           onClose={() => setRescheduling(false)}
           onDone={() => setRescheduling(false)}
@@ -246,7 +246,7 @@ function MeetingCard({ lead, repoId }: { lead: Lead; repoId: number }) {
       )}
       {canceling && (
         <CancelBookingDialog
-          repoId={repoId}
+          projectId={projectId}
           booking={lead}
           onClose={() => setCanceling(false)}
           onDone={() => setCanceling(false)}
@@ -259,7 +259,7 @@ function MeetingCard({ lead, repoId }: { lead: Lead; repoId: number }) {
 export function LeadDetail({ id }: { id: number }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId, role } = useAgency();
+  const { projectId, role } = useAgency();
   const href = useAgencyHref();
   const canEdit = role !== "view-only";
 
@@ -267,7 +267,7 @@ export function LeadDetail({ id }: { id: number }) {
     data: lead,
     isLoading,
     error,
-  } = useQuery(trpc.agency.leads.get.queryOptions({ repoId, id }));
+  } = useQuery(trpc.agency.leads.get.queryOptions({ projectId, id }));
 
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
@@ -280,7 +280,7 @@ export function LeadDetail({ id }: { id: number }) {
 
   const onSaved = (updated: NonNullable<typeof lead>) => {
     queryClient.setQueryData(
-      trpc.agency.leads.get.queryOptions({ repoId, id }).queryKey,
+      trpc.agency.leads.get.queryOptions({ projectId, id }).queryKey,
       updated
     );
     queryClient.invalidateQueries({ queryKey: trpc.agency.leads.list.pathKey() });
@@ -316,7 +316,7 @@ export function LeadDetail({ id }: { id: number }) {
   const isBooking = lead.source === "booking" && Boolean(lead.bookingAt);
 
   const save = (status: AgencyLeadStatus = lead.status) =>
-    update.mutate({ repoId, id, status, valueCents, notes: notes || null });
+    update.mutate({ projectId, id, status, valueCents, notes: notes || null });
 
   const name = lead.name || lead.email || lead.phone || `Lead #${lead.id}`;
 
@@ -399,7 +399,7 @@ export function LeadDetail({ id }: { id: number }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-6">
-          {isBooking && <MeetingCard lead={lead} repoId={repoId} />}
+          {isBooking && <MeetingCard lead={lead} projectId={projectId} />}
 
           {/* Contact */}
           <section className="bg-card ring-foreground/7 flex flex-col gap-3 rounded-[18px] p-6 shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1">
@@ -635,7 +635,7 @@ export function LeadDetail({ id }: { id: number }) {
                       size="sm"
                       variant="outline"
                       disabled={retry.isPending}
-                      onClick={() => retry.mutate({ repoId, id })}
+                      onClick={() => retry.mutate({ projectId, id })}
                     >
                       Try again
                     </Button>
@@ -657,7 +657,7 @@ export function LeadDetail({ id }: { id: number }) {
 
       {statusDialog === "won" && (
         <MarkWonDialog
-          repoId={repoId}
+          projectId={projectId}
           lead={lead}
           onClose={() => setStatusDialog(null)}
           onDone={(updated) => {
@@ -668,7 +668,7 @@ export function LeadDetail({ id }: { id: number }) {
       )}
       {statusDialog === "lost" && (
         <MarkLostDialog
-          repoId={repoId}
+          projectId={projectId}
           lead={lead}
           onClose={() => setStatusDialog(null)}
           onDone={(updated) => {

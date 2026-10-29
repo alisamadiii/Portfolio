@@ -8,7 +8,7 @@ import { WebsiteUrlCard } from "@/components/settings/website-url-card";
 /** Site Settings › Domain. The live site is hosted elsewhere (the client's own
  * Netlify); this only records its address and the embed-script allowlist. */
 export function DomainPanel() {
-  const repoId = useProject()?.repoId ?? 0;
+  const projectId = useProject()?.projectId ?? "";
 
   return (
     <div className="mx-auto w-full max-w-screen-lg space-y-6 p-6">
@@ -19,8 +19,8 @@ export function DomainPanel() {
           form, booking and contact scripts.
         </p>
       </div>
-      <WebsiteUrlCard repoId={repoId} />
-      <OriginsCard repoId={repoId} />
+      <WebsiteUrlCard projectId={projectId} />
+      <OriginsCard projectId={projectId} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { getServerSession } from "@/lib/session-server";
 
 import { AgencySeed } from "@/components/query-seeds";
 import { ErrorCard } from "@/components/repo/project-snapshot-gate";
+import { isProjectId } from "@/lib/paths";
 
 // A project has two UIs: the website editor (@website) and, when the project
 // runs on an agency subscription, the lead-generation agency workspace
@@ -21,11 +22,10 @@ export default async function Layout({
   children: React.ReactNode;
   agency: React.ReactNode;
   website: React.ReactNode;
-  params: Promise<{ repoId: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-  const { repoId: repoIdParam } = await params;
-  const repoId = Number(repoIdParam);
-  if (!Number.isInteger(repoId) || repoId <= 0) {
+  const { projectId } = await params;
+  if (!isProjectId(projectId)) {
     return (
       <ErrorCard
         title="Project not found"
@@ -43,11 +43,11 @@ export default async function Layout({
   if (!session?.user) return redirect(signInUrl);
 
   // Admins can force the website UI on an agency project (AdminViewSwitch).
-  const view = (await cookies()).get(`hub-view-${repoId}`)?.value;
+  const view = (await cookies()).get(`hub-view-${projectId}`)?.value;
   if (view === "website" && isAdminUser(session.user)) return website;
 
   const caller = createHttpCaller(requestHeaders);
-  const agencyProject = await caller.agency.project.query({ repoId });
+  const agencyProject = await caller.agency.project.query({ projectId });
   if (!agencyProject) return website;
 
   return <AgencySeed agency={agencyProject}>{agency}</AgencySeed>;

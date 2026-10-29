@@ -92,9 +92,9 @@ function SelectBox({
 export function BookingPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
 
-  const status = useQuery(trpc.agency.booking.status.queryOptions({ repoId }));
+  const status = useQuery(trpc.agency.booking.status.queryOptions({ projectId }));
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: trpc.agency.booking.pathKey() });
 
@@ -121,7 +121,7 @@ export function BookingPage() {
       ) : (
         <div className="flex flex-col gap-6">
           {status.data.connected && status.data.settings && (
-            <BookingsCard repoId={repoId} />
+            <BookingsCard projectId={projectId} />
           )}
           {!status.data.connected && (
             <ConnectCard needsReconnect={status.data.needsReconnect} />
@@ -129,11 +129,11 @@ export function BookingPage() {
           <SettingsCard
             key={JSON.stringify(status.data.settings)}
             saved={status.data.settings}
-            repoId={repoId}
+            projectId={projectId}
             onSaved={refresh}
           />
-          {status.data.repoId && status.data.settings && (
-            <BookingSnippet repoId={status.data.repoId} />
+          {status.data.projectId && status.data.settings && (
+            <BookingSnippet projectId={status.data.projectId} />
           )}
         </div>
       )}
@@ -183,11 +183,11 @@ function ConnectCard({ needsReconnect }: { needsReconnect: boolean }) {
 
 function SettingsCard({
   saved,
-  repoId,
+  projectId,
   onSaved,
 }: {
   saved: AgencyBookingSettings | null;
-  repoId: number;
+  projectId: string;
   onSaved: () => void;
 }) {
   const trpc = useTRPC();
@@ -463,7 +463,7 @@ function SettingsCard({
         </span>
         <Button
           disabled={!dirty || save.isPending}
-          onClick={() => save.mutate({ repoId, settings: form })}
+          onClick={() => save.mutate({ projectId, settings: form })}
         >
           {saved ? "Save changes" : "Turn on booking"}
         </Button>
@@ -474,8 +474,8 @@ function SettingsCard({
 
 // ─── Install snippet ─────────────────────────────────────────────
 
-function BookingSnippet({ repoId }: { repoId: number }) {
-  const snippet = `<script src="${API_URL}/booking.js" data-key="${repoId}" defer></script>\n<button data-booking>Book an appointment</button>`;
+function BookingSnippet({ projectId }: { projectId: string }) {
+  const snippet = `<script src="${API_URL}/booking.js" data-key="${projectId}" defer></script>\n<button data-booking>Book an appointment</button>`;
   return (
     <FrameCard innerClassName="flex flex-col gap-3">
       <p className="text-[17px] font-semibold">Put booking on the website</p>
@@ -511,11 +511,11 @@ function BookingSnippet({ repoId }: { repoId: number }) {
 
 // ─── Bookings list ───────────────────────────────────────────────
 
-function BookingsCard({ repoId }: { repoId: number }) {
+function BookingsCard({ projectId }: { projectId: string }) {
   const href = useAgencyHref();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const bookings = useQuery(trpc.agency.booking.list.queryOptions({ repoId }));
+  const bookings = useQuery(trpc.agency.booking.list.queryOptions({ projectId }));
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: trpc.agency.booking.pathKey() });
 
@@ -662,7 +662,7 @@ function BookingsCard({ repoId }: { repoId: number }) {
                         disabled={setOutcome.isPending}
                         onClick={() =>
                           setOutcome.mutate({
-                            repoId,
+                            projectId,
                             leadId: booking.id,
                             outcome: null,
                           })
@@ -688,7 +688,7 @@ function BookingsCard({ repoId }: { repoId: number }) {
                           disabled={setOutcome.isPending}
                           onClick={() =>
                             setOutcome.mutate({
-                              repoId,
+                              projectId,
                               leadId: booking.id,
                               outcome: "completed",
                             })
@@ -702,7 +702,7 @@ function BookingsCard({ repoId }: { repoId: number }) {
                           disabled={setOutcome.isPending}
                           onClick={() =>
                             setOutcome.mutate({
-                              repoId,
+                              projectId,
                               leadId: booking.id,
                               outcome: "no_show",
                             })
@@ -721,7 +721,7 @@ function BookingsCard({ repoId }: { repoId: number }) {
 
       {cancelTarget && (
         <CancelBookingDialog
-          repoId={repoId}
+          projectId={projectId}
           booking={cancelTarget}
           onClose={() => setCancelTarget(null)}
           onDone={() => {
@@ -732,7 +732,7 @@ function BookingsCard({ repoId }: { repoId: number }) {
       )}
       {rescheduleTarget && (
         <RescheduleDialog
-          repoId={repoId}
+          projectId={projectId}
           booking={rescheduleTarget}
           onClose={() => setRescheduleTarget(null)}
           onDone={() => {

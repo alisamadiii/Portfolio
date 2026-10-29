@@ -51,26 +51,26 @@ export const authenticatedProcedure = baseProcedure.use(
     });
   }
 );
-// CMS-scoped: requires `repoId` in the input (the project's stable identity),
+// CMS-scoped: requires `projectId` in the input (the project's stable identity),
 // resolves the caller's token for that project, and injects `user` + `token` +
 // the derived `owner`/`repo` (display + GitHub REST) into ctx. Individual
 // procedures merge their own input on top (e.g. `branch`).
 // `token` is null for uploaded projects (source 'upload') — they have no
 // GitHub repo. GitHub-only procedures call requireGithubToken below.
 export const cmsProcedure = authenticatedProcedure
-  .input(z.object({ repoId: z.number().int().positive() }))
+  .input(z.object({ projectId: z.string().uuid() }))
   .use(async ({ next, ctx, input }) => {
     const user = ctx.session.user;
     const { token, source, role, owner, repo } = await getToken(
       user,
-      input.repoId
+      input.projectId
     );
     if (!token && source !== "upload") {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "Token not found" });
     }
 
     return next({
-      ctx: { ...ctx, user, token, source, role, owner, repo, repoId: input.repoId },
+      ctx: { ...ctx, user, token, source, role, owner, repo, projectId: input.projectId },
     });
   });
 
@@ -152,13 +152,13 @@ export const cmsFullAccessProcedure = cmsProcedure.use(
 // Collaborator management: admins or full-access collaborators of the repo.
 // Injects `repoAccess` (DB-only lookup) and `isActorAdmin`.
 export const collaboratorManageProcedure = authenticatedProcedure
-  .input(z.object({ repoId: z.number().int().positive() }))
+  .input(z.object({ projectId: z.string().uuid() }))
   .use(async ({ next, ctx, input }) => {
     let access;
     try {
       access = await requireCollaboratorManageAccess(
         ctx.session.user,
-        input.repoId
+        input.projectId
       );
     } catch (error) {
       throw toTRPCError(error);

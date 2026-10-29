@@ -22,7 +22,7 @@ const isoDay = (date: Date) => date.toISOString().slice(0, 10);
  * read; never throws, a failed lookup is retried on a later call.
  */
 export async function enrichAdClicks(client: {
-  repoId: number;
+  projectId: string;
   googleAdsCustomerId: string | null;
 }) {
   const customerId = client.googleAdsCustomerId;
@@ -40,7 +40,7 @@ export async function enrichAdClicks(client: {
       .from(agencyLead)
       .where(
         and(
-          eq(agencyLead.repoId, client.repoId),
+          eq(agencyLead.projectId, client.projectId),
           isNotNull(agencyLead.gclid),
           isNull(agencyLead.adClickCheckedAt),
           lt(agencyLead.createdAt, new Date(now - READY_AFTER)),

@@ -37,7 +37,7 @@ import { Loader2, UploadCloud } from "@/components/icon";
  * session's changes + chat) while keeping the session open.
  */
 export function SessionActions() {
-  const { repoId, session, editToken, noteSessionEnded, onDefaultBranch } =
+  const { projectId, session, editToken, noteSessionEnded, onDefaultBranch } =
     useCanvasEditor();
   const { myRole, source } = useRepo();
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
@@ -46,7 +46,7 @@ export function SessionActions() {
   const queryClient = useQueryClient();
 
   const sessionQueryKey = trpc.cms.previewSession.get.queryOptions({
-    repoId,
+    projectId,
   }).queryKey;
   const invalidateSession = () =>
     queryClient.invalidateQueries({ queryKey: sessionQueryKey });
@@ -150,7 +150,7 @@ export function SessionActions() {
                 // Close immediately — the header Publish button shows the
                 // loading spinner (publishMutation.isPending) from here on.
                 setConfirmPublish(false);
-                publishMutation.mutate({ repoId, sessionId: session.id });
+                publishMutation.mutate({ projectId, sessionId: session.id });
               }}
             >
               Publish
@@ -176,7 +176,7 @@ export function SessionActions() {
             <AlertDialogAction
               onClick={() => {
                 setConfirmDiscard(false);
-                resetMutation.mutate({ repoId, sessionId: session.id });
+                resetMutation.mutate({ projectId, sessionId: session.id });
               }}
             >
               Discard

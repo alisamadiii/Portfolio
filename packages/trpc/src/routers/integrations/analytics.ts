@@ -273,14 +273,14 @@ async function runGa4Report(
 // Google token — so any viewer of the tab sees data without linking their own
 // Google account.
 
-async function resolveProject(repoId: number) {
+async function resolveProject(projectId: string) {
   const [row] = await db
     .select({
       gaPropertyId: hubProject.gaPropertyId,
       gaConnectedUserId: hubProject.gaConnectedUserId,
     })
     .from(hubProject)
-    .where(eq(hubProject.repoId, repoId))
+    .where(eq(hubProject.id, projectId))
     .limit(1);
   if (!row) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
@@ -288,14 +288,14 @@ async function resolveProject(repoId: number) {
   return row;
 }
 
-const ownerRepoWhere = (repoId: number) => eq(hubProject.repoId, repoId);
+const ownerRepoWhere = (projectId: string) => eq(hubProject.id, projectId);
 
 const RANGES = { "7d": 7, "28d": 28, "90d": 90 } as const;
 
 export const analyticsRouter = createTRPCRouter({
   // Cheap gate for the Analytics tab — connected → dashboard, else setup card.
   status: cmsProcedure.query(async ({ ctx }) => {
-    const project = await resolveProject(ctx.repoId);
+    const project = await resolveProject(ctx.projectId);
     return {
       connected: !!(project.gaPropertyId && project.gaConnectedUserId),
       propertyId: project.gaPropertyId,
@@ -305,7 +305,7 @@ export const analyticsRouter = createTRPCRouter({
   // GA4 properties the CALLER's freshly-linked Google account can read —
   // powers the property dropdown right after the consent flow.
   properties: cmsFullAccessProcedure.query(async ({ ctx }) => {
-    await requireFeature(ctx.user, ctx.repoId, "analytics");
+    await requireFeature(ctx.user, ctx.projectId, "analytics");
     const token = await getGoogleAccessToken(ctx.user.id);
     return listGa4Properties(token);
   }),
@@ -315,7 +315,7 @@ export const analyticsRouter = createTRPCRouter({
   connect: cmsFullAccessProcedure
     .input(z.object({ propertyId: z.string().regex(/^\d+$/) }))
     .mutation(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "analytics");
+      await requireFeature(ctx.user, ctx.projectId, "analytics");
       // Verify the caller's token can actually see this property before saving.
       const token = await getGoogleAccessToken(ctx.user.id);
       const properties = await listGa4Properties(token);
@@ -328,7 +328,7 @@ export const analyticsRouter = createTRPCRouter({
       await db
         .update(hubProject)
         .set({ gaPropertyId: input.propertyId, gaConnectedUserId: ctx.user.id })
-        .where(ownerRepoWhere(ctx.repoId));
+        .where(ownerRepoWhere(ctx.projectId));
       return { ok: true };
     }),
 
@@ -336,15 +336,15 @@ export const analyticsRouter = createTRPCRouter({
     await db
       .update(hubProject)
       .set({ gaPropertyId: null, gaConnectedUserId: null })
-      .where(ownerRepoWhere(ctx.repoId));
+      .where(ownerRepoWhere(ctx.projectId));
     return { ok: true };
   }),
 
   report: cmsProcedure
     .input(z.object({ range: z.enum(["7d", "28d", "90d"]).default("28d") }))
     .query(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "analytics");
-      const project = await resolveProject(ctx.repoId);
+      await requireFeature(ctx.user, ctx.projectId, "analytics");
+      const project = await resolveProject(ctx.projectId);
       if (!project.gaPropertyId || !project.gaConnectedUserId) {
         throw RECONNECT();
       }

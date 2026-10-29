@@ -195,7 +195,7 @@ export const UploadImport = ({
     if (!picked || !pilotUrl) return;
     setBusy(true);
     setProgress(0);
-    let repoId: number | null = null;
+    let projectId: string | null = null;
     try {
       const isZip =
         picked.files.length === 1 && /\.zip$/i.test(picked.files[0]!.path);
@@ -207,10 +207,10 @@ export const UploadImport = ({
       const reserved = await importMutation.mutateAsync({
         name: name.trim() || picked.name,
       });
-      repoId = reserved.repoId;
+      projectId = reserved.projectId;
 
       const result = await uploadZip(
-        `${pilotUrl}/api/v1/imports?repoId=${reserved.repoId}&name=${encodeURIComponent(reserved.name)}`,
+        `${pilotUrl}/api/v1/imports?projectId=${reserved.projectId}&name=${encodeURIComponent(reserved.name)}`,
         reserved.importToken,
         blob,
         setProgress
@@ -219,14 +219,14 @@ export const UploadImport = ({
         throw new Error(result.error ?? `Upload failed (${result.status}).`);
       }
 
-      await finalizeMutation.mutateAsync({ repoId: reserved.repoId });
+      await finalizeMutation.mutateAsync({ projectId: reserved.projectId });
       toast.success("Project imported.");
       await queryClient.invalidateQueries();
       onClose();
-      router.push(repoPath(reserved.repoId));
+      router.push(repoPath(reserved.projectId));
     } catch (error) {
-      if (repoId !== null) {
-        cancelMutation.mutate({ repoId });
+      if (projectId !== null) {
+        cancelMutation.mutate({ projectId });
       }
       toast.error(
         error instanceof Error ? error.message : "Import failed. Try again."

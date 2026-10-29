@@ -32,20 +32,20 @@ import { resolveProjectRole } from "./project-access";
 const getToken = cache(
   async (
     user: { id: string; email: string; role?: string | null },
-    repoId: number
+    projectId: string
   ) => {
-    // repoId is the project's stable, globally-unique identity. owner/repo are
+    // projectId is the project's stable, globally-unique identity. owner/repo are
     // derived from the row (display + GitHub REST), never used to decide access.
     const [project] = await db
       .select({
         owner: hubProject.owner,
         repo: hubProject.repo,
         source: hubProject.source,
-        repoId: hubProject.repoId,
+        projectId: hubProject.id,
         githubConnectedUserId: hubProject.githubConnectedUserId,
       })
       .from(hubProject)
-      .where(and(eq(hubProject.repoId, repoId), eq(hubProject.hidden, false)))
+      .where(and(eq(hubProject.id, projectId), eq(hubProject.hidden, false)))
       .limit(1);
 
     // No visible row = the project was deleted from the hub (tombstoned) or

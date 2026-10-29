@@ -34,7 +34,7 @@ export const PlanCard = ({
   compact?: boolean;
 }) => {
   const trpc = useTRPC();
-  const product = useQuery(trpc.products.getByProject.queryOptions("AGENCY"));
+  const product = useQuery(trpc.products.getForPlan.queryOptions("website:paid"));
 
   const features =
     ((product.data?.metadata as { features?: string[] } | null)?.features ??

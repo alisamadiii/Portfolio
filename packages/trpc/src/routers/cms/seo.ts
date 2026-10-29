@@ -26,7 +26,7 @@ export const seoRouter = createTRPCRouter({
       // just drops us to the published site.
       let base: string | null = null;
       try {
-        const session = await getPreviewSession(ctx.repoId);
+        const session = await getPreviewSession(ctx.projectId);
         if (session?.status === "ready" && session.previewUrl) {
           base = new URL(session.previewUrl).origin;
         }
@@ -35,7 +35,7 @@ export const seoRouter = createTRPCRouter({
       }
 
       // Fallback: the project's published domain.
-      if (!base) base = await getCustomDomainBaseUrl(ctx.repoId);
+      if (!base) base = await getCustomDomainBaseUrl(ctx.projectId);
       if (!base) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",

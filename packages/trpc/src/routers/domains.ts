@@ -13,11 +13,11 @@ import { normalizeOrigin } from "../lib/agency/origins";
  * elsewhere (the client's own Netlify); the hub only previews and publishes.
  */
 
-const projectOrigins = async (repoId: number) => {
+const projectOrigins = async (projectId: string) => {
   const [project] = await db
     .select({ origins: hubProject.origins })
     .from(hubProject)
-    .where(eq(hubProject.repoId, repoId))
+    .where(eq(hubProject.id, projectId))
     .limit(1);
   if (!project) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
@@ -28,7 +28,7 @@ const projectOrigins = async (repoId: number) => {
 export const domainsRouter = createTRPCRouter({
   /** Hostnames the project's embed scripts (lead form / booking / contact) may run on. */
   origins: createTRPCRouter({
-    get: cmsFullAccessProcedure.query(({ ctx }) => projectOrigins(ctx.repoId)),
+    get: cmsFullAccessProcedure.query(({ ctx }) => projectOrigins(ctx.projectId)),
     set: cmsFullAccessProcedure
       .input(z.object({ origins: z.array(z.string().trim().max(253)).max(50) }))
       .mutation(async ({ ctx, input }) => {
@@ -43,7 +43,7 @@ export const domainsRouter = createTRPCRouter({
         await db
           .update(hubProject)
           .set({ origins: cleaned })
-          .where(eq(hubProject.repoId, ctx.repoId));
+          .where(eq(hubProject.id, ctx.projectId));
         return cleaned;
       }),
   }),

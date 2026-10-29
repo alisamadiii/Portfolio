@@ -27,7 +27,7 @@ import { getConnectedAccount } from "../lib/integrations";
 // ─── Deploy / import flow ────────────────────────────────────────
 // "Add project": pick a GitHub repo + enter its live website URL (used for the
 // iframe preview + as the project's website_url). Every project is repo-keyed
-// (hub_project.repoId). The importing user's id is stored as
+// (hub_project.projectId). The importing user's id is stored as
 // githubConnectedUserId — that user owns the project.
 //
 // The only import source is a GitHub App installation ("Ali Samadi App"): the
@@ -43,10 +43,11 @@ const splitRepo = (fullName: string) => {
 };
 
 /**
- * Create or attach the hub_project for an imported repo. Upserts by repoId so
- * existing rows are reused; sets the project's website_url when provided.
+ * Create the hub_project for an imported repo. Always a new row: one GitHub
+ * repo can back several projects (e.g. a test copy). repoId is stored only for
+ * GitHub get/push; project identity is the row's uuid id.
  */
-async function upsertProject(
+async function insertGithubProject(
   userId: string,
   ghRepo: {
     id: number;
@@ -57,50 +58,10 @@ async function upsertProject(
     updatedAt: string | null;
   },
   websiteUrl?: string | null
-) {
-  const [existing] = await db
-    .select({
-      owner: hubProject.owner,
-      repo: hubProject.repo,
-      githubConnectedUserId: hubProject.githubConnectedUserId,
-    })
-    .from(hubProject)
-    .where(eq(hubProject.repoId, ghRepo.id))
-    .limit(1);
-  // Never let a re-import reassign a project that another user already owns.
-  if (
-    existing?.githubConnectedUserId &&
-    existing.githubConnectedUserId !== userId
-  ) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: `${existing.owner}/${existing.repo} is already owned by another user.`,
-    });
-  }
-  const fields = {
-    // The importing user owns this project (access filtering + full-access role).
-    githubConnectedUserId: userId,
-    // Re-importing a deleted project revives its tombstoned row — without this
-    // the project stays invisible (every listing and getToken filter hidden).
-    hidden: false,
-    ...(websiteUrl ? { websiteUrl } : {}),
-  };
-  if (existing) {
-    await db
-      .update(hubProject)
-      .set({
-        ...fields,
-        // Identity is repoId; owner/repo are display-only. Refresh them from the
-        // live GitHub metadata so a rename/transfer keeps the label honest.
-        owner: ghRepo.owner,
-        repo: ghRepo.repo,
-        private: ghRepo.private,
-        defaultBranch: ghRepo.defaultBranch,
-        githubUpdatedAt: new Date(ghRepo.updatedAt ?? Date.now()),
-      })
-      .where(eq(hubProject.repoId, ghRepo.id));
-  } else {
-    await db.insert(hubProject).values({
+): Promise<string> {
+  const [row] = await db
+    .insert(hubProject)
+    .values({
       repoId: ghRepo.id,
       owner: ghRepo.owner,
       repo: ghRepo.repo,
@@ -108,17 +69,20 @@ async function upsertProject(
       defaultBranch: ghRepo.defaultBranch,
       githubUpdatedAt: new Date(ghRepo.updatedAt ?? Date.now()),
       syncedAt: new Date(),
-      ...fields,
-    });
-  }
+      // The importing user owns this project (access filtering + full-access role).
+      githubConnectedUserId: userId,
+      ...(websiteUrl ? { websiteUrl } : {}),
+    })
+    .returning({ id: hubProject.id });
 
   // Provision this project's useSend email team + sending subdomain in the
   // background. Idempotent and best-effort — never blocks or fails the import;
   // the project's Emails view offers a manual retry if this doesn't finish.
   void provisionProjectEmails({
-    repoId: ghRepo.id,
+    projectId: row!.id,
     name: `${ghRepo.owner}/${ghRepo.repo}`,
   });
+  return row!.id;
 }
 
 const ghAppHeaders = (auth: string) => ({
@@ -400,8 +364,8 @@ export const deployRouter = createTRPCRouter({
           });
         }
       }
-      await upsertProject(userId, ghRepo, websiteUrl);
-      return { repo: ghRepo.repo, repoId: ghRepo.id };
+      const projectId = await insertGithubProject(userId, ghRepo, websiteUrl);
+      return { repo: ghRepo.repo, projectId };
     }),
 
   // ─── Upload source (no GitHub) ────────────────────────────────────
@@ -418,19 +382,19 @@ export const deployRouter = createTRPCRouter({
   // Step 2 (after the browser's zip upload): verify the workspace landed on
   // content-pilot, then reveal the row and store the live URL.
   finalizeUpload: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const project = await requireOwnUploadRow(ctx.session.user, input.repoId);
-      await finalizeUploadProject(input.repoId);
-      return { repoId: input.repoId, name: project.repo };
+      const project = await requireOwnUploadRow(ctx.session.user, input.projectId);
+      await finalizeUploadProject(input.projectId);
+      return { projectId: input.projectId, name: project.repo };
     }),
 
   // Error path: drop a reserved-but-never-finalized row so the name frees up.
   cancelUpload: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      await requireOwnUploadRow(ctx.session.user, input.repoId);
-      await cancelUploadProject(input.repoId);
+      await requireOwnUploadRow(ctx.session.user, input.projectId);
+      await cancelUploadProject(input.projectId);
       return { ok: true };
     }),
 });
@@ -438,7 +402,7 @@ export const deployRouter = createTRPCRouter({
 /** The caller's own upload-sourced row (admins pass), or a clear error. */
 async function requireOwnUploadRow(
   user: { id: string; email: string; role?: string | null },
-  repoId: number
+  projectId: string
 ) {
   const [project] = await db
     .select({
@@ -447,7 +411,7 @@ async function requireOwnUploadRow(
       githubConnectedUserId: hubProject.githubConnectedUserId,
     })
     .from(hubProject)
-    .where(eq(hubProject.repoId, repoId))
+    .where(eq(hubProject.id, projectId))
     .limit(1);
   if (!project || project.source !== "upload") {
     throw new TRPCError({ code: "NOT_FOUND", message: "Upload not found." });

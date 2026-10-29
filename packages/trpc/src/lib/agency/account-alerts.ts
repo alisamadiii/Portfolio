@@ -52,7 +52,7 @@ export async function getAccountAlerts(client: Client): Promise<AdsAlert[] | nul
           .from(agencyLead)
           .where(
             and(
-              eq(agencyLead.repoId, client.repoId!),
+              eq(agencyLead.projectId, client.projectId!),
               gte(
                 agencyLead.createdAt,
                 new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)

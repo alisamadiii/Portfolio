@@ -31,12 +31,12 @@ type BookingLike = {
 
 /** Confirm + run the cancel mutation for one booking. */
 export function CancelBookingDialog({
-  repoId,
+  projectId,
   booking,
   onClose,
   onDone,
 }: {
-  repoId: number;
+  projectId: string;
   booking: BookingLike;
   onClose: () => void;
   onDone: () => void;
@@ -69,7 +69,7 @@ export function CancelBookingDialog({
           <Button
             variant="destructive"
             disabled={cancel.isPending}
-            onClick={() => cancel.mutate({ repoId, leadId: booking.id })}
+            onClick={() => cancel.mutate({ projectId, leadId: booking.id })}
           >
             Cancel booking
           </Button>
@@ -81,12 +81,12 @@ export function CancelBookingDialog({
 
 /** Pick a new slot and move the booking. */
 export function RescheduleDialog({
-  repoId,
+  projectId,
   booking,
   onClose,
   onDone,
 }: {
-  repoId: number;
+  projectId: string;
   booking: BookingLike;
   onClose: () => void;
   onDone: () => void;
@@ -98,7 +98,7 @@ export function RescheduleDialog({
     return { from: from.toISOString(), to: to.toISOString() };
   }, []);
   const slots = useQuery(
-    trpc.agency.booking.slots.queryOptions({ repoId, ...range })
+    trpc.agency.booking.slots.queryOptions({ projectId, ...range })
   );
   const [day, setDay] = useState<string | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
@@ -178,7 +178,7 @@ export function RescheduleDialog({
           <Button
             disabled={!slot || reschedule.isPending}
             onClick={() =>
-              slot && reschedule.mutate({ repoId, leadId: booking.id, at: slot })
+              slot && reschedule.mutate({ projectId, leadId: booking.id, at: slot })
             }
           >
             Move booking

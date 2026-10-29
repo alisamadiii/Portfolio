@@ -46,10 +46,10 @@ export function ErrorCard({
  * Wraps every editor route: the website editor and an agency project's Website.
  */
 export async function ProjectSnapshotGate({
-  repoId,
+  projectId,
   children,
 }: {
-  repoId: number;
+  projectId: string;
   children: React.ReactNode;
 }) {
   const caller = createHttpCaller(await headers());
@@ -58,7 +58,7 @@ export async function ProjectSnapshotGate({
   // catalog, `branch` defaults to the repo's default branch — neither is in the URL.
   let repoInfo;
   try {
-    repoInfo = await caller.cms.repos.getSnapshot.query({ repoId });
+    repoInfo = await caller.cms.repos.getSnapshot.query({ projectId });
   } catch (error: any) {
     switch (error?.data?.code) {
       case "NOT_FOUND":
@@ -87,14 +87,14 @@ export async function ProjectSnapshotGate({
         // throws before installationStatus is ever consulted. Route to the
         // install overlay, which polls and unlocks itself after the install.
         const access = await caller.cms.repos.installationStatus.query({
-          repoId,
+          projectId,
         });
         if (access.status === "missing") {
           return (
             <InstallAppOverlay
               owner={access.owner}
               repo={access.repo}
-              repoId={repoId}
+              projectId={projectId}
               installUrl={access.installUrl}
             />
           );
@@ -150,7 +150,7 @@ export async function ProjectSnapshotGate({
   // Push-access gate: the GitHub App must cover the repo (every read, commit
   // and push rides its installation token). "missing" shows a blocking (but
   // translucent) install-app overlay that unlocks itself once installed.
-  const access = await caller.cms.repos.installationStatus.query({ repoId });
+  const access = await caller.cms.repos.installationStatus.query({ projectId });
   const installGate =
     access.status === "missing"
       ? { owner: access.owner, repo: access.repo, installUrl: access.installUrl }
@@ -159,13 +159,13 @@ export async function ProjectSnapshotGate({
   // Hand the snapshot to React Query: useRepo() / useProject() read it from
   // the cache, so it's there on the first render and stays live.
   return (
-    <ProjectSeed repoId={repoId} snapshot={repoInfo}>
+    <ProjectSeed projectId={projectId} snapshot={repoInfo}>
         <RepoLayout>{children}</RepoLayout>
         {installGate && (
           <InstallAppOverlay
             owner={installGate.owner}
             repo={installGate.repo}
-            repoId={repoId}
+            projectId={projectId}
             installUrl={installGate.installUrl}
           />
         )}

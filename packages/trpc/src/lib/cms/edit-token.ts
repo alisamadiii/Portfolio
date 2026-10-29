@@ -20,7 +20,7 @@ const DEFAULT_TTL_SECONDS = 30 * 60;
 export interface EditTokenPayload {
   // GitHub repository id — the only identity claim; content-pilot resolves the
   // owner/repo slug from it server-side, so a rename never invalidates tokens.
-  repoId: number;
+  projectId: string;
   /** Expiry, unix seconds. */
   exp: number;
 }
@@ -52,12 +52,12 @@ const IMPORT_TTL_SECONDS = 15 * 60;
  * payload carrying a `scope`, and its verifyImportToken requires this one.
  */
 export function signImportToken(
-  data: { repoId: number },
+  data: { projectId: string },
   secret: string,
   ttlSeconds: number = IMPORT_TTL_SECONDS
 ): string {
   const payload = {
-    repoId: data.repoId,
+    projectId: data.projectId,
     scope: "import" as const,
     exp: Math.floor(Date.now() / 1000) + ttlSeconds,
   };

@@ -76,14 +76,14 @@ export function useWebsiteUrl(): {
   const project = useProject();
   const owner = project?.owner;
   const repo = project?.repo;
-  const repoId = project?.repoId ?? 0;
+  const projectId = project?.projectId ?? "";
 
   const cached = readCache(owner, repo);
 
   const { data, isSuccess, isError } = useQuery(
     trpc.cms.repos.getSnapshot.queryOptions(
-      { repoId },
-      { enabled: !!repoId, staleTime: TTL_MS, retry: false }
+      { projectId },
+      { enabled: !!projectId, staleTime: TTL_MS, retry: false }
     )
   );
 

@@ -25,12 +25,12 @@ import {
 export function InstallAppOverlay({
   owner,
   repo,
-  repoId,
+  projectId,
   installUrl,
 }: {
   owner: string;
   repo: string;
-  repoId: number;
+  projectId: string;
   installUrl: string | null;
 }) {
   const trpc = useTRPC();
@@ -42,7 +42,7 @@ export function InstallAppOverlay({
   // sequence and re-run the server layout.
   const poll = useQuery(
     trpc.cms.repos.installationStatus.queryOptions(
-      { repoId },
+      { projectId },
       { enabled: !success, refetchInterval: 4000 }
     )
   );

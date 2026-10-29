@@ -18,10 +18,10 @@ import {
   type UseSendEmailRow,
 } from "../lib/usesend";
 import { ensureProjectWorkspace } from "../lib/usesend-provision";
-import { assertRepoAccessByRepoId } from "../lib/cms/authz";
+import { assertRepoAccessByProjectId } from "../lib/cms/authz";
 
 // Emails live in the self-hosted useSend instance. Each project is its own
-// useSend team (workspace), keyed by repoId; hub_project.usesendApiKey is that
+// useSend team (workspace), keyed by projectId; hub_project.usesendApiKey is that
 // team's key and scopes every list/send server-side. "Emails provisioned" ==
 // usesendApiKey set; "sending ready" == usesendDomainId set (the project's
 // subdomain is DNS-verified). Dates and search are filtered in memory over a
@@ -32,7 +32,7 @@ const NOT_FOUND = () =>
 
 const emailId = z.string().min(1).max(100);
 
-async function resolveProject(repoId: number) {
+async function resolveProject(projectId: string) {
   const [row] = await db
     .select({
       repo: hubProject.repo,
@@ -40,7 +40,7 @@ async function resolveProject(repoId: number) {
       notifyEmail: hubProject.notifyEmail,
     })
     .from(hubProject)
-    .where(eq(hubProject.repoId, repoId))
+    .where(eq(hubProject.id, projectId))
     .limit(1);
   if (!row) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
@@ -90,14 +90,14 @@ async function authorizeEmailById(
     // Outside the snapshot window (or undomained) → no way to scope it.
     if (domainId == null) throw NOT_FOUND();
     const projects = await db
-      .select({ repoId: hubProject.repoId })
+      .select({ projectId: hubProject.id })
       .from(hubProject)
       .where(eq(hubProject.usesendDomainId, domainId));
     let allowed = false;
     for (const project of projects) {
       try {
         // Pure DB access check (admin / owner / collaborator) — no GitHub.
-        await assertRepoAccessByRepoId(user, project.repoId);
+        await assertRepoAccessByProjectId(user, project.projectId);
         allowed = true;
         break;
       } catch {
@@ -115,7 +115,7 @@ export const emailsRouter = createTRPCRouter({
   // list/stats, and shows a setup card when the project has no sending
   // domain configured.
   enabled: cmsProcedure.query(async ({ ctx }) => {
-    const project = await resolveProject(ctx.repoId);
+    const project = await resolveProject(ctx.projectId);
     // Team provisioned → the Emails view renders and the project can send
     // (sending runs on the shared agency domain, always available).
     return {
@@ -129,11 +129,11 @@ export const emailsRouter = createTRPCRouter({
   setNotifyEmail: cmsFullAccessProcedure
     .input(z.object({ email: z.string().trim().email().or(z.literal("")) }))
     .mutation(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "emails");
+      await requireFeature(ctx.user, ctx.projectId, "emails");
       await db
         .update(hubProject)
         .set({ notifyEmail: input.email || null })
-        .where(eq(hubProject.repoId, ctx.repoId));
+        .where(eq(hubProject.id, ctx.projectId));
       return { notifyEmail: input.email || null };
     }),
 
@@ -142,11 +142,11 @@ export const emailsRouter = createTRPCRouter({
   // projects imported before this existed, or whose background provisioning
   // didn't finish. Sending needs no domain step (shared agency domain).
   setup: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    await requireFeature(ctx.user, ctx.repoId, "emails");
-    const project = await resolveProject(ctx.repoId);
+    await requireFeature(ctx.user, ctx.projectId, "emails");
+    const project = await resolveProject(ctx.projectId);
     await ensureProjectWorkspace({
-      repoId: ctx.repoId,
-      name: project.repo || `project-${ctx.repoId}`,
+      projectId: ctx.projectId,
+      name: project.repo || `project-${ctx.projectId}`,
     });
     return { enabled: true };
   }),
@@ -164,8 +164,8 @@ export const emailsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "emails");
-      const project = await resolveProject(ctx.repoId);
+      await requireFeature(ctx.user, ctx.projectId, "emails");
+      const project = await resolveProject(ctx.projectId);
       const emails = await projectEmails(project);
 
       const fromTs = input.from?.getTime();
@@ -201,8 +201,8 @@ export const emailsRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "emails");
-      const project = await resolveProject(ctx.repoId);
+      await requireFeature(ctx.user, ctx.projectId, "emails");
+      const project = await resolveProject(ctx.projectId);
       const emails = await projectEmails(project);
 
       const fromTs = input.from?.getTime();
@@ -234,8 +234,8 @@ export const emailsRouter = createTRPCRouter({
   get: cmsProcedure
     .input(z.object({ id: emailId }))
     .query(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "emails");
-      const project = await resolveProject(ctx.repoId);
+      await requireFeature(ctx.user, ctx.projectId, "emails");
+      const project = await resolveProject(ctx.projectId);
       const emails = await projectEmails(project);
       const email = emails.find((e) => e.id === input.id);
       if (!email) throw NOT_FOUND();
@@ -247,8 +247,8 @@ export const emailsRouter = createTRPCRouter({
   getViewUrl: cmsProcedure
     .input(z.object({ id: emailId }))
     .mutation(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "emails");
-      const project = await resolveProject(ctx.repoId);
+      await requireFeature(ctx.user, ctx.projectId, "emails");
+      const project = await resolveProject(ctx.projectId);
 
       // The detail endpoint has no domainId — scope by requiring the id in
       // the project's snapshot. NOT_FOUND for foreign emails too, don't leak

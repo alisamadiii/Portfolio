@@ -7,7 +7,7 @@ import { hubProject } from "@workspace/drizzle/schema";
 import { UseSendError, usesendFetch } from "@workspace/email/usesend";
 
 // ─── Per-project useSend provisioning ────────────────────────────
-// Every project is its own useSend team (workspace), keyed by repoId
+// Every project is its own useSend team (workspace), keyed by projectId
 // (Team.externalId). Created with the instance admin key; the returned per-team
 // API key is stored on hub_project and scopes every later call. Sending uses a
 // single shared, env-configured agency domain that every team may send from
@@ -38,10 +38,10 @@ type WorkspaceResponse = {
  * we never stored its key (409) — the key can't be re-derived.
  */
 export async function ensureProjectWorkspace(args: {
-  repoId: number;
+  projectId: string;
   name: string;
 }): Promise<{ teamId: number; apiKey: string }> {
-  const { repoId, name } = args;
+  const { projectId, name } = args;
 
   const [row] = await db
     .select({
@@ -49,7 +49,7 @@ export async function ensureProjectWorkspace(args: {
       apiKey: hubProject.usesendApiKey,
     })
     .from(hubProject)
-    .where(eq(hubProject.repoId, repoId))
+    .where(eq(hubProject.id, projectId))
     .limit(1);
 
   if (row?.apiKey && row.teamId != null) {
@@ -61,12 +61,12 @@ export async function ensureProjectWorkspace(args: {
     res = await usesendFetch<WorkspaceResponse>("/api/v1/workspaces", {
       method: "POST",
       apiKey: adminKey(),
-      body: { name, externalId: String(repoId) },
+      body: { name, externalId: String(projectId) },
     });
   } catch (error) {
     if (error instanceof UseSendError && error.status === 409) {
       throw new Error(
-        `useSend already has a team for repo ${repoId} but its API key was never stored; an admin must mint a new key.`
+        `useSend already has a team for project ${projectId} but its API key was never stored; an admin must mint a new key.`
       );
     }
     throw error;
@@ -75,24 +75,24 @@ export async function ensureProjectWorkspace(args: {
   await db
     .update(hubProject)
     .set({ usesendTeamId: res.teamId, usesendApiKey: res.apiKey })
-    .where(eq(hubProject.repoId, repoId));
+    .where(eq(hubProject.id, projectId));
 
   return { teamId: res.teamId, apiKey: res.apiKey };
 }
 
 /**
  * Best-effort, non-blocking provisioning at project creation. Creates the
- * project's useSend team so client-hub can pull its emails by repoId. Never
+ * project's useSend team so client-hub can pull its emails by projectId. Never
  * throws — failures are logged and the Emails view's "Set up emails" button
  * retries.
  */
 export async function provisionProjectEmails(args: {
-  repoId: number;
+  projectId: string;
   name: string;
 }): Promise<void> {
   try {
-    await ensureProjectWorkspace({ repoId: args.repoId, name: args.name });
+    await ensureProjectWorkspace({ projectId: args.projectId, name: args.name });
   } catch (error) {
-    console.error("useSend provisioning failed for repo", args.repoId, error);
+    console.error("useSend provisioning failed for project", args.projectId, error);
   }
 }

@@ -4,22 +4,22 @@ import { eq } from "drizzle-orm";
 
 import { createHttpError } from "./errors";
 import { isAdminUser } from "../authz-shared";
-import { collaboratorMatchesUserForRepoId } from "./collaborator-access";
+import { collaboratorMatchesUserForProjectId } from "./collaborator-access";
 import { isProjectOwner, resolveProjectRole } from "./project-access";
 import { db, orgRepoTable } from "./db";
 
-// Repo lookup from the project catalog — no GitHub, no PAT. Keyed by repoId
+// Repo lookup from the project catalog — no GitHub, no PAT. Keyed by projectId
 // (the project's stable, globally-unique identity). Collaborator invites are
 // CMS-dashboard-only (nothing is sent to GitHub), and the hub app that runs
 // them has no GITHUB_* env, so this must stay DB-only.
-const getRepoAccessByRepoId = async (repoId: number) => {
+const getRepoAccessByProjectId = async (projectId: string) => {
   const row = await db.query.hubProject.findFirst({
-    where: eq(orgRepoTable.repoId, repoId),
+    where: eq(orgRepoTable.id, projectId),
   });
   if (!row) throw createHttpError("Repository not found.", 404);
 
   return {
-    repoId: row.repoId,
+    projectId: row.id,
     ownerLogin: row.owner,
     repoName: row.repo,
     ownerType: "org",
@@ -32,10 +32,10 @@ const getRepoAccessByRepoId = async (repoId: number) => {
 // invites live in the CMS dashboard, never on GitHub.
 const requireCollaboratorManageAccess = async (
   user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
-  repoId: number
+  projectId: string
 ) => {
   const isActorAdmin = isAdminUser(user);
-  const repoAccess = await getRepoAccessByRepoId(repoId);
+  const repoAccess = await getRepoAccessByProjectId(projectId);
 
   // The project's owner (importer or agency client) manages it like an
   // admin — full parity over collaborators.
@@ -43,7 +43,7 @@ const requireCollaboratorManageAccess = async (
 
   if (!isActorAdmin && !isActorOwner) {
     const row = await db.query.hubCollaborator.findFirst({
-      where: collaboratorMatchesUserForRepoId(user, repoId),
+      where: collaboratorMatchesUserForProjectId(user, projectId),
     });
     if (row?.role !== "full-access") {
       throw createHttpError(
@@ -61,7 +61,7 @@ const requireCollaboratorManageAccess = async (
 const assertProjectAccess = async (
   user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
   project: {
-    repoId: number;
+    projectId: string;
     githubConnectedUserId: string | null;
   }
 ) => {
@@ -70,23 +70,26 @@ const assertProjectAccess = async (
   }
 };
 
-// Same check keyed by the numeric repoId (used by billing endpoints that only
-// carry a repoId). Returns the project row on success.
-const assertRepoAccessByRepoId = async (
+// Same check keyed by projectId (used by billing endpoints that only
+// carry a projectId). Returns the project row on success.
+const assertRepoAccessByProjectId = async (
   user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
-  repoId: number
+  projectId: string
 ) => {
   const project = await db.query.hubProject.findFirst({
-    where: eq(orgRepoTable.repoId, repoId),
+    where: eq(orgRepoTable.id, projectId),
   });
   if (!project) throw createHttpError("Project not found.", 404);
-  await assertProjectAccess(user, project);
+  await assertProjectAccess(user, {
+    projectId: project.id,
+    githubConnectedUserId: project.githubConnectedUserId,
+  });
   return project;
 };
 
 export {
   assertProjectAccess,
-  assertRepoAccessByRepoId,
-  getRepoAccessByRepoId,
+  assertRepoAccessByProjectId,
+  getRepoAccessByProjectId,
   requireCollaboratorManageAccess,
 };

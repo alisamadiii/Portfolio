@@ -17,11 +17,11 @@ import { Plus, Trash } from "@/components/icon";
  * project (stored on hub_project, shared with the agency settings card): the
  * lead form / booking / contact scripts only run on the hosts listed here.
  */
-export function OriginsCard({ repoId }: { repoId: number }) {
+export function OriginsCard({ projectId }: { projectId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const origins = useQuery(trpc.domains.origins.get.queryOptions({ repoId }));
+  const origins = useQuery(trpc.domains.origins.get.queryOptions({ projectId }));
   const [rows, setRows] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
 
@@ -112,7 +112,7 @@ export function OriginsCard({ repoId }: { repoId: number }) {
           <Button
             isLoading={save.isPending}
             disabled={!dirty || save.isPending}
-            onClick={() => save.mutate({ repoId, origins: rows })}
+            onClick={() => save.mutate({ projectId, origins: rows })}
           >
             Save domains
           </Button>

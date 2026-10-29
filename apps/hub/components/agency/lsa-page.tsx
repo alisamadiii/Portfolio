@@ -64,13 +64,13 @@ const CHARGED: Record<
 
 export function LsaPage() {
   const trpc = useTRPC();
-  const { repoId, adsConnected } = useAgency();
+  const { projectId, adsConnected } = useAgency();
   const [days, setDays] = useState<RangeValue>("30");
   const range = useMemo(() => lastDays(Number(days)), [days]);
 
   const stats = useQuery(
     trpc.agency.ads.lsa.stats.queryOptions(
-      { repoId, ...range },
+      { projectId, ...range },
       {
         enabled: adsConnected,
         staleTime: 5 * 60_000,
@@ -80,7 +80,7 @@ export function LsaPage() {
   );
   const leads = useQuery(
     trpc.agency.ads.lsa.leads.queryOptions(
-      { repoId, ...range },
+      { projectId, ...range },
       {
         enabled: adsConnected,
         staleTime: 5 * 60_000,

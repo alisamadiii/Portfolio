@@ -35,12 +35,12 @@ import {
   attributionSchema,
   clientIp,
   corsHeaders,
-  findClientByRepoId,
+  findClientByProjectId,
   hostOf,
   isAllowedOrigin,
   isRateLimited,
   leadEmailHtml,
-  parseRepoIdParam,
+  parseProjectIdParam,
 } from "@/lib/agency-public";
 
 // ─── Public booking endpoint ────────────────────────────────────
@@ -63,7 +63,7 @@ export async function OPTIONS(req: Request) {
   });
 }
 
-type PublicClient = NonNullable<Awaited<ReturnType<typeof findClientByRepoId>>>;
+type PublicClient = NonNullable<Awaited<ReturnType<typeof findClientByProjectId>>>;
 
 const activeTypes = (settings: AgencyBookingSettings) =>
   settings.types.filter((type) => type.active !== false);
@@ -80,18 +80,18 @@ const bookable = (settings: AgencyBookingSettings | null) =>
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ repoId: string }> }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { repoId: repoIdParam } = await params;
+  const { projectId: projectIdParam } = await params;
   const origin = req.headers.get("origin");
   const headers = corsHeaders(origin, "GET, POST, OPTIONS");
 
-  const repoId = parseRepoIdParam(repoIdParam);
-  if (repoId === null) {
+  const projectId = parseProjectIdParam(projectIdParam);
+  if (projectId === null) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
 
-  const client = await findClientByRepoId(repoId);
+  const client = await findClientByProjectId(projectId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -100,7 +100,7 @@ export async function GET(
   }
   // Reads are cheap and the widget fetches per week browsed, so the cap is
   // far looser than the booking POST's.
-  if (await isRateLimited(`bookget:${repoId}:${clientIp(req)}`, 120)) {
+  if (await isRateLimited(`bookget:${projectId}:${clientIp(req)}`, 120)) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429, headers });
   }
 
@@ -148,7 +148,7 @@ export async function GET(
 
   try {
     const slots = await getAvailability({
-      repoId: client.repoId,
+      projectId: client.projectId,
       userId: client.userId,
       settings: settings!,
       fromMs,
@@ -177,18 +177,18 @@ const bodySchema = attributionSchema.extend({
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ repoId: string }> }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { repoId: repoIdParam } = await params;
+  const { projectId: projectIdParam } = await params;
   const origin = req.headers.get("origin");
   const headers = corsHeaders(origin, "GET, POST, OPTIONS");
 
-  const repoId = parseRepoIdParam(repoIdParam);
-  if (repoId === null) {
+  const projectId = parseProjectIdParam(projectIdParam);
+  if (projectId === null) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
 
-  const client = await findClientByRepoId(repoId);
+  const client = await findClientByProjectId(projectId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -198,7 +198,7 @@ export async function POST(
   if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
     return NextResponse.json({ error: "Request too large" }, { status: 413, headers });
   }
-  if (await isRateLimited(`booking:${repoId}:${clientIp(req)}`)) {
+  if (await isRateLimited(`booking:${projectId}:${clientIp(req)}`)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }
@@ -301,7 +301,7 @@ export async function POST(
     [lead] = await db
       .insert(agencyLead)
       .values({
-        repoId: client.repoId,
+        projectId: client.projectId,
         source: "booking",
         status: isSpam ? "spam" : "new",
         name: data.name,
@@ -334,7 +334,7 @@ export async function POST(
       })
       .returning();
   } catch (error) {
-    // Unique (repo_id, booking_at): someone booked the same slot first.
+    // Unique (project_id, booking_at): someone booked the same slot first.
     if ((error as { code?: string })?.code === "23505") {
       return NextResponse.json(
         { error: "That time was just taken.", taken: true },
@@ -417,7 +417,7 @@ export async function POST(
       to: client.notifyEmail ?? client.ownerEmail,
       replyTo: data.email,
       subject: `New booking: ${type.name} with ${data.name}`,
-      html: leadEmailHtml(lines, `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`, siteName, {
+      html: leadEmailHtml(lines, `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`, siteName, {
         tag: "New booking",
         title: `${data.name} booked ${type.name}`,
       }),
@@ -426,7 +426,7 @@ export async function POST(
         "",
         ...lines.map(([label, value]) => `${label}: ${value}`),
         "",
-        `${urls.cms}/p/${client.repoId}/agency/${lead!.id}`,
+        `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`,
       ].join("\n"),
     });
   } catch (error) {

@@ -122,7 +122,7 @@ import { ensureStripeCustomer } from "./payments";
 
 // ─── Lead-generation agency ──────────────────────────────────────
 // Agency clients see the agency UI in the Hub: their one website, the leads
-// its forms capture (POST /api/agency/forms/[repoId] on apps/api), and their
+// its forms capture (POST /api/agency/forms/[projectId] on apps/api), and their
 // Google Ads results. Closing a lead as won reports it back to Google Ads.
 
 type SessionUser = { id: string; email: string; role?: string | null };
@@ -133,25 +133,25 @@ async function agencyRoleForClient(
   client: typeof agencyClient.$inferSelect
 ): Promise<CollaboratorRole | null> {
   if (isAdminUser(user) || client.userId === user.id) return "full-access";
-  if (!client.repoId) return null;
+  if (!client.projectId) return null;
   const collaboration = await db.query.hubCollaborator.findFirst({
     where: and(
       collaboratorMatchesUser(user),
-      eq(hubCollaborator.repoId, client.repoId)
+      eq(hubCollaborator.projectId, client.projectId)
     ),
     columns: { role: true },
   });
   return collaboration?.role ?? null;
 }
 
-// Agency-scoped: requires `repoId`, resolves the caller's role on that agency
+// Agency-scoped: requires `projectId`, resolves the caller's role on that agency
 // client from the DB only (no GitHub token needed, unlike cmsProcedure).
 const agencyProcedure = authenticatedProcedure
-  .input(z.object({ repoId: z.number().int().positive() }))
+  .input(z.object({ projectId: z.string().uuid() }))
   .use(async ({ next, ctx, input }) => {
     const user = ctx.session.user;
     const client = await db.query.agencyClient.findFirst({
-      where: eq(agencyClient.repoId, input.repoId),
+      where: eq(agencyClient.projectId, input.projectId),
     });
     if (!client) {
       throw new TRPCError({
@@ -168,11 +168,11 @@ const agencyProcedure = authenticatedProcedure
       });
     }
     // Every agency screen is built on leads; the plan catalog decides who has them.
-    await requireFeature(user, input.repoId, "leads");
+    await requireFeature(user, input.projectId, "leads");
 
-    // Found by repoId, so the website is linked here.
+    // Found by projectId, so the website is linked here.
     return next({
-      ctx: { ...ctx, client: { ...client, repoId: input.repoId }, role },
+      ctx: { ...ctx, client: { ...client, projectId: input.projectId }, role },
     });
   });
 
@@ -263,9 +263,9 @@ const hostOf = (url: string | null) => {
   }
 };
 
-const getLead = async (repoId: number, id: number) => {
+const getLead = async (projectId: string, id: number) => {
   const lead = await db.query.agencyLead.findFirst({
-    where: and(eq(agencyLead.id, id), eq(agencyLead.repoId, repoId)),
+    where: and(eq(agencyLead.id, id), eq(agencyLead.projectId, projectId)),
   });
   if (!lead)
     throw new TRPCError({ code: "NOT_FOUND", message: "Lead not found." });
@@ -301,7 +301,7 @@ const leadsRouter = createTRPCRouter({
         ]);
       }
       const where = and(
-        eq(agencyLead.repoId, ctx.client.repoId),
+        eq(agencyLead.projectId, ctx.client.projectId),
         // Only leads whose ad click was matched to this campaign.
         input.campaignId
           ? sql`${agencyLead.adClick}->>'campaignId' = ${input.campaignId}`
@@ -336,7 +336,7 @@ const leadsRouter = createTRPCRouter({
 
   get: agencyProcedure
     .input(z.object({ id: z.number().int().positive() }))
-    .query(({ ctx, input }) => getLead(ctx.client.repoId, input.id)),
+    .query(({ ctx, input }) => getLead(ctx.client.projectId, input.id)),
 
   // Counts, won value and leads per day for a date range (inclusive, UTC).
   stats: agencyProcedure
@@ -357,7 +357,7 @@ const leadsRouter = createTRPCRouter({
         ? sql`${agencyLead.adClick}->>'campaignId' = ${input.campaignId}`
         : undefined;
       const inRange = and(
-        eq(agencyLead.repoId, ctx.client.repoId),
+        eq(agencyLead.projectId, ctx.client.projectId),
         campaignFilter,
         gte(agencyLead.createdAt, from),
         lt(agencyLead.createdAt, to)
@@ -365,7 +365,7 @@ const leadsRouter = createTRPCRouter({
 
       const notSpam = and(inRange, ne(agencyLead.status, "spam"));
       const wonInRange = and(
-        eq(agencyLead.repoId, ctx.client.repoId),
+        eq(agencyLead.projectId, ctx.client.projectId),
         campaignFilter,
         eq(agencyLead.status, "won"),
         gte(agencyLead.wonAt, from),
@@ -469,7 +469,7 @@ const leadsRouter = createTRPCRouter({
 
       // Bookings count by meeting time, not capture time; canceled ones drop out.
       const bookingInRange = and(
-        eq(agencyLead.repoId, ctx.client.repoId),
+        eq(agencyLead.projectId, ctx.client.projectId),
         campaignFilter,
         eq(agencyLead.source, "booking"),
         isNull(agencyLead.bookingCanceledAt),
@@ -567,7 +567,7 @@ const leadsRouter = createTRPCRouter({
       const [lead] = await db
         .insert(agencyLead)
         .values({
-          repoId: ctx.client.repoId,
+          projectId: ctx.client.projectId,
           source: "manual",
           channel: "manual",
           name: input.name || null,
@@ -590,7 +590,7 @@ const leadsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const current = await getLead(ctx.client.repoId, input.id);
+      const current = await getLead(ctx.client.projectId, input.id);
 
       const status = input.status ?? current.status;
       const becameWon = status === "won" && current.status !== "won";
@@ -632,18 +632,18 @@ const leadsRouter = createTRPCRouter({
         reportWonLead(ctx.client, lead!),
         reportLeadStage(ctx.client, lead!, "qualified"),
       ]);
-      return getLead(ctx.client.repoId, current.id);
+      return getLead(ctx.client.projectId, current.id);
     }),
 
   retryConversion: agencyWriteProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const lead = await getLead(ctx.client.repoId, input.id);
+      const lead = await getLead(ctx.client.projectId, input.id);
       await Promise.all([
         reportWonLead(ctx.client, lead),
         reportLeadStages(ctx.client, lead),
       ]);
-      return getLead(ctx.client.repoId, input.id);
+      return getLead(ctx.client.projectId, input.id);
     }),
 });
 
@@ -652,7 +652,7 @@ const adminRouter = createTRPCRouter({
     db
       .select({
         id: agencyClient.id,
-        repoId: agencyClient.repoId,
+        projectId: agencyClient.projectId,
         industry: agencyClient.industry,
         adsType: agencyClient.adsType,
         googleAdsCustomerId: agencyClient.googleAdsCustomerId,
@@ -666,12 +666,12 @@ const adminRouter = createTRPCRouter({
       })
       .from(agencyClient)
       .innerJoin(userTable, eq(userTable.id, agencyClient.userId))
-      .leftJoin(hubProject, eq(hubProject.repoId, agencyClient.repoId))
+      .leftJoin(hubProject, eq(hubProject.id, agencyClient.projectId))
       .leftJoin(
         subscriptions,
         eq(
-          sql`${subscriptions.metadata} ->> 'repoId'`,
-          sql`${agencyClient.repoId}::text`
+          sql`${subscriptions.metadata} ->> 'projectId'`,
+          sql`${agencyClient.projectId}::text`
         )
       )
       .orderBy(desc(agencyClient.createdAt))
@@ -745,14 +745,14 @@ const adminRouter = createTRPCRouter({
   }),
 
   // Create an agency workspace on a project, or update one (by `id`). One user
-  // can own many: each agency is its own project (repoId). No website yet →
+  // can own many: each agency is its own project (projectId). No website yet →
   // a starter project (placeholder index.html) is created for the client.
   upsertClient: adminProcedure
     .input(
       z.object({
         id: z.number().int().positive().nullable(),
         email: z.string().trim().email(),
-        repoId: z.number().int().positive().nullable(),
+        projectId: z.string().uuid().nullable(),
         // Starter project name when there's no website yet.
         businessName: z.string().trim().max(100).nullable(),
         industry: z.enum(INDUSTRIES).nullable(),
@@ -784,9 +784,9 @@ const adminRouter = createTRPCRouter({
         });
       }
 
-      if (input.repoId) {
+      if (input.projectId) {
         const project = await db.query.hubProject.findFirst({
-          where: eq(hubProject.repoId, input.repoId),
+          where: eq(hubProject.id, input.projectId),
         });
         if (!project) {
           throw new TRPCError({
@@ -795,7 +795,7 @@ const adminRouter = createTRPCRouter({
           });
         }
         const taken = await db.query.agencyClient.findFirst({
-          where: eq(agencyClient.repoId, input.repoId),
+          where: eq(agencyClient.projectId, input.projectId),
           columns: { id: true },
         });
         if (taken && taken.id !== existing?.id) {
@@ -808,19 +808,19 @@ const adminRouter = createTRPCRouter({
 
       // Every agency lives in a project: the picked one, the current one, or
       // a fresh starter site.
-      const repoId =
-        input.repoId ??
-        existing?.repoId ??
+      const projectId =
+        input.projectId ??
+        existing?.projectId ??
         (
           await createStarterProject({
             userId: owner.id,
             name: input.businessName || owner.name || "My business",
           })
-        ).repoId;
+        ).projectId;
 
       const values = {
         userId: owner.id,
-        repoId,
+        projectId,
         industry: input.industry,
         adsType: input.adsType,
         googleAdsCustomerId: input.googleAdsCustomerId
@@ -845,10 +845,10 @@ const adminRouter = createTRPCRouter({
   // Admin Website ⇄ Agency switch: whether the project has an agency workspace
   // yet (switching to Agency without one creates it first).
   adminView: adminProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ input }) => {
       const client = await db.query.agencyClient.findFirst({
-        where: eq(agencyClient.repoId, input.repoId),
+        where: eq(agencyClient.projectId, input.projectId),
         columns: { id: true },
       });
       return { hasAgency: Boolean(client) };
@@ -857,14 +857,14 @@ const adminRouter = createTRPCRouter({
   // Give a project an agency workspace from the admin switch. Idempotent; the
   // owner is whoever connected the project (the admin when unknown).
   enableForProject: adminProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const existing = await db.query.agencyClient.findFirst({
-        where: eq(agencyClient.repoId, input.repoId),
+        where: eq(agencyClient.projectId, input.projectId),
       });
       if (existing) return existing;
       const project = await db.query.hubProject.findFirst({
-        where: eq(hubProject.repoId, input.repoId),
+        where: eq(hubProject.id, input.projectId),
         columns: { githubConnectedUserId: true },
       });
       if (!project) {
@@ -877,21 +877,21 @@ const adminRouter = createTRPCRouter({
         .insert(agencyClient)
         .values({
           userId: project.githubConnectedUserId ?? ctx.session.user.id,
-          repoId: input.repoId,
+          projectId: input.projectId,
           weeklyReport: false,
         })
-        .onConflictDoNothing({ target: agencyClient.repoId })
+        .onConflictDoNothing({ target: agencyClient.projectId })
         .returning();
       return (
         client ??
         (await db.query.agencyClient.findFirst({
-          where: eq(agencyClient.repoId, input.repoId),
+          where: eq(agencyClient.projectId, input.projectId),
         }))!
       );
     }),
 
   // Stripe Checkout link for the Launch plan ($300 setup + $1,200/mo). Paying
-  // it creates the project's subscription (webhook keys it on metadata.repoId)
+  // it creates the project's subscription (webhook keys it on metadata.projectId)
   // and switches the client to the agency UI. The session is pinned to the
   // client's Stripe customer (matched or created by their hub email), so the
   // email at checkout is read-only — the payment can't land on a stranger.
@@ -909,7 +909,7 @@ const adminRouter = createTRPCRouter({
       }
       const [client] = await db
         .select({
-          repoId: agencyClient.repoId,
+          projectId: agencyClient.projectId,
           userId: agencyClient.userId,
           email: userTable.email,
           name: userTable.name,
@@ -931,7 +931,7 @@ const adminRouter = createTRPCRouter({
       });
       const metadata = {
         plan: "agency-launch",
-        repoId: String(client.repoId),
+        projectId: String(client.projectId),
         userId: client.userId,
       };
       const session = await stripe.checkout.sessions.create({
@@ -981,7 +981,7 @@ const adminRouter = createTRPCRouter({
 // delete, and which lead stage our server reports to each one.
 
 const conversionsProcedure = agencyProcedure.use(async ({ next, ctx }) => {
-  await requireFeature(ctx.session.user, ctx.client.repoId, "ads");
+  await requireFeature(ctx.session.user, ctx.client.projectId, "ads");
   return next({ ctx });
 });
 
@@ -1098,7 +1098,7 @@ const conversionsRouter = createTRPCRouter({
         >`max(${agencyLead.conversionUploadedAt})::text`,
       })
       .from(agencyLead)
-      .where(eq(agencyLead.repoId, ctx.client.repoId));
+      .where(eq(agencyLead.projectId, ctx.client.projectId));
 
     return {
       customerId,
@@ -1255,16 +1255,16 @@ async function unwireAction(
 
 // ─── Booking ─────────────────────────────────────────────────────
 // Appointment settings + the owner's view of bookings. Visitors book through
-// the public widget endpoint (apps/api .../agency/booking/[repoId]); the
+// the public widget endpoint (apps/api .../agency/booking/[projectId]); the
 // calendar behind everything is the OWNER's Google account (client.userId),
 // no matter which hub member manages the booking.
 
 const SLOT_MS = BOOKING_MINUTES * 60 * 1000;
 
 /** The lead must be a live booking belonging to this client. */
-async function findBookingLead(repoId: number, leadId: number) {
+async function findBookingLead(projectId: string, leadId: number) {
   const lead = await db.query.agencyLead.findFirst({
-    where: and(eq(agencyLead.id, leadId), eq(agencyLead.repoId, repoId)),
+    where: and(eq(agencyLead.id, leadId), eq(agencyLead.projectId, projectId)),
   });
   if (!lead || lead.source !== "booking" || !lead.bookingAt) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Booking not found." });
@@ -1285,9 +1285,9 @@ const bookingRouter = createTRPCRouter({
       // Calendar linked before booking existed: one reconnect adds freebusy.
       needsReconnect: !booking && Boolean(calendar),
       settings: ctx.client.bookingSettings,
-      // The embed scripts key on repoId; full-access clients see it to build
+      // The embed scripts key on projectId; full-access clients see it to build
       // their install snippet.
-      repoId: ctx.role === "full-access" ? ctx.client.repoId : null,
+      projectId: ctx.role === "full-access" ? ctx.client.projectId : null,
     };
   }),
 
@@ -1321,7 +1321,7 @@ const bookingRouter = createTRPCRouter({
       .from(agencyLead)
       .where(
         and(
-          eq(agencyLead.repoId, ctx.client.repoId),
+          eq(agencyLead.projectId, ctx.client.projectId),
           eq(agencyLead.source, "booking"),
           isNotNull(agencyLead.bookingAt),
           gte(agencyLead.bookingAt, since)
@@ -1348,7 +1348,7 @@ const bookingRouter = createTRPCRouter({
         return { slots: [] };
       }
       const slots = await getAvailability({
-        repoId: ctx.client.repoId,
+        projectId: ctx.client.projectId,
         userId: ctx.client.userId,
         settings,
         fromMs,
@@ -1366,7 +1366,7 @@ const bookingRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const lead = await findBookingLead(ctx.client.repoId, input.leadId);
+      const lead = await findBookingLead(ctx.client.projectId, input.leadId);
       if (lead.bookingCanceledAt) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -1389,7 +1389,7 @@ const bookingRouter = createTRPCRouter({
   cancel: agencyWriteProcedure
     .input(z.object({ leadId: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
-      const lead = await findBookingLead(ctx.client.repoId, input.leadId);
+      const lead = await findBookingLead(ctx.client.projectId, input.leadId);
       if (lead.bookingCanceledAt) return;
       if (lead.booking?.eventId) {
         await deleteLeadMeeting({
@@ -1408,7 +1408,7 @@ const bookingRouter = createTRPCRouter({
     .input(z.object({ leadId: z.number().int(), at: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const settings = ctx.client.bookingSettings;
-      const lead = await findBookingLead(ctx.client.repoId, input.leadId);
+      const lead = await findBookingLead(ctx.client.projectId, input.leadId);
       if (lead.bookingCanceledAt) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -1442,7 +1442,7 @@ const bookingRouter = createTRPCRouter({
           })
           .where(eq(agencyLead.id, lead.id));
       } catch (error) {
-        // Unique (repo_id, booking_at): that slot is already booked.
+        // Unique (project_id, booking_at): that slot is already booked.
         if ((error as { code?: string })?.code === "23505") {
           throw new TRPCError({
             code: "CONFLICT",
@@ -1470,26 +1470,26 @@ export const agencyRouter = createTRPCRouter({
   // agency (no client row, no access, or no live agency subscription). The hub
   // picks the agency UI over the website editor on this.
   project: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
       const user = ctx.session.user;
       const client = await db.query.agencyClient.findFirst({
-        where: eq(agencyClient.repoId, input.repoId),
+        where: eq(agencyClient.projectId, input.projectId),
       });
       if (!client) return null;
       const role = await agencyRoleForClient(user, client);
       if (!role) return null;
 
-      const entitlement = await getEntitlement(input.repoId);
+      const entitlement = await getEntitlement(input.projectId);
       if (entitlement.product !== "agency" && !isAdminUser(user)) return null;
 
       const project = await db.query.hubProject.findFirst({
-        where: eq(hubProject.repoId, input.repoId),
+        where: eq(hubProject.id, input.projectId),
         columns: { owner: true, repo: true, websiteUrl: true },
       });
 
       return {
-        repoId: input.repoId,
+        projectId: input.projectId,
         role,
         owner: project?.owner ?? "",
         repo: project?.repo ?? "",
@@ -1501,7 +1501,7 @@ export const agencyRouter = createTRPCRouter({
           client.googleAdsActions?.lead && client.googleAdsConversionAction
         ),
         // Only people who can edit the site need the install snippet; it keys
-        // on repoId (above), so no separate value is returned here.
+        // on projectId (above), so no separate value is returned here.
         canInstall: role === "full-access",
       };
     }),
@@ -1517,7 +1517,7 @@ export const agencyRouter = createTRPCRouter({
       const [row] = await db
         .select({ origins: hubProject.origins })
         .from(hubProject)
-        .where(eq(hubProject.repoId, ctx.client.repoId))
+        .where(eq(hubProject.id, ctx.client.projectId))
         .limit(1);
       return row?.origins ?? [];
     }),
@@ -1535,7 +1535,7 @@ export const agencyRouter = createTRPCRouter({
         await db
           .update(hubProject)
           .set({ origins: cleaned })
-          .where(eq(hubProject.repoId, ctx.client.repoId));
+          .where(eq(hubProject.id, ctx.client.projectId));
         return cleaned;
       }),
   }),
@@ -1674,11 +1674,11 @@ export const agencyRouter = createTRPCRouter({
   // Saved copies of the Monday report emails, newest week first.
   reports: createTRPCRouter({
     list: agencyProcedure.query(async ({ ctx }) => {
-      await requireFeature(ctx.session.user, ctx.client.repoId, "leads");
+      await requireFeature(ctx.session.user, ctx.client.projectId, "leads");
       const rows = await db
         .select()
         .from(agencyWeeklyReport)
-        .where(eq(agencyWeeklyReport.repoId, ctx.client.repoId))
+        .where(eq(agencyWeeklyReport.projectId, ctx.client.projectId))
         .orderBy(desc(agencyWeeklyReport.weekFrom))
         .limit(52);
       return rows.map((row) => ({
@@ -1697,7 +1697,7 @@ export const agencyRouter = createTRPCRouter({
         dateRange.extend({ campaignId: z.string().regex(/^\d+$/).optional() })
       )
       .query(async ({ ctx, input }) => {
-        await requireFeature(ctx.session.user, ctx.client.repoId, "ads");
+        await requireFeature(ctx.session.user, ctx.client.projectId, "ads");
         if (!ctx.client.googleAdsCustomerId || !isGoogleAdsConfigured())
           return null;
         try {
@@ -1949,7 +1949,7 @@ export const agencyRouter = createTRPCRouter({
 
     // Light list for the sidebar campaign filter. Null when no account linked.
     campaigns: agencyProcedure.query(async ({ ctx }) => {
-      await requireFeature(ctx.session.user, ctx.client.repoId, "ads");
+      await requireFeature(ctx.session.user, ctx.client.projectId, "ads");
       const customerId = ctx.client.googleAdsCustomerId;
       if (!customerId || !isGoogleAdsConfigured()) return null;
       try {

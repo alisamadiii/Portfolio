@@ -8,8 +8,8 @@ import {
 } from "@/components/document-title";
 import { EditorShell } from "@/components/shell/editor-shell";
 
-/** The canvas editor page body, shared by website projects (/p/[repoId]) and
- * agency projects (/p/[repoId]/website). */
+/** The canvas editor page body, shared by website projects (/p/[projectId]) and
+ * agency projects (/p/[projectId]/website). */
 export function EditorPage({ inAgency = false }: { inAgency?: boolean }) {
   const project = useProject();
 

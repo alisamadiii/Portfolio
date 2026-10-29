@@ -31,7 +31,7 @@ export const projectRouter = createTRPCRouter({
    */
   delete: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
     try {
-      const repoId = ctx.repoId;
+      const projectId = ctx.projectId;
 
       const [project] = await db
         .select({
@@ -41,13 +41,13 @@ export const projectRouter = createTRPCRouter({
           usesendPendingDomainId: hubProject.usesendPendingDomainId,
         })
         .from(hubProject)
-        .where(eq(hubProject.repoId, repoId))
+        .where(eq(hubProject.id, projectId))
         .limit(1);
       if (!project) return { ok: true };
 
       // 1. Billing — hard gate. A failed cancel/refund aborts before anything
       //    is destroyed, and the project survives for a retry.
-      await settleAndCancel(repoId);
+      await settleAndCancel(projectId);
 
       // 2. useSend sending domain (active or still-pending). 404-tolerant;
       //    best-effort so an email-service blip never blocks the delete.
@@ -66,19 +66,19 @@ export const projectRouter = createTRPCRouter({
       //    session (+ transcripts/events/attachments/
       //    staged uploads), and the per-repo setting overrides. Auto-closes a
       //    live editing session, so this never 409s.
-      await deleteImport(repoId);
+      await deleteImport(projectId);
 
       // 4. Wipe project-scoped hub rows (subscription, collaborators, invites,
       //    config + content cache).
       await deleteProjectChildRows([
-        { repoId, owner: project.owner, repo: project.repo },
+        { projectId, owner: project.owner, repo: project.repo },
       ]);
 
       // 5. Remove the project row from our database (GitHub and uploaded
       //    alike; the GitHub repo itself is never touched). Nothing re-adds
       //    projects automatically (only an explicit import inserts), so no
       //    tombstone is needed, and the name is free for a re-import.
-      await db.delete(hubProject).where(eq(hubProject.repoId, repoId));
+      await db.delete(hubProject).where(eq(hubProject.id, projectId));
 
       return { ok: true };
     } catch (error) {
@@ -99,7 +99,7 @@ export const projectRouter = createTRPCRouter({
         const [project] = await db
           .select({ ownerId: hubProject.githubConnectedUserId })
           .from(hubProject)
-          .where(eq(hubProject.repoId, ctx.repoId))
+          .where(eq(hubProject.id, ctx.projectId))
           .limit(1);
         if (!project) {
           throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
@@ -127,7 +127,7 @@ export const projectRouter = createTRPCRouter({
         await db
           .update(hubProject)
           .set({ websiteUrl })
-          .where(eq(hubProject.repoId, ctx.repoId));
+          .where(eq(hubProject.id, ctx.projectId));
         return { websiteUrl };
       } catch (error) {
         if (error instanceof TRPCError) throw error;

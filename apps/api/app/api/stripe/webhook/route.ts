@@ -9,11 +9,14 @@ import { trackPurchase } from "@workspace/google-analytics/server";
 import { db } from "@workspace/drizzle/index";
 import { subscriptions, user, webhookEvents } from "@workspace/drizzle/schema";
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Standalone Stripe webhook — the single billing sync point.
 //
-// Two concerns in ONE subscription table, split by metadata.repoId:
-//  1. Per-project CMS subscriptions (metadata.repoId) -> upserted on the
-//     repoId partial-unique index via syncCmsSubscription.
+// Two concerns in ONE subscription table, split by metadata.projectId:
+//  1. Per-project CMS subscriptions (metadata.projectId) -> upserted on the
+//     projectId partial-unique index via syncCmsSubscription.
 //  2. Everything else (Motion/agency/template purchases) -> the product /
 //     subscription / order mirror rows via the stripe-sync helpers (keyed on
 //     the Stripe sub id).
@@ -24,7 +27,7 @@ import { subscriptions, user, webhookEvents } from "@workspace/drizzle/schema";
 // and order-independent — duplicate or out-of-order events all converge to
 // the same final state, sidestepping Stripe's event-ordering pain.
 //
-// The project<->payment join key is `subscription.metadata.repoId` (set on
+// The project<->payment join key is `subscription.metadata.projectId` (set on
 // both website checkouts and raw payment links), NEVER email — Stripe emails
 // aren't unique and a payment link lets the client pay with any email.
 
@@ -76,20 +79,28 @@ async function syncCmsSubscription(customerId: string, subscriptionId: string | 
       ).data[0];
   if (!sub) return;
 
-  const repoId = Number(sub.metadata.repoId ?? sub.metadata.repo_id);
-  if (!Number.isFinite(repoId) || repoId <= 0) return; // not a CMS project sub
+  // The project this sub unlocks: the row we already synced for this sub wins
+  // (covers subs whose Stripe metadata still says repoId until the one-time
+  // backfill runs), else metadata.projectId (hub_project.id).
+  const [synced] = await db
+    .select({ projectId: sql<string | null>`${subscriptions.metadata} ->> 'projectId'` })
+    .from(subscriptions)
+    .where(eq(subscriptions.id, sub.id))
+    .limit(1);
+  const projectId = synced?.projectId ?? sub.metadata.projectId;
+  if (!projectId || !UUID_RE.test(projectId)) return; // not a project sub
 
   // One row per project. When a different subscription already holds it:
   // - a live row is never overwritten by a sub that isn't live (e.g. the old
   //   website plan's "deleted" event arriving after the agency plan started);
   // - a new live sub replaces the old live one, which is canceled with a
   //   prorated credit so the client never pays twice for the same project.
-  // One live row per tenant, keyed on metadata (the repoId column is gone).
-  const metaRepoId = sql`${subscriptions.metadata} ->> 'repoId'`;
+  // One live row per tenant, keyed on metadata (the projectId column is gone).
+  const metaProjectId = sql`${subscriptions.metadata} ->> 'projectId'`;
   const [current] = await db
     .select({ id: subscriptions.id, status: subscriptions.status })
     .from(subscriptions)
-    .where(eq(metaRepoId, String(repoId)))
+    .where(eq(metaProjectId, projectId))
     .limit(1);
   if (current && current.id !== sub.id && LIVE_STATUSES.has(current.status)) {
     if (!LIVE_STATUSES.has(sub.status)) return;
@@ -128,7 +139,7 @@ async function syncCmsSubscription(customerId: string, subscriptionId: string | 
   // service-agnostic key every entitlement query reads.
   const product = planForPrice(price?.id)?.split(":")[0] ?? "";
   const metadata = {
-    repoId: String(repoId),
+    projectId,
     userId: userId ?? "",
     product,
     name: sub.metadata.name || "",

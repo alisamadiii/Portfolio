@@ -16,12 +16,12 @@ import { useTRPC } from "@workspace/trpc/client";
  * the website Emails tab and the agency settings. Empty = the project owner's
  * account email.
  */
-export function NotifyEmailCard({ repoId }: { repoId: number }) {
+export function NotifyEmailCard({ projectId }: { projectId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const user = useCurrentUser().data?.user ?? null;
 
-  const gate = useQuery(trpc.emails.enabled.queryOptions({ repoId }));
+  const gate = useQuery(trpc.emails.enabled.queryOptions({ projectId }));
   const [value, setValue] = useState("");
   const [dirty, setDirty] = useState(false);
 
@@ -68,7 +68,7 @@ export function NotifyEmailCard({ repoId }: { repoId: number }) {
         <Button
           isLoading={save.isPending}
           disabled={gate.isPending || !dirty || value.trim() === saved}
-          onClick={() => save.mutate({ repoId, email: value.trim() })}
+          onClick={() => save.mutate({ projectId, email: value.trim() })}
         >
           Save
         </Button>

@@ -37,12 +37,12 @@ const dollars = (cents: number, currency: string) => formatMoney(cents, currency
 export function BudgetPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const { campaignId } = useCampaignFilter();
 
   const budget = useQuery(
     trpc.agency.ads.budget.get.queryOptions(
-      { repoId },
+      { projectId },
       { placeholderData: keepPreviousData }
     )
   );
@@ -87,7 +87,7 @@ export function BudgetPage() {
   const saveTarget = () => {
     const value = Number(target);
     setTarget.mutate({
-      repoId,
+      projectId,
       monthlyCents: value > 0 ? Math.round(value * 100) : null,
     });
     setTargetInput(null);
@@ -277,7 +277,7 @@ export function BudgetPage() {
                               if (!value || value <= 0)
                                 return toast.error("Enter a daily budget.");
                               setCampaignBudget.mutate({
-                                repoId,
+                                projectId,
                                 budgetResourceName: campaign.budgetResourceName,
                                 dailyBudgetCents: Math.round(value * 100),
                               });

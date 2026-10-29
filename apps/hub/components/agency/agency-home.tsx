@@ -46,22 +46,22 @@ type Tile = {
 /** The "Finish setting up" checklist — onboarding tiles. */
 function SetupChecklist() {
   const trpc = useTRPC();
-  const { repoId, repo, adsConnected, adsType, conversionsWired } = useAgency();
+  const { projectId, repo, adsConnected, adsType, conversionsWired } = useAgency();
   const href = useAgencyHref();
   // Search-campaign tiles don't apply to an LSA-only client.
   const searchAds = adsConnected && adsType !== "lsa";
 
-  const booking = useQuery(trpc.agency.booking.status.queryOptions({ repoId }));
-  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ repoId }));
+  const booking = useQuery(trpc.agency.booking.status.queryOptions({ projectId }));
+  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const campaigns = useQuery(
-    trpc.agency.campaigns.list.queryOptions({ repoId })
+    trpc.agency.campaigns.list.queryOptions({ projectId })
   );
   const firstLead = useQuery(
-    trpc.agency.leads.list.queryOptions({ repoId, page: 1, pageSize: 1 })
+    trpc.agency.leads.list.queryOptions({ projectId, page: 1, pageSize: 1 })
   );
   const negativeLists = useQuery(
     trpc.agency.ads.negativeLists.list.queryOptions(
-      { repoId },
+      { projectId },
       { enabled: searchAds, retry: false }
     )
   );
@@ -206,9 +206,9 @@ function SetupChecklist() {
 function RecentLeads() {
   const href = useAgencyHref();
   const trpc = useTRPC();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const { data } = useQuery(
-    trpc.agency.leads.list.queryOptions({ repoId, page: 1, pageSize: 5 })
+    trpc.agency.leads.list.queryOptions({ projectId, page: 1, pageSize: 5 })
   );
 
   return (
@@ -273,8 +273,8 @@ function RecentLeads() {
 function NextBooking() {
   const href = useAgencyHref();
   const trpc = useTRPC();
-  const { repoId } = useAgency();
-  const bookings = useQuery(trpc.agency.booking.list.queryOptions({ repoId }));
+  const { projectId } = useAgency();
+  const bookings = useQuery(trpc.agency.booking.list.queryOptions({ projectId }));
 
   const next = bookings.data
     ?.filter(

@@ -60,10 +60,10 @@ export function ShellHeader({
 }) {
   const router = useRouter();
   const [leaveOpen, setLeaveOpen] = useState(false);
-  const { repoId } = useCanvasEditor();
+  const { projectId } = useCanvasEditor();
   const { myRole } = useRepo();
   const canManage = (myRole ?? "full-access") === "full-access";
-  const leaveHref = inAgency ? repoPath(repoId) : "/";
+  const leaveHref = inAgency ? repoPath(projectId) : "/";
 
   const canvasActive = mode === "canvas";
   const settingsActive = mode === "settings";
@@ -140,7 +140,7 @@ export function ShellHeader({
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
         <AdminViewSwitch
-          repoId={repoId}
+          projectId={projectId}
           current={inAgency ? "agency" : "website"}
         />
         <AiIntroDialog />
@@ -154,7 +154,7 @@ export function ShellHeader({
           <Info className="size-5" />
         </Button>
         <User align="end" />
-        <InviteButton repoId={repoId} />
+        <InviteButton projectId={projectId} />
         <SessionActions />
       </div>
     </header>

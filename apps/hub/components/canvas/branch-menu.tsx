@@ -58,7 +58,7 @@ import { SubmitButton } from "@/components/submit-button";
  */
 export const BranchMenu = () => {
   const {
-    repoId,
+    projectId,
     branch: defaultBranchHint,
     session,
     editToken,
@@ -73,9 +73,9 @@ export const BranchMenu = () => {
 
   const branchesQuery = useQuery(
     trpc.cms.previewSession.branches.queryOptions(
-      { repoId },
+      { projectId },
       {
-        enabled: Boolean(repoId) && canEdit && source !== "upload",
+        enabled: Boolean(projectId) && canEdit && source !== "upload",
         staleTime: 30_000,
       }
     )
@@ -103,10 +103,10 @@ export const BranchMenu = () => {
     session.status === "restarting";
 
   const sessionQueryKey = trpc.cms.previewSession.get.queryOptions({
-    repoId,
+    projectId,
   }).queryKey;
   const branchesQueryKey = trpc.cms.previewSession.branches.queryOptions({
-    repoId,
+    projectId,
   }).queryKey;
   const afterSwitch = (target: string) => {
     noteSessionEnded({ switched: target });
@@ -157,7 +157,7 @@ export const BranchMenu = () => {
 
   const switchTo = (target: string) => {
     if (target === currentLabel) return;
-    switchMutation.mutate({ repoId, branch: target });
+    switchMutation.mutate({ projectId, branch: target });
   };
 
   return (
@@ -238,7 +238,7 @@ export const BranchMenu = () => {
               defaultBranch={defaultBranch}
               existing={branchesQuery.data?.branches ?? []}
               pending={createMutation.isPending}
-              onSubmit={(name) => createMutation.mutate({ repoId, name })}
+              onSubmit={(name) => createMutation.mutate({ projectId, name })}
             />
           )}
         </DialogContent>

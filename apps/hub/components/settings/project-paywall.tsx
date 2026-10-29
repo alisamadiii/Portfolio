@@ -52,10 +52,10 @@ const PITCH: Record<Feature, { title: string; body: string }> = {
  * same catalog (requireFeature).
  */
 export const ProjectPaywall = ({
-  repoId,
+  projectId,
   feature,
 }: {
-  repoId: number;
+  projectId: string;
   feature: Feature;
 }) => {
   const user = useCurrentUser().data?.user ?? null;
@@ -70,7 +70,7 @@ export const ProjectPaywall = ({
     setCheckingOut(true);
     try {
       await startPlanCheckout({
-        repoId,
+        projectId,
         userId: user.id,
         email: user.email,
         name: user.name,
@@ -119,8 +119,8 @@ export const ProjectFeatureGate = ({
   children: React.ReactNode;
 }) => {
   const project = useProject();
-  const repoId = project?.repoId ?? undefined;
-  const { can, isLoading } = useEntitlement(repoId);
+  const projectId = project?.projectId ?? undefined;
+  const { can, isLoading } = useEntitlement(projectId);
 
   if (isLoading) {
     return (
@@ -129,8 +129,8 @@ export const ProjectFeatureGate = ({
       </div>
     );
   }
-  if (repoId && !can(feature)) {
-    return <ProjectPaywall repoId={repoId} feature={feature} />;
+  if (projectId && !can(feature)) {
+    return <ProjectPaywall projectId={projectId} feature={feature} />;
   }
   return children;
 };

@@ -22,7 +22,7 @@ const FROM = "Client Hub <noreply@alisamadii.com>";
  * Monday morning report to every agency client owner: last week's numbers vs
  * the week before. Triggered by a Coolify scheduled task:
  *   curl -fsS -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/weekly-agency-report
- * `?repoId=…` limits the run to one client (manual testing).
+ * `?projectId=…` limits the run to one client (manual testing).
  */
 export async function GET(request: NextRequest) {
   if (
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const only = request.nextUrl.searchParams.get("repoId");
+  const only = request.nextUrl.searchParams.get("projectId");
   const clients = await db
     .select({ client: agencyClient, ownerEmail: user.email })
     .from(agencyClient)
@@ -43,15 +43,15 @@ export async function GET(request: NextRequest) {
   const failed: number[] = [];
 
   for (const { client, ownerEmail } of clients) {
-    if (!client.repoId || !client.weeklyReport || !ownerEmail) {
+    if (!client.projectId || !client.weeklyReport || !ownerEmail) {
       skipped++;
       continue;
     }
-    if (only && String(client.repoId) !== only) continue;
+    if (only && String(client.projectId) !== only) continue;
 
     try {
       // Churned or non-agency projects don't get reports.
-      const entitlement = await getEntitlement(client.repoId);
+      const entitlement = await getEntitlement(client.projectId);
       if (entitlement.product !== "agency") {
         skipped++;
         continue;
@@ -59,11 +59,11 @@ export async function GET(request: NextRequest) {
 
       const report = await buildWeeklyReport(client);
       // A rerun of the cron never double-sends a week. The single-client
-      // test hook (?repoId=…) bypasses this so a test can repeat.
+      // test hook (?projectId=…) bypasses this so a test can repeat.
       if (!only) {
         const existing = await db.query.agencyWeeklyReport.findFirst({
           where: and(
-            eq(agencyWeeklyReport.repoId, client.repoId),
+            eq(agencyWeeklyReport.projectId, client.projectId),
             eq(agencyWeeklyReport.weekFrom, report.week.from)
           ),
           columns: { id: true },
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
           topCampaign: report.topCampaign,
           topSearchTerm: report.topSearchTerm,
           alerts: report.alerts,
-          dashboardUrl: `${urls.cms}/p/${client.repoId}/marketing`,
+          dashboardUrl: `${urls.cms}/p/${client.projectId}/marketing`,
           unsubscribeUrl: `${urls.portfolio}/api/agency/report/unsubscribe?token=${encodeURIComponent(signToken(`report:${client.id}`, 0))}`,
         }),
       });
@@ -109,13 +109,13 @@ export async function GET(request: NextRequest) {
       await db
         .insert(agencyWeeklyReport)
         .values({
-          repoId: client.repoId,
+          projectId: client.projectId,
           weekFrom: report.week.from,
           data: report,
           emailedAt: new Date(),
         })
         .onConflictDoUpdate({
-          target: [agencyWeeklyReport.repoId, agencyWeeklyReport.weekFrom],
+          target: [agencyWeeklyReport.projectId, agencyWeeklyReport.weekFrom],
           set: { data: report, emailedAt: new Date() },
         });
       sent++;

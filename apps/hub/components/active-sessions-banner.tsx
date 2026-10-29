@@ -79,7 +79,7 @@ export function ActiveSessionsBanner() {
               })}
             </span>
             <Button asChild size="sm" variant="outline">
-              <Link href={repoPath(session.repoId)}>Open</Link>
+              <Link href={repoPath(session.projectId)}>Open</Link>
             </Button>
             <Button
               size="sm"
@@ -88,7 +88,7 @@ export function ActiveSessionsBanner() {
               disabled={closeMutation.isPending}
               onClick={() =>
                 closeMutation.mutate({
-                  repoId: session.repoId,
+                  projectId: session.projectId,
                   sessionId: session.id,
                 })
               }

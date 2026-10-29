@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import { TRPCError } from "@trpc/server";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
@@ -8,7 +10,7 @@ import { hubProject } from "@workspace/drizzle/schema";
 import { getImport } from "../content-pilot";
 import { isUniqueViolation } from "../db-errors";
 import { signImportToken } from "./edit-token";
-import { syntheticRepoId, uploadSlug } from "./upload-slug";
+import { uploadSlug } from "./upload-slug";
 
 // ─── Upload (no-GitHub) projects ────────────────────────────────
 // Shared by deploy.importUpload/finalizeUpload (browser zip upload) and the
@@ -27,19 +29,18 @@ const importSecret = () => {
 
 /**
  * Reserve a hidden upload project row + mint its one-time import token.
- * `repoId` pins the id (an agency client's existing synthetic tenant id);
- * otherwise a fresh synthetic id is drawn per attempt.
+ * `projectId` pins the id (an agency client's existing tenant id); otherwise
+ * a fresh uuid is drawn. Uploads have no GitHub repo id (repoId stays null).
  */
-export async function reserveUploadProject(userId: string, name: string, repoId?: number) {
+export async function reserveUploadProject(userId: string, name: string, projectId?: string) {
   const secret = importSecret();
   const base = uploadSlug(name);
 
   // Uniquify against uq_hub_project_owner_repo_ci under the 'uploads'
-  // pseudo-owner, then insert with a synthetic repoId. Retried on the rare
-  // id collision (uq_hub_project_repo_id).
+  // pseudo-owner.
+  const id = projectId ?? randomUUID();
   for (let attempt = 0; attempt < 5; attempt++) {
     const repo = attempt === 0 ? base : `${base}-${attempt + 1}`;
-    const id = repoId ?? syntheticRepoId();
     // A deleted upload project left before hard deletes existed still
     // holds its name as a tombstone (hidden, no owner). Uploads never
     // re-sync, so reclaim the name. A reserved in-progress import is also
@@ -57,7 +58,7 @@ export async function reserveUploadProject(userId: string, name: string, repoId?
       );
     try {
       await db.insert(hubProject).values({
-        repoId: id,
+        id,
         source: "upload",
         owner: "uploads",
         repo,
@@ -68,9 +69,9 @@ export async function reserveUploadProject(userId: string, name: string, repoId?
         githubConnectedUserId: userId,
         hidden: true,
       });
-      return { repoId: id, name: repo, importToken: signImportToken({ repoId: id }, secret) };
+      return { projectId: id, name: repo, importToken: signImportToken({ projectId: id }, secret) };
     } catch (error) {
-      // Unique violation on owner/repo or repoId — try the next suffix/id.
+      // Unique violation on owner/repo — try the next suffix.
       if (!isUniqueViolation(error)) throw error;
     }
   }
@@ -81,8 +82,8 @@ export async function reserveUploadProject(userId: string, name: string, repoId?
 }
 
 /** Verify the workspace landed on content-pilot, then reveal the row. */
-export async function finalizeUploadProject(repoId: number) {
-  const status = await getImport(repoId);
+export async function finalizeUploadProject(projectId: string) {
+  const status = await getImport(projectId);
   if (!status.exists) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
@@ -96,18 +97,18 @@ export async function finalizeUploadProject(repoId: number) {
       githubUpdatedAt: new Date(),
       syncedAt: new Date(),
     })
-    .where(eq(hubProject.repoId, repoId));
+    .where(eq(hubProject.id, projectId));
 }
 
 /** Drop a reserved-but-never-finalized row so the name frees up. */
-export async function cancelUploadProject(repoId: number) {
+export async function cancelUploadProject(projectId: string) {
   // Hard-delete only hidden rows — a visible project goes through
   // project.delete (billing settle + pilot cleanup).
   await db
     .delete(hubProject)
     .where(
       and(
-        eq(hubProject.repoId, repoId),
+        eq(hubProject.id, projectId),
         eq(hubProject.source, "upload"),
         eq(hubProject.hidden, true)
       )
@@ -117,12 +118,12 @@ export async function cancelUploadProject(repoId: number) {
 /**
  * A one-page placeholder site for an agency client with no website yet, so
  * every agency lives inside a project. Owned by the client's user. Pass the
- * client's existing tenant id as `repoId` to keep its leads/subscription keyed.
+ * client's existing tenant id as `projectId` to keep its leads/subscription keyed.
  */
 export async function createStarterProject(input: {
   userId: string;
   name: string;
-  repoId?: number;
+  projectId?: string;
 }) {
   const pilotUrl = (process.env.CONTENT_PILOT_URL ?? "").replace(/\/$/, "");
   if (!pilotUrl) {
@@ -131,11 +132,11 @@ export async function createStarterProject(input: {
       message: "CONTENT_PILOT_URL is not set.",
     });
   }
-  const reserved = await reserveUploadProject(input.userId, input.name, input.repoId);
+  const reserved = await reserveUploadProject(input.userId, input.name, input.projectId);
   try {
     const zip = zipSync({ "index.html": strToU8(starterHtml(input.name)) });
     const res = await fetch(
-      `${pilotUrl}/api/v1/imports?repoId=${reserved.repoId}&name=${encodeURIComponent(reserved.name)}`,
+      `${pilotUrl}/api/v1/imports?projectId=${reserved.projectId}&name=${encodeURIComponent(reserved.name)}`,
       {
         method: "POST",
         headers: {
@@ -151,10 +152,10 @@ export async function createStarterProject(input: {
         message: `Starter site upload failed (${res.status}).`,
       });
     }
-    await finalizeUploadProject(reserved.repoId);
-    return { repoId: reserved.repoId, name: reserved.name };
+    await finalizeUploadProject(reserved.projectId);
+    return { projectId: reserved.projectId, name: reserved.name };
   } catch (error) {
-    await cancelUploadProject(reserved.repoId);
+    await cancelUploadProject(reserved.projectId);
     throw error;
   }
 }

@@ -1,8 +1,8 @@
 /*
  * Ali Samadii LLC contact email.
- * <script src="https://api.alisamadii.com/contact.js" data-key="PROJECT_REPO_ID" defer></script>
- * data-key is the project's repoId (shown in the Hub); posts to
- * /api/agency/contact/<repoId>.
+ * <script src="https://api.alisamadii.com/contact.js" data-key="PROJECT_ID" defer></script>
+ * data-key is the project's projectId (shown in the Hub); posts to
+ * /api/agency/contact/<projectId>.
  *
  * - Takes over every <form data-contact-form>: posts its fields to the Hub,
  *   which sends the site owner a contact email through the project's own

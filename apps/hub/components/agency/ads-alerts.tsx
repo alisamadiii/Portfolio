@@ -14,10 +14,10 @@ import { TriangleAlert } from "@/components/icon";
 export function AdsAlerts() {
   const href = useAgencyHref();
   const trpc = useTRPC();
-  const { repoId, adsConnected } = useAgency();
+  const { projectId, adsConnected } = useAgency();
   const alerts = useQuery(
     trpc.agency.ads.alerts.queryOptions(
-      { repoId },
+      { projectId },
       { enabled: adsConnected, staleTime: 5 * 60 * 1000, retry: false }
     )
   );
@@ -53,10 +53,10 @@ export function AdsAlerts() {
 /** Count badge for the sidebar's Marketing item. */
 export function AdsAlertCount() {
   const trpc = useTRPC();
-  const { repoId, adsConnected } = useAgency();
+  const { projectId, adsConnected } = useAgency();
   const alerts = useQuery(
     trpc.agency.ads.alerts.queryOptions(
-      { repoId },
+      { projectId },
       { enabled: adsConnected, staleTime: 5 * 60 * 1000, retry: false }
     )
   );

@@ -10,7 +10,7 @@ import {
   createTRPCRouter,
 } from "../init";
 import { accessibleProjectsWhere } from "../lib/cms/accessible-projects";
-import { assertRepoAccessByRepoId } from "../lib/cms/authz";
+import { assertRepoAccessByProjectId } from "../lib/cms/authz";
 import { toTRPCError } from "../lib/cms/errors";
 import { getEntitlement, getEntitlements } from "../lib/payment/entitlements";
 import type { Entitlement } from "../lib/payment/plans";
@@ -24,10 +24,10 @@ export const plansRouter = createTRPCRouter({
   mine: collaboratorProcedure.query(async ({ ctx }): Promise<Entitlement[]> => {
     try {
       const projects = await db
-        .select({ repoId: hubProject.repoId })
+        .select({ projectId: hubProject.id })
         .from(hubProject)
         .where(accessibleProjectsWhere(ctx));
-      return await getEntitlements(projects.map((p) => p.repoId));
+      return await getEntitlements(projects.map((p) => p.projectId));
     } catch (error) {
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);
@@ -37,9 +37,9 @@ export const plansRouter = createTRPCRouter({
   // Fresh read for one project, used right after checkout to confirm the
   // webhook has landed.
   project: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ ctx, input }): Promise<Entitlement> => {
-      await assertRepoAccessByRepoId(ctx.session.user, input.repoId);
-      return getEntitlement(input.repoId);
+      await assertRepoAccessByProjectId(ctx.session.user, input.projectId);
+      return getEntitlement(input.projectId);
     }),
 });

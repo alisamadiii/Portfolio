@@ -13,7 +13,18 @@ import type { subscriptions } from "@workspace/drizzle/schema";
 // or the Coolify container), NOT Vercel-specific, so self-hosting picks the
 // live Stripe prices instead of silently falling back to sandbox.
 const IS_PROD = process.env.NODE_ENV === "production";
-const price = (live: string, sandbox: string) => (IS_PROD ? live : sandbox);
+// Both modes' ids per resolved price, so a DB mirror synced from the other
+// Stripe mode (e.g. live rows in the testing DB) still matches.
+const PRICE_PAIRS = new Map<string, readonly [string, string]>();
+const price = (live: string, sandbox: string) => {
+  const id = IS_PROD ? live : sandbox;
+  PRICE_PAIRS.set(id, [live, sandbox]);
+  return id;
+};
+
+/** A resolved price id plus its other-mode twin (live ⇄ sandbox). */
+export const priceIdVariants = (id: string): readonly string[] =>
+  PRICE_PAIRS.get(id) ?? [id];
 
 // ─── Features ───────────────────────────────────────────────────
 
@@ -142,7 +153,7 @@ export type SubscriptionStatus = (typeof subscriptions.$inferSelect)["status"];
 
 /** What one project is entitled to. Same shape on server and client. */
 export type Entitlement = {
-  repoId: number;
+  projectId: string;
   plan: PlanKey;
   product: ProductId;
   /** e.g. "Website plan", "Agency · Launch" */
@@ -208,7 +219,7 @@ export const planLabel = (plan: PlanKey): string => {
  * website:free; the Stripe state is still reported so billing can show it.
  */
 export const entitlementFor = (
-  repoId: number,
+  projectId: string,
   row: {
     status: SubscriptionStatus;
     priceId: string | null;
@@ -219,7 +230,7 @@ export const entitlementFor = (
   const plan = (live && planForPrice(row.priceId)) || FREE_PLAN;
   const tier = tierDef(plan);
   return {
-    repoId,
+    projectId,
     plan,
     product: plan.split(":")[0] as ProductId,
     label: planLabel(plan),
@@ -238,4 +249,4 @@ export const canUse = (
   options?: { isAdmin?: boolean }
 ): boolean =>
   Boolean(options?.isAdmin) ||
-  (entitlement ?? entitlementFor(0, null)).features.includes(feature);
+  (entitlement ?? entitlementFor("", null)).features.includes(feature);

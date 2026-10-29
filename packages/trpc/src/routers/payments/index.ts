@@ -425,10 +425,10 @@ export const paymentsRouter = createTRPCRouter({
           })
           .from(subscriptions)
           .leftJoin(products, eq(products.id, subscriptions.productId))
-          // Product subscriptions only — per-project CMS rows (repoId set)
+          // Product subscriptions only — per-project CMS rows (projectId set)
           // belong to the hub's per-project Billing panel.
           .where(
-            and(eq(subscriptions.userId, userId), sql`${subscriptions.metadata} ->> 'repoId' is null`)
+            and(eq(subscriptions.userId, userId), sql`${subscriptions.metadata} ->> 'projectId' is null`)
           )
           .orderBy(desc(subscriptions.createdAt));
 
@@ -489,7 +489,7 @@ export const paymentsRouter = createTRPCRouter({
         .where(
           and(
             eq(subscriptions.userId, ctx.session.user.id),
-            sql`${subscriptions.metadata} ->> 'repoId' is null`
+            sql`${subscriptions.metadata} ->> 'projectId' is null`
           )
         ),
       db

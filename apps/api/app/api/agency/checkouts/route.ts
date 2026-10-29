@@ -40,8 +40,8 @@ const bodySchema = z.object({
   email: z.email().optional(),
   name: z.string().max(200).optional(),
   // Per-project CMS subscription: the webhook keys the subscription off
-  // metadata.repoId, and reuses the user's Stripe customer to avoid dupes.
-  repoId: z.number().int().positive().optional(),
+  // metadata.projectId, and reuses the user's Stripe customer to avoid dupes.
+  projectId: z.string().uuid().optional(),
   userId: z.string().max(200).optional(),
   // Feature purchases return the user to the page they were on.
   returnUrl: z.url().max(2000).optional(),
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       { status: 400, headers }
     );
   }
-  const { plan, email, name, returnUrl, repoId, userId } = parsed.data;
+  const { plan, email, name, returnUrl, projectId, userId } = parsed.data;
 
   const prices = pricesFor(plan);
   if (!prices) {
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     plan,
     name: name ?? "",
     // Per-project CMS subscription join keys (read back by the Stripe webhook).
-    repoId: repoId ? String(repoId) : "",
+    projectId: projectId ? String(projectId) : "",
     userId: userId ?? "",
   };
 

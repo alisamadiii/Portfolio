@@ -30,7 +30,7 @@ const nextConfig = {
       { source: "/billing", has: PORTAL_HOST, destination: `${HUB}/billing?tab=purchases`, permanent: false },
       { source: "/", has: PORTAL_HOST, destination: `${HUB}/account`, permanent: false },
       { source: "/:path*", has: PORTAL_HOST, destination: `${HUB}/:path*`, permanent: false },
-      // Agency pages moved inside their project (/p/[repoId]/...). Old
+      // Agency pages moved inside their project (/p/[projectId]/...). Old
       // bookmarks and emailed links land on the project gallery.
       ...["/agency", "/marketing", "/business-info", "/reports", "/analytics", "/origins", "/newsletter"].flatMap(
         (source) => [

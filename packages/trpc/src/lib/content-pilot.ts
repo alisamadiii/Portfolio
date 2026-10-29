@@ -24,7 +24,7 @@ const config = () => {
 
 export type PreviewSession = {
   id: string;
-  repoId: number;
+  projectId: string;
   /** Workspace source: 'upload' = local-only (no GitHub). */
   source?: "github" | "upload";
   owner: string;
@@ -95,12 +95,11 @@ async function pilotError(res: Response): Promise<never> {
  * repo's live session is on another branch (the caller closes it first).
  */
 export async function createPreviewSession(
-  repoId: number,
+  projectId: string,
   requestedBy?: string,
   branch?: string,
-  // Slug hint — lets content-pilot skip its repoId → owner/repo API lookup
-  // (required for GitHub App-only deployments, where it has no PAT to resolve
-  // a repoId it has never cloned).
+  // owner/repo: required by content-pilot for every session (GitHub ops are
+  // keyed by slug; the workspace is keyed by projectId).
   slug?: { owner: string; repo: string },
   // Commit identity for the session's pushes (the project owner's GitHub
   // noreply identity, derived from the App installation). Omitted → the
@@ -113,7 +112,7 @@ export async function createPreviewSession(
   const res = await pilotFetch(`/api/v1/sessions`, {
     method: "POST",
     body: JSON.stringify({
-      repoId,
+      projectId,
       requestedBy,
       branch,
       owner: slug?.owner,
@@ -138,8 +137,8 @@ export type PilotProjectStatus = {
 };
 
 /** A project's pilot workspace state. */
-export async function getImport(repoId: number): Promise<PilotProjectStatus> {
-  const res = await pilotFetch(`/api/v1/imports/${repoId}`);
+export async function getImport(projectId: string): Promise<PilotProjectStatus> {
+  const res = await pilotFetch(`/api/v1/imports/${projectId}`);
   if (!res.ok) await pilotError(res);
   return (await res.json()) as PilotProjectStatus;
 }
@@ -148,8 +147,8 @@ export async function getImport(repoId: number): Promise<PilotProjectStatus> {
  * Removes an uploaded project's workspace. Hard gate in project.delete.
  * Throws CONFLICT while a preview session is live.
  */
-export async function deleteImport(repoId: number): Promise<void> {
-  const res = await pilotFetch(`/api/v1/imports/${repoId}`, {
+export async function deleteImport(projectId: string): Promise<void> {
+  const res = await pilotFetch(`/api/v1/imports/${projectId}`, {
     method: "DELETE",
   });
   if (!res.ok && res.status !== 404) await pilotError(res);
@@ -165,9 +164,9 @@ export async function listLivePreviewSessions(): Promise<PreviewSession[]> {
 
 /** The repo's active session, or null. */
 export async function getPreviewSession(
-  repoId: number
+  projectId: string
 ): Promise<PreviewSession | null> {
-  const res = await pilotFetch(`/api/v1/sessions?repoId=${repoId}`);
+  const res = await pilotFetch(`/api/v1/sessions?projectId=${projectId}`);
   if (!res.ok) await pilotError(res);
   const data = (await res.json()) as { session: PreviewSession | null };
   return data.session;

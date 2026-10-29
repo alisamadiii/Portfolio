@@ -12,19 +12,19 @@ import { agencyClient, hubProject } from "@workspace/drizzle/schema";
  */
 export const accessibleProjectsWhere = (ctx: {
   isAdmin: boolean;
-  collaborations: { repoId: number | null }[] | null;
+  collaborations: { projectId: string | null }[] | null;
   session: { user: { id: string } };
 }): SQL | undefined => {
   const conds: (SQL | undefined)[] = [eq(hubProject.hidden, false)];
   if (!ctx.isAdmin) {
     const collabConds = (ctx.collaborations ?? [])
-      .map((c) => c.repoId)
-      .filter((id): id is number => id != null)
-      .map((id) => eq(hubProject.repoId, id));
+      .map((c) => c.projectId)
+      .filter((id): id is string => id != null)
+      .map((id) => eq(hubProject.id, id));
     const ownedAgency = inArray(
-      hubProject.repoId,
+      hubProject.id,
       db
-        .select({ repoId: agencyClient.repoId })
+        .select({ projectId: agencyClient.projectId })
         .from(agencyClient)
         .where(eq(agencyClient.userId, ctx.session.user.id))
     );

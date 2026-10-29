@@ -46,8 +46,8 @@ import {
  * means one live session per repo, so switching = close + start.
  */
 
-const sessionForRepo = async (repoId: number, sessionId: string) => {
-  const session = await getPreviewSession(repoId);
+const sessionForRepo = async (projectId: string, sessionId: string) => {
+  const session = await getPreviewSession(projectId);
   if (!session || session.id !== sessionId) {
     throw new TRPCError({
       code: "NOT_FOUND",
@@ -71,11 +71,11 @@ const deleteBranchRef = async (
     });
 };
 
-const projectDefaultBranch = async (repoId: number) => {
+const projectDefaultBranch = async (projectId: string) => {
   const [project] = await db
     .select({ defaultBranch: hubProject.defaultBranch })
     .from(hubProject)
-    .where(eq(hubProject.repoId, repoId))
+    .where(eq(hubProject.id, projectId))
     .limit(1);
   return project?.defaultBranch || "main";
 };
@@ -139,7 +139,7 @@ type SwitchCtx = {
   token: string;
   owner: string;
   repo: string;
-  repoId: number;
+  projectId: string;
   user: { name?: string | null; email?: string | null };
 };
 
@@ -155,7 +155,7 @@ const assertCanLeave = async (
 ) => {
   if (!current || !LIVE_OR_PAUSED.includes(current.status)) return;
   if (!isPreviewBranch(current.branch)) return;
-  const base = await projectDefaultBranch(ctx.repoId);
+  const base = await projectDefaultBranch(ctx.projectId);
   if (
     await hasUnpublishedCommits(
       ctx.token,
@@ -186,7 +186,7 @@ const leaveAndStart = async (
   }
   try {
     return await createPreviewSession(
-      ctx.repoId,
+      ctx.projectId,
       ctx.user.name || ctx.user.email || undefined,
       target ?? undefined,
       { owner: ctx.owner, repo: ctx.repo },
@@ -215,7 +215,7 @@ export const previewSessionRouter = createTRPCRouter({
     // user directly (there is no GitHub noreply identity to derive).
     if (ctx.source === "upload") {
       return createPreviewSession(
-        ctx.repoId,
+        ctx.projectId,
         ctx.user.name || ctx.user.email || undefined,
         undefined,
         { owner: ctx.owner, repo: ctx.repo },
@@ -226,7 +226,7 @@ export const previewSessionRouter = createTRPCRouter({
       );
     }
     return createPreviewSession(
-      ctx.repoId,
+      ctx.projectId,
       ctx.user.name || ctx.user.email || undefined,
       undefined,
       { owner: ctx.owner, repo: ctx.repo },
@@ -246,15 +246,15 @@ export const previewSessionRouter = createTRPCRouter({
 
     const conds: (SQL | undefined)[] = [
       inArray(
-        hubProject.repoId,
-        live.map((s) => s.repoId)
+        hubProject.id,
+        live.map((s) => s.projectId)
       ),
     ];
     if (!ctx.isAdmin) {
       const collabConds = (ctx.collaborations ?? [])
-        .map((c) => c.repoId)
-        .filter((id): id is number => id != null)
-        .map((id) => eq(hubProject.repoId, id));
+        .map((c) => c.projectId)
+        .filter((id): id is string => id != null)
+        .map((id) => eq(hubProject.id, id));
       const ownConnected = eq(
         hubProject.githubConnectedUserId,
         ctx.session.user.id
@@ -262,16 +262,16 @@ export const previewSessionRouter = createTRPCRouter({
       conds.push(or(ownConnected, ...collabConds));
     }
     const projects = await db
-      .select({ repoId: hubProject.repoId })
+      .select({ projectId: hubProject.id })
       .from(hubProject)
       .where(and(...conds));
-    const mine = new Set(projects.map((p) => p.repoId));
-    return { sessions: live.filter((s) => mine.has(s.repoId)) };
+    const mine = new Set(projects.map((p) => p.projectId));
+    return { sessions: live.filter((s) => mine.has(s.projectId)) };
   }),
 
   /** The active session (canvas polls this while starting). */
   get: cmsProcedure.query(async ({ ctx }) => {
-    const session = await getPreviewSession(ctx.repoId);
+    const session = await getPreviewSession(ctx.projectId);
     return { session };
   }),
 
@@ -282,7 +282,7 @@ export const previewSessionRouter = createTRPCRouter({
    */
   branches: cmsProcedure.query(async ({ ctx }) => {
     // Uploaded projects live on a single local 'main' — no branch menu.
-    const defaultBranch = await projectDefaultBranch(ctx.repoId);
+    const defaultBranch = await projectDefaultBranch(ctx.projectId);
     if (ctx.source === "upload") return { defaultBranch, branches: [] };
     const token = requireGithubToken(ctx);
     const named = (await listNamedBranches(token, ctx.owner, ctx.repo))
@@ -300,7 +300,7 @@ export const previewSessionRouter = createTRPCRouter({
     .input(z.object({ branch: z.string().trim().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const switchCtx = { ...ctx, token: requireGithubToken(ctx) };
-      const defaultBranch = await projectDefaultBranch(ctx.repoId);
+      const defaultBranch = await projectDefaultBranch(ctx.projectId);
       const target = input.branch === defaultBranch ? null : input.branch;
       if (target !== null && !isValidBranchName(target)) {
         throw new TRPCError({
@@ -308,7 +308,7 @@ export const previewSessionRouter = createTRPCRouter({
           message: "That is not a valid branch name.",
         });
       }
-      const current = await getPreviewSession(ctx.repoId);
+      const current = await getPreviewSession(ctx.projectId);
       const alreadyThere =
         current &&
         LIVE_OR_PAUSED.includes(current.status) &&
@@ -329,14 +329,14 @@ export const previewSessionRouter = createTRPCRouter({
     .input(z.object({ name: z.string().trim().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const switchCtx = { ...ctx, token: requireGithubToken(ctx) };
-      const defaultBranch = await projectDefaultBranch(ctx.repoId);
+      const defaultBranch = await projectDefaultBranch(ctx.projectId);
       if (!isValidBranchName(input.name) || input.name === defaultBranch) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "That is not a valid branch name.",
         });
       }
-      const current = await getPreviewSession(ctx.repoId);
+      const current = await getPreviewSession(ctx.projectId);
       await assertCanLeave(switchCtx, current);
 
       const sha = await getBranchHeadSha(
@@ -375,7 +375,7 @@ export const previewSessionRouter = createTRPCRouter({
   close: cmsWriteProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const session = await sessionForRepo(ctx.repoId, input.sessionId);
+      const session = await sessionForRepo(ctx.projectId, input.sessionId);
       await closePreviewSession(session.id, "discard");
       // Uploads have no remote refs; the local branch dies with the workspace
       // sync on the next session.
@@ -394,7 +394,7 @@ export const previewSessionRouter = createTRPCRouter({
   reset: cmsWriteProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const session = await sessionForRepo(ctx.repoId, input.sessionId);
+      const session = await sessionForRepo(ctx.projectId, input.sessionId);
       await resetPreviewSession(session.id);
       return { reset: true };
     }),
@@ -403,7 +403,7 @@ export const previewSessionRouter = createTRPCRouter({
   cancel: cmsWriteProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const session = await sessionForRepo(ctx.repoId, input.sessionId);
+      const session = await sessionForRepo(ctx.projectId, input.sessionId);
       await cancelPreviewMessage(session.id);
       return { canceled: true };
     }),
@@ -419,8 +419,8 @@ export const previewSessionRouter = createTRPCRouter({
   publish: cmsFullAccessProcedure
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      await requireFeature(ctx.user, ctx.repoId, "ai-chat");
-      const session = await sessionForRepo(ctx.repoId, input.sessionId);
+      await requireFeature(ctx.user, ctx.projectId, "ai-chat");
+      const session = await sessionForRepo(ctx.projectId, input.sessionId);
 
       // Throws CONFLICT when production moved under the session (the pilot
       // restores the session branch, so nothing is lost). The client's host
@@ -434,7 +434,7 @@ export const previewSessionRouter = createTRPCRouter({
         await db
           .update(hubProject)
           .set({ githubUpdatedAt: new Date() })
-          .where(eq(hubProject.repoId, ctx.repoId));
+          .where(eq(hubProject.id, ctx.projectId));
       } else {
         const token = requireGithubToken(ctx);
         await deleteBranchRef(token, ctx.owner, ctx.repo, session.branch);

@@ -42,14 +42,14 @@ const chipText = (word: StarterNegativeList["words"][number]) =>
  */
 export function StarterNegativeLists() {
   const trpc = useTRPC();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const [tab, setTab] = useState<NegativeListKey>("jobs");
   const [confirming, setConfirming] = useState<StarterNegativeList | null>(
     null
   );
 
   const meta = useQuery(
-    trpc.agency.ads.negativeLists.list.queryOptions({ repoId })
+    trpc.agency.ads.negativeLists.list.queryOptions({ projectId })
   );
 
   const visible = STARTER_NEGATIVE_LISTS.filter(
@@ -180,7 +180,7 @@ function ApplyDialogContent({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
 
   const apply = useMutation(
     trpc.agency.ads.negativeLists.applyList.mutationOptions({
@@ -230,7 +230,7 @@ function ApplyDialogContent({
           disabled={apply.isPending}
           onClick={(event) => {
             event.preventDefault();
-            apply.mutate({ repoId, listKey: list.key });
+            apply.mutate({ projectId, listKey: list.key });
           }}
         >
           {apply.isPending && <Spinner />}

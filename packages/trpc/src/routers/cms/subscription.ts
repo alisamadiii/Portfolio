@@ -13,7 +13,7 @@ import { hubProject, subscriptions } from "@workspace/drizzle/schema";
 
 import {
   assertProjectAccess,
-  assertRepoAccessByRepoId,
+  assertRepoAccessByProjectId,
 } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 
@@ -40,15 +40,15 @@ export const subscriptionRouter = createTRPCRouter({
   // The per-project subscription row (or null) for the Billing tab. Drives the
   // products-vs-manage branch.
   getProject: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       const [project] = await db
         .select({
-          repoId: hubProject.repoId,
+          projectId: hubProject.id,
           githubConnectedUserId: hubProject.githubConnectedUserId,
         })
         .from(hubProject)
-        .where(eq(hubProject.repoId, input.repoId))
+        .where(eq(hubProject.id, input.projectId))
         .limit(1);
       if (!project) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
@@ -57,23 +57,23 @@ export const subscriptionRouter = createTRPCRouter({
       const [row] = await db
         .select()
         .from(subscriptions)
-        .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(project.repoId)))
+        .where(eq(sql`${subscriptions.metadata} ->> 'projectId'`, String(project.projectId)))
         .limit(1);
       return {
-        repoId: project.repoId,
+        projectId: project.projectId,
         subscription: row ?? null,
       };
     }),
 
   // Invoices for a project, scoped to that project's Stripe customer.
   getInvoices: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      await assertRepoAccessByRepoId(ctx.session.user, input.repoId);
+      await assertRepoAccessByProjectId(ctx.session.user, input.projectId);
       const [row] = await db
         .select({ stripeCustomerId: subscriptions.stripeCustomerId })
         .from(subscriptions)
-        .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(input.repoId)))
+        .where(eq(sql`${subscriptions.metadata} ->> 'projectId'`, String(input.projectId)))
         .limit(1);
       if (!row?.stripeCustomerId) return [];
       const invoices = await stripe.invoices.list({
@@ -87,16 +87,16 @@ export const subscriptionRouter = createTRPCRouter({
   createPortalSession: authenticatedProcedure
     .input(
       z.object({
-        repoId: z.number().int().positive(),
+        projectId: z.string().uuid(),
         returnUrl: z.string(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await assertRepoAccessByRepoId(ctx.session.user, input.repoId);
+      await assertRepoAccessByProjectId(ctx.session.user, input.projectId);
       const [row] = await db
         .select({ stripeCustomerId: subscriptions.stripeCustomerId })
         .from(subscriptions)
-        .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(input.repoId)))
+        .where(eq(sql`${subscriptions.metadata} ->> 'projectId'`, String(input.projectId)))
         .limit(1);
       if (!row?.stripeCustomerId) {
         throw new TRPCError({

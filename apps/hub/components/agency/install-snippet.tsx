@@ -42,10 +42,10 @@ function CopyBlock({ code }: { code: string }) {
 
 // The one-line capture script, for whoever maintains the site's code.
 export function InstallSnippet() {
-  const { repoId, canInstall } = useAgency();
+  const { projectId, canInstall } = useAgency();
   if (!canInstall) return null;
 
-  const snippet = `<script src="${API_URL}/leads.js" data-key="${repoId}" defer></script>`;
+  const snippet = `<script src="${API_URL}/leads.js" data-key="${projectId}" defer></script>`;
 
   return (
     <details className="bg-card rounded-lg border px-5 py-3 text-[14px]">

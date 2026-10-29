@@ -44,7 +44,7 @@ const bounds = (from: string, to: string) => {
   return { start, end };
 };
 
-async function leadNumbers(repoId: number, from: string, to: string) {
+async function leadNumbers(projectId: string, from: string, to: string) {
   const { start, end } = bounds(from, to);
   const [row] = await db
     .select({
@@ -54,7 +54,7 @@ async function leadNumbers(repoId: number, from: string, to: string) {
     .from(agencyLead)
     .where(
       and(
-        eq(agencyLead.repoId, repoId),
+        eq(agencyLead.projectId, projectId),
         ne(agencyLead.status, "spam"),
         gte(agencyLead.createdAt, start),
         lt(agencyLead.createdAt, end)
@@ -66,7 +66,7 @@ async function leadNumbers(repoId: number, from: string, to: string) {
     .from(agencyLead)
     .where(
       and(
-        eq(agencyLead.repoId, repoId),
+        eq(agencyLead.projectId, projectId),
         eq(agencyLead.status, "won"),
         gte(agencyLead.wonAt, start),
         lt(agencyLead.wonAt, end)
@@ -81,7 +81,7 @@ async function leadNumbers(repoId: number, from: string, to: string) {
     .from(agencyLead)
     .where(
       and(
-        eq(agencyLead.repoId, repoId),
+        eq(agencyLead.projectId, projectId),
         eq(agencyLead.source, "booking"),
         isNull(agencyLead.bookingCanceledAt),
         gte(agencyLead.bookingAt, start),
@@ -104,14 +104,14 @@ export async function buildWeeklyReport(
   now = new Date()
 ): Promise<WeeklyReportData> {
   const week = reportWeek(now);
-  const repoId = client.repoId!;
+  const projectId = client.projectId!;
   const customerId = client.googleAdsCustomerId;
   const hasAds = Boolean(customerId && isGoogleAdsConfigured());
 
   const [current, previous, adsCurrent, adsPrevious, terms, alerts] =
     await Promise.all([
-      leadNumbers(repoId, week.from, week.to),
-      leadNumbers(repoId, week.priorFrom, week.priorTo),
+      leadNumbers(projectId, week.from, week.to),
+      leadNumbers(projectId, week.priorFrom, week.priorTo),
       hasAds
         ? cachedAds(customerId!, `stats:${week.from}:${week.to}:all`, ttlForRange(week.to), () =>
             getAdsStats(customerId!, week.from, week.to)
@@ -146,7 +146,7 @@ export async function buildWeeklyReport(
       .from(agencyLead)
       .where(
         and(
-          eq(agencyLead.repoId, repoId),
+          eq(agencyLead.projectId, projectId),
           ne(agencyLead.status, "spam"),
           sql`${agencyLead.adClick}->>'campaignId' = ${top.id}`,
           gte(agencyLead.createdAt, start),

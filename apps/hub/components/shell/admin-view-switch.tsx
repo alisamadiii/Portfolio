@@ -27,15 +27,15 @@ type View = "website" | "agency";
 
 /**
  * Admin-only Website ⇄ Agency tabs. The choice is a per-project cookie the
- * /p/[repoId] layout reads (admins only) to pick the slot; switching to Agency
+ * /p/[projectId] layout reads (admins only) to pick the slot; switching to Agency
  * on a project without a workspace creates one first.
  */
 export function AdminViewSwitch({
-  repoId,
+  projectId,
   current,
   className,
 }: {
-  repoId: number;
+  projectId: string;
   current: View;
   className?: string;
 }) {
@@ -45,7 +45,7 @@ export function AdminViewSwitch({
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const status = useQuery({
-    ...trpc.agency.admin.adminView.queryOptions({ repoId }),
+    ...trpc.agency.admin.adminView.queryOptions({ projectId }),
     enabled: isAdmin,
   });
   const enable = useMutation(
@@ -55,8 +55,8 @@ export function AdminViewSwitch({
   if (!isAdmin) return null;
 
   const go = (view: View) => {
-    document.cookie = `hub-view-${repoId}=${view}; path=/; max-age=31536000; samesite=lax`;
-    router.push(repoPath(repoId));
+    document.cookie = `hub-view-${projectId}=${view}; path=/; max-age=31536000; samesite=lax`;
+    router.push(repoPath(projectId));
     router.refresh();
   };
 
@@ -109,7 +109,7 @@ export function AdminViewSwitch({
               disabled={enable.isPending}
               onClick={() =>
                 enable.mutate(
-                  { repoId },
+                  { projectId },
                   {
                     onSuccess: () => go("agency"),
                     onError: (error) => toast.error(error.message),

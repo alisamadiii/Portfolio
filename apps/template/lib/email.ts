@@ -12,7 +12,7 @@ type SendEmailInput = {
 // Sends through the self-hosted useSend instance. Deliberately dependency-free
 // (plain fetch) so this file copies out to client repos as-is. Handover: the
 // client swaps USESEND_API_KEY in the environment (their own key or instance)
-// — the X-Repo-Id / X-Email-Type headers travel with the send either way.
+// — the X-Project-Id / X-Email-Type headers travel with the send either way.
 export const sendEmail = async ({
   to,
   subject,
@@ -26,7 +26,7 @@ export const sendEmail = async ({
     throw new Error("Missing USESEND_API_KEY in environment variables");
   }
   const baseUrl = process.env.USESEND_URL ?? "https://mail.alisamadii.com";
-  const repoId = process.env.REPO_ID;
+  const projectId = process.env.PROJECT_ID;
 
   const res = await fetch(`${baseUrl}/api/v1/emails`, {
     method: "POST",
@@ -42,7 +42,7 @@ export const sendEmail = async ({
       text,
       replyTo,
       headers: {
-        ...(repoId ? { "X-Repo-Id": repoId } : {}),
+        ...(projectId ? { "X-Project-Id": projectId } : {}),
         "X-Email-Type": type ?? "send",
       },
     }),

@@ -16,9 +16,9 @@ import { Globe, Plus, Trash } from "@/components/icon";
 export function OriginsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
 
-  const origins = useQuery(trpc.agency.origins.get.queryOptions({ repoId }));
+  const origins = useQuery(trpc.agency.origins.get.queryOptions({ projectId }));
   const [rows, setRows] = useState<string[]>([]);
   const [dirty, setDirty] = useState(false);
 
@@ -97,7 +97,7 @@ export function OriginsPage() {
 
       <Button
         disabled={!dirty || save.isPending}
-        onClick={() => save.mutate({ repoId, origins: rows })}
+        onClick={() => save.mutate({ projectId, origins: rows })}
       >
         {save.isPending ? "Saving…" : "Save domains"}
       </Button>

@@ -182,20 +182,20 @@ const chartConfig = {
  */
 export function useAgencyNumbers(days: number) {
   const trpc = useTRPC();
-  const { repoId, adsConnected } = useAgency();
+  const { projectId, adsConnected } = useAgency();
   const { campaignId } = useCampaignFilter();
   const range = useMemo(() => lastDays(days), [days]);
   const scope = campaignId ?? undefined;
 
   const leads = useQuery(
     trpc.agency.leads.stats.queryOptions(
-      { repoId, ...range, campaignId: scope },
+      { projectId, ...range, campaignId: scope },
       { placeholderData: keepPreviousData }
     )
   );
   const ads = useQuery(
     trpc.agency.ads.stats.queryOptions(
-      { repoId, ...range, campaignId: scope },
+      { projectId, ...range, campaignId: scope },
       {
         enabled: adsConnected,
         staleTime: 5 * 60 * 1000,

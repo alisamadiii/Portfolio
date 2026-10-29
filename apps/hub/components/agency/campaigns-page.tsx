@@ -74,10 +74,10 @@ export function CampaignsIndex() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
 
   const campaigns = useQuery(
-    trpc.agency.campaigns.list.queryOptions({ repoId })
+    trpc.agency.campaigns.list.queryOptions({ projectId })
   );
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
@@ -90,7 +90,7 @@ export function CampaignsIndex() {
         });
         setOpen(false);
         setName("");
-        router.push(`${sectionUrl(repoId, "keywords")}/${campaign.id}`);
+        router.push(`${sectionUrl(projectId, "keywords")}/${campaign.id}`);
       },
       onError: (error) => toast.error(error.message),
     })
@@ -133,7 +133,7 @@ export function CampaignsIndex() {
               {campaigns.data.map((campaign, i) => (
                 <Link
                   key={campaign.id}
-                  href={`${sectionUrl(repoId, "keywords")}/${campaign.id}`}
+                  href={`${sectionUrl(projectId, "keywords")}/${campaign.id}`}
                   className={
                     i < campaigns.data.length - 1
                       ? "border-foreground/7 flex items-center gap-5 border-b px-6 py-5"
@@ -176,13 +176,13 @@ export function CampaignsIndex() {
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && name.trim())
-                    create.mutate({ repoId, name: name.trim() });
+                    create.mutate({ projectId, name: name.trim() });
                 }}
               />
               <DialogFooter>
                 <Button
                   disabled={!name.trim() || create.isPending}
-                  onClick={() => create.mutate({ repoId, name: name.trim() })}
+                  onClick={() => create.mutate({ projectId, name: name.trim() })}
                 >
                   {create.isPending ? "Creating…" : "Create"}
                 </Button>
@@ -206,10 +206,10 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
 
   const campaigns = useQuery(
-    trpc.agency.campaigns.list.queryOptions({ repoId })
+    trpc.agency.campaigns.list.queryOptions({ projectId })
   );
   const campaign = campaigns.data?.find((c) => c.id === campaignId);
 
@@ -248,7 +248,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
     trpc.agency.campaigns.remove.mutationOptions({
       onSuccess: () => {
         invalidate();
-        router.push(sectionUrl(repoId, "keywords"));
+        router.push(sectionUrl(projectId, "keywords"));
       },
       onError: (error) => toast.error(error.message),
     })
@@ -258,7 +258,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
     if (!campaign || !name.trim()) return;
     try {
       await update.mutateAsync({
-        repoId,
+        projectId,
         id: campaign.id,
         name: name.trim(),
         niche: niche.trim(),
@@ -302,7 +302,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
             Keyword group not found.
           </p>
           <Link
-            href={sectionUrl(repoId, "keywords")}
+            href={sectionUrl(projectId, "keywords")}
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-[15px] font-medium"
           >
             <ArrowLeft className="size-4" /> Keywords
@@ -311,7 +311,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
       ) : (
         <FrameCard innerClassName="flex flex-col gap-7 p-7">
           <Link
-            href={sectionUrl(repoId, "keywords")}
+            href={sectionUrl(projectId, "keywords")}
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start text-[15px] font-medium"
           >
             <ArrowLeft className="size-4" /> All keyword groups
@@ -422,7 +422,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
               disabled={remove.isPending}
               onClick={() => {
                 if (confirm(`Delete "${campaign.name}" and its keywords?`))
-                  remove.mutate({ repoId, id: campaign.id });
+                  remove.mutate({ projectId, id: campaign.id });
               }}
             >
               Delete group

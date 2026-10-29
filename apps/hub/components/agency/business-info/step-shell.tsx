@@ -14,7 +14,7 @@ import {
   stepFor,
 } from "@/components/agency/business-info-config";
 import { stepStatuses } from "@/components/agency/business-info/status";
-import { useRouteRepoId } from "@/hooks/use-repo";
+import { useRouteProjectId } from "@/hooks/use-repo";
 import { useAgency } from "@/components/agency/use-agency";
 import {
   Eyebrow,
@@ -31,10 +31,10 @@ export { Eyebrow, FieldHead, FrameCard, PageShell };
 /** Horizontal step pill bar with live done states. */
 function StepBar({ currentKey }: { currentKey: string }) {
   const trpc = useTRPC();
-  const { repoId } = useAgency();
-  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ repoId }));
+  const { projectId } = useAgency();
+  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const campaigns = useQuery(
-    trpc.agency.campaigns.list.queryOptions({ repoId })
+    trpc.agency.campaigns.list.queryOptions({ projectId })
   );
   const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? []);
 
@@ -50,7 +50,7 @@ function StepBar({ currentKey }: { currentKey: string }) {
               <span aria-hidden className="bg-foreground/16 h-px w-4" />
             )}
             <Link
-              href={sectionUrl(repoId, step.key)}
+              href={sectionUrl(projectId, step.key)}
               aria-current={current ? "step" : undefined}
               className={cn(
                 "inline-flex items-center gap-2 rounded-full py-2 pr-3.5 pl-2 text-[15px] font-medium",
@@ -111,7 +111,7 @@ export function StepShell({
   };
   children: React.ReactNode;
 }) {
-  const repoId = useRouteRepoId();
+  const projectId = useRouteProjectId();
   const step = stepFor(stepKey)!;
   const index = BUSINESS_STEPS.findIndex((s) => s.key === stepKey);
   const prev = BUSINESS_STEPS[index - 1];
@@ -122,7 +122,7 @@ export function StepShell({
     <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-9">
       <div className="flex flex-col gap-5">
         <Link
-          href={businessInfoUrl(repoId)}
+          href={businessInfoUrl(projectId)}
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 self-start text-[15px] font-medium"
         >
           <ArrowLeft className="size-4" /> Business info overview
@@ -152,7 +152,7 @@ export function StepShell({
           <div className="border-foreground/7 flex flex-wrap items-center justify-between gap-4 border-t pt-3">
             {prev ? (
               <Link
-                href={sectionUrl(repoId, prev.key)}
+                href={sectionUrl(projectId, prev.key)}
                 className="hover:text-foreground inline-flex items-center gap-2 py-3 text-[16px] font-medium"
               >
                 <ArrowLeft className="size-4" /> {prev.title}
@@ -174,7 +174,7 @@ export function StepShell({
                 <button
                   type="button"
                   disabled={footer.saving}
-                  onClick={() => footer.saveAnd(businessInfoUrl(repoId))}
+                  onClick={() => footer.saveAnd(businessInfoUrl(projectId))}
                   className="bg-foreground/5 hover:bg-foreground/8 rounded-[11px] px-5 py-3.5 text-[16px] font-medium disabled:opacity-60"
                 >
                   Save and exit
@@ -184,7 +184,7 @@ export function StepShell({
                   disabled={footer.saving}
                   onClick={() =>
                     footer.saveAnd(
-                      last ? businessInfoUrl(repoId) : sectionUrl(repoId, next.key)
+                      last ? businessInfoUrl(projectId) : sectionUrl(projectId, next.key)
                     )
                   }
                   className="bg-primary text-primary-foreground inline-flex items-center gap-2.5 rounded-[11px] px-5.5 py-3.5 text-[16px] font-semibold shadow-[0_8px_24px_rgba(252,132,100,0.32)] disabled:opacity-60"
@@ -204,7 +204,7 @@ export function StepShell({
               </div>
             ) : next ? (
               <Link
-                href={sectionUrl(repoId, next.key)}
+                href={sectionUrl(projectId, next.key)}
                 className="bg-primary text-primary-foreground inline-flex items-center gap-2.5 rounded-[11px] px-5.5 py-3.5 text-[16px] font-semibold shadow-[0_8px_24px_rgba(252,132,100,0.32)]"
               >
                 Continue to {next.title.toLowerCase()}{" "}

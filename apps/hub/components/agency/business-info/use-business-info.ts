@@ -21,9 +21,9 @@ export function useBusinessInfo(keys: { key: string; initial: number }[]) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
 
-  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ repoId }));
+  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const [draft, setDraft] = useState<Draft>({});
   const [dirty, setDirty] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
@@ -97,7 +97,7 @@ export function useBusinessInfo(keys: { key: string; initial: number }[]) {
 
   const saveAnd = async (to?: string) => {
     try {
-      await save.mutateAsync({ repoId, businessInfo: values });
+      await save.mutateAsync({ projectId, businessInfo: values });
       if (to) router.push(to);
     } catch {
       // onError already toasted; stay on the page.
@@ -105,7 +105,7 @@ export function useBusinessInfo(keys: { key: string; initial: number }[]) {
   };
 
   return {
-    repoId,
+    projectId,
     info,
     draft,
     setDraft: (next: Draft) => {

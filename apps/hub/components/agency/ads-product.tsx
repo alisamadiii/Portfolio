@@ -46,8 +46,8 @@ export function AdsProductProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { repoId, adsType } = useAgency();
-  const key = `ads-product:${repoId}`;
+  const { projectId, adsType } = useAgency();
+  const key = `ads-product:${projectId}`;
   const [stored, setStored] = useState<AdsProduct>("search");
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export function AdsProductProvider({
 
 /** Sidebar segmented switch between Google Ads and Local Services. */
 export function AdsProductSwitch() {
-  const { repoId, adsType } = useAgency();
+  const { projectId, adsType } = useAgency();
   const { product, setProduct } = useAdsProduct();
   const pathname = usePathname();
   const router = useRouter();
@@ -98,7 +98,7 @@ export function AdsProductSwitch() {
     // Leave a page the other mode doesn't have.
     const hidden = next === "lsa" ? SEARCH_ONLY : LSA_ONLY;
     if (hidden.some((route) => projectSubpath(pathname).startsWith(route))) {
-      router.push(agencyHref(repoId, "/marketing"));
+      router.push(agencyHref(projectId, "/marketing"));
     }
   };
 

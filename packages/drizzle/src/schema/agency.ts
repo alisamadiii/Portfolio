@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
   index,
   integer,
@@ -10,6 +9,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
@@ -176,12 +176,13 @@ export const agencyClient = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    // The project this agency lives in (hub_project.repoId) and the tenant id
-    // for leads/booking/entitlement. Opaque bigint key, no FK.
-    repoId: bigint("repo_id", { mode: "number" }).notNull().unique(),
+    // The project this agency lives in (hub_project.id) and the tenant id
+    // for leads/booking/entitlement. No FK.
+    projectId: uuid("project_id").notNull().unique(),
+
 
     // The embed scripts (leads.js / booking.js / contact.js) post keyed by the project's
-    // repoId above (data-key=repoId) — no separate public key. Abuse is bounded
+    // projectId above (data-key=projectId) — no separate public key. Abuse is bounded
     // by the origins allowlist (now hub_project.origins) + the Postgres rate limiter.
 
     // Per-client brand assets: resourceKey -> list of value options (business
@@ -228,7 +229,7 @@ export const agencyLead = pgTable(
   "agency_lead",
   {
     id: serial("id").primaryKey(),
-    repoId: bigint("repo_id", { mode: "number" }).notNull(),
+    projectId: uuid("project_id").notNull(),
 
     name: text("name"),
     email: text("email"),
@@ -288,19 +289,19 @@ export const agencyLead = pgTable(
       .$onUpdate(() => new Date()),
   },
   (table) => ({
-    idxRepoCreated: index("agency_lead_repo_created_idx").on(
-      table.repoId,
+    idxProjectCreated: index("agency_lead_project_created_idx").on(
+      table.projectId,
       table.createdAt.desc()
     ),
-    idxRepoChannelCreated: index("agency_lead_repo_channel_created_idx").on(
-      table.repoId,
+    idxProjectChannelCreated: index("agency_lead_project_channel_created_idx").on(
+      table.projectId,
       table.channel,
       table.createdAt.desc()
     ),
     // Two visitors can't take the same slot: slots are a fixed 15-minute grid,
     // so equal start times are the only possible conflict.
-    uniqRepoBookingAt: uniqueIndex("agency_lead_repo_booking_at_idx")
-      .on(table.repoId, table.bookingAt)
+    uniqProjectBookingAt: uniqueIndex("agency_lead_project_booking_at_idx")
+      .on(table.projectId, table.bookingAt)
       .where(sql`${table.bookingCanceledAt} is null`),
   })
 );
@@ -346,7 +347,7 @@ export const agencyWeeklyReport = pgTable(
   "agency_weekly_report",
   {
     id: serial("id").primaryKey(),
-    repoId: bigint("repo_id", { mode: "number" }).notNull(),
+    projectId: uuid("project_id").notNull(),
     // Monday of the reported week (YYYY-MM-DD).
     weekFrom: text("week_from").notNull(),
     // The WeeklyReportData the email rendered (packages/trpc lib/agency/weekly-report).
@@ -355,8 +356,8 @@ export const agencyWeeklyReport = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({
-    uniqRepoWeek: uniqueIndex("agency_weekly_report_repo_week_idx").on(
-      table.repoId,
+    uniqProjectWeek: uniqueIndex("agency_weekly_report_project_week_idx").on(
+      table.projectId,
       table.weekFrom
     ),
   })

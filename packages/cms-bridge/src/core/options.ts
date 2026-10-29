@@ -7,7 +7,7 @@
 export interface BridgeOptions {
   /** GitHub numeric repo id — the content-pilot join key (not secret). The
    * only required option; the server resolves owner/repo from it. */
-  repoId: number;
+  projectId: string;
   /** Master switch — when false the integration is a complete no-op. Default true. */
   enabled?: boolean;
   /**
@@ -37,6 +37,6 @@ export interface BridgeOptions {
 export interface BridgeRuntimeConfig {
   project?: string;
   endpoint: string;
-  repoId: number;
+  projectId: string;
   branch: string;
 }

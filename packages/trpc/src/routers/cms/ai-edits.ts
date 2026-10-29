@@ -19,7 +19,7 @@ export const aiEditsRouter = createTRPCRouter({
     }
     // AI chat is a paid feature: messages go straight to content-pilot with
     // this token, so gating the mint blocks chat server-side.
-    await requireFeature(ctx.user, ctx.repoId, "ai-chat");
+    await requireFeature(ctx.user, ctx.projectId, "ai-chat");
     const secret = process.env.EDIT_TOKEN_SECRET;
     if (!secret) {
       throw new TRPCError({
@@ -28,7 +28,7 @@ export const aiEditsRouter = createTRPCRouter({
       });
     }
 
-    const token = signEditToken({ repoId: ctx.repoId }, secret);
+    const token = signEditToken({ projectId: ctx.projectId }, secret);
     return { token };
   }),
 });

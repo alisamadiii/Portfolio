@@ -85,7 +85,7 @@ export function ConversionDialog({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const [form, setForm] = useState(() =>
     action ? { ...action } : { ...EMPTY }
   );
@@ -131,7 +131,7 @@ export function ConversionDialog({
     if (!fields.name) return toast.error("Give the action a name.");
     if (!action) {
       create.mutate({
-        repoId,
+        projectId,
         ...fields,
         type: form.type as "UPLOAD_CLICKS" | "AD_CALL",
         stage: canWire ? form.stage : null,
@@ -147,7 +147,7 @@ export function ConversionDialog({
       defaultValue: action.defaultValue,
     };
     update.mutate({
-      repoId,
+      projectId,
       resourceName: action.resourceName,
       before,
       after: fields,

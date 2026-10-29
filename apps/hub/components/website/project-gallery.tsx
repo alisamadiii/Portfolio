@@ -27,7 +27,7 @@ const FRAME_H = 800;
 type Project = {
   owner: string;
   repo: string;
-  repoId: number;
+  projectId: string;
   source?: string;
   private?: boolean;
   updatedAt?: string | null;
@@ -140,7 +140,7 @@ const ProjectCard = ({
   const url = project.websiteUrl ?? null;
   return (
     <Link
-      href={repoPath(project.repoId)}
+      href={repoPath(project.projectId)}
       className="bg-card hover:border-foreground/20 group flex flex-col overflow-hidden rounded-lg border transition"
     >
       <PreviewFrame url={url} />
@@ -188,7 +188,7 @@ const AgencyProjectCard = ({
   const tier = entitlement.label.split("·").pop()?.trim() ?? entitlement.label;
   return (
     <Link
-      href={repoPath(project.repoId)}
+      href={repoPath(project.projectId)}
       className="group flex flex-col overflow-hidden rounded-lg bg-[#141210] text-white shadow-[0_18px_50px_-20px_rgba(252,132,100,0.55)] ring-1 ring-white/10 transition hover:ring-[#fc8464]/50"
     >
       <div className="m-2 mb-0 overflow-hidden rounded-md ring-1 ring-white/10">
@@ -280,7 +280,7 @@ export function ProjectGallery() {
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {projects.map((p) => {
-            const entitlement = plans.forRepo(p.repoId);
+            const entitlement = plans.forRepo(p.projectId);
             const Card =
               entitlement.product === "agency" ? AgencyProjectCard : ProjectCard;
             return (

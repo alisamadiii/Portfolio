@@ -34,19 +34,19 @@ export const usePlans = () => {
 
   const isAdmin = isAdminUser(user);
   const byRepo = useMemo(
-    () => new Map((query.data ?? []).map((e) => [e.repoId, e])),
+    () => new Map((query.data ?? []).map((e) => [e.projectId, e])),
     [query.data]
   );
 
   /** A project's entitlement; website:free until loaded or if unknown. */
   const forRepo = useCallback(
-    (repoId: number): Entitlement => byRepo.get(repoId) ?? entitlementFor(repoId, null),
+    (projectId: string): Entitlement => byRepo.get(projectId) ?? entitlementFor(projectId, null),
     [byRepo]
   );
 
   const can = useCallback(
-    (repoId: number, feature: Feature): boolean =>
-      canUse(byRepo.get(repoId), feature, { isAdmin }),
+    (projectId: string, feature: Feature): boolean =>
+      canUse(byRepo.get(projectId), feature, { isAdmin }),
     [byRepo, isAdmin]
   );
 
@@ -67,12 +67,12 @@ export const usePlans = () => {
 };
 
 /** One project's plan, plus a feature check scoped to it. */
-export const useEntitlement = (repoId: number | null | undefined) => {
+export const useEntitlement = (projectId: string | null | undefined) => {
   const plans = usePlans();
-  const id = repoId ?? 0;
+  const id = projectId ?? "";
   return {
     entitlement: plans.forRepo(id),
-    can: (feature: Feature) => Boolean(repoId) && plans.can(id, feature),
+    can: (feature: Feature) => Boolean(projectId) && plans.can(id, feature),
     isLoading: plans.isLoading,
     refresh: plans.refresh,
   };
@@ -81,13 +81,13 @@ export const useEntitlement = (repoId: number | null | undefined) => {
 /** Starts a self-serve plan checkout for one project and redirects to Stripe. */
 export const startPlanCheckout = async ({
   plan = "website:paid",
-  repoId,
+  projectId,
   userId,
   email,
   name,
 }: {
   plan?: SelfServePlan;
-  repoId: number;
+  projectId: string;
   userId: string;
   email: string;
   name?: string | null;
@@ -102,7 +102,7 @@ export const startPlanCheckout = async ({
         plan,
         email,
         name: name || undefined,
-        repoId,
+        projectId,
         userId,
         returnUrl,
       }),

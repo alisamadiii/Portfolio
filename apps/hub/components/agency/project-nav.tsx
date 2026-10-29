@@ -89,7 +89,7 @@ function ProjectNavGroup({
   );
 }
 
-/** Compact nav for inside a project (/p/[repoId]); the hub home uses NavPages. */
+/** Compact nav for inside a project (/p/[projectId]); the hub home uses NavPages. */
 export function ProjectNav({
   label,
   pages,

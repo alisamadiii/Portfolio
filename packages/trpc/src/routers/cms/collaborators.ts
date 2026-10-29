@@ -46,8 +46,8 @@ type InviteState =
 
 type InviteRow = typeof collaboratorInviteTable.$inferSelect;
 
-// Projects are addressed by repoId (/p/<repoId>); owner/repo are display-only.
-const getDestinationPath = (invite: InviteRow) => `/p/${invite.repoId}`;
+// Projects are addressed by projectId (/p/<projectId>); owner/repo are display-only.
+const getDestinationPath = (invite: InviteRow) => `/p/${invite.projectId}`;
 
 const maskEmail = (address: string) => {
   const [name, domain] = address.split("@");
@@ -71,11 +71,11 @@ const loadInvite = async (token: string): Promise<InviteRow | null> => {
     return null;
   }
 
-  const collaborator = invite.repoId
+  const collaborator = invite.projectId
     ? await db.query.hubCollaborator.findFirst({
         where: and(
           sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
-          eq(collaboratorTable.repoId, invite.repoId)
+          eq(collaboratorTable.projectId, invite.projectId)
         ),
       })
     : null;
@@ -97,14 +97,14 @@ const claimInviteForUser = async (
     return false;
   }
 
-  if (invite.repoId) {
+  if (invite.projectId) {
     await db
       .update(collaboratorTable)
       .set({ userId: user.id })
       .where(
         and(
           sql`lower(${collaboratorTable.email}) = lower(${invite.email})`,
-          eq(collaboratorTable.repoId, invite.repoId)
+          eq(collaboratorTable.projectId, invite.projectId)
         )
       );
   }
@@ -129,12 +129,12 @@ const generateInviteToken = () => {
 // Creates (or replaces) a pending invite for an email and returns the hub link.
 const createInviteUrl = async ({
   email,
-  repoId,
+  projectId,
   owner,
   repo,
 }: {
   email: string;
-  repoId: number;
+  projectId: string;
   owner: string;
   repo: string;
 }) => {
@@ -149,13 +149,13 @@ const createInviteUrl = async ({
     .where(
       and(
         sql`lower(${collaboratorInviteTable.email}) = lower(${email})`,
-        eq(collaboratorInviteTable.repoId, repoId)
+        eq(collaboratorInviteTable.projectId, projectId)
       )
     );
 
   await db
     .insert(collaboratorInviteTable)
-    .values({ token, email, repoId, owner, repo, expiresAt });
+    .values({ token, email, projectId, owner, repo, expiresAt });
 
   const inviteUrl = new URL("/sign-in/collaborator", getHubBaseUrl());
   inviteUrl.searchParams.set("token", token);
@@ -173,7 +173,7 @@ export const collaboratorsRouter = createTRPCRouter({
     try {
       // TODO: support for branches and account collaborators
       return db.query.hubCollaborator.findMany({
-        where: eq(collaboratorTable.repoId, ctx.repoAccess.repoId),
+        where: eq(collaboratorTable.projectId, ctx.repoAccess.projectId),
       });
     } catch (error) {
       if (error instanceof TRPCError) throw error;
@@ -250,7 +250,7 @@ export const collaboratorsRouter = createTRPCRouter({
       try {
         const { repoAccess, isActorAdmin, isActorOwner } = ctx;
         const canManageFullAccess = isActorAdmin || isActorOwner;
-        // Display strings only — access is scoped by repoAccess.repoId.
+        // Display strings only — access is scoped by repoAccess.projectId.
         const owner = repoAccess.ownerLogin;
         const repo = repoAccess.repoName;
         const user = ctx.session.user;
@@ -277,7 +277,7 @@ export const collaboratorsRouter = createTRPCRouter({
           const existingUser = await findVerifiedUserByEmail(email);
           const existing = await db.query.hubCollaborator.findFirst({
             where: and(
-              eq(collaboratorTable.repoId, repoAccess.repoId),
+              eq(collaboratorTable.projectId, repoAccess.projectId),
               sql`lower(${collaboratorTable.email}) = lower(${email})`
             ),
           });
@@ -301,7 +301,7 @@ export const collaboratorsRouter = createTRPCRouter({
           if (!existingUser) {
             const inviteUrl = await createInviteUrl({
               email,
-              repoId: repoAccess.repoId,
+              projectId: repoAccess.projectId,
               owner,
               repo,
             });
@@ -343,7 +343,7 @@ export const collaboratorsRouter = createTRPCRouter({
             .insert(collaboratorTable)
             .values({
               type: repoAccess.ownerType,
-              repoId: repoAccess.repoId,
+              projectId: repoAccess.projectId,
               owner: repoAccess.ownerLogin,
               repo: repoAccess.repoName,
               email,
@@ -392,7 +392,7 @@ export const collaboratorsRouter = createTRPCRouter({
       try {
         const { repoAccess, isActorAdmin, isActorOwner } = ctx;
         const canManageFullAccess = isActorAdmin || isActorOwner;
-        // Display strings only — scoping is by repoAccess.repoId.
+        // Display strings only — scoping is by repoAccess.projectId.
         const owner = repoAccess.ownerLogin;
         const repo = repoAccess.repoName;
 
@@ -419,7 +419,7 @@ export const collaboratorsRouter = createTRPCRouter({
           .where(
             and(
               eq(collaboratorTable.id, input.collaboratorId),
-              eq(collaboratorTable.repoId, repoAccess.repoId)
+              eq(collaboratorTable.projectId, repoAccess.projectId)
             )
           )
           .returning();
@@ -436,7 +436,7 @@ export const collaboratorsRouter = createTRPCRouter({
           .where(
             and(
               sql`lower(${collaboratorInviteTable.email}) = lower(${collaborator.email})`,
-              eq(collaboratorInviteTable.repoId, repoAccess.repoId)
+              eq(collaboratorInviteTable.projectId, repoAccess.projectId)
             )
           );
 
@@ -457,7 +457,7 @@ export const collaboratorsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const { repoAccess } = ctx;
-        // Display strings only — scoping is by repoAccess.repoId.
+        // Display strings only — scoping is by repoAccess.projectId.
         const owner = repoAccess.ownerLogin;
         const repo = repoAccess.repoName;
         const user = ctx.session.user;
@@ -472,7 +472,7 @@ export const collaboratorsRouter = createTRPCRouter({
           });
         }
 
-        if (collaborator.repoId !== repoAccess.repoId) {
+        if (collaborator.projectId !== repoAccess.projectId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Collaborator does not belong to this repository.",
@@ -482,7 +482,7 @@ export const collaboratorsRouter = createTRPCRouter({
         const baseUrl = getHubBaseUrl();
         const inviteUrl = await createInviteUrl({
           email: collaborator.email,
-          repoId: repoAccess.repoId,
+          projectId: repoAccess.projectId,
           owner,
           repo,
         });
@@ -532,7 +532,7 @@ export const collaboratorsRouter = createTRPCRouter({
         const collaborator = await db.query.hubCollaborator.findFirst({
           where: and(
             eq(collaboratorTable.id, input.collaboratorId),
-            eq(collaboratorTable.repoId, repoAccess.repoId)
+            eq(collaboratorTable.projectId, repoAccess.projectId)
           ),
         });
         if (!collaborator) {

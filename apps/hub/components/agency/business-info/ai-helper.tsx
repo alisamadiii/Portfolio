@@ -20,7 +20,7 @@ import {
   Lock,
   TriangleAlert,
 } from "@/components/icon";
-import { useRouteRepoId } from "@/hooks/use-repo";
+import { useRouteProjectId } from "@/hooks/use-repo";
 
 function useCopy(text: string) {
   const [copied, setCopied] = useState(false);
@@ -50,7 +50,7 @@ export function AiHelper({
   /** Per-section href overrides (e.g. deep-link to the selected category). */
   links?: Record<string, string>;
 }) {
-  const repoId = useRouteRepoId();
+  const projectId = useRouteProjectId();
   const [open, setOpen] = useState(false);
   const { text, missing } = resolvePrompt(prompt, values);
   const { copied, copy } = useCopy(text);
@@ -91,7 +91,7 @@ export function AiHelper({
               {fill.label}
               {!present && step && (
                 <Link
-                  href={links?.[fill.section] ?? sectionUrl(repoId, fill.section)}
+                  href={links?.[fill.section] ?? sectionUrl(projectId, fill.section)}
                   className="text-primary ml-auto text-[15px]"
                 >
                   Add in step {step.step}
@@ -179,7 +179,7 @@ export function VerifyCard({
   prompt: PromptSpec;
   values: Record<string, string[]>;
 }) {
-  const repoId = useRouteRepoId();
+  const projectId = useRouteProjectId();
   const [open, setOpen] = useState(false);
   const { text, missing } = resolvePrompt(prompt, values);
   const { copied, copy } = useCopy(text);

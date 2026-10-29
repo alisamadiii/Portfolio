@@ -21,14 +21,14 @@ import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
  * SEO base URL, and is auto-allowed for the embed scripts. Editable by the
  * project owner or an admin; everyone else sees it read-only.
  */
-export function WebsiteUrlCard({ repoId }: { repoId: number }) {
+export function WebsiteUrlCard({ projectId }: { projectId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const project = useProject();
   const user = useCurrentUser().data?.user ?? null;
 
   const snapshot = useQuery(
-    trpc.cms.repos.getSnapshot.queryOptions({ repoId }, { enabled: !!repoId })
+    trpc.cms.repos.getSnapshot.queryOptions({ projectId }, { enabled: !!projectId })
   );
   const websiteUrl = snapshot.data?.websiteUrl ?? null;
   const canEdit = isAdminUser(user) || !!snapshot.data?.isOwner;
@@ -79,7 +79,7 @@ export function WebsiteUrlCard({ repoId }: { repoId: number }) {
               isLoading={save.isPending}
               disabled={!dirty}
               onClick={() =>
-                save.mutate({ repoId, websiteUrl: url.trim() || null })
+                save.mutate({ projectId, websiteUrl: url.trim() || null })
               }
             >
               Save

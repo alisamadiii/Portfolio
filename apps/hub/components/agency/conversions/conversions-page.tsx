@@ -93,7 +93,7 @@ const SHOW_PRESET: boolean = false;
 export function ConversionsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const { campaignId } = useCampaignFilter();
   const [days, setDays] = useState<RangeValue>("30");
   const range = useMemo(() => lastDays(Number(days)), [days]);
@@ -106,7 +106,7 @@ export function ConversionsPage() {
 
   const list = useQuery(
     trpc.agency.ads.conversions.list.queryOptions(
-      { repoId, ...range },
+      { projectId, ...range },
       { placeholderData: keepPreviousData }
     )
   );
@@ -288,7 +288,7 @@ export function ConversionsPage() {
               }
               disabled={applyPreset.isPending}
               onClick={() =>
-                applyPreset.mutate({ repoId, presetId: preset.id })
+                applyPreset.mutate({ projectId, presetId: preset.id })
               }
             >
               {applyPreset.isPending
@@ -611,7 +611,7 @@ export function ConversionsPage() {
             <AlertDialogAction
               variant="destructive"
               disabled={remove.isPending}
-              onClick={() => removing && remove.mutate({ repoId, ...removing })}
+              onClick={() => removing && remove.mutate({ projectId, ...removing })}
             >
               Delete
             </AlertDialogAction>

@@ -30,7 +30,7 @@ export function NewLeadDialog() {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const href = useAgencyHref();
   const [open, setOpen] = useState(false);
 
@@ -69,7 +69,7 @@ export function NewLeadDialog() {
             event.preventDefault();
             const form = new FormData(event.currentTarget);
             create.mutate({
-              repoId,
+              projectId,
               name: String(form.get("name") ?? ""),
               email: String(form.get("email") ?? ""),
               phone: String(form.get("phone") ?? ""),

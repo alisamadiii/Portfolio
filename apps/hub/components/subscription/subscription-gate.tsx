@@ -52,19 +52,19 @@ export function SubscriptionGateProvider({
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const verifiedOnReturnRef = useRef(false);
 
-  // The plan is per-project: every 402 fires from inside /p/[repoId], so the
+  // The plan is per-project: every 402 fires from inside /p/[projectId], so the
   // current path identifies which project the checkout must bind to (the
-  // webhook keys the subscription on metadata.repoId).
-  const repoIdMatch = pathname?.match(/^\/p\/(\d+)(?:\/|$)/);
-  const repoId = repoIdMatch ? Number(repoIdMatch[1]) : undefined;
+  // webhook keys the subscription on metadata.projectId).
+  const projectIdMatch = pathname?.match(/^\/p\/([0-9a-f-]{36})(?:\/|$)/i);
+  const projectId = projectIdMatch?.[1];
 
   // Fresh read of this project's plan (the webhook may have just landed),
   // then refresh the cached plans so every gate in the hub updates.
   const verifyMutation = useMutation({
-    mutationFn: async ({ repoId, feature }: { repoId?: number; feature: Feature | null }) => {
-      if (!repoId) return false;
+    mutationFn: async ({ projectId, feature }: { projectId?: string; feature: Feature | null }) => {
+      if (!projectId) return false;
       const entitlement = await queryClient.fetchQuery({
-        ...trpc.plans.project.queryOptions({ repoId }),
+        ...trpc.plans.project.queryOptions({ projectId }),
         staleTime: 0,
       });
       await plans.refresh();
@@ -107,18 +107,18 @@ export function SubscriptionGateProvider({
     verifiedOnReturnRef.current = true;
     url.searchParams.delete("purchase");
     window.history.replaceState(null, "", url.toString());
-    verifyAccess({ feature: null, repoId });
-  }, [verifyAccess, repoId]);
+    verifyAccess({ feature: null, projectId });
+  }, [verifyAccess, projectId]);
 
   const handleSubscribe = async () => {
-    if (!user?.email || !repoId) {
+    if (!user?.email || !projectId) {
       toast.error("Open the project and sign in with your email before subscribing.");
       return;
     }
     setIsCheckingOut(true);
     try {
       await startPlanCheckout({
-        repoId,
+        projectId,
         userId: user.id,
         email: user.email,
         name: user.name,
@@ -158,7 +158,7 @@ export function SubscriptionGateProvider({
               variant="outline"
               className="w-full"
               disabled={isVerifying || isCheckingOut}
-              onClick={() => verifyAccess({ feature, repoId })}
+              onClick={() => verifyAccess({ feature, projectId })}
             >
               {isVerifying ? "Checking…" : "I already subscribed"}
             </Button>

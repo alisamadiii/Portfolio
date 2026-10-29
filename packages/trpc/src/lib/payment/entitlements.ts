@@ -16,39 +16,41 @@ import {
 } from "./plans";
 
 // Server side of the plan catalog (./plans): reads each project's
-// subscription row (synced by the Stripe webhook on metadata.repoId) and turns
+// subscription row (synced by the Stripe webhook on metadata.projectId) and turns
 // it into an Entitlement. Every gate and the hub's usePlans hook go through
 // here, so "what can this project do" has exactly one answer.
 
 // The tenant key is the subscription's metadata, not a column: a sub grants
-// access to whatever `metadata.repoId` names (website repo or agency client).
-const metaRepoId = sql<string>`${subscriptions.metadata} ->> 'repoId'`;
+// access to whatever `metadata.projectId` names (website repo or agency client).
+const metaProjectId = sql<string>`${subscriptions.metadata} ->> 'projectId'`;
 
 const subscriptionColumns = {
-  repoId: sql<number>`(${subscriptions.metadata} ->> 'repoId')::bigint`,
+  projectId: metaProjectId,
   status: subscriptions.status,
   priceId: subscriptions.priceId,
   cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
 };
 
 /** Entitlements for many projects in one query (missing row = website:free). */
-const getEntitlements = async (repoIds: number[]): Promise<Entitlement[]> => {
-  if (!repoIds.length) return [];
+const getEntitlements = async (projectIds: string[]): Promise<Entitlement[]> => {
+  if (!projectIds.length) return [];
   const rows = await db
     .select(subscriptionColumns)
     .from(subscriptions)
-    .where(inArray(metaRepoId, repoIds.map(String)));
-  const byRepo = new Map(rows.map((row) => [Number(row.repoId), row]));
-  return repoIds.map((repoId) => entitlementFor(repoId, byRepo.get(repoId) ?? null));
+    .where(inArray(metaProjectId, projectIds));
+  const byProject = new Map(rows.map((row) => [row.projectId, row]));
+  return projectIds.map((projectId) =>
+    entitlementFor(projectId, byProject.get(projectId) ?? null)
+  );
 };
 
-const getEntitlement = async (repoId: number): Promise<Entitlement> => {
+const getEntitlement = async (projectId: string): Promise<Entitlement> => {
   const [row] = await db
     .select(subscriptionColumns)
     .from(subscriptions)
-    .where(eq(metaRepoId, String(repoId)))
+    .where(eq(metaProjectId, projectId))
     .limit(1);
-  return entitlementFor(repoId, row ?? null);
+  return entitlementFor(projectId, row ?? null);
 };
 
 /**
@@ -60,16 +62,16 @@ const getEntitlement = async (repoId: number): Promise<Entitlement> => {
  */
 const requireFeature = async (
   user: { email: string; role?: string | null },
-  repoId: number,
+  projectId: string,
   feature: Feature
 ): Promise<void> => {
   if (isAdminUser(user)) return;
 
   let entitlement: Entitlement;
   try {
-    entitlement = await getEntitlement(repoId);
+    entitlement = await getEntitlement(projectId);
   } catch (error) {
-    console.error(`Plan check failed for repo ${repoId}`, error);
+    console.error(`Plan check failed for repo ${projectId}`, error);
     throw toTRPCError(
       createHttpError("Could not verify this project's plan. Please try again.", 503)
     );

@@ -60,7 +60,7 @@ const EMPTY = {
   id: null as number | null,
   email: "",
   businessName: "",
-  repoId: "",
+  projectId: "",
   industry: "",
   adsType: "search",
   googleAdsCustomerId: "",
@@ -221,9 +221,9 @@ export default function AgencyClientsPage() {
               id: form.id,
               email: form.email,
               businessName: form.businessName || null,
-              repoId:
-                form.repoId && form.repoId !== NO_WEBSITE
-                  ? Number(form.repoId)
+              projectId:
+                form.projectId && form.projectId !== NO_WEBSITE
+                  ? form.projectId
                   : null,
               industry:
                 form.industry && form.industry !== NO_INDUSTRY
@@ -270,12 +270,12 @@ export default function AgencyClientsPage() {
               items={[
                 { value: NO_WEBSITE, label: "No website yet (create starter site)" },
                 ...(projects.data ?? []).map((project) => ({
-                  value: String(project.repoId),
+                  value: String(project.projectId),
                   label: `${project.owner}/${project.repo}`,
                 })),
               ]}
-              value={form.repoId || NO_WEBSITE}
-              onValueChange={(value) => set("repoId")(String(value))}
+              value={form.projectId || NO_WEBSITE}
+              onValueChange={(value) => set("projectId")(String(value))}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -286,8 +286,8 @@ export default function AgencyClientsPage() {
                 </SelectItem>
                 {projects.data?.map((project) => (
                   <SelectItem
-                    key={project.repoId}
-                    value={String(project.repoId)}
+                    key={project.projectId}
+                    value={String(project.projectId)}
                   >
                     {project.owner}/{project.repo}
                   </SelectItem>
@@ -295,7 +295,7 @@ export default function AgencyClientsPage() {
               </SelectContent>
             </Select>
           </div>
-          {!form.id && (!form.repoId || form.repoId === NO_WEBSITE) && (
+          {!form.id && (!form.projectId || form.projectId === NO_WEBSITE) && (
             <div className="space-y-1.5">
               <Label htmlFor="business-name">Business name</Label>
               <Input
@@ -578,14 +578,14 @@ export default function AgencyClientsPage() {
                       )}
                   </TableCell>
                   <TableCell>
-                    <code className="text-[12px]">{client.repoId}</code>
+                    <code className="text-[12px]">{client.projectId}</code>
                   </TableCell>
                   <TableCell className="space-x-1 text-right">
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={paymentLink.isPending || !client.repoId}
-                      title={client.repoId ? undefined : "Link a website first"}
+                      disabled={paymentLink.isPending || !client.projectId}
+                      title={client.projectId ? undefined : "Link a website first"}
                       onClick={() => paymentLink.mutate({ id: client.id })}
                     >
                       Payment link
@@ -598,7 +598,7 @@ export default function AgencyClientsPage() {
                           id: client.id,
                           email: client.email,
                           businessName: "",
-                          repoId: client.repoId ? String(client.repoId) : "",
+                          projectId: client.projectId ? String(client.projectId) : "",
                           industry: client.industry ?? "",
                           adsType: client.adsType ?? "search",
                           googleAdsCustomerId: client.googleAdsCustomerId ?? "",

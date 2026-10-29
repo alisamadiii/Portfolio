@@ -24,12 +24,12 @@ import { PanelError } from "@/components/settings/panel-error";
  */
 export function AgencyBillingPage() {
   const trpc = useTRPC();
-  const { repoId } = useAgency();
+  const { projectId } = useAgency();
   const user = useCurrentUser().data?.user ?? null;
-  const { refresh: refreshPlans } = useEntitlement(repoId);
+  const { refresh: refreshPlans } = useEntitlement(projectId);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery(
-    trpc.cms.subscription.getProject.queryOptions({ repoId })
+    trpc.cms.subscription.getProject.queryOptions({ projectId })
   );
 
   // Back from Stripe checkout: the webhook writes the row asynchronously, so
@@ -72,7 +72,7 @@ export function AgencyBillingPage() {
         ) : !data.subscription || data.subscription.status === "canceled" ? (
           user ? (
             <ProjectPlans
-              repoId={data.repoId}
+              projectId={data.projectId}
               userId={user.id}
               userEmail={user.email}
               userName={user.name}
@@ -80,7 +80,7 @@ export function AgencyBillingPage() {
           ) : null
         ) : (
           <ProjectManage
-            repoId={data.repoId}
+            projectId={data.projectId}
             subscription={data.subscription}
           />
         )}

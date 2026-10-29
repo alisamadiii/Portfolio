@@ -16,7 +16,7 @@ import { stripe } from "@workspace/trpc/lib/payment/stripe";
  * No-ops (returns quietly) when there's nothing to settle: no subscription row,
  * a non-paid plan, no Stripe subscription id, or an already-canceled sub.
  */
-export async function settleAndCancel(repoId: number): Promise<void> {
+export async function settleAndCancel(projectId: string): Promise<void> {
   const [row] = await db
     .select({
       id: subscriptions.id,
@@ -24,11 +24,11 @@ export async function settleAndCancel(repoId: number): Promise<void> {
       status: subscriptions.status,
     })
     .from(subscriptions)
-    .where(eq(sql`${subscriptions.metadata} ->> 'repoId'`, String(repoId)))
+    .where(eq(sql`${subscriptions.metadata} ->> 'projectId'`, String(projectId)))
     .limit(1);
 
   // Paid rows carry the Stripe sub id as the row id. Legacy free rows
-  // ('free_<repoId>', no Stripe sub) have nothing to settle.
+  // ('free_<projectId>', no Stripe sub) have nothing to settle.
   const subId = row?.id;
   if (
     !row ||

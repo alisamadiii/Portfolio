@@ -17,7 +17,7 @@ const DangerIcon = ({ className }: SVGProps<SVGSVGElement>) => (
 );
 
 /**
- * Agency projects' Site settings (sidebar group → /p/[repoId]/settings/[key]).
+ * Agency projects' Site settings (sidebar group → /p/[projectId]/settings/[key]).
  * Its own pages, separate from the website editor's Settings tab
  * (components/settings/*), so agency settings can change on their own.
  * Analytics is the agency's own page; emails are covered by leads; origins

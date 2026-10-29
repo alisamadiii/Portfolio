@@ -64,13 +64,13 @@ function titleFromPath(pathname: string): string {
  * fall back to the cms.json / settings baseUrl.
  */
 export async function getCustomDomainBaseUrl(
-  repoId: number
+  projectId: string
 ): Promise<string | null> {
   try {
     const [row] = await db
       .select({ websiteUrl: hubProject.websiteUrl })
       .from(hubProject)
-      .where(eq(hubProject.repoId, repoId))
+      .where(eq(hubProject.id, projectId))
       .limit(1);
     return row?.websiteUrl ?? null;
   } catch {
@@ -89,7 +89,7 @@ export const pagesRouter = createTRPCRouter({
         // the project has one (static uploads), else empty — never needsDomain:
         // an upload's domain story is the live serve, not Settings › Domain.
         if (ctx.source === "upload") {
-          const uploadBaseUrl = await getCustomDomainBaseUrl(ctx.repoId);
+          const uploadBaseUrl = await getCustomDomainBaseUrl(ctx.projectId);
           return {
             baseUrl: uploadBaseUrl ?? "",
             origin: uploadBaseUrl ? new URL(uploadBaseUrl).origin : "",
@@ -111,7 +111,7 @@ export const pagesRouter = createTRPCRouter({
         // The canvas base URL is the project's own website URL only — no dev
         // override, no manifest/settings fallback. Without one, tell the client
         // to add a domain in Settings › Domain.
-        const domainBaseUrl = await getCustomDomainBaseUrl(ctx.repoId);
+        const domainBaseUrl = await getCustomDomainBaseUrl(ctx.projectId);
         if (!domainBaseUrl) {
           return {
             baseUrl: "",
@@ -193,7 +193,7 @@ export const pagesRouter = createTRPCRouter({
    * or a fetch error all return an empty list and the tree shows no arrows.
    */
   sitemap: cmsProcedure.query(async ({ ctx }) => {
-    const baseUrl = await getCustomDomainBaseUrl(ctx.repoId);
+    const baseUrl = await getCustomDomainBaseUrl(ctx.projectId);
     if (!baseUrl) return { paths: [] as string[] };
 
     let origin: string;

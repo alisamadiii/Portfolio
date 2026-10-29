@@ -29,7 +29,7 @@ export function SessionSeed({
   return children;
 }
 
-/** agency.project({ repoId }), from the /p/[repoId] layout when it picks the agency UI. */
+/** agency.project({ projectId }), from the /p/[projectId] layout when it picks the agency UI. */
 export function AgencySeed({
   agency,
   children,
@@ -41,27 +41,27 @@ export function AgencySeed({
   const queryClient = useQueryClient();
   useState(() => {
     queryClient.setQueryData(
-      trpc.agency.project.queryKey({ repoId: agency.repoId }),
+      trpc.agency.project.queryKey({ projectId: agency.projectId }),
       agency
     );
   });
   return children;
 }
 
-/** cms.repos.getSnapshot({ repoId }), from the /p/[repoId] layout. */
+/** cms.repos.getSnapshot({ projectId }), from the /p/[projectId] layout. */
 export function ProjectSeed({
-  repoId,
+  projectId,
   snapshot,
   children,
 }: {
-  repoId: number;
+  projectId: string;
   snapshot: RouterOutputs["cms"]["repos"]["getSnapshot"];
   children: React.ReactNode;
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   useState(() => {
-    queryClient.setQueryData(trpc.cms.repos.getSnapshot.queryKey({ repoId }), snapshot);
+    queryClient.setQueryData(trpc.cms.repos.getSnapshot.queryKey({ projectId }), snapshot);
   });
   return children;
 }

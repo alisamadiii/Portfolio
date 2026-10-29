@@ -47,7 +47,7 @@ export const AgencyDangerPage = () => {
   const queryClient = useQueryClient();
   const project = useProject();
   const repo = project?.repo;
-  const repoId = project?.repoId ?? 0;
+  const projectId = project?.projectId ?? "";
 
   const [open, setOpen] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -59,7 +59,7 @@ export const AgencyDangerPage = () => {
         // card now, then refetch the list so it matches the server.
         const { queryKey } = trpc.cms.repos.listMine.queryOptions(undefined);
         queryClient.setQueryData(queryKey, (old) =>
-          old?.filter((project) => project.repoId !== repoId)
+          old?.filter((project) => project.projectId !== projectId)
         );
         void queryClient.invalidateQueries({ queryKey });
         toast.success("Project deleted.");
@@ -69,7 +69,7 @@ export const AgencyDangerPage = () => {
     })
   );
 
-  if (!repo || !repoId) return null;
+  if (!repo || !projectId) return null;
 
   return (
     <PageShell
@@ -172,7 +172,7 @@ export const AgencyDangerPage = () => {
                   </AlertDialogCancel>
                   <Button
                     variant="destructive"
-                    onClick={() => deleteMutation.mutate({ repoId })}
+                    onClick={() => deleteMutation.mutate({ projectId })}
                     isLoading={deleteMutation.isPending}
                     size="lg"
                   >

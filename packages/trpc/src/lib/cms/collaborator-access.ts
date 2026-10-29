@@ -18,13 +18,13 @@ const collaboratorMatchesUser = (user: { id: string; email: string }) =>
     )
   );
 
-// Access is keyed by repoId (the project's stable, globally-unique identity).
+// Access is keyed by projectId (the project's stable, globally-unique identity).
 // owner/repo on the collaborator row are display-only and can drift on a GitHub
 // rename/transfer, so they are never used to decide access.
-const collaboratorMatchesUserForRepoId = (
+const collaboratorMatchesUserForProjectId = (
   user: { id: string; email: string },
-  repoId: number
-) => and(collaboratorMatchesUser(user), eq(collaboratorTable.repoId, repoId));
+  projectId: string
+) => and(collaboratorMatchesUser(user), eq(collaboratorTable.projectId, projectId));
 
 const findVerifiedUserByEmail = async (email: string) => {
   return db.query.user.findFirst({
@@ -60,7 +60,7 @@ const bindCollaboratorInvitesToUser = async (
 export {
   bindCollaboratorInvitesToUser,
   collaboratorMatchesUser,
-  collaboratorMatchesUserForRepoId,
+  collaboratorMatchesUserForProjectId,
   findVerifiedUserByEmail,
   normalizeEmail,
 };

@@ -50,9 +50,9 @@ import { AdminViewSwitch } from "@/components/shell/admin-view-switch";
 type NavPage = ProjectNavPage & { feature?: Feature };
 
 // Pages tied to a plan feature only show when the client's tier includes it.
-// Every agency page lives under its project: /p/[repoId]/...
-const overviewPages = (repoId: number, hasSite: boolean): NavPage[] => {
-  const path = (...segments: string[]) => repoPath(repoId, ...segments);
+// Every agency page lives under its project: /p/[projectId]/...
+const overviewPages = (projectId: string, hasSite: boolean): NavPage[] => {
+  const path = (...segments: string[]) => repoPath(projectId, ...segments);
   return [
     { title: "Home", url: path(), icon: House, exact: true },
     {
@@ -104,10 +104,10 @@ const overviewPages = (repoId: number, hasSite: boolean): NavPage[] => {
 export function AgencySidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const { repoId, repo, hasSite, role } = useAgency();
-  const { entitlement, can } = useEntitlement(repoId);
+  const { projectId, repo, hasSite, role } = useAgency();
+  const { entitlement, can } = useEntitlement(projectId);
   const { product } = useAdsProduct();
-  const pages = overviewPages(repoId, hasSite).filter(
+  const pages = overviewPages(projectId, hasSite).filter(
     (page) => !page.feature || can(page.feature)
   );
 
@@ -136,7 +136,7 @@ export function AgencySidebar({
           </div>
         </div>
         <AdminViewSwitch
-          repoId={repoId}
+          projectId={projectId}
           current="agency"
           className="mx-1 mt-2"
         />
@@ -151,7 +151,7 @@ export function AgencySidebar({
             label="Site settings"
             pages={SITE_SETTINGS.map((setting) => ({
               title: setting.title,
-              url: repoPath(repoId, "settings", setting.key),
+              url: repoPath(projectId, "settings", setting.key),
               icon: setting.icon,
             }))}
           />

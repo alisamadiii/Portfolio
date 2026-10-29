@@ -12,7 +12,7 @@ import { WebsiteUrlCard } from "@/components/settings/website-url-card";
  * plus the lead form / booking widget allowed origins, in one page.
  */
 export function AgencyDomainPage() {
-  const repoId = useProject()?.repoId ?? 0;
+  const projectId = useProject()?.projectId ?? "";
   return (
     <PageShell
       eyebrow="SITE SETTINGS"
@@ -23,7 +23,7 @@ export function AgencyDomainPage() {
         <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
           Website address
         </h2>
-        <WebsiteUrlCard repoId={repoId} />
+        <WebsiteUrlCard projectId={projectId} />
       </section>
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
@@ -41,7 +41,7 @@ export function AgencyDomainPage() {
         <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
           Notification email
         </h2>
-        <NotifyEmailCard repoId={repoId} />
+        <NotifyEmailCard projectId={projectId} />
       </section>
     </PageShell>
   );

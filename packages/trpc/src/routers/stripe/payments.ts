@@ -187,7 +187,7 @@ export const stripeRouter = createTRPCRouter({
           company: session.metadata?.company ?? "",
           pages: session.metadata?.pages ?? "",
           // Agency checkouts: the project the subscription unlocks.
-          repoId: Number(session.metadata?.repoId) || null,
+          projectId: session.metadata?.projectId || null,
         },
         lineItems: (session.line_items?.data ?? []).map((li) => ({
           name: li.description,

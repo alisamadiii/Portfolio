@@ -267,6 +267,20 @@
       "when": 1793268987146,
       "tag": "0037_many_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793269717868,
+      "tag": "0038_marvelous_lady_bullseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793269732561,
+      "tag": "0039_messy_secret_warriors",
+      "breakpoints": true
     }
   ]
 }

@@ -28,11 +28,11 @@ const LSA_TABS = [
 /** Count of search terms with spend but no conversions — the red tab badge. */
 function useWastedCount(enabled: boolean) {
   const trpc = useTRPC();
-  const { repoId, adsConnected } = useAgency();
+  const { projectId, adsConnected } = useAgency();
   const range = useMemo(() => lastDays(30), []);
   const list = useQuery(
     trpc.agency.ads.searchTerms.list.queryOptions(
-      { repoId, ...range },
+      { projectId, ...range },
       { enabled: enabled && adsConnected, retry: false, staleTime: 5 * 60_000 }
     )
   );

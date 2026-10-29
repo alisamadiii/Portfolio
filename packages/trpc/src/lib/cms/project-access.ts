@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { agencyClient, type CollaboratorRole } from "@workspace/drizzle/schema";
 
 import { isAdminUser } from "../authz-shared";
-import { collaboratorMatchesUserForRepoId } from "./collaborator-access";
+import { collaboratorMatchesUserForProjectId } from "./collaborator-access";
 import { db } from "./db";
 
 // The one rule for who may open a project and with which role. Everything
@@ -16,7 +16,7 @@ import { db } from "./db";
 //   - invited collaborators: their hub_collaborator role
 //   - anyone else: no access
 
-type ProjectRef = { repoId: number; githubConnectedUserId: string | null };
+type ProjectRef = { projectId: string; githubConnectedUserId: string | null };
 
 const isProjectOwner = async (
   userId: string,
@@ -25,7 +25,7 @@ const isProjectOwner = async (
   if (project.githubConnectedUserId === userId) return true;
   const agencyOwner = await db.query.agencyClient.findFirst({
     where: and(
-      eq(agencyClient.repoId, project.repoId),
+      eq(agencyClient.projectId, project.projectId),
       eq(agencyClient.userId, userId)
     ),
     columns: { id: true },
@@ -42,7 +42,7 @@ const resolveProjectRole = async (
     return "full-access";
   }
   const collaborator = await db.query.hubCollaborator.findFirst({
-    where: collaboratorMatchesUserForRepoId(user, project.repoId),
+    where: collaboratorMatchesUserForProjectId(user, project.projectId),
   });
   return collaborator?.role ?? null;
 };

@@ -3,7 +3,7 @@
  * flow (a user's own repo) — there is no org-wide auto-sync anymore.
  */
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, inArray, notInArray, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
 import {
@@ -12,37 +12,49 @@ import {
   hubCollaborator,
   hubCollaboratorInvite,
   hubConfig,
+  hubProject,
   subscriptions,
 } from "@workspace/drizzle/schema";
 
 /**
  * Delete every project-scoped row for the given projects — but NOT the
  * hub_project rows themselves (those are tombstoned to block re-sync).
- * App-level cascade: the hub DB has no FK cascade because hub_project.repo_id
- * is a unique index, not a constraint.
+ * App-level cascade: child tables carry project_id without an FK.
  *
- *  - by repoId: subscription, collaborators, pending invites
+ *  - by projectId: subscription, collaborators, pending invites
  *  - by owner/repo (all branches): config + GitHub content cache rows
  */
 const deleteProjectChildRows = async (
-  projects: Array<{ repoId: number; owner: string; repo: string }>
+  projects: Array<{ projectId: string; owner: string; repo: string }>
 ) => {
   if (!projects.length) return;
-  const repoIds = projects.map((p) => p.repoId);
+  const projectIds = projects.map((p) => p.projectId);
 
   await db
     .delete(subscriptions)
-    .where(inArray(sql`${subscriptions.metadata} ->> 'repoId'`, repoIds.map(String)));
+    .where(inArray(sql`${subscriptions.metadata} ->> 'projectId'`, projectIds));
   await db
     .delete(hubCollaborator)
-    .where(inArray(hubCollaborator.repoId, repoIds));
+    .where(inArray(hubCollaborator.projectId, projectIds));
   await db
     .delete(hubCollaboratorInvite)
-    .where(inArray(hubCollaboratorInvite.repoId, repoIds));
+    .where(inArray(hubCollaboratorInvite.projectId, projectIds));
 
   // Config + content cache are keyed owner/repo/branch — drop all branches for
-  // each project's slug.
+  // each project's slug, unless another project still uses the same repo.
   for (const { owner, repo } of projects) {
+    const [shared] = await db
+      .select({ id: hubProject.id })
+      .from(hubProject)
+      .where(
+        and(
+          sql`lower(${hubProject.owner}) = lower(${owner})`,
+          sql`lower(${hubProject.repo}) = lower(${repo})`,
+          notInArray(hubProject.id, projectIds)
+        )
+      )
+      .limit(1);
+    if (shared) continue;
     const match = (table: typeof hubConfig | typeof hubCacheFile | typeof hubCacheFileMeta) =>
       and(
         sql`lower(${table.owner}) = lower(${owner})`,

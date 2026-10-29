@@ -46,13 +46,13 @@ export const ProjectBillingPanel = () => {
   const project = useProject();
   const user = useCurrentUser().data?.user ?? null;
 
-  const repoId = project?.repoId ?? 0;
-  const { refresh: refreshPlans } = useEntitlement(repoId);
+  const projectId = project?.projectId ?? "";
+  const { refresh: refreshPlans } = useEntitlement(projectId);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery(
     trpc.cms.subscription.getProject.queryOptions(
-      { repoId },
-      { enabled: !!repoId }
+      { projectId },
+      { enabled: !!projectId }
     )
   );
 
@@ -100,16 +100,16 @@ export const ProjectBillingPanel = () => {
         // resubscribe (distinct from cancelAtPeriodEnd, which stays managed
         // as "Canceling" until the period actually ends).
         data.subscription.status === "canceled" ? (
-        user && repoId ? (
+        user && projectId ? (
           <ProjectPlans
-            repoId={data.repoId}
+            projectId={data.projectId}
             userId={user.id}
             userEmail={user.email}
             userName={user.name}
           />
         ) : null
       ) : (
-        <ProjectManage repoId={data.repoId} subscription={data.subscription} />
+        <ProjectManage projectId={data.projectId} subscription={data.subscription} />
       )}
     </div>
   );
@@ -118,12 +118,12 @@ export const ProjectBillingPanel = () => {
 // ─── Products picker (no subscription yet) ──────────────────────
 
 export const ProjectPlans = ({
-  repoId,
+  projectId,
   userId,
   userEmail,
   userName,
 }: {
-  repoId: number;
+  projectId: string;
   userId: string;
   userEmail: string;
   userName?: string;
@@ -138,7 +138,7 @@ export const ProjectPlans = ({
     setCheckingOut(true);
     try {
       await startPlanCheckout({
-        repoId,
+        projectId,
         userId,
         email: userEmail,
         name: userName,
@@ -172,14 +172,14 @@ type ProjectInvoice =
   RouterOutputs["cms"]["subscription"]["getInvoices"][number];
 
 export const ProjectManage = ({
-  repoId,
+  projectId,
   subscription,
 }: {
-  repoId: number;
+  projectId: string;
   subscription: ProjectSubscription;
 }) => {
   const trpc = useTRPC();
-  const { entitlement } = useEntitlement(repoId);
+  const { entitlement } = useEntitlement(projectId);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const {
@@ -187,7 +187,7 @@ export const ProjectManage = ({
     isFetching: invoicesLoading,
     error: invoicesError,
     refetch: refetchInvoices,
-  } = useQuery(trpc.cms.subscription.getInvoices.queryOptions({ repoId }));
+  } = useQuery(trpc.cms.subscription.getInvoices.queryOptions({ projectId }));
 
   const portalMutation = useMutation(
     trpc.cms.subscription.createPortalSession.mutationOptions()
@@ -195,7 +195,7 @@ export const ProjectManage = ({
 
   const openPortal = () =>
     portalMutation.mutate(
-      { repoId, returnUrl: window.location.href },
+      { projectId, returnUrl: window.location.href },
       {
         onSuccess: (data) => {
           if (data.url) window.open(data.url, "_blank");

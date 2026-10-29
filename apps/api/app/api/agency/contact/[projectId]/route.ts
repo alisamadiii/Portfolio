@@ -14,12 +14,12 @@ import { urls } from "@workspace/ui/lib/company";
 import {
   clientIp,
   corsHeaders,
-  findContactClientByRepoId,
+  findContactClientByProjectId,
   hostOf,
   isAllowedOrigin,
   isRateLimited,
   leadEmailHtml,
-  parseRepoIdParam,
+  parseProjectIdParam,
 } from "@/lib/agency-public";
 
 // ─── Contact email ──────────────────────────────────────────────
@@ -63,18 +63,18 @@ const NAME_KEYS = ["name", "full_name", "fullname", "your-name", "your_name"];
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ repoId: string }> }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const { repoId: repoIdParam } = await params;
+  const { projectId: projectIdParam } = await params;
   const origin = req.headers.get("origin");
   const headers = corsHeaders(origin);
 
-  const repoId = parseRepoIdParam(repoIdParam);
-  if (repoId === null) {
+  const projectId = parseProjectIdParam(projectIdParam);
+  if (projectId === null) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
 
-  const client = await findContactClientByRepoId(repoId);
+  const client = await findContactClientByProjectId(projectId);
   if (!client) {
     return NextResponse.json({ error: "Unknown form" }, { status: 404, headers });
   }
@@ -101,7 +101,7 @@ export async function POST(
   if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
     return NextResponse.json({ error: "Submission too large" }, { status: 413, headers });
   }
-  if (await isRateLimited(`contact:${repoId}:${clientIp(req)}`)) {
+  if (await isRateLimited(`contact:${projectId}:${clientIp(req)}`)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }
@@ -165,7 +165,7 @@ export async function POST(
         to: recipient,
         ...(replyTo ? { replyTo } : {}),
         subject: `${data.formName ? `${data.formName}: ` : ""}${title}`,
-        html: leadEmailHtml(lines, `${urls.cms}/p/${repoId}`, siteName, {
+        html: leadEmailHtml(lines, `${urls.cms}/p/${projectId}`, siteName, {
           tag: "Contact form",
           title,
         }),

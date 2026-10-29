@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import {
@@ -14,6 +14,11 @@ import {
   projectsTypeValues,
 } from "@workspace/drizzle/schema";
 import type { ProjectType } from "@workspace/drizzle/schema";
+import {
+  priceIdVariants,
+  pricesFor,
+  SELF_SERVE_PLANS,
+} from "@workspace/trpc/lib/payment/plans";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -45,6 +50,28 @@ export const productsRouter = createTRPCRouter({
       });
     }
   }),
+
+  // The Stripe product behind a self-serve plan, matched on the plan's
+  // recurring price (several products share metadata.project = "AGENCY").
+  getForPlan: baseProcedure
+    .input(z.enum(SELF_SERVE_PLANS))
+    .query(async ({ input }) => {
+      const priceId = pricesFor(input)?.recurring;
+      const [product] = priceId
+        ? await db
+            .select()
+            .from(products)
+            .where(inArray(products.stripePriceId, [...priceIdVariants(priceId)]))
+            .limit(1)
+        : [];
+      if (!product) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `No product found for plan "${input}"`,
+        });
+      }
+      return product;
+    }),
 
   getByProject: baseProcedure
     .input(z.enum(projectsTypeValues))

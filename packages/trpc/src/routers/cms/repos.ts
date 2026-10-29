@@ -8,9 +8,9 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { createHttpError, toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { assertRepoAccessByRepoId } from "@workspace/trpc/lib/cms/authz";
+import { assertRepoAccessByProjectId } from "@workspace/trpc/lib/cms/authz";
 import { isProjectOwner } from "@workspace/trpc/lib/cms/project-access";
-import { resolveProjectByRepoId } from "@workspace/trpc/lib/cms/repo-id";
+import { resolveProjectByProjectId } from "@workspace/trpc/lib/cms/repo-id";
 import { accessibleProjectsWhere } from "@workspace/trpc/lib/cms/accessible-projects";
 import { getRepoSnapshot } from "@workspace/trpc/lib/cms/github-cache-file";
 import { getToken } from "@workspace/trpc/lib/cms/token";
@@ -34,7 +34,7 @@ export const reposRouter = createTRPCRouter({
           .select({
             owner: hubProject.owner,
             repo: hubProject.repo,
-            repoId: hubProject.repoId,
+            projectId: hubProject.id,
             source: hubProject.source,
             private: hubProject.private,
             defaultBranch: hubProject.defaultBranch,
@@ -48,7 +48,7 @@ export const reposRouter = createTRPCRouter({
         return rows.map((row) => ({
           owner: row.owner,
           repo: row.repo,
-          repoId: row.repoId,
+          projectId: row.projectId,
           source: row.source,
           private: row.private,
           defaultBranch: row.defaultBranch,
@@ -66,38 +66,41 @@ export const reposRouter = createTRPCRouter({
    * server-side: getToken + getRepoSnapshot). Access control = getToken.
    */
   getSnapshot: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       try {
-        // repoId is globally unique in hub_project — resolves the exact project
-        // (owner + name) and enforces the caller's Hub access in one step.
-        const project = await assertRepoAccessByRepoId(
+        // Resolves the exact project (owner + name) and enforces the caller's
+        // Hub access in one step.
+        const project = await assertRepoAccessByProjectId(
           ctx.session.user,
-          input.repoId
+          input.projectId
         );
         const owner = project.owner;
         const repo = project.repo;
 
         const { token, role } = await getToken(
           ctx.session.user,
-          input.repoId
+          input.projectId
         );
         // Importer or agency client; drives the hub's owner controls.
-        const isOwner = await isProjectOwner(ctx.session.user.id, project);
+        const isOwner = await isProjectOwner(ctx.session.user.id, {
+          projectId: project.id,
+          githubConnectedUserId: project.githubConnectedUserId,
+        });
 
         // Uploaded projects have no GitHub repo: synthesize the snapshot from
         // the project row. One branch ('main'), always private, no cache
         // revalidation — the files live in content-pilot's workspace.
         if (project.source === "upload") {
           return {
-            id: input.repoId,
+            id: 0,
             owner,
             ownerId: 0,
             repo,
             defaultBranch: project.defaultBranch,
             branches: [project.defaultBranch],
             isPrivate: true,
-            repoId: input.repoId,
+            projectId: input.projectId,
             myRole: role,
             isOwner,
             websiteUrl: project.websiteUrl ?? null,
@@ -113,8 +116,8 @@ export const reposRouter = createTRPCRouter({
         try {
           snapshot = await getRepoSnapshot(owner, repo, token);
         } catch (snapshotError) {
-          // We already confirmed the project exists (repoId resolved) and the
-          // caller has Hub access (assertRepoAccessByRepoId). So a GitHub
+          // We already confirmed the project exists (projectId resolved) and the
+          // caller has Hub access (assertRepoAccessByProjectId). So a GitHub
           // 404/403 here means the App's installation can't reach the repo —
           // a distinct, actionable case, NOT "repository removed".
           const status =
@@ -137,11 +140,11 @@ export const reposRouter = createTRPCRouter({
         }
 
         // websiteUrl (thumbnail/preview + hooks) comes from the project row
-        // already loaded by assertRepoAccessByRepoId.
+        // already loaded by assertRepoAccessByProjectId.
 
         return {
           ...snapshot,
-          repoId: input.repoId,
+          projectId: input.projectId,
           myRole: role,
           isOwner,
           websiteUrl: project.websiteUrl ?? null,
@@ -159,10 +162,10 @@ export const reposRouter = createTRPCRouter({
    * Fails open on transient errors — a GitHub blip never blocks a project.
    */
   installationStatus: authenticatedProcedure
-    .input(z.object({ repoId: z.number().int().positive() }))
+    .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ input }) => {
       try {
-        const project = await resolveProjectByRepoId(input.repoId);
+        const project = await resolveProjectByProjectId(input.projectId);
         if (!project) return { status: "ok" as const };
         // Uploaded projects have no GitHub repo to install anything on.
         if (project.source === "upload") return { status: "ok" as const };

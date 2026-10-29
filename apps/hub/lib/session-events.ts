@@ -1,3 +1,5 @@
+import { isProjectId } from "@/lib/paths";
+
 /**
  * Pure pieces of the live AI-session stream (see hooks/use-session-events.ts):
  * the Claude stream-json reducer and the reconnect bookkeeping. Kept free of
@@ -49,9 +51,9 @@ const shortPath = (value: unknown) => {
   if (typeof value !== "string" || !value) return null;
   const parts = value.split("/").filter(Boolean);
   const tail = parts.slice(-2);
-  // Drop the clone dir (the numeric repoId under workspace/) — "1290180826/
+  // Drop the clone dir (the projectId uuid under workspace/) — "<uuid>/
   // _site.json" reads as noise; the filename alone is what the client needs.
-  if (/^\d+$/.test(tail[0] ?? "")) return tail[1] ?? tail[0]!;
+  if (isProjectId(tail[0])) return tail[1] ?? tail[0]!;
   return tail.join("/");
 };
 
