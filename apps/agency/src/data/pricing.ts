@@ -95,8 +95,8 @@ export const WEBSITE_ONLY = {
 
 export const PRICING = {
   // E-commerce Storefront — separate offer on /ecommerce only. Published as
-  // "$1,500 setup + $120/mo"; CTAs route to /quote?plan=ecommerce.
-  ecommerce: { setup: 1500, monthly: 120 },
+  // "$799 setup + $25/mo"; CTAs route to /quote?plan=ecommerce.
+  ecommerce: { setup: 799, monthly: 25 },
 };
 
 // ─── Shared helpers ─────────────────────────────────────────────
