@@ -3,7 +3,7 @@ title: "Amazon SES vs Resend: Real Pricing From an Agency"
 description: "One charges a tenth of a cent per email, the other $20 a month. I run client email on SES — here's the real cost math and who should pick which."
 keyword: "amazon ses vs resend"
 publishDate: 2026-08-09
-updatedDate: 2026-08-20
+updatedDate: 2026-10-30
 heroImage: "/blog/ses-hero.webp"
 heroImageAlt: "An open laptop showing an email inbox on a desk"
 heroCredit:
@@ -35,7 +35,7 @@ That's the whole reason this post exists. Email sending is one of those invisibl
 | Free tier       | —                 | 3,000 emails/month, capped at 100/day |
 | Setup           | takes a developer | takes an afternoon                    |
 
-My clients get the SES price without ever touching the setup — **the first 1,000 emails every month are free**, and every email goes out from their own domain with no watermark.
+My clients get the SES price without ever touching the setup. I set it up in **their own AWS account**, they pay Amazon directly (a typical small business sends under a dollar's worth a year), and every email goes out from their own domain with no watermark.
 
 </div>
 
@@ -51,7 +51,7 @@ Resend's paid plan is **$20 a month for up to 50,000 emails**. That's a fine pri
 
 One detail worth knowing with SES: it charges **per recipient, not per message**. Send one email to 100 people, that's 100 billable emails. At these prices it's a rounding error, but it's the honest fine print. (Amazon has also started selling SES in named plans — the "Essentials" tier starts at $0.16 per 1,000 — but the classic pay-as-you-go rate above is still there and still what a small business should be on.)
 
-For my clients, the arrangement is simpler than either: **the first 1,000 emails every month are free.** Past that, you're into fractions of a cent per email. Nobody is paying $20 a month to receive their own contact form.
+For my clients, the arrangement is simpler than either: **SES in their own AWS account, billed by Amazon at $0.10 per 1,000.** At small-business volume that's cents a year. Nobody is paying $20 a month to receive their own contact form.
 
 ![Cables plugged into networking equipment in a server room](/blog/email-setup.webp)
 
@@ -63,7 +63,7 @@ Setting up SES properly means verifying your domain, adding DNS records so inbox
 
 Estimates online put SES setup at four to fifteen hours for someone doing it the first time. One developer did the maths and concluded Resend is actually cheaper for most startups once you price in that engineering time — and for a startup paying developer salaries, he's right.
 
-But here's the thing about hiring an agency: **that cost is mine, and I've already paid it.** The domain verification, the DNS records, the sandbox exit, the bounce handling — done once, reused for every client. You get pallet pricing with retail service. It's the one genuine advantage of the "boring infrastructure plus a person who's already fought it" model: the hard part happened before you arrived.
+But here's the thing about hiring an agency: **I've already learned it, so you don't pay for the learning.** The domain verification, the DNS records, the sandbox exit, the bounce handling: I've done it enough times that it's part of the build, set up in your own account. You get pallet pricing with retail service. It's the one genuine advantage of the "boring infrastructure plus a person who's already fought it" model: the hard part happened before you arrived.
 
 ![The contact email template every client site sends](/blog/contact-email-template.webp)
 
@@ -97,16 +97,15 @@ Every email my clients send is like that: their domain, their design, no waterma
 
 ![Neatly organised files and records in an archive](/blog/email-records.webp)
 
-## Every email, on the record
+## Your account, your records
 
-The part I'd want as a business owner: nothing here is fire-and-forget. Every email sent on a client's behalf is logged, and clients see the log in their [Client Hub](https://hub.alisamadii.com) dashboard on the Emails page.
+The part I'd want as a business owner: the sending account is yours, not mine. SES runs in your own AWS account, under your email, on your card, the same rule I use for [your domain](/blog/who-should-own-your-domain-name).
 
-- **Every email, listed** — contact-form messages, notifications, the lot, newest first.
-- **Open any of them** and see the exact email that was delivered — not a summary, the actual thing, pixel for pixel, straight from the archived copy.
-- **Search and filter** by text, type, or any date range.
-- **Export a range as a PDF** — pick the dates, click export, get a clean document listing every email sent in the period. Handy for records, disputes, or proving to a committee that yes, the notification did go out on the 14th.
+- **You own the keys.** If we ever part ways, your email keeps sending. Nothing to migrate, nobody to ask.
+- **You pay Amazon, not me.** No markup on email, no "email plan" on my invoice.
+- **Delivery and bounce records stay with you**, in an account you control, for the day you need to prove that yes, the notification did go out on the 14th.
 
-If you've ever wondered "did that email actually send?" — this is the answer, permanently, with receipts. (Literally. Some of the emails are receipts.)
+If you've ever wondered "who actually controls my website's email?", the answer should be you. With this setup, it is.
 
 ## When you should NOT do it my way
 
@@ -124,11 +123,11 @@ Send enough email that it should look professional; send too little to justify $
 
 To put it all in one place — email sending on my client sites means:
 
-- Sent through Amazon SES from your own domain
-- First 1,000 emails a month free, fractions of a cent after
-- No watermark — a designed template, standard or custom to your brand
+- Sent through Amazon SES, in your own AWS account, from your own domain
+- You pay Amazon directly: $0.10 per 1,000 emails, no markup
+- No watermark: a designed template, standard or custom to your brand
 - Spam-filtered and locked to your inbox
-- Every email archived and exportable from your dashboard
+- Set up as part of your website build, no extra plan
 
 If your current website's contact form goes to a Gmail address, or worse, goes nowhere and you've been wondering why it's so quiet — [get in touch](/#contact). The form on my site uses exactly the system described above, so consider your first message a product demo. If it doesn't arrive, I owe you a very awkward apology.
 
@@ -147,7 +146,7 @@ Automated email from a personal Gmail hits spam filters fast and looks unprofess
 Not on my setup. Every email comes from your domain with your template and nothing else. Watermarks are how free email tools advertise themselves; they're the first thing to get rid of when the emails represent a real business.
 
 **What does the client actually see?**
-A live log in their Client Hub dashboard: every email sent, searchable and filterable, with the exact delivered email viewable in full, and any date range exportable as a PDF.
+Every contact-form message in their own inbox, with reply-to set to the visitor. The sending account itself is theirs too, so delivery and bounce records sit in an account they control, not mine.
 
 **Can the contact form on my site be abused to spam people?**
 Not this one. The endpoint only delivers to your own inbox — the recipient isn't something the form can change — and it's rate-limited to five submissions per ten minutes per visitor, which stops most bots at the door.
@@ -204,7 +203,7 @@ It can pause your sending if your bounce or complaint rates climb too high — t
       "name": "What does the client actually see?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A live log in their Client Hub dashboard: every email sent, searchable and filterable, with the exact delivered email viewable in full, and any date range exportable as a PDF."
+        "text": "Every contact-form message in their own inbox, with reply-to set to the visitor. The sending account itself is theirs too, so delivery and bounce records sit in an account they control, not mine."
       }
     },
     {

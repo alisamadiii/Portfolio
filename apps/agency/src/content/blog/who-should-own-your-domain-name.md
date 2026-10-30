@@ -1,9 +1,9 @@
 ---
 title: "Who Should Own Your Domain Name? You. Always You."
-description: "The domain goes in your account, under your email, on your card — while your agency hosts the site. The setup that keeps you off the hostage list."
+description: "The domain goes in your account, under your email, on your card. So do the hosting and the code. The setup that keeps you off the hostage list."
 keyword: "who should own your domain name"
 publishDate: 2026-08-08
-updatedDate: 2026-08-20
+updatedDate: 2026-10-30
 heroImage: "/blog/domain-hero.webp"
 heroImageAlt: "A close-up shot of a vintage typewriter"
 heroCredit:
@@ -26,10 +26,10 @@ Here's why that tiny purchase matters more than most of the big ones.
 
 <div class="direct-answer">
 
-**Who should own your domain name?** You, the business owner — always. Not your web designer, not your agency, not me. The domain should be registered in your own account, under your own email, paid with your own card. Your agency builds and hosts the website and gives you DNS records to connect the two — you keep the deed, they're just the builder. With me, it works like this:
+**Who should own your domain name?** You, the business owner — always. Not your web designer, not your agency, not me. The domain should be registered in your own account, under your own email, paid with your own card. Your agency builds the website and connects the two. You keep the deed, they're just the builder. With me, it works like this:
 
 1. You buy the domain from any registrar — [Namecheap](https://www.namecheap.com), [GoDaddy](https://www.godaddy.com), wherever. If you've never done it, I'll walk you through it.
-2. I build and host the website.
+2. I build the website and set up its hosting and code in accounts you own.
 3. I send you the DNS values to paste into your registrar. Stuck? We hop on a call and do it together.
 
 </div>
@@ -50,13 +50,13 @@ If you've never bought a domain before, it's a ten-minute job — about as hard 
 
 ![A video call on a laptop — walking through setup together on a screen share](/blog/dns-setup.webp)
 
-## Step two: I host the site and send you the DNS values
+## Step two: I set up hosting in your account and send you the DNS values
 
 Once your domain exists and the site is built, they need to be introduced. That's DNS — the internet's address book. Sounds technical. In practice, it's copy and paste.
 
 Here's the actual handoff:
 
-- I host the website and get it live on my infrastructure
+- I put the website live on hosting in your own account (I use Netlify), with the code in your own GitHub
 - I send you a short list of DNS records — a few names and values
 - You log in to wherever you bought the domain, open the DNS settings, and paste them in
 - Within an hour or so, your domain points at your new site
@@ -65,7 +65,7 @@ That's it. Whether you bought from Namecheap, GoDaddy, or a registrar I've never
 
 And if that paragraph still made your eyes glaze over — genuinely fine. Give me a call and we'll do it together on a screen share, you driving, me navigating. Ten minutes, done, and you'll never wonder what a DNS record is again. (You'll also never _need_ to. It's a set-and-forget job.)
 
-Notice what this arrangement means: I never need your registrar password, and you never need to touch my hosting. Each of us holds our own keys. Which brings me to the part I actually care about.
+Notice what this arrangement means: I never need your registrar password, and nothing about your site lives on my infrastructure. You hold the keys; I just get invited in to do the work. Which brings me to the part I actually care about.
 
 ### While you're in there: three settings worth thirty seconds
 
@@ -83,11 +83,9 @@ Here's the uncomfortable truth most agencies won't put in writing, so I will.
 
 I plan to be doing this for a long time. But no business is guaranteed forever — agencies close, people retire, life happens. If your domain lived in my account and something happened to me or this business, you'd be locked out of your own name while lawyers and registrars sorted it out. That's not a risk you should carry so I can save one login.
 
-So the whole setup is built around one rule: **nothing about your website should depend on me still existing.** You own the domain. You get the site's files and full access to everything built for you. That's the baseline, included, no asterisk.
+So the whole setup is built around one rule: **nothing about your website should depend on me still existing.** You own the domain. The hosting account is yours. The code lives in your own GitHub. That's the baseline, included, no asterisk.
 
-Now, the honest bit: owning the files and knowing what to do with them are two different things. A folder of code is not much comfort at 2am if you've never deployed a website. So I'm putting together something for exactly that — think AppleCare for your website, except you pay once and it never expires. For a one-time $149, you get the complete code and I teach you the whole rescue drill: how to get your code, run it on your own laptop, and put it live on [Vercel](https://vercel.com) yourself. I'm writing the full step-by-step guide so it's all written down, not locked in my head.
-
-And if you'd rather never touch a terminal — also fine. Everything is packaged and ready, so worst case you hand the folder to any basic web developer and say "host this." It's a small, boring job for them, and it shouldn't cost much. Either way: you'd need a new web guy. You wouldn't need a lawyer.
+Which means there's no rescue drill to learn. If I vanished tomorrow, your site would keep running exactly as it does today, because it was never running on anything of mine. The only thing you'd lose is me making the edits. Hand any web developer access to your GitHub and they can pick up where I left off. You'd need a new web guy. You wouldn't need a lawyer.
 
 That's the opposite of how a chunk of this industry works, where the client is quietly dependent on the agency for everything — domain, hosting, edits, mercy. Dependency is a business model. It's just not mine. I'd rather you stay because the work is good than because leaving is complicated.
 
@@ -95,7 +93,7 @@ One honest caveat: if what you actually want is to hand everything to one compan
 
 ## The deal, in one sentence
 
-You hold the deed, I build the house, and the day you outgrow me — or I ride off into the sunset — you walk away with everything and owe nobody a thing. Now if you'll excuse me, I have to go explain to my accountant why I keep telling people not to pay me.
+You hold the deed, I build the house, and the day you outgrow me (or I ride off into the sunset) you walk away with everything and owe nobody a thing. Now if you'll excuse me, I have to go explain to my accountant why I keep telling people not to pay me.
 
 If you're starting a project and want it set up this way, [get in touch](/#contact). First job: I'll help you buy a domain. From someone else.
 
@@ -117,7 +115,7 @@ DNS records tell the internet where your domain should point — they're the add
 Run a WHOIS lookup — free at [lookup.icann.org](https://lookup.icann.org). If your business name and details aren't on the registration, find out whose are, today rather than the day you need to move.
 
 **What happens to my website if your agency shuts down?**
-Nothing dramatic — and that's by design. You own the domain and you have the site's complete code. If you took the one-time $149 website insurance, you've already been taught the rescue drill — get the code, run it on your laptop, host it on Vercel — and it's all written down in a guide you keep. And if you'd rather not touch it, any basic web developer can host a ready-made site for you cheaply. You'd be inconvenienced, not held hostage.
+Nothing dramatic, and that's by design. The domain, the hosting account, and the code all sit in accounts you own, so the site keeps running without me. When you want changes, any web developer can pick up the code from your GitHub and keep going. You'd be inconvenienced, not held hostage.
 
 ---
 
@@ -173,7 +171,7 @@ Nothing dramatic — and that's by design. You own the domain and you have the s
       "name": "What happens to my website if your agency shuts down?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Nothing dramatic — and that's by design. You own the domain and you have the site's complete code. If you took the one-time $149 website insurance, you've already been taught the rescue drill — get the code, run it on your laptop, host it on Vercel — and it's all written down in a guide you keep. And if you'd rather not touch it, any basic web developer can host a ready-made site for you cheaply. You'd be inconvenienced, not held hostage."
+        "text": "Nothing dramatic, and that's by design. The domain, the hosting account, and the code all sit in accounts you own, so the site keeps running without me. When you want changes, any web developer can pick up the code from your GitHub and keep going. You'd be inconvenienced, not held hostage."
       }
     }
   ]

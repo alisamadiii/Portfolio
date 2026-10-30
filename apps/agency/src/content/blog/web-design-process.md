@@ -3,7 +3,7 @@ title: "The Web Design Process: Four Steps From Idea to Live"
 description: "My web design process in four steps — Discovery, Strategy, Execution, Launch — plus how long a website really takes and where AI fits in."
 keyword: "web design process"
 publishDate: 2026-08-05
-updatedDate: 2026-08-20
+updatedDate: 2026-10-30
 heroImage: "/blog/process-hero.webp"
 heroImageAlt: "A designer's desk with a notebook, pen, and phone — planning a website"
 heroCredit:
@@ -31,7 +31,7 @@ The web design process is the set of stages a website goes through from first id
 1. **Discovery** — figure out what the site is _for_, who it's talking to, and what job it's being hired to do
 2. **Strategy** — decide its shape: sitemap, user journey, wireframes, creative direction
 3. **Execution** — build and test it in real code, AI-assisted, human-reviewed
-4. **Launch & Scale** — put it live and hand you the keys, CMS included
+4. **Launch & Scale**: put it live in your own accounts and hand you the keys, Client Hub included
 
 </div>
 
@@ -106,17 +106,17 @@ None of this shows up in a screenshot. All of it shows up the day a real custome
 
 The last step is getting your site into the world and making sure you can run it without me hovering over your shoulder like a nervous parent at a first driving lesson.
 
-Every site I build is deployed to a **global CDN** — meaning it's served from data centres close to your visitors, so it's fast everywhere, not just wherever I happen to be sitting. There's no server to babysit and nothing to patch. Static sites are both quicker and much harder to hack than the database-driven platforms most small businesses end up stuck on. Fewer moving parts, fewer things that break at 2am.
+Every site I build is deployed to a **global CDN**, on a hosting account you own, meaning it's served from data centres close to your visitors, so it's fast everywhere, not just wherever I happen to be sitting. There's no server to babysit and nothing to patch. Static sites are both quicker and much harder to hack than the database-driven platforms most small businesses end up stuck on. Fewer moving parts, fewer things that break at 2am.
 
-Then comes the part I'm actually proudest of: **the handoff.** I set every client up on an Astro-based site connected to a simple content management system (CMS). Through a clean dashboard, you can:
+Then comes the part I'm actually proudest of: **the handoff.** The domain, the hosting, and the code all go into accounts you own. Then I connect the site to Client Hub, where you can:
 
-- **Edit any text** yourself — headlines, paragraphs, prices. Change a phone number without filing a support ticket and waiting three business days.
-- **Swap images and add pages** without touching a single line of code.
-- **Publish instantly.** Every change you save goes live automatically, usually inside a minute.
+- **Edit any text** yourself: headlines, paragraphs, prices. Tell the AI "change the phone number" and it's done, no support ticket, no waiting three business days.
+- **Swap images and add pages** by describing what you want, without touching a single line of code.
+- **Preview, then publish.** You see the change on a live preview first; hit publish and your host deploys it, usually inside a minute.
 
-Here's the safety net: because the CMS only exposes content and not code, you _can't_ accidentally break the site. Poke around all you like — the worst you can do is fix a typo. And because everything's version-controlled behind the scenes, any change can be rolled back. You get the control of a big platform with none of the fragility.
+Here's the safety net: everything's version-controlled behind the scenes, so any change can be rolled back, and nothing goes live until you've seen it in the preview. You get the control of a big platform with none of the fragility.
 
-This is the bit most agencies quietly hate, because "you need us to change a word" is a nice little recurring invoice. I'd rather you own your site. If you'd genuinely rather stay hands-off, managed hosting keeps everything fast, secure, and backed up while you go run your business. Your call — not a trap.
+This is the bit most agencies quietly hate, because "you need us to change a word" is a nice little recurring invoice. I'd rather you own your site. Client Hub access is a flat $25 a month, and if you'd genuinely rather stay hands-off, send me the change and I'll make it. Your call, not a trap.
 
 And "Scale" isn't just a word I added to make the step sound bigger. A launched site isn't finished, it's _started_. You watch what pages people actually visit, you tweak the ones that underperform, you add a service page when you add a service. The process doesn't end at launch. Launch is where the useful part begins.
 
@@ -148,7 +148,7 @@ So for the simple ones, I compress the process. We have a short, honest conversa
 What you skip: the heavy Strategy phase, the endless wireframe rounds, the discovery deck nobody reads twice. What you keep — because these aren't negotiable — is the part that matters:
 
 - **A proper build.** Real code, tested on phones and every browser, fast everywhere. Speed and quality don't get cut just because the timeline is short.
-- **Launch & Scale, same as everyone.** Your site goes live on a global CDN, and you get the CMS. Change your text, swap your images, add a page — all yourself, no ticket, no developer, no waiting.
+- **Launch & Scale, same as everyone.** Your site goes live on a global CDN in your own hosting account, and you get Client Hub. Change your text, swap your images, add a page with AI, all yourself, no ticket, no developer, no waiting.
 - **You own it.** Same as the big builds. It's your site, not a rental you keep paying to touch.
 
 The trade is simple: less process, less cost, live in a day — in exchange for a smaller scope. When your business grows and the site needs to do more, we add the missing steps then. You don't pay for Strategy you don't need yet.
@@ -193,13 +193,13 @@ Discovery — figuring out what the site needs to do and who it's for, ideally w
 Six to twelve weeks for a typical custom site, and as little as a day for a simple, well-scoped one built the way I build. The variable that moves the timeline most isn't the design — it's how quickly you supply content and feedback.
 
 **Do I always need all four steps?**
-No. Big builds with a real job to do get the full process. But a small business that just needs a clean, professional site to look legit and take enquiries doesn't need two weeks of Discovery and Strategy — I compress those to a short conversation and go straight to build, so a well-scoped site can be live in about a day. You still get a proper tested build, the CMS, and full ownership. When the business grows and the site needs to do more, we add the missing steps then.
+No. Big builds with a real job to do get the full process. But a small business that just needs a clean, professional site to look legit and take enquiries doesn't need two weeks of Discovery and Strategy — I compress those to a short conversation and go straight to build, so a well-scoped site can be live in about a day. You still get a proper tested build, Client Hub, and full ownership. When the business grows and the site needs to do more, we add the missing steps then.
 
 **What's the difference between web design and web development?**
 Design is how it looks and how a visitor moves through it — layout, typography, the journey. Development is the code that makes it actually work in a browser. Some people split those across two hires. I do both, which is part of why the timeline is shorter — nothing gets lost in the handoff between a designer who can't code and a developer who's never met the client.
 
 **Can I really edit the site myself after launch?**
-Yes, and that's the whole point. You get a dashboard where you can change text, swap images, and add pages, and it publishes in about a minute. You can't break anything, because the CMS only touches content, never code. No developer, no ticket, no waiting. If you'd rather not touch it at all, managed hosting has you covered — but the option is yours, not mine.
+Yes, and that's the whole point. In Client Hub you tell the AI what to change (text, images, a new page), preview it, and publish. Every change is version-controlled, so anything can be rolled back. No developer, no ticket, no waiting. If you'd rather not touch it at all, send me the change and I'll make it.
 
 ---
 
@@ -271,7 +271,7 @@ Yes, and that's the whole point. You get a dashboard where you can change text, 
       "name": "Can I really edit the site myself after launch?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes, and that's the whole point. You get a dashboard where you can change text, swap images, and add pages, and it publishes in about a minute. You can't break anything, because the CMS only touches content, never code. If you'd rather not touch it at all, managed hosting has you covered — the option is yours."
+        "text": "Yes, and that's the whole point. In Client Hub you tell the AI what to change (text, images, a new page), preview it, and publish. Every change is version-controlled, so anything can be rolled back. If you'd rather not touch it at all, send me the change and I'll make it."
       }
     }
   ]
