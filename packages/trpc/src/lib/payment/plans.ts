@@ -9,10 +9,6 @@
 
 import type { subscriptions } from "@workspace/drizzle/schema";
 
-// Self-serve price ids, written by scripts/sync-stripe-plans.mts on every
-// api build (live) and committed for sandbox.
-import generatedPrices from "./stripe-prices.generated.json";
-
 // Production when the Node process runs in production mode (next build/start,
 // or the Coolify container), NOT Vercel-specific, so self-hosting picks the
 // live Stripe prices instead of silently falling back to sandbox.
@@ -93,11 +89,11 @@ export const PLANS = {
       paid: {
         label: "Website plan",
         priceLabel: "$25/mo",
-        // scripts/sync-stripe-plans.mts (runs on every api build)
+        // "Website Management" product, $25/mo
         prices: {
           recurring: price(
-            (generatedPrices.live as Record<string, string>)["website:paid"] ?? "",
-            (generatedPrices.test as Record<string, string>)["website:paid"] ?? ""
+            "price_1UWD3rEhKQbL1BLmxW6K00PL",
+            "price_1UWCvOEhKQbL1BLmIFadya35"
           ),
         },
         // The original $100/mo price (live, sandbox).

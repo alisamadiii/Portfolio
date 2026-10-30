@@ -5,7 +5,6 @@ import {
   priceIdVariants,
   pricesFor,
 } from "@workspace/trpc/lib/payment/plans";
-import generatedPrices from "@workspace/trpc/lib/payment/stripe-prices.generated.json";
 
 // The Billing plan card finds its Stripe product by the plan's price id. The
 // DB mirror can hold the other Stripe mode's ids (live rows in the testing
@@ -15,10 +14,11 @@ describe("priceIdVariants", () => {
   it("returns the live and sandbox ids of the website plan", () => {
     const id = pricesFor("website:paid")!.recurring;
     // Deliberately updated (2026-10-30): the $100/mo ids were replaced by the
-    // $25/mo price that scripts/sync-stripe-plans.mts writes per mode.
+    // $25/mo price (live, sandbox). Updated again 2026-10-30 when the
+    // sync script was removed and the ids were hardcoded.
     expect(priceIdVariants(id)).toEqual([
-      (generatedPrices.live as Record<string, string>)["website:paid"] ?? "",
-      generatedPrices.test["website:paid"],
+      "price_1UWD3rEhKQbL1BLmxW6K00PL",
+      "price_1UWCvOEhKQbL1BLmIFadya35",
     ]);
   });
 
@@ -34,8 +34,8 @@ describe("priceIdVariants", () => {
 });
 
 describe("planForPrice", () => {
-  it("maps the synced $25/mo sandbox price to the website plan", () => {
-    expect(planForPrice(generatedPrices.test["website:paid"])).toBe(
+  it("maps the $25/mo sandbox price to the website plan", () => {
+    expect(planForPrice("price_1UWCvOEhKQbL1BLmIFadya35")).toBe(
       "website:paid"
     );
   });
