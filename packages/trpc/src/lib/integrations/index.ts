@@ -56,7 +56,11 @@ export const reconnectError = (name: string) =>
     message: `${name} needs to be reconnected.`,
   });
 
-type ConnectedAccount = { accountId: string; scope: string | null };
+type ConnectedAccount = {
+  id: string;
+  accountId: string;
+  scope: string | null;
+};
 
 /** True when a granted scope string covers everything an integration needs. */
 export const scopeSatisfied = (
@@ -81,7 +85,11 @@ export async function getConnectedAccount(
 ): Promise<ConnectedAccount | null> {
   if (!userId) return null;
   const rows = await db
-    .select({ accountId: account.accountId, scope: account.scope })
+    .select({
+      id: account.id,
+      accountId: account.accountId,
+      scope: account.scope,
+    })
     .from(account)
     .where(and(eq(account.userId, userId), eq(account.providerId, providerId)));
   if (!requiredScope) return rows[0] ?? null;
@@ -108,11 +116,12 @@ export async function getIntegrationAccessToken(
   );
   if (!connected) throw reconnectError(errorName);
   try {
+    // better-auth 1.7 resolves getAccessToken's accountId against the account
+    // row id (account.id), and its body schema no longer accepts providerId.
     const res = await auth.api.getAccessToken({
       body: {
-        providerId: integration.providerId,
         userId,
-        accountId: connected.accountId,
+        accountId: connected.id,
       },
     });
     const token = (res as { accessToken?: string } | null)?.accessToken;

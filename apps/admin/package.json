@@ -23,7 +23,7 @@
     "@workspace/trpc": "workspace:*",
     "@workspace/ui": "workspace:*",
     "axios": "^1.9.0",
-    "better-auth": "^1.5.4",
+    "better-auth": "^1.7.14",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.577.0",
