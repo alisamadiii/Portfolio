@@ -39,7 +39,7 @@ export const seoRouter = createTRPCRouter({
       if (!base) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: "Start a preview or add a website URL in Settings › Domain first.",
+          message: "Start a preview or add a website URL in project settings first.",
         });
       }
 

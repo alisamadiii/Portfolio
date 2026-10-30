@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { priceIdVariants, pricesFor } from "@workspace/trpc/lib/payment/plans";
+import {
+  planForPrice,
+  priceIdVariants,
+  pricesFor,
+} from "@workspace/trpc/lib/payment/plans";
+import generatedPrices from "@workspace/trpc/lib/payment/stripe-prices.generated.json";
 
 // The Billing plan card finds its Stripe product by the plan's price id. The
 // DB mirror can hold the other Stripe mode's ids (live rows in the testing
@@ -9,9 +14,11 @@ import { priceIdVariants, pricesFor } from "@workspace/trpc/lib/payment/plans";
 describe("priceIdVariants", () => {
   it("returns the live and sandbox ids of the website plan", () => {
     const id = pricesFor("website:paid")!.recurring;
+    // Deliberately updated (2026-10-30): the $100/mo ids were replaced by the
+    // $25/mo price that scripts/sync-stripe-plans.mts writes per mode.
     expect(priceIdVariants(id)).toEqual([
-      "price_1UMr7QEhKQbL1BLm2o3DHJ1P",
-      "price_1UMoKjEhKQbL1BLm0xZuUQiw",
+      (generatedPrices.live as Record<string, string>)["website:paid"] ?? "",
+      generatedPrices.test["website:paid"],
     ]);
   });
 
@@ -23,5 +30,23 @@ describe("priceIdVariants", () => {
 
   it("passes an unknown id through", () => {
     expect(priceIdVariants("price_unknown")).toEqual(["price_unknown"]);
+  });
+});
+
+describe("planForPrice", () => {
+  it("maps the synced $25/mo sandbox price to the website plan", () => {
+    expect(planForPrice(generatedPrices.test["website:paid"])).toBe(
+      "website:paid"
+    );
+  });
+
+  it("keeps the retired $100/mo prices on the website plan for old subscribers", () => {
+    expect(planForPrice("price_1UMr7QEhKQbL1BLm2o3DHJ1P")).toBe("website:paid");
+    expect(planForPrice("price_1UMoKjEhKQbL1BLm0xZuUQiw")).toBe("website:paid");
+  });
+
+  it("does not map an empty or unknown id", () => {
+    expect(planForPrice("")).toBeNull();
+    expect(planForPrice("price_unknown")).toBeNull();
   });
 });

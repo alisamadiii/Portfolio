@@ -21,6 +21,7 @@ import { SessionChatPanel } from "@/components/canvas/session-chat-panel";
 import { type CanvasDevice } from "@/components/canvas/canvas-toolbar";
 import { ShellHeader, type ShellMode } from "@/components/shell/shell-header";
 import { DocsPanel } from "@/components/shell/docs-panel";
+import { ProjectSettingsDialog } from "@/components/shell/project-settings-dialog";
 import { SettingsMode } from "@/components/settings/settings-mode";
 import { useRepo } from "@/hooks/use-repo";
 import { roleAtLeast } from "@/lib/authz-shared";
@@ -68,12 +69,14 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
     pagesError,
     needsDomain,
     session,
+    projectId,
   } = useCanvasEditor();
   const { myRole } = useRepo();
   // view-only collaborators get the guide instead of the AI chat panel.
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const [mode, setMode] = useState<ShellMode>("canvas");
   const [docsOpen, setDocsOpen] = useState(false);
+  const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
   const [device, setDevice] = useState<CanvasDevice>("desktop");
   const [reloadNonce, setReloadNonce] = useState(0);
   // Splitter drag: a transparent shield keeps the iframe from swallowing
@@ -155,6 +158,7 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
         onModeChange={setMode}
         inAgency={inAgency}
         onToggleDocs={() => setDocsOpen((open) => !open)}
+        onOpenProjectSettings={() => setProjectSettingsOpen(true)}
         chatWidth={chatWidth}
       />
 
@@ -216,8 +220,11 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
                           The canvas previews your live site. Add the project's
                           domain so we know where it lives.
                         </p>
-                        <Button className="mt-5" onClick={() => setMode("settings")}>
-                          Add domain
+                        <Button
+                          className="mt-5"
+                          onClick={() => setProjectSettingsOpen(true)}
+                        >
+                          Add website URL
                         </Button>
                       </div>
                     </div>
@@ -245,6 +252,14 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      {!inAgency && (
+        <ProjectSettingsDialog
+          projectId={projectId}
+          open={projectSettingsOpen}
+          onOpenChange={setProjectSettingsOpen}
+        />
+      )}
 
       {/* Client guide — opened from the header's info button. */}
       <Sheet open={docsOpen} onOpenChange={setDocsOpen}>

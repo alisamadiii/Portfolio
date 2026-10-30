@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, Globe, TriangleAlert } from "@/components/icon";
+import { CreditCard, TriangleAlert } from "@/components/icon";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -11,22 +11,18 @@ import { DangerPanel } from "@/components/settings/danger-panel";
 import { ChartMark } from "@/components/analytics/chart-mark";
 import { SpeedMark } from "@/components/analytics/speed-mark";
 import { SpeedPanel } from "@/components/settings/speed-panel";
-import { DomainPanel } from "@/components/settings/domain-panel";
-import { EmailsPanel } from "@/components/settings/emails-panel";
 import { ProjectFeatureGate } from "@/components/settings/project-paywall";
-import { EnvelopeMark } from "@/components/emails/envelope-mark";
 
 /** Sentinels for the Site Settings entries in the settings nav. */
 const BILLING = "$billing";
-const DOMAIN = "$domain";
-const EMAILS = "$emails";
 const ANALYTICS = "$analytics";
 const SPEED = "$speed";
 const DANGER = "$danger";
 
 /**
  * In-shell Settings view (the logo-dropdown flips into this). Repo-level
- * project settings only — Billing, Domain, Emails, Analytics, Speed, Danger.
+ * project settings only — Billing, Analytics, Speed, Danger. The website URL
+ * lives in the header's project settings dialog.
  * Site content + page settings are edited through the AI chat now.
  */
 export function SettingsMode() {
@@ -44,18 +40,6 @@ export function SettingsMode() {
           label="Billing"
           active={selected === BILLING}
           onClick={() => setSelected(BILLING)}
-        />
-        <NavRow
-          icon={<Globe className="size-4" />}
-          label="Domain"
-          active={selected === DOMAIN}
-          onClick={() => setSelected(DOMAIN)}
-        />
-        <NavRow
-          icon={<EnvelopeMark className="size-4" />}
-          label="Emails"
-          active={selected === EMAILS}
-          onClick={() => setSelected(EMAILS)}
         />
         <NavRow
           icon={<ChartMark className="size-4" />}
@@ -81,12 +65,6 @@ export function SettingsMode() {
       <main className="bg-shell min-w-0 flex-1 overflow-y-auto">
         {selected === BILLING ? (
           <ProjectBillingPanel />
-        ) : selected === DOMAIN ? (
-          <DomainPanel />
-        ) : selected === EMAILS ? (
-          <ProjectFeatureGate feature="emails">
-            <EmailsPanel />
-          </ProjectFeatureGate>
         ) : selected === ANALYTICS ? (
           <ProjectFeatureGate feature="analytics">
             <AnalyticsPanel />

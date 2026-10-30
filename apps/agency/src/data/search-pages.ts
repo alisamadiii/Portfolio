@@ -115,7 +115,7 @@ export const SEARCH_PAGES: SearchPage[] = [
   {
     title: "Websites for Small Businesses",
     description:
-      "A custom website without ads: designed, built, hosted, and cared for. $1,299 setup + $100/mo.",
+      "A custom website without ads: designed, built, and set up in your own accounts. $699 setup + $25/mo.",
     url: "/websites",
     keywords: [
       "website",
@@ -123,7 +123,7 @@ export const SEARCH_PAGES: SearchPage[] = [
       "website only",
       "small business website",
       "no ads",
-      "1299",
+      "699",
     ],
   },
   {

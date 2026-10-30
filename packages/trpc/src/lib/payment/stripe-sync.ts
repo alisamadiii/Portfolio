@@ -85,7 +85,7 @@ const resolveUser = async (
  * Re-fetch a product and its active price from Stripe and upsert the mirror
  * row. Called for product.* and price.* events — order-independent.
  */
-const syncStripeProduct = async (productId: string) => {
+export const syncStripeProduct = async (productId: string) => {
   const product = await stripe.products.retrieve(productId);
 
   // Prefer the default price; fall back to the first active one.
@@ -223,9 +223,13 @@ const subscriptionIdOf = (invoice: Stripe.Invoice): string => {
 const syncStripeOrderFromInvoice = async (invoice: Stripe.Invoice) => {
   if (!invoice.id) return;
   // Per-project CMS subscription invoices belong to hub_subscription only.
+  // Subscriptions created before the uuid switch still carry repoId.
+  const subMeta = invoice.parent?.subscription_details?.metadata;
   if (
-    invoice.parent?.subscription_details?.metadata?.projectId ||
-    invoice.metadata?.projectId
+    subMeta?.projectId ||
+    subMeta?.repoId ||
+    invoice.metadata?.projectId ||
+    invoice.metadata?.repoId
   ) {
     return;
   }

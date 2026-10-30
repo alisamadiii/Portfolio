@@ -77,7 +77,7 @@ export const PlanCard = ({
             <div className="mt-5 flex items-baseline gap-1.5">
               <span className="text-4xl font-extrabold tracking-tight">
                 {formatPrice(
-                  product.data?.priceAmount ?? 10000,
+                  product.data?.priceAmount ?? 2500,
                   product.data?.priceCurrency ?? "usd"
                 )}
               </span>

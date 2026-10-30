@@ -56,7 +56,7 @@ const PLAN_LABELS = {
   launch: "Launch: website + Google Ads ($2,500/mo)",
   growth: "Growth: website + Google Ads ($3,500/mo)",
   scale: "Scale: website + Google Ads ($4,500/mo)",
-  website: "Website only, no ads: $1,299 setup + $100/mo",
+  website: "Website only, no ads: $699 setup + $25/mo",
   ecommerce: "E-commerce Storefront (Shopify): $1,500 setup + $120/mo",
   newsletter: "Newsletter (quoted)",
   custom: "Custom / not sure",

@@ -25,6 +25,7 @@ import {
   ArrowLeft,
   Info,
   LayoutGrid,
+  Settings,
   Settings2,
   type LucideProps,
 } from "@/components/icon";
@@ -39,19 +40,23 @@ export type ShellMode = "canvas" | "settings";
  * Docked top bar (warm off-white). Left: back arrow (home) + agency brand
  * mark. The Canvas / Settings tabs float at the canvas panel's left edge —
  * `--chat-w` (set by the resizable split) keeps them aligned at any splitter
- * position. Center: project name + branch. Right: guide, user menu, Invite
+ * position. Center: project name + branch. Right: guide, project settings
+ * (website, full access), user menu, Invite
  * (full access), Publish (content editor+). Images are attached in the chat.
  */
 export function ShellHeader({
   mode,
   onModeChange,
   onToggleDocs,
+  onOpenProjectSettings,
   chatWidth,
   inAgency,
 }: {
   mode: ShellMode;
   onModeChange: (mode: ShellMode) => void;
   onToggleDocs: () => void;
+  /** Opens the website project settings dialog (website URL). */
+  onOpenProjectSettings: () => void;
   /** Chat-panel width (%) — offsets the tabs to the canvas panel's left edge. */
   chatWidth: number;
   /** Agency project: no Settings tab (site settings live in the agency
@@ -153,6 +158,17 @@ export function ShellHeader({
         >
           <Info className="size-5" />
         </Button>
+        {!inAgency && canManage && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onOpenProjectSettings}
+            aria-label="Project settings"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Settings className="size-5" />
+          </Button>
+        )}
         <User align="end" />
         <InviteButton projectId={projectId} />
         <SessionActions />

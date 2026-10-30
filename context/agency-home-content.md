@@ -168,7 +168,7 @@ A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applie
 
 $0 setup · Website included · 6-month minimum, then month-to-month · Ad spend paid to Google directly
 
-Just need a website, no ads? $1,299 + $100/mo · See website plans →
+Just need a website, no ads? $699 + $25/mo · See website plans →
 
 ---
 
@@ -197,7 +197,7 @@ A: Yes. Your code lives in your own GitHub, and your domain and Google Ads accou
 A: We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included in every growth plan at no extra cost.
 
 **Q: Can I get just a website, without ads?**
-A: Yes. Our website-only plan is $1,299 setup + $100/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our Websites page.
+A: Yes. Our website-only plan is $699 setup + $25/mo: custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page.
 
 **Q: Do you only work with Jacksonville businesses?**
 A: No. We're based in Jacksonville and work with businesses across Florida, including Miami, Tampa, and Orlando, as well as anywhere in the US. Everything can be handled online.
@@ -230,7 +230,7 @@ Jacksonville, FL
 Form fields (QuoteForm.astro):
 - Name
 - Email
-- I'm interested in (select): Launch $2,500/mo · Growth $3,500/mo (default) · Scale $4,500/mo · Website only $1,299 + $100/mo · E-commerce storefront · Newsletter for my business: quoted · Custom / not sure yet
+- I'm interested in (select): Launch $2,500/mo · Growth $3,500/mo (default) · Scale $4,500/mo · Website only $699 + $25/mo · E-commerce storefront · Newsletter for my business: quoted · Custom / not sure yet
 - Your goals (textarea), placeholder: "What do you sell, where, and how do leads come in today?"
 - [button: Request a Quote]
 - Success: "Thanks, we'll reply within a day." 

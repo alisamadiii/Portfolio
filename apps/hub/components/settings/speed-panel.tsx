@@ -231,11 +231,11 @@ export function SpeedPanel() {
             <SpeedMark className="size-6" />
           </div>
           <h3 className="mt-5 text-[20px] font-extrabold tracking-tight">
-            No domain connected
+            No website URL
           </h3>
           <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14px]">
-            Connect a domain in the Domain tab and the speed test will run
-            against your live website.
+            Add your website URL in project settings (the gear in the header)
+            and the speed test will run against your live website.
           </p>
         </div>
       </div>

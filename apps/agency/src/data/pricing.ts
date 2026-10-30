@@ -81,15 +81,15 @@ export const FROM_PRICE = PLANS[0].monthly;
 export const WEBSITE_ONLY = {
   id: "website",
   name: "Website only",
-  setup: 1299,
-  monthly: 100,
+  setup: 699,
+  monthly: 25,
   blurb:
-    "Just need a great website, no ads? We design, build, host, and care for it.",
+    "Just need a great website, no ads? We design and build it, then set it up in your own accounts.",
   features: [
     "Custom design & development",
-    "Client Hub: edit anything",
-    "Email from your own domain",
-    "Essential SEO & managed hosting",
+    "Client Hub: edit anything with AI",
+    "Set up in your own accounts: domain, hosting, code",
+    "Essential SEO, analytics & speed reports",
   ],
 } as const;
 

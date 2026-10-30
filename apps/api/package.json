@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "pnpm --filter @workspace/drizzle migrate && next build",
+    "build": "pnpm --filter @workspace/drizzle migrate && pnpm --filter @workspace/trpc stripe:sync-plans && next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",

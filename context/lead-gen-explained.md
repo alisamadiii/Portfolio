@@ -36,7 +36,7 @@ So when you build a new dashboard, its job is to **pull these numbers together**
 | **Launch**                | $2,500/mo             | Website + hosting, **1** Google Ads campaign, manages up to **$3k/mo** of ad spend, form + GA4 tracking, home page + 1 landing page, monthly report                                |
 | **Growth** (most popular) | $3,500/mo             | Everything in Launch, **several** campaigns, up to **$6k/mo** ad spend, **call tracking**, a landing page per service, **Local Services Ads** setup, a strategy call every 2 weeks |
 | **Scale**                 | $4,500/mo             | Everything in Growth, unlimited campaigns, up to **$10k/mo** ad spend, landing pages per service **and** per city, **local SEO + Google Business Profile**, a weekly strategy call |
-| **Website only**          | $1,299 once + $100/mo | Just a website, hosting, edits. **No ads.** This is your old offer                                                                                                                 |
+| **Website only**          |  $699 once + $25/mo   | Just a website, set up in their accounts, AI edits. **No ads.** This is your old offer                                                                                                                 |
 
 **Rules for all growth plans (Launch, Growth, Scale):**
 

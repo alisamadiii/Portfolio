@@ -9,6 +9,10 @@
 
 import type { subscriptions } from "@workspace/drizzle/schema";
 
+// Self-serve price ids, written by scripts/sync-stripe-plans.mts on every
+// api build (live) and committed for sandbox.
+import generatedPrices from "./stripe-prices.generated.json";
+
 // Production when the Node process runs in production mode (next build/start,
 // or the Coolify container), NOT Vercel-specific, so self-hosting picks the
 // live Stripe prices instead of silently falling back to sandbox.
@@ -61,12 +65,14 @@ type TierDef = {
    * Stripe mode yet (run the seed script).
    */
   prices: { recurring: string; setup?: string } | null;
+  /** Retired recurring prices that existing subscribers may still bill on;
+   *  they map to this tier too. */
+  legacyRecurring?: readonly string[];
   features: readonly Feature[];
   limits?: Partial<Limits>;
 };
 
 const WEBSITE_PAID_FEATURES = [
-  "emails",
   "analytics",
   "speed",
   "ai-chat",
@@ -86,14 +92,19 @@ export const PLANS = {
       },
       paid: {
         label: "Website plan",
-        priceLabel: "$100/mo",
-        // scripts/seed-project-plan.mts
+        priceLabel: "$25/mo",
+        // scripts/sync-stripe-plans.mts (runs on every api build)
         prices: {
           recurring: price(
-            "price_1UMr7QEhKQbL1BLm2o3DHJ1P",
-            "price_1UMoKjEhKQbL1BLm0xZuUQiw"
+            (generatedPrices.live as Record<string, string>)["website:paid"] ?? "",
+            (generatedPrices.test as Record<string, string>)["website:paid"] ?? ""
           ),
         },
+        // The original $100/mo price (live, sandbox).
+        legacyRecurring: [
+          "price_1UMr7QEhKQbL1BLm2o3DHJ1P",
+          "price_1UMoKjEhKQbL1BLm0xZuUQiw",
+        ],
         features: WEBSITE_PAID_FEATURES,
       },
     },
@@ -115,21 +126,21 @@ export const PLANS = {
             "price_1UTKyPEhKQbL1BLmoPB4xRAO"
           ),
         },
-        features: [...WEBSITE_PAID_FEATURES, "leads", "ads"],
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads"],
         limits: { adCampaigns: 1, adSpendCap: 3000 },
       },
       growth: {
         label: "Growth",
         priceLabel: "Coming soon",
         prices: null,
-        features: [...WEBSITE_PAID_FEATURES, "leads", "ads", "newsletter"],
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
         limits: { adCampaigns: 5, adSpendCap: 6000 },
       },
       scale: {
         label: "Scale",
         priceLabel: "Coming soon",
         prices: null,
-        features: [...WEBSITE_PAID_FEATURES, "leads", "ads", "newsletter"],
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
         limits: { adCampaigns: null, adSpendCap: 10000 },
       },
     },
@@ -197,7 +208,13 @@ export const planForPrice = (
 ): PlanKey | null => {
   if (!priceId) return null;
   return (
-    PLAN_KEYS.find((plan) => tierDef(plan).prices?.recurring === priceId) ?? null
+    PLAN_KEYS.find((plan) => {
+      const tier = tierDef(plan);
+      return (
+        tier.prices?.recurring === priceId ||
+        !!tier.legacyRecurring?.includes(priceId)
+      );
+    }) ?? null
   );
 };
 
