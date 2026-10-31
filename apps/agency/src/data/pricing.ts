@@ -76,28 +76,91 @@ export const TERMS = { setup: 0, minimumMonths: 6 };
 
 export const FROM_PRICE = PLANS[0].monthly;
 
-// Website only, no ads — the secondary offer under the growth tiers for
-// businesses that just need a site. Routes to /quote?plan=website.
-export const WEBSITE_ONLY = {
-  id: "website",
-  name: "Website only",
-  setup: 699,
-  monthly: 25,
-  blurb:
-    "Just need a great website, no ads? We design and build it, then set it up in your own accounts.",
+// Website plans, no ads — the secondary offer under the growth tiers for
+// businesses that just need a site. Every plan includes Client Hub at
+// `monthly`; Care replaces it for clients who want edits done for them.
+// Core keeps id "website" so existing /quote?plan=website links still work.
+export type WebsitePlan = {
+  id: "website" | "website-local";
+  name: string;
+  setup: number;
+  monthly: number;
+  featured?: boolean;
+  blurb: string;
+  features: string[];
+};
+
+export const WEBSITE_PLANS: WebsitePlan[] = [
+  {
+    id: "website",
+    name: "Core",
+    setup: 699,
+    monthly: 25,
+    blurb:
+      "A fast custom website, built and set up in your own accounts, that you edit yourself with AI.",
+    features: [
+      "Custom design & development",
+      "Client Hub: edit anything with AI",
+      "Set up in your own accounts",
+      "Essential SEO foundations",
+      "Analytics & speed reports",
+    ],
+  },
+  {
+    id: "website-local",
+    name: "Local Growth",
+    setup: 1199,
+    monthly: 25,
+    featured: true,
+    blurb:
+      "Everything in Core, plus the local pieces that bring in calls: a tuned Google profile and more reviews.",
+    features: [
+      "Everything in Core",
+      "Google Business Profile optimization",
+      "NFC review card: customers tap to leave a review",
+      "Review link & QR code for receipts and texts",
+    ],
+  },
+];
+
+// Lowest website price, for "From $699 + $25/mo" lines.
+export const WEBSITE_FROM = WEBSITE_PLANS[0];
+
+// Optional done-for-you care. Replaces the Client Hub monthly (not on top).
+// Sales-led: invoiced manually, not a hub Stripe tier.
+export const CARE = {
+  id: "care",
+  name: "Care",
+  monthly: 99,
+  blurb: "Rather not touch the site yourself? We keep an eye on it and make the edits for you.",
   features: [
-    "Custom design & development",
-    "Client Hub: edit anything with AI",
-    "Set up in your own accounts: domain, hosting, code",
-    "Essential SEO, analytics & speed reports",
+    "Everything in Client Hub",
+    "Uptime & speed monitoring",
+    "Monthly performance report",
+    "Up to 1 hour of edits done for you each month",
+  ],
+  fine: "Edits cover text, hours, prices and photo swaps. New pages, layout changes or new sections are quoted separately. Unused time does not roll over.",
+} as const;
+
+// Optional managed newsletter, on top of any website plan. Sales-led like
+// Care: /quote?plan=newsletter, invoiced manually. Runs on our usesend (SES).
+export const NEWSLETTER = {
+  id: "newsletter",
+  name: "Managed Newsletter Service",
+  monthly: 199,
+  blurb:
+    "Want to turn past customers into a predictable revenue stream? We connect your site to our AWS-powered newsletter platform. You text us your monthly special or a job photo; we design, write, and send it for you. Your subscriber list is uncapped: no penalties or price hikes as it grows.",
+  features: [
+    "100% managed newsletter creation & sending",
+    "Uncapped contact list, zero growth penalties",
+    "Powered by reliable AWS infrastructure",
+    "High-converting opt-in forms & pop-ups included",
+    "Up to 1 custom broadcast sent for you each month",
   ],
 } as const;
 
-export const PRICING = {
-  // E-commerce Storefront — separate offer on /ecommerce only. Published as
-  // "$799 setup + $25/mo"; CTAs route to /quote?plan=ecommerce.
-  ecommerce: { setup: 799, monthly: 25 },
-};
+// E-commerce storefronts, web apps and booking integrations have no fixed
+// price: custom quote after a discovery call, via /quote?plan=ecommerce.
 
 // ─── Shared helpers ─────────────────────────────────────────────
 

@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 
 import { cities } from "../data/cities";
 import { getDocsTree } from "../data/docs";
-import { FROM_PRICE, GUARANTEE, PLANS, TERMS, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
+import { FROM_PRICE, GUARANTEE, PLANS, TERMS, CARE, NEWSLETTER, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
 
 // Plain-markdown summary for LLMs / answer engines. Prices come from
 // src/data/pricing.ts so this never drifts from the site.
@@ -51,8 +51,8 @@ export const GET: APIRoute = async () => {
 - [Contact](https://www.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://www.alisamadii.com/blog): articles on Google Ads, local search, and websites that convert.
 - [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
-- [Websites for Small Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, and set up in your own accounts, editable with AI through Client Hub. ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo.
-- [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for businesses, own domain, branded templates, writing and sending handled. Quoted per business, no published price.
+- [Websites for Small Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, and set up in your own accounts, editable with AI through Client Hub. From ${fmtPrice(WEBSITE_FROM.setup)} setup + ${fmtPrice(WEBSITE_FROM.monthly)}/mo.
+- [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for businesses, own domain, branded templates, writing and sending handled. ${fmtPrice(NEWSLETTER.monthly)}/mo add-on.
 - [Pest Control Lead Generation](https://www.alisamadii.com/pest-control): managed Google Ads for pest control companies plus a website with click-to-call, per-pest and per-city pages, review walls, and booking forms. From ${fmtPrice(FROM_PRICE)}/mo.
 
 ## Services
@@ -61,8 +61,8 @@ export const GET: APIRoute = async () => {
 - [Web development](https://www.alisamadii.com/services/web-development): websites built to convert leads into calls and booked jobs
 - [SEO & analytics](https://www.alisamadii.com/services/seo-analytics): local search visibility and lead tracking
 - [Email newsletter](https://www.alisamadii.com/newsletter): bring past customers back for repeat business
-- [E-commerce](https://www.alisamadii.com/services/ecommerce): custom Shopify storefronts
-- [Website management](https://www.alisamadii.com/services/website-management): Client Hub editing + managed hosting
+- [E-commerce](https://www.alisamadii.com/services/ecommerce): custom Shopify storefronts, custom quote
+- [Website management](https://www.alisamadii.com/services/website-management): Client Hub editing, or the done-for-you Care plan
 - [UI/UX design](https://www.alisamadii.com/services/ui-ux-design): layouts designed to convert
 - [Brand identity](https://www.alisamadii.com/services/brand-identity): logo, color, typography systems
 - [Custom web apps](https://www.alisamadii.com/services/custom-web-apps): dashboards, auth, databases
@@ -72,7 +72,10 @@ export const GET: APIRoute = async () => {
 Every growth plan is a custom website plus fully managed Google Ads. ${fmtPrice(TERMS.setup)} setup, ${TERMS.minimumMonths}-month minimum, then month-to-month. Ad spend is not included; Google bills it to the client directly.
 
 ${PLANS.map((p) => `- ${p.name}: ${fmtPrice(p.monthly)}/mo, manages up to ${fmtPrice(p.adSpendCap)}/mo in ad spend. ${p.features.join("; ")}.`).join("\n")}
-- ${WEBSITE_ONLY.name} (no ads): ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo. ${WEBSITE_ONLY.features.join("; ")}.
+${WEBSITE_PLANS.map((p) => `- Website only, ${p.name} (no ads): ${fmtPrice(p.setup)} setup + ${fmtPrice(p.monthly)}/mo. ${p.features.join("; ")}.`).join("\n")}
+- ${CARE.name} plan (optional, replaces the Client Hub monthly): ${fmtPrice(CARE.monthly)}/mo. ${CARE.features.join("; ")}. ${CARE.fine}
+- ${NEWSLETTER.name} (optional add-on): ${fmtPrice(NEWSLETTER.monthly)}/mo. ${NEWSLETTER.features.join("; ")}.
+- E-commerce storefronts, web apps and integrations: custom quote after a discovery call.
 - Custom: fully scoped projects (admin panels, auth, databases), contact for a quote.
 
 Guarantee (growth plans): ${GUARANTEE.leads} ${GUARANTEE.process} ${GUARANTEE.fine}

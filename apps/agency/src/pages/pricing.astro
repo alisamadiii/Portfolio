@@ -4,7 +4,7 @@
 // from src/data/pricing.ts so the page and schema never drift.
 import MockupLayout from "../layouts/MockupLayout.astro";
 import GrowthPlans from "../components/GrowthPlans.astro";
-import { GUARANTEE, PLANS, TERMS, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
+import { GUARANTEE, PLANS, TERMS, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
 import CTA from "../html/blocks/cta.html?raw";
 
 const SITE = "https://www.alisamadii.com";
@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     q: "Is there a setup fee?",
-    a: `Not on growth plans. The custom website build is included, setup is ${fmtPrice(TERMS.setup)}, and you pay the monthly price from the first month. The website-only plan has a one-time ${fmtPrice(WEBSITE_ONLY.setup)} build fee.`,
+    a: `Not on growth plans. The custom website build is included, setup is ${fmtPrice(TERMS.setup)}, and you pay the monthly price from the first month. Website-only plans have a one-time build fee, from ${fmtPrice(WEBSITE_FROM.setup)}.`,
   },
   {
     q: `Why is there a ${TERMS.minimumMonths}-month minimum?`,
@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: "Can I get just a website, without ads?",
-    a: `Yes. The website-only plan is ${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo: custom design and build, hosting, care, and email from your own domain. You can add Google Ads later. Full details are on our Websites page.`,
+    a: `Yes. Website-only plans start at ${fmtPrice(WEBSITE_FROM.setup)} setup + ${fmtPrice(WEBSITE_FROM.monthly)}/mo: custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page.`,
   },
   {
     q: "What happens if I leave?",
@@ -72,19 +72,19 @@ const pricingSchema = [
           priceCurrency: "USD",
           unitCode: "MON",
         },
-      })).concat({
+      })).concat(WEBSITE_PLANS.map((plan) => ({
         "@type": "Offer",
-        name: WEBSITE_ONLY.name,
-        description: `${fmtPrice(WEBSITE_ONLY.setup)} setup + ${fmtPrice(WEBSITE_ONLY.monthly)}/mo: ${WEBSITE_ONLY.features.join(", ")}. No Google Ads.`,
-        price: String(WEBSITE_ONLY.monthly),
+        name: `Website only: ${plan.name}`,
+        description: `${fmtPrice(plan.setup)} setup + ${fmtPrice(plan.monthly)}/mo: ${plan.features.join(", ")}. No Google Ads.`,
+        price: String(plan.monthly),
         priceCurrency: "USD",
         priceSpecification: {
           "@type": "UnitPriceSpecification",
-          price: String(WEBSITE_ONLY.monthly),
+          price: String(plan.monthly),
           priceCurrency: "USD",
           unitCode: "MON",
         },
-      }),
+      }))),
     },
   },
   {

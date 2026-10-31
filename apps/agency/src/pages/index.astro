@@ -7,6 +7,7 @@
 // QuoteForm.astro and fires the same GA4 / Google Ads events.
 import HeroFlow from "../components/HeroFlow.astro";
 import Analytics from "../components/Analytics.astro";
+import { WEBSITE_FROM, fmtPrice } from "../data/pricing";
 
 const SITE = "https://www.alisamadii.com";
 const PATH = "/";
@@ -27,6 +28,8 @@ const showShippedStrip = false;
 // Prices are off the homepage for now. Flip to true to render the pricing
 // section, nav links, Offer schema and priced form labels again.
 const SHOW_PRICING = false;
+const websiteSetup = fmtPrice(WEBSITE_FROM.setup);
+const websiteMonthly = fmtPrice(WEBSITE_FROM.monthly);
 const ogImage = "/images/agency/hero-leads.webp";
 const videoSrc = "/hero-video.mp4";
 
@@ -123,7 +126,7 @@ const jsonLd = {
           acceptedAnswer: {
             "@type": "Answer",
             text: SHOW_PRICING
-              ? "Yes. Our website-only plan is $699 setup + $25/mo: custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page."
+              ? `Yes. Our website-only plans start at ${websiteSetup} setup + ${websiteMonthly}/mo: custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page.`
               : "Yes. Our website-only plan covers custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page.",
           },
         },
@@ -1065,7 +1068,7 @@ const jsonLd = {
                   </p>
                   <p style="margin: 0; font-size: 15px; color: #c9bfb5">
                     Just need a website, no ads?{" "}
-                    <strong style="color: #fffdfb">$699 + $25/mo</strong> ·{" "}
+                    <strong style="color: #fffdfb">From {websiteSetup} + {websiteMonthly}/mo</strong> ·{" "}
                     <a
                       href="/websites"
                       class="tlink"
@@ -1259,8 +1262,8 @@ const jsonLd = {
                 ><p
                   style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
                 >
-                  Yes. Our website-only plan {
-                    SHOW_PRICING ? "is $699 setup + $25/mo:" : "covers"
+                  Yes. Our website-only plans {
+                    SHOW_PRICING ? `start at ${websiteSetup} setup + ${websiteMonthly}/mo and cover` : "cover"
                   } custom design and build, set up in your own accounts, and
                   editable with AI in Client Hub. You can add Google Ads later. Full details are on our <a
                     href="/websites"
@@ -1422,7 +1425,7 @@ const jsonLd = {
                   <option value="website"
                     >{
                       SHOW_PRICING
-                        ? "Website only · $699 + $25/mo"
+                        ? `Website only · from ${websiteSetup} + ${websiteMonthly}/mo`
                         : "Website only"
                     }</option
                   >

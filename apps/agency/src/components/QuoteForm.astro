@@ -3,11 +3,12 @@
 // on /quote, /contact, the homepage hero, and anywhere else. Multiple
 // instances per page are fine: the script binds each `.quote-form` by class
 // and reads fields via form.elements, no ids. Pricing cards deep-link with
-// ?plan=launch|growth|scale|website|ecommerce|newsletter|custom, which preselects the plan <select>
-// on load.
+// ?plan=launch|growth|scale|website|website-local|care|ecommerce|newsletter|custom
+// (comma-separated for several), which pre-checks those plan chips on load.
+// Plans are checkboxes sharing name="plan"; leads.js joins them as "a, b".
 // Submits to the portfolio quote API, which relays to agency@alisamadii.com
 // via the SES contact backend (recipient fixed server-side).
-import { PLANS, PRICING, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
+import { CARE, NEWSLETTER, PLANS, WEBSITE_PLANS } from "../data/pricing";
 
 interface Props {
   // Compact mode: tighter paddings + no intro copy, for the hero column.
@@ -19,6 +20,38 @@ const { compact = false, heading = "Tell us about your business" } = Astro.props
 
 const inputClass =
   "w-full rounded-xl border border-charcoal/[0.08] bg-white px-4 py-3.5 text-sm text-charcoal transition-all focus:border-accent/30 focus:ring-2 focus:ring-accent/30 focus:outline-none";
+// "I'm interested in" chips, grouped. Multi-select.
+const planGroups = [
+  {
+    label: "Google Ads + website",
+    options: PLANS.map((plan) => ({
+      id: plan.id,
+      label: plan.name,
+    })),
+  },
+  {
+    label: "Website only",
+    options: WEBSITE_PLANS.map((plan) => ({
+      id: plan.id,
+      label: plan.name,
+    })),
+  },
+  {
+    label: "Add-ons",
+    options: [
+      { id: CARE.id, label: `${CARE.name} plan` },
+      { id: NEWSLETTER.id, label: "Managed newsletter" },
+    ],
+  },
+  {
+    label: "Other",
+    options: [
+      { id: "ecommerce", label: "Online store, web app, or integrations" },
+      { id: "custom", label: "Not sure yet" },
+    ],
+  },
+];
+
 const labelClass =
   "mb-2 block text-xs font-medium tracking-[0.1em] text-warmgray uppercase";
 ---
@@ -124,30 +157,26 @@ const labelClass =
         )
       }
 
-      <div>
-        <span class={labelClass}>I'm interested in</span>
-        <select name="plan" aria-label="I'm interested in" class={inputClass}>
+      <fieldset>
+        <legend class={labelClass}>I'm interested in <span class="tracking-normal normal-case">(pick any)</span></legend>
+        <div class="flex flex-col gap-3">
           {
-            PLANS.map((plan) => (
-              <option value={plan.id} selected={plan.featured}>
-                {plan.name}: website + Google Ads, {fmtPrice(plan.monthly)}/mo
-              </option>
+            planGroups.map((group) => (
+              <div>
+                <p class="mb-1.5 text-[11px] text-warmgray">{group.label}</p>
+                <div class="flex flex-wrap gap-2">
+                  {group.options.map((option) => (
+                    <label class="cursor-pointer rounded-full border border-charcoal/[0.1] bg-white px-3.5 py-2 text-sm text-charcoal transition-all select-none hover:border-charcoal/25 has-checked:border-accent has-checked:bg-accent/10 has-focus-visible:ring-2 has-focus-visible:ring-accent/30">
+                      <input type="checkbox" name="plan" value={option.id} class="sr-only" />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
             ))
           }
-          <option value={WEBSITE_ONLY.id}
-            >Website only, no ads: {fmtPrice(WEBSITE_ONLY.setup)} setup + {
-              fmtPrice(WEBSITE_ONLY.monthly)
-            }/mo</option
-          >
-          <option value="ecommerce"
-            >E-commerce Storefront (Shopify): {
-              fmtPrice(PRICING.ecommerce.setup)
-            } setup + {fmtPrice(PRICING.ecommerce.monthly)}/mo</option
-          >
-          <option value="newsletter">Newsletter for my business: quoted</option>
-          <option value="custom">Custom / not sure yet</option>
-        </select>
-      </div>
+        </div>
+      </fieldset>
 
       <div>
         <span class={labelClass}>Your goals</span>
@@ -189,17 +218,18 @@ const labelClass =
 </div>
 
 <script is:inline data-astro-rerun>
-  // Preselect the plan from ?plan= (pricing cards + offer CTAs deep-link here).
+  // Pre-check plans from ?plan=a,b (pricing cards + offer CTAs deep-link here).
   // Submission is handled by the shared lead-capture script (leads.js); this form
   // just needs data-lead-form, which it has.
   (() => {
-    const plan = new URLSearchParams(location.search).get("plan");
-    if (!plan) return;
+    const plans = (new URLSearchParams(location.search).get("plan") || "")
+      .split(",")
+      .filter(Boolean);
+    if (!plans.length) return;
     document.querySelectorAll(".quote-form").forEach((form) => {
-      const select = form.elements.plan;
-      if (select && select.querySelector(`option[value="${plan}"]`)) {
-        select.value = plan;
-      }
+      form.querySelectorAll('input[name="plan"]').forEach((input) => {
+        if (plans.includes(input.value)) input.checked = true;
+      });
     });
   })();
 </script>

@@ -1,24 +1,28 @@
 ---
-// /websites: the website-only offer for businesses (no ads).
+// /websites: the website plans for businesses (no ads).
 // Design from the Claude Design canvas, standalone like the homepage: own
 // <html>/<head>, fonts and global styles, no ClientRouter. Prices come from
-// WEBSITE_ONLY in src/data/pricing.ts, project cards from the real client
-// entries in src/data/projects.ts, reviews from the Elfsight Google reviews
-// widget. Every CTA routes to /quote?plan=website.
+// WEBSITE_PLANS, CARE and NEWSLETTER in src/data/pricing.ts, project cards from the real
+// client entries in src/data/projects.ts, reviews from the Elfsight Google
+// reviews widget. CTAs route to /quote?plan=<plan id>.
 import Analytics from "../components/Analytics.astro";
 import GoogleReviews from "../components/GoogleReviews.astro";
-import { PRICING, WEBSITE_ONLY, fmtPrice } from "../data/pricing";
+import { CARE, NEWSLETTER, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
 import { PROJECTS } from "../data/projects";
 
 const SITE = 'https://www.alisamadii.com';
 const PATH = '/websites';
 const url = new URL(PATH, SITE).href;
-const setup = fmtPrice(WEBSITE_ONLY.setup);
-const monthly = fmtPrice(WEBSITE_ONLY.monthly);
-const ecomSetup = fmtPrice(PRICING.ecommerce.setup);
-const ecomMonthly = fmtPrice(PRICING.ecommerce.monthly);
+const setup = fmtPrice(WEBSITE_FROM.setup);
+const monthly = fmtPrice(WEBSITE_FROM.monthly);
+const care = fmtPrice(CARE.monthly);
+// Horizontal add-on rows under the plan cards, same layout for each.
+const addOns = [
+  { ...CARE, title: `${CARE.name} plan`, tag: `${care}/mo instead of ${fmtPrice(WEBSITE_FROM.monthly)}/mo · optional`, cta: "Add Care" },
+  { ...NEWSLETTER, title: NEWSLETTER.name, tag: `${fmtPrice(NEWSLETTER.monthly)}/mo · optional add-on`, fine: undefined, cta: "Add Newsletter" },
+];
 const title = 'Web Design for Small Businesses | Ali Samadi Agency';
-const description = `Custom, hand-coded websites for businesses anywhere. Easy to edit yourself, yours to keep. ${setup} + ${monthly}/mo.`;
+const description = `Custom, hand-coded websites for businesses anywhere. Easy to edit yourself, yours to keep. From ${setup} + ${monthly}/mo.`;
 const ogImage = '/og/websites.jpg';
 const quoteHref = '/quote?plan=website';
 
@@ -29,7 +33,11 @@ const projects = ['fla2z-construction', 'mohammad-samadi', 'hazara-oregon']
 const faqs = [
   {
     q: "What's included in the monthly plan?",
-    a: `Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support are included, all for ${monthly}/mo. Your domain, hosting, and code are set up in your own accounts, so you own everything.`,
+    a: `Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support are included, all for ${monthly}/mo. Rather have us make the edits? The ${care}/mo Care plan adds monitoring, a monthly report, and up to an hour of edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.`,
+  },
+  {
+    q: "What's the difference between Core and Local Growth?",
+    a: `Core is the website itself. Local Growth adds the pieces that bring in local calls: we optimize your Google Business Profile and give you an NFC review card, so happy customers can tap their phone and leave a review on the spot.`,
   },
   {
     q: 'How fast can my site go live?',
@@ -62,31 +70,47 @@ const jsonLd = {
       "provider": { "@id": `${SITE}/#organization` },
       "areaServed": "Worldwide",
       "url": url,
-      "offers": [{
-        "@type": "Offer",
-        "name": WEBSITE_ONLY.name,
-        "price": String(WEBSITE_ONLY.setup),
-        "priceCurrency": "USD",
-        "description": `${setup} setup + ${monthly}/mo: ${WEBSITE_ONLY.features.join(", ")}.`,
-        "priceSpecification": {
-          "@type": "UnitPriceSpecification",
-          "price": String(WEBSITE_ONLY.monthly),
+      "offers": [
+        ...WEBSITE_PLANS.map((plan) => ({
+          "@type": "Offer",
+          "name": plan.name,
+          "price": String(plan.setup),
           "priceCurrency": "USD",
-          "unitText": "MONTH",
-        },
-      }, {
-        "@type": "Offer",
-        "name": "E-commerce Storefront",
-        "price": String(PRICING.ecommerce.setup),
-        "priceCurrency": "USD",
-        "description": `${ecomSetup} setup + ${ecomMonthly}/mo: a custom storefront on your existing Shopify.`,
-        "priceSpecification": {
-          "@type": "UnitPriceSpecification",
-          "price": String(PRICING.ecommerce.monthly),
+          "description": `${fmtPrice(plan.setup)} setup + ${fmtPrice(plan.monthly)}/mo: ${plan.features.join(", ")}.`,
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": String(plan.monthly),
+            "priceCurrency": "USD",
+            "unitText": "MONTH",
+          },
+        })),
+        {
+          "@type": "Offer",
+          "name": `${CARE.name} plan`,
+          "price": String(CARE.monthly),
           "priceCurrency": "USD",
-          "unitText": "MONTH",
+          "description": `${care}/mo: ${CARE.features.join(", ")}.`,
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": String(CARE.monthly),
+            "priceCurrency": "USD",
+            "unitText": "MONTH",
+          },
         },
-      }],
+        {
+          "@type": "Offer",
+          "name": NEWSLETTER.name,
+          "price": String(NEWSLETTER.monthly),
+          "priceCurrency": "USD",
+          "description": `${fmtPrice(NEWSLETTER.monthly)}/mo: ${NEWSLETTER.features.join(", ")}.`,
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": String(NEWSLETTER.monthly),
+            "priceCurrency": "USD",
+            "unitText": "MONTH",
+          },
+        },
+      ],
     },
     {
       "@type": "FAQPage",
@@ -153,7 +177,7 @@ const jsonLd = {
 <p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: #5a524b">Custom-designed, hand-coded websites for businesses anywhere. Live in about a day, easy to edit yourself, and yours to keep.</p>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 6px">
 <a href={quoteHref} class="btn cta">Get a free consultation</a>
-<p class="cap" style="margin: 0; color: #6d645c">{setup} + {monthly}/mo · no templates · you own it</p>
+<p class="cap" style="margin: 0; color: #6d645c">From {setup} + {monthly}/mo · no templates · you own it</p>
 </div>
 </div>
 
@@ -214,7 +238,7 @@ const jsonLd = {
 <div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px 48px">
 <div style="display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>What's included</p><h2 class="h2" style="max-width: 14ch">One plan. The whole website.</h2></div>
-<p style="flex: 0 1 420px; margin: 0; font-size: 17px; color: #5a524b">No add-on menus or surprise invoices. Design, build, hosting, and care are one monthly relationship.</p>
+<p style="flex: 0 1 420px; margin: 0; font-size: 17px; color: #5a524b">No add-on menus or surprise invoices. One setup fee for design and build, then one flat monthly for Client Hub and support.</p>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px">
 <article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px; background: #221f1c; color: #f6efe9; box-shadow: 0 30px 60px -30px rgba(34,31,28,0.6)">
@@ -293,35 +317,50 @@ const jsonLd = {
 <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
 <p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Pricing</p>
 <h2 class="h2">Simple, flat pricing</h2>
-<p style="margin: 0; max-width: 480px; font-size: 17px; color: #5a524b">One setup fee, one flat monthly. In writing before we start, no hidden fees.</p>
+<p style="margin: 0; max-width: 480px; font-size: 17px; color: #5a524b">Pick a plan, pay one setup fee, then one flat monthly. In writing before we start, no hidden fees.</p>
 </div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; align-items: stretch; width: 100%; max-width: 900px; margin: 0 auto">
-<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 18px; box-shadow: 0 0 0 2px #fc8464, 0 30px 60px -24px rgba(239,108,75,0.45)">
-<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Website</h3><span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: #fc8464; font-size: 10.5px">No ads</span></div>
-<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">{setup}</span> <span class="mono" style="font-size: 14px; color: #6d645c">setup + {monthly}/mo</span></p>
+<div style="display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 1100px; margin: 0 auto">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 18px; align-items: stretch">
+{WEBSITE_PLANS.map((plan) => (
+<article class="card" style={`padding: 32px; display: flex; flex-direction: column; gap: 18px${plan.featured ? "; box-shadow: 0 0 0 2px #fc8464, 0 30px 60px -24px rgba(239,108,75,0.45)" : ""}`}>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">{plan.name}</h3>{plan.featured && <span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: #fc8464; font-size: 10.5px">Most popular</span>}</div>
+<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">{fmtPrice(plan.setup)}</span> <span class="mono" style="font-size: 14px; color: #6d645c">setup + {fmtPrice(plan.monthly)}/mo</span></p>
+<p style="margin: 0; font-size: 15px; color: #5a524b">{plan.blurb}</p>
 <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Custom design &amp; development</li>
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Client Hub: edit anything with AI</li>
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Set up in your own accounts</li>
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> SEO foundations</li>
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Analytics &amp; speed reports</li>
+{plan.features.map((f) => <li><span aria-hidden="true" style="color: #2f8a4a">✓</span> {f}</li>)}
 </ul>
-<a href={quoteHref} class="btn cta" style="margin-top: auto; justify-content: center">Get a free consultation</a>
+<a href={`/quote?plan=${plan.id}`} class={plan.featured ? "btn cta" : "btn dark"} style="margin-top: auto; justify-content: center">Get a free consultation</a>
 </article>
+))}
 <article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 18px">
-<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">E-commerce Storefront</h3><span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: rgba(34,31,28,0.06); font-size: 10.5px">For Shopify</span></div>
-<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">{ecomSetup}</span> <span class="mono" style="font-size: 14px; color: #6d645c">setup + {ecomMonthly}/mo</span></p>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Custom</h3><span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: rgba(34,31,28,0.06); font-size: 10.5px">Scoped to you</span></div>
+<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">Let's talk</span></p>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Need an online store, a web app, or booking integrations? We quote after a short discovery call.</p>
 <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Custom storefront matched to your brand</li>
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Product pages, collections, search &amp; accounts</li>
-<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Shopify keeps checkout, inventory &amp; orders</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Custom Shopify storefronts</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Web apps &amp; client portals</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Booking, CRM &amp; payment integrations</li>
 <li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Set up in your own accounts</li>
 </ul>
 <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
-<a href="/quote?plan=ecommerce" class="btn dark" style="justify-content: center">Get a quote</a>
-<a href="/ecommerce" class="tlink" style="text-align: center; font-size: 14px; font-weight: 600">How the storefront works →</a>
+<a href="/quote?plan=ecommerce" class="btn dark" style="justify-content: center">Request a custom quote</a>
+<a href="/ecommerce" class="tlink" style="text-align: center; font-size: 14px; font-weight: 600">How our storefronts work →</a>
 </div>
 </article>
+</div>
+{addOns.map((addOn) => (
+<article class="card" style="padding: 28px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 32px">
+<div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap"><h3 style="margin: 0; font-size: 20px; font-weight: 800">{addOn.title}</h3><span class="mono" style="font-size: 14px; color: #6d645c">{addOn.tag}</span></div>
+<p style="margin: 0; font-size: 15px; color: #5a524b">{addOn.blurb}</p>
+{addOn.fine && <p style="margin: 0; font-size: 13px; color: #6d645c">{addOn.fine}</p>}
+</div>
+<ul style="flex: 1 1 280px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 15px">
+{addOn.features.map((f) => <li><span aria-hidden="true" style="color: #2f8a4a">✓</span> {f}</li>)}
+</ul>
+<a href={`/quote?plan=${addOn.id}`} class="btn dark" style="flex: 0 0 auto; min-width: 170px; justify-content: center">{addOn.cta}</a>
+</article>
+))}
 </div>
 </div>
 </section>

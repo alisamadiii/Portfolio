@@ -450,7 +450,7 @@ export const services: Service[] = [
       },
       {
         q: "What does a custom Shopify storefront cost?",
-        a: "A one-time $799 setup covers the design and build, set up in your own accounts, then $25/month covers Client Hub so you can edit the storefront with AI. Larger catalogs or custom features are quoted before we start.",
+        a: "Every store is different, so we quote after a short discovery call: catalog size, integrations, and custom features set the price. You get a fixed quote in writing before we start, plus a small monthly for Client Hub so you can edit the storefront with AI.",
       },
       {
         q: "How long does it take?",

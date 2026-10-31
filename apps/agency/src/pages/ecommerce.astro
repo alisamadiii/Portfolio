@@ -1,18 +1,14 @@
 ---
 // Offer page for the E-commerce Storefront plan — a custom headless storefront
 // on the client's existing Shopify. Distinct from /services/ecommerce (the SEO
-// service page): this one sells the productized plan. Pricing comes from
-// src/data/pricing.ts; every CTA routes to /quote?plan=ecommerce until the
-// Stripe subscription is wired up. Migrated to the mockup design system.
+// service page): this one sells the storefront offer. No fixed price: every
+// storefront is a custom quote after a discovery call, so every CTA routes to
+// /quote?plan=ecommerce. Migrated to the mockup design system.
 import MockupLayout from "../layouts/MockupLayout.astro";
 import ShopifyLogo from "../components/ShopifyLogo.astro";
-import { PRICING, fmtPrice } from "../data/pricing";
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/ecommerce`;
-
-const setup = fmtPrice(PRICING.ecommerce.setup);
-const monthly = fmtPrice(PRICING.ecommerce.monthly);
 
 const faqs = [
   {
@@ -25,7 +21,7 @@ const faqs = [
   },
   {
     q: "What does it cost?",
-    a: `A one-time ${setup} setup covers the design and build, set up in your own accounts, then ${monthly}/month covers Client Hub so you can edit the storefront with AI. Larger catalogs or custom features are quoted before we start.`,
+    a: "Every store is different, so we quote after a short discovery call: catalog size, integrations, and custom features set the price. You get a fixed quote in writing before we start, plus a small monthly for Client Hub so you can edit the storefront with AI.",
   },
   {
     q: "How long does it take?",
@@ -120,7 +116,7 @@ const schema = [
 
 <MockupLayout
   title="Custom Shopify Storefront Design | Ali Samadi Agency"
-  description={`Swap your Shopify theme for a fast, custom storefront. Shopify still runs checkout and inventory. ${setup} setup + ${monthly}/mo.`}
+  description={`Swap your Shopify theme for a fast, custom storefront. Shopify still runs checkout and inventory. Custom quote, fixed in writing.`}
   canonical={pageUrl}
   og={{
     title: "Unique Website for Your Shopify — Ali Samadi Agency",
@@ -151,7 +147,7 @@ const schema = [
             <a href="#pricing" class="tlink" style="display:inline-flex;align-items:center;min-height:52px;padding:0 12px;font-size:15px;font-weight:500;color:rgb(103,98,90);">See pricing ↓</a>
           </div>
           <p class="mono" style="margin:0;font-size:12.5px;letter-spacing:0.06em;color:rgb(107,102,93);">
-            {setup} setup &middot; {monthly}/mo &middot; live in 3&ndash;4 weeks
+            Custom quote &middot; fixed in writing &middot; live in 3&ndash;4 weeks
           </p>
         </div>
 
@@ -273,13 +269,14 @@ const schema = [
         <div style="display:flex;flex-direction:column;gap:20px;">
           <p class="eyebrow"><span></span>Pricing</p>
           <h2 style="margin:0;max-width:20ch;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
-            One setup, one flat monthly
+            Priced to your store
           </h2>
           <p style="margin:0;max-width:52ch;font-size:15.5px;line-height:1.6;color:rgb(103,98,90);">
-            The setup covers design and the full storefront build on your
-            existing Shopify, set up in your own accounts. The monthly covers
-            Client Hub, where you edit the storefront with AI. Larger catalogs or custom
-            features are quoted in writing before we start.
+            Every store is different, so we price after a short discovery
+            call. You get a fixed quote in writing covering design and the
+            full storefront build on your existing Shopify, set up in your own
+            accounts, plus a small monthly for Client Hub, where you edit the
+            storefront with AI.
           </p>
           <p style="margin:0;max-width:52ch;font-size:15.5px;line-height:1.6;color:rgb(103,98,90);">
             Your Shopify subscription stays with Shopify — this replaces your
@@ -298,11 +295,8 @@ const schema = [
             </span>
             <h3 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em;">E-commerce Storefront</h3>
             <div style="margin-top:12px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;">
-              <span style="font-size:30px;font-weight:700;letter-spacing:-0.02em;">{setup}</span>
-              <span style="font-size:16px;color:rgba(27,26,23,0.6);">setup</span>
-              <span style="color:rgba(27,26,23,0.6);">+</span>
-              <span style="font-size:30px;font-weight:700;letter-spacing:-0.02em;">{monthly}</span>
-              <span style="font-size:16px;color:rgba(27,26,23,0.6);">/mo</span>
+              <span style="font-size:30px;font-weight:700;letter-spacing:-0.02em;">Custom quote</span>
+              <span style="font-size:16px;color:rgba(27,26,23,0.6);">fixed in writing</span>
             </div>
             <ul style="position:relative;margin:24px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;font-size:14px;color:rgba(27,26,23,0.85);">
               {
@@ -316,7 +310,7 @@ const schema = [
             </ul>
             <div style="position:relative;margin-top:auto;padding-top:28px;">
               <a href="/quote?plan=ecommerce" style="display:inline-flex;width:100%;align-items:center;justify-content:center;gap:8px;border-radius:9999px;background:rgb(27,26,23);padding:14px 20px;font-size:14px;font-weight:500;color:rgb(246,245,243);text-decoration:none;">
-                Get a Quote <span aria-hidden="true">↗</span>
+                Request a custom quote <span aria-hidden="true">↗</span>
               </a>
             </div>
           </div>
