@@ -4,7 +4,7 @@
 // from src/data/pricing.ts so the page and schema never drift.
 import MockupLayout from "../layouts/MockupLayout.astro";
 import GrowthPlans from "../components/GrowthPlans.astro";
-import { GUARANTEE, PLANS, TERMS, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
+import { GUARANTEE, PLANS, TERMS, fmtPrice } from "../data/pricing";
 import CTA from "../html/blocks/cta.html?raw";
 
 const SITE = "https://www.alisamadii.com";
@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     q: "Is there a setup fee?",
-    a: `Not on growth plans. The custom website build is included, setup is ${fmtPrice(TERMS.setup)}, and you pay the monthly price from the first month. Website-only plans have a one-time build fee, from ${fmtPrice(WEBSITE_FROM.setup)}.`,
+    a: `Not on growth plans. The custom website build is included, setup is ${fmtPrice(TERMS.setup)}, and you pay the monthly price from the first month. Website-only projects are quoted per project.`,
   },
   {
     q: `Why is there a ${TERMS.minimumMonths}-month minimum?`,
@@ -34,7 +34,7 @@ const faqs = [
   },
   {
     q: "Can I get just a website, without ads?",
-    a: `Yes. Website-only plans start at ${fmtPrice(WEBSITE_FROM.setup)} setup + ${fmtPrice(WEBSITE_FROM.monthly)}/mo: custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page.`,
+    a: "Yes. We scope a website-only project around the features you need: custom design and build, set up in your own accounts, editable with AI in Client Hub, plus local SEO, reviews, Shopify or web apps when you want them. Priced in writing after a free call, and you can add Google Ads later. Full details are on our Websites page.",
   },
   {
     q: "What happens if I leave?",
@@ -72,19 +72,7 @@ const pricingSchema = [
           priceCurrency: "USD",
           unitCode: "MON",
         },
-      })).concat(WEBSITE_PLANS.map((plan) => ({
-        "@type": "Offer",
-        name: `Website only: ${plan.name}`,
-        description: `${fmtPrice(plan.setup)} setup + ${fmtPrice(plan.monthly)}/mo: ${plan.features.join(", ")}. No Google Ads.`,
-        price: String(plan.monthly),
-        priceCurrency: "USD",
-        priceSpecification: {
-          "@type": "UnitPriceSpecification",
-          price: String(plan.monthly),
-          priceCurrency: "USD",
-          unitCode: "MON",
-        },
-      }))),
+      })),
     },
   },
   {

@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 
 import { cities } from "../data/cities";
 import { getDocsTree } from "../data/docs";
-import { FROM_PRICE, GUARANTEE, PLANS, TERMS, CARE, NEWSLETTER, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
+import { FROM_PRICE, GUARANTEE, PLANS, TERMS, CARE, NEWSLETTER, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
 
 // Plain-markdown summary for LLMs / answer engines. Prices come from
 // src/data/pricing.ts so this never drifts from the site.
@@ -51,7 +51,7 @@ export const GET: APIRoute = async () => {
 - [Contact](https://www.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://www.alisamadii.com/blog): articles on Google Ads, local search, and websites that convert.
 - [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
-- [Websites for Small Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, and set up in your own accounts, editable with AI through Client Hub. From ${fmtPrice(WEBSITE_FROM.setup)} setup + ${fmtPrice(WEBSITE_FROM.monthly)}/mo.
+- [Websites for Small Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, and set up in your own accounts, editable with AI through Client Hub. Features: custom design and development, Client Hub AI editing, own-account setup, SEO, analytics and speed reports, Google Business Profile optimization, NFC review cards and QR review links, Shopify stores, web apps, AI receptionist and chatbot. Custom quote after a free consultation.
 - [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for businesses, own domain, branded templates, writing and sending handled. ${fmtPrice(NEWSLETTER.monthly)}/mo add-on.
 - [Pest Control Lead Generation](https://www.alisamadii.com/pest-control): managed Google Ads for pest control companies plus a website with click-to-call, per-pest and per-city pages, review walls, and booking forms. From ${fmtPrice(FROM_PRICE)}/mo.
 
@@ -72,7 +72,7 @@ export const GET: APIRoute = async () => {
 Every growth plan is a custom website plus fully managed Google Ads. ${fmtPrice(TERMS.setup)} setup, ${TERMS.minimumMonths}-month minimum, then month-to-month. Ad spend is not included; Google bills it to the client directly.
 
 ${PLANS.map((p) => `- ${p.name}: ${fmtPrice(p.monthly)}/mo, manages up to ${fmtPrice(p.adSpendCap)}/mo in ad spend. ${p.features.join("; ")}.`).join("\n")}
-${WEBSITE_PLANS.map((p) => `- Website only, ${p.name} (no ads): ${fmtPrice(p.setup)} setup + ${fmtPrice(p.monthly)}/mo. ${p.features.join("; ")}.`).join("\n")}
+- Website only (no ads): scoped per project around the features picked, custom quote after a free consultation. Core features: ${WEBSITE_PLANS[0].features.join("; ")}. Local growth add-ons: ${WEBSITE_PLANS[1].features.slice(1).join("; ")}. Also: custom Shopify stores, web apps and client portals, AI receptionist and chatbot.
 - ${CARE.name} plan (optional, replaces the Client Hub monthly): ${fmtPrice(CARE.monthly)}/mo. ${CARE.features.join("; ")}. ${CARE.fine}
 - ${NEWSLETTER.name} (optional add-on): ${fmtPrice(NEWSLETTER.monthly)}/mo. ${NEWSLETTER.features.join("; ")}.
 - E-commerce storefronts, web apps and integrations: custom quote after a discovery call.

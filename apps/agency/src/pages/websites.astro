@@ -1,43 +1,136 @@
 ---
-// /websites: the website plans for businesses (no ads).
+// /websites: custom websites for businesses (no ads).
 // Design from the Claude Design canvas, standalone like the homepage: own
-// <html>/<head>, fonts and global styles, no ClientRouter. Prices come from
-// WEBSITE_PLANS, CARE and NEWSLETTER in src/data/pricing.ts, project cards from the real
-// client entries in src/data/projects.ts, reviews from the Elfsight Google
-// reviews widget. CTAs route to /quote?plan=<plan id>.
+// <html>/<head>, fonts and global styles, no ClientRouter. Prices are hidden
+// while SHOW_PRICING is false: the page lists every feature we can build in
+// category columns (featureGroups) and routes to a free consultation or a
+// custom quote. Flip the flag to bring back the WEBSITE_PLANS / CARE /
+// NEWSLETTER cards, the priced Offer schema and the "From $" lines. Project
+// cards come from src/data/projects.ts, reviews from the Elfsight widget.
 import Analytics from "../components/Analytics.astro";
 import GoogleReviews from "../components/GoogleReviews.astro";
 import { CARE, NEWSLETTER, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
 import { PROJECTS } from "../data/projects";
 
+const SHOW_PRICING = false;
 const SITE = 'https://www.alisamadii.com';
 const PATH = '/websites';
 const url = new URL(PATH, SITE).href;
 const setup = fmtPrice(WEBSITE_FROM.setup);
 const monthly = fmtPrice(WEBSITE_FROM.monthly);
 const care = fmtPrice(CARE.monthly);
-// Horizontal add-on rows under the plan cards, same layout for each.
+// Horizontal add-on rows under the plan cards, same layout for each (priced mode only).
 const addOns = [
   { ...CARE, title: `${CARE.name} plan`, tag: `${care}/mo instead of ${fmtPrice(WEBSITE_FROM.monthly)}/mo · optional`, cta: "Add Care" },
   { ...NEWSLETTER, title: NEWSLETTER.name, tag: `${fmtPrice(NEWSLETTER.monthly)}/mo · optional add-on`, fine: undefined, cta: "Add Newsletter" },
 ];
-const title = 'Web Design for Small Businesses | Ali Samadi Agency';
-const description = `Custom, hand-coded websites for businesses anywhere. Easy to edit yourself, yours to keep. From ${setup} + ${monthly}/mo.`;
+const title = SHOW_PRICING
+  ? 'Web Design for Small Businesses | Ali Samadi Agency'
+  : 'Custom Website Design & Development for Small Businesses | Ali Samadi Agency';
+const description = SHOW_PRICING
+  ? `Custom, hand-coded websites for businesses anywhere. Easy to edit yourself, yours to keep. From ${setup} + ${monthly}/mo.`
+  : 'Custom-designed, hand-coded websites you edit yourself with AI. Shopify stores, web apps, AI receptionists, local SEO and reviews, all set up in your own accounts. Free consultation.';
 const ogImage = '/og/websites.jpg';
 const quoteHref = '/quote?plan=website';
+// "custom" pre-checks the "Not sure yet" chip on the quote form.
+const customQuoteHref = '/quote?plan=custom';
 
 const projects = ['fla2z-construction', 'mohammad-samadi', 'hazara-oregon']
   .map((slug) => PROJECTS.find((p) => p.slug === slug))
   .filter((p) => p !== undefined);
 
-const faqs = [
+// Everything we can build, grouped in the columns the features section
+// renders. Column order matters: the big builds come first. The same array
+// feeds the OfferCatalog schema so markup and UI never drift.
+type Feature = { icon: keyof typeof icons; name: string; note?: string; isNew?: boolean };
+type FeatureGroup = { label: string; title: string; dark?: boolean; features: Feature[] };
+
+// 20px lucide-style stroke icons, inline so the page stays dependency-free.
+const icons = {
+  "pen-tool": '<path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/>',
+  code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  "shopping-bag": '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  layout: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
+  bot: '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+  sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>',
+  key: '<path d="m21 2-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  "bar-chart": '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+  gauge: '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+  "map-pin": '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  nfc: '<path d="M6 8.32a7.43 7.43 0 0 1 0 7.36"/><path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58"/><path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8"/><path d="M16.37 2a20.16 20.16 0 0 1 0 20"/>',
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  "qr-code": '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  megaphone: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  plug: '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/>',
+} as const;
+
+const featureGroups: FeatureGroup[] = [
   {
-    q: "What's included in the monthly plan?",
-    a: `Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support are included, all for ${monthly}/mo. Rather have us make the edits? The ${care}/mo Care plan adds monitoring, a monthly report, and up to an hour of edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.`,
+    label: "Build",
+    title: "What we design and code",
+    dark: true,
+    features: [
+      { icon: "pen-tool", name: "Custom design", note: "Designed around your business, never a template" },
+      { icon: "code", name: "Hand-coded development", note: "Fast, accessible, mobile-first" },
+      { icon: "shopping-bag", name: "Custom Shopify store", note: "A storefront on your own Shopify" },
+      { icon: "layout", name: "Web apps & client portals", note: "Dashboards, logins, databases" },
+      { icon: "bot", name: "AI receptionist & chatbot", note: "Answers calls and chats, books the job", isNew: true },
+    ],
   },
   {
-    q: "What's the difference between Core and Local Growth?",
-    a: `Core is the website itself. Local Growth adds the pieces that bring in local calls: we optimize your Google Business Profile and give you an NFC review card, so happy customers can tap their phone and leave a review on the spot.`,
+    label: "Client Hub",
+    title: "Run it yourself",
+    features: [
+      { icon: "sparkles", name: "Edit anything with AI", note: "Chat, preview, publish in a minute" },
+      { icon: "key", name: "Set up in your own accounts", note: "Domain, hosting and code are yours" },
+      { icon: "search", name: "Essential SEO foundation", note: "Sitemap, schema, meta, Search Console" },
+      { icon: "bar-chart", name: "Analytics", note: "Visits, calls and forms in one place" },
+      { icon: "gauge", name: "Speed reports", note: "Core Web Vitals, checked for you" },
+    ],
+  },
+  {
+    label: "Local growth",
+    title: "Get found and reviewed",
+    features: [
+      { icon: "map-pin", name: "Google Business Profile optimization", note: "Every field filled, tuned for the map pack" },
+      { icon: "nfc", name: "NFC review cards", note: "Customers tap their phone to leave a review" },
+      { icon: "star", name: "Review link", note: "One link straight to your Google review form" },
+      { icon: "qr-code", name: "QR code for receipts and texts", note: "Printed or texted, scans to your review page" },
+    ],
+  },
+  {
+    label: "Ongoing",
+    title: "We keep it working",
+    features: [
+      { icon: "shield", name: "Care plan", note: "Monitoring, monthly report, edits done for you" },
+      { icon: "mail", name: "Managed newsletter", note: "We write and send it from your own domain" },
+      { icon: "megaphone", name: "Google Ads management", note: "Campaigns, call tracking, monthly tuning" },
+      { icon: "plug", name: "Booking, CRM & payment integrations", note: "Calendars, Stripe, your existing tools" },
+    ],
+  },
+];
+
+const faqs = [
+  {
+    q: "How much does a website cost?",
+    a: SHOW_PRICING
+      ? `Websites start at ${setup} setup + ${monthly}/mo. Shopify stores, web apps and integrations are quoted per project after a short call.`
+      : "It depends on the features you pick. Every project is scoped on a free call and priced in writing before any work starts, so there are no surprises later.",
+  },
+  {
+    q: "What's included after launch?",
+    a: SHOW_PRICING
+      ? `Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support are included, all for ${monthly}/mo. Rather have us make the edits? The ${care}/mo Care plan adds monitoring, a monthly report, and up to an hour of edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.`
+      : "Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support come with it. Rather have us make the edits? The Care plan adds monitoring, a monthly report, and edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.",
+  },
+  {
+    q: "What brings in local calls?",
+    a: SHOW_PRICING
+      ? "Core is the website itself. Local Growth adds the pieces that bring in local calls: we optimize your Google Business Profile and give you an NFC review card, so happy customers can tap their phone and leave a review on the spot."
+      : "The local growth pieces: we optimize your Google Business Profile, give you an NFC review card and a QR code for receipts and texts, so happy customers can tap or scan and leave a review on the spot.",
   },
   {
     q: 'How fast can my site go live?',
@@ -70,7 +163,18 @@ const jsonLd = {
       "provider": { "@id": `${SITE}/#organization` },
       "areaServed": "Worldwide",
       "url": url,
-      "offers": [
+      ...(SHOW_PRICING ? {} : {
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Website features",
+          "itemListElement": featureGroups.map((group) => ({
+            "@type": "Offer",
+            "name": group.title,
+            "description": group.features.map((f) => f.name).join(", ") + ". Custom quote after a free consultation.",
+          })),
+        },
+      }),
+      ...(SHOW_PRICING ? { "offers": [
         ...WEBSITE_PLANS.map((plan) => ({
           "@type": "Offer",
           "name": plan.name,
@@ -110,7 +214,7 @@ const jsonLd = {
             "unitText": "MONTH",
           },
         },
-      ],
+      ] } : {}),
     },
     {
       "@type": "FAQPage",
@@ -177,7 +281,7 @@ const jsonLd = {
 <p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: #5a524b">Custom-designed, hand-coded websites for businesses anywhere. Live in about a day, easy to edit yourself, and yours to keep.</p>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 6px">
 <a href={quoteHref} class="btn cta">Get a free consultation</a>
-<p class="cap" style="margin: 0; color: #6d645c">From {setup} + {monthly}/mo · no templates · you own it</p>
+<p class="cap" style="margin: 0; color: #6d645c">{SHOW_PRICING ? `From ${setup} + ${monthly}/mo` : 'Custom-built'} · no templates · you own it</p>
 </div>
 </div>
 
@@ -238,7 +342,7 @@ const jsonLd = {
 <div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px 48px">
 <div style="display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>What's included</p><h2 class="h2" style="max-width: 14ch">One plan. The whole website.</h2></div>
-<p style="flex: 0 1 420px; margin: 0; font-size: 17px; color: #5a524b">No add-on menus or surprise invoices. One setup fee for design and build, then one flat monthly for Client Hub and support.</p>
+<p style="flex: 0 1 420px; margin: 0; font-size: 17px; color: #5a524b">{SHOW_PRICING ? 'No add-on menus or surprise invoices. One setup fee for design and build, then one flat monthly for Client Hub and support.' : 'Every project is scoped on a short call and priced in writing before we start. Design, build, Client Hub and support, all in one place.'}</p>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px">
 <article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px; background: #221f1c; color: #f6efe9; box-shadow: 0 30px 60px -30px rgba(34,31,28,0.6)">
@@ -270,7 +374,7 @@ const jsonLd = {
 <article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(160deg, #fff 30%, #ffe9df 100%)">
 <span class="cap" style="color: #c4502e">06 · Need more?</span>
 <h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Shopify stores &amp; web apps</h3>
-<p style="margin: 0; font-size: 15px; color: #5a524b">Custom storefronts on your Shopify, plus dashboards, logins, and databases, quoted per project.</p>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Custom storefronts on your Shopify, web apps, and AI receptionists that answer calls and chats, quoted per project.</p>
 <a href="/services" class="tlink" style="margin-top: auto; font-size: 15px; font-weight: 700">See all services →</a>
 </article>
 </div>
@@ -311,7 +415,50 @@ const jsonLd = {
 <!-- GOOGLE REVIEWS (Elfsight, lazy-loaded) -->
 <GoogleReviews />
 
-<!-- PRICING -->
+<!-- FEATURES: everything we can build, in category columns. Replaces the
+     priced plan cards while SHOW_PRICING is false. -->
+{!SHOW_PRICING && (
+<section id="features" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>What we can build</p>
+<h2 class="h2" style="max-width: 14ch">Pick what your business needs</h2>
+<p style="margin: 0; max-width: 520px; font-size: 17px; color: #5a524b">Every project is scoped around the features you pick, so the price depends on what's inside. Book a free call and we'll put it in writing.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 18px; align-items: stretch">
+{featureGroups.map((group, i) => (
+<article class="card lift" style={`padding: 32px; display: flex; flex-direction: column; gap: 26px${group.dark ? "; background: #221f1c; color: #f6efe9; box-shadow: 0 30px 60px -30px rgba(34,31,28,0.6)" : ""}`}>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="cap" style={`color: ${group.dark ? "#fc8464" : "#c4502e"}`}>0{i + 1} · {group.label}</span>
+<h3 style="margin: 0; font-size: 24px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">{group.title}</h3>
+</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 18px 24px">
+{group.features.map((f) => (
+<li style="display: flex; align-items: flex-start; gap: 12px">
+<span aria-hidden="true" style={`flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: ${group.dark ? "rgba(246,239,233,0.08)" : "rgba(252,132,100,0.14)"}; color: ${group.dark ? "#fc8464" : "#c4502e"}`}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={icons[f.icon]} /></span>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3">{f.name}{f.isNew && <span class="cap" style="padding: 2px 8px; border-radius: 9999px; background: #fc8464; color: #221f1c; font-size: 10px">New</span>}</span>
+{f.note && <span style={`font-size: 13px; line-height: 1.45; color: ${group.dark ? "#c9bfb5" : "#6d645c"}`}>{f.note}</span>}
+</span>
+</li>
+))}
+</ul>
+</article>
+))}
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px">
+<a href={quoteHref} class="btn cta">Get a free consultation</a>
+<a href={customQuoteHref} class="btn dark" style="min-height: 54px; padding: 0 28px; font-size: 16px">Request a custom quote</a>
+</div>
+<p class="cap" style="margin: 0; color: #6d645c">A free 20-minute call · scope and price in writing · no obligation</p>
+</div>
+</div>
+</section>
+)}
+
+<!-- PRICING: plan cards + add-ons, only while SHOW_PRICING is true -->
+{SHOW_PRICING && (
 <section id="pricing" style="position: relative; padding: 100px 0">
 <div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
 <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
@@ -364,6 +511,7 @@ const jsonLd = {
 </div>
 </div>
 </section>
+)}
 
 <!-- FAQ -->
 <section id="faq" style="position: relative; padding: 100px 0">
@@ -404,7 +552,7 @@ const jsonLd = {
 <nav aria-label="Page" style="position: fixed; z-index: 50; left: 50%; bottom: 22px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 7px; border-radius: 9999px; background: rgba(255,253,251,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 20px 40px -16px rgba(34,31,28,0.35)">
 <a href="#top" aria-label="Back to top" class="tlink" style="width: 46px; height: 46px; border-radius: 9999px; background: linear-gradient(180deg, #ff9a7c, #ef6c4b); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5)"><img src="/images/agency/logo.png" alt="Ali Samadi Agency logo" style="width: 26px; height: 26px; border-radius: 6px" width="400" height="400" loading="lazy" decoding="async"></a>
 <span class="cap hide-sm" style="display: flex; gap: 6px; padding: 0 10px">
-<a href="#benefits" class="navlink">Benefits</a><a href="#services" class="navlink">Services</a><a href="#how" class="navlink">How we work</a><a href="#projects" class="navlink">Projects</a><a href="#pricing" class="navlink">Pricing</a>
+<a href="#benefits" class="navlink">Benefits</a><a href="#services" class="navlink">Services</a><a href="#how" class="navlink">How we work</a><a href="#projects" class="navlink">Projects</a>{SHOW_PRICING ? <a href="#pricing" class="navlink">Pricing</a> : <a href="#features" class="navlink">Features</a>}
 </span>
 <details class="wmenu show-sm">
 <summary class="btn" aria-label="Menu" style="display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: 9999px; background: rgba(34,31,28,0.06); color: #221f1c; font-size: 15px; font-weight: 700"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>Menu</summary>
@@ -413,7 +561,7 @@ const jsonLd = {
 <a href="#services" class="wlink">Services<span aria-hidden="true">→</span></a>
 <a href="#how" class="wlink">How we work<span aria-hidden="true">→</span></a>
 <a href="#projects" class="wlink">Projects<span aria-hidden="true">→</span></a>
-<a href="#pricing" class="wlink">Pricing<span aria-hidden="true">→</span></a>
+{SHOW_PRICING ? <a href="#pricing" class="wlink">Pricing<span aria-hidden="true">→</span></a> : <a href="#features" class="wlink">Features<span aria-hidden="true">→</span></a>}
 <a href="#faq" class="wlink">FAQ<span aria-hidden="true">→</span></a>
 <a href="tel:+19713828969" class="wlink" style="border-bottom: 0">Call +1 (971) 382-8969<span aria-hidden="true">↗</span></a>
 </div>

@@ -2,7 +2,7 @@
 // Growth partnership tiers. Rendered from src/data/pricing.ts so every page
 // (home, /pricing, industry pages, city pages) shows the same numbers.
 // Markup mirrors the mockup pricing-card styling (inline styles, not Tailwind).
-import { GUARANTEE, PLANS, TERMS_LINE, WEBSITE_FROM, fmtPrice } from "../data/pricing";
+import { GUARANTEE, PLANS, TERMS_LINE, fmtPrice } from "../data/pricing";
 
 interface Props {
   showTerms?: boolean;
@@ -132,11 +132,11 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
       <p style="margin: 20px 0px 0px; text-align: center; font-size: 15px; line-height: 1.6; color: rgb(103, 98, 90);">
         Just need a website, no ads?{" "}
         <strong style="font-weight: 600; color: rgb(27, 26, 23);">
-          From {fmtPrice(WEBSITE_FROM.setup)} + {fmtPrice(WEBSITE_FROM.monthly)}/mo
+          Scoped around the features you pick, priced in writing
         </strong>{" "}
         &middot;{" "}
-        <a href="/websites" class="tlink" style="font-weight: 500; color: rgb(27, 26, 23);">
-          See website plans →
+        <a href="/websites#features" class="tlink" style="font-weight: 500; color: rgb(27, 26, 23);">
+          See what we build →
         </a>
       </p>
     )
