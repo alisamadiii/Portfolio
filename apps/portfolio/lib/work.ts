@@ -20,10 +20,23 @@ export type Tile = {
   label?: string;
 };
 
-// Native apps — built, in progress, or planned.
+// Native apps — built, in progress, or planned. All under the Barnameh studio.
 export const apps: Tile[] = [
-  // Story — iOS app for keeping a family's memories in one private place.
-  { name: "Story", status: "building", img: "/apps/story.png" },
+  // Story — private family photo & video journal. In App Store review (Nov 2026).
+  {
+    name: "Story",
+    href: "https://www.trybarnameh.com/story",
+    status: "building",
+    img: "/apps/story.png",
+  },
+  // Dirplay — folder-based music & video player. Live on the App Store.
+  {
+    name: "Dirplay",
+    href: "https://www.trybarnameh.com/dirplay",
+    img: "/apps/dirplay.png",
+  },
+  // Refocus — Screen Time app and website blocker. In progress.
+  { name: "Refocus", status: "building", img: "/apps/refocus.png" },
 ];
 
 // Companies I've built for. Logo SVGs live in components/icons/clients.tsx.
