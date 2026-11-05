@@ -18,9 +18,33 @@ export const SEARCH_PAGES: SearchPage[] = [
   {
     title: "Home",
     description:
-      "Services, process, work, pricing, and how to start a project.",
+      "Custom websites for small businesses: designed, hand-coded, set up in your own accounts, and editable with AI.",
     url: "/",
-    keywords: ["homepage", "start", "agency", "ali samadi"],
+    keywords: [
+      "homepage",
+      "start",
+      "agency",
+      "ali samadi",
+      "website",
+      "web design",
+      "website only",
+      "small business website",
+    ],
+  },
+  {
+    title: "Lead Generation",
+    description:
+      "Managed Google Ads plus a website built to convert, with every call and form tracked back to its source.",
+    url: "/lead-generation",
+    keywords: [
+      "leads",
+      "lead generation",
+      "google ads",
+      "ads",
+      "growth",
+      "more calls",
+      "guarantee",
+    ],
   },
   {
     title: "Docs",
@@ -111,20 +135,6 @@ export const SEARCH_PAGES: SearchPage[] = [
       "Everything we offer: Google Ads, lead tracking, websites that convert, email, and more.",
     url: "/services",
     keywords: ["what we do", "offerings", "capabilities", "help"],
-  },
-  {
-    title: "Websites for Small Businesses",
-    description:
-      "A custom website without ads: designed, built, and set up in your own accounts. From $699 setup + $25/mo.",
-    url: "/websites",
-    keywords: [
-      "website",
-      "web design",
-      "website only",
-      "small business website",
-      "no ads",
-      "699",
-    ],
   },
   {
     title: "E-commerce Storefront",

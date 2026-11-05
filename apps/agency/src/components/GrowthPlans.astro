@@ -10,11 +10,17 @@ interface Props {
   showGuarantee?: boolean;
 }
 
-const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro.props;
+const {
+  showTerms = true,
+  showWebsiteOnly = true,
+  showGuarantee = true,
+} = Astro.props;
 ---
 
 <div>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; align-items: stretch;">
+  <div
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; align-items: stretch;"
+  >
     {
       PLANS.map((plan) => (
         <article
@@ -49,7 +55,10 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
               <span style="font-size: 44px; line-height: 1; font-weight: 600; letter-spacing: -0.03em;">
                 {fmtPrice(plan.monthly)}
               </span>
-              <span class="mono" style="font-size: 15px; color: rgb(103, 98, 90);">
+              <span
+                class="mono"
+                style="font-size: 15px; color: rgb(103, 98, 90);"
+              >
                 /mo
               </span>
             </p>
@@ -59,7 +68,10 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
             <ul style="margin: 0px; padding: 20px 0px 0px; list-style: none; border-top: 1px solid rgba(27, 26, 23, 0.07); display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.45;">
               {plan.features.map((f) => (
                 <li style="display: flex; gap: 10px;">
-                  <span aria-hidden="true" style="color: rgb(47, 107, 63); font-weight: 600;">
+                  <span
+                    aria-hidden="true"
+                    style="color: rgb(47, 107, 63); font-weight: 600;"
+                  >
                     ✓
                   </span>
                   {f}
@@ -84,7 +96,10 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
   </div>
   {
     showGuarantee && (
-      <section aria-label="Our guarantee" style="margin-top: 32px; padding: 32px; border-radius: 24px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; flex-direction: column; gap: 24px;">
+      <section
+        aria-label="Our guarantee"
+        style="margin-top: 32px; padding: 32px; border-radius: 24px; background: rgb(27, 26, 23); color: rgb(246, 245, 243); display: flex; flex-direction: column; gap: 24px;"
+      >
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;">
           <span
             class="mono"
@@ -98,7 +113,10 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px 40px;">
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <p class="mono" style="margin: 0px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(252, 132, 100);">
+            <p
+              class="mono"
+              style="margin: 0px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(252, 132, 100);"
+            >
               Lead guarantee · {GUARANTEE.days} days
             </p>
             <p style="margin: 0px; font-size: 16px; line-height: 1.6; color: rgb(214, 209, 200);">
@@ -106,7 +124,10 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
             </p>
           </div>
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <p class="mono" style="margin: 0px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(252, 132, 100);">
+            <p
+              class="mono"
+              style="margin: 0px; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(252, 132, 100);"
+            >
               On-time guarantee
             </p>
             <p style="margin: 0px; font-size: 16px; line-height: 1.6; color: rgb(214, 209, 200);">
@@ -114,7 +135,10 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
             </p>
           </div>
         </div>
-        <p class="mono" style="margin: 0px; padding-top: 16px; border-top: 1px solid rgba(246, 245, 243, 0.12); font-size: 12px; line-height: 1.6; color: rgb(160, 154, 145);">
+        <p
+          class="mono"
+          style="margin: 0px; padding-top: 16px; border-top: 1px solid rgba(246, 245, 243, 0.12); font-size: 12px; line-height: 1.6; color: rgb(160, 154, 145);"
+        >
           {GUARANTEE.fine}
         </p>
       </section>
@@ -122,7 +146,10 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
   }
   {
     showTerms && (
-      <p class="mono" style="margin: 28px 0px 0px; text-align: center; font-size: 13px; line-height: 1.6; letter-spacing: 0.02em; color: rgb(107, 102, 93);">
+      <p
+        class="mono"
+        style="margin: 28px 0px 0px; text-align: center; font-size: 13px; line-height: 1.6; letter-spacing: 0.02em; color: rgb(107, 102, 93);"
+      >
         {TERMS_LINE}
       </p>
     )
@@ -135,7 +162,11 @@ const { showTerms = true, showWebsiteOnly = true, showGuarantee = true } = Astro
           Scoped around the features you pick, priced in writing
         </strong>{" "}
         &middot;{" "}
-        <a href="/websites#features" class="tlink" style="font-weight: 500; color: rgb(27, 26, 23);">
+        <a
+          href="/#features"
+          class="tlink"
+          style="font-weight: 500; color: rgb(27, 26, 23);"
+        >
           See what we build →
         </a>
       </p>

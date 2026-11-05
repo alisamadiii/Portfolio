@@ -705,7 +705,7 @@ export const services: Service[] = [
       "ui-ux-design",
       "UX designer sketching interface wireframes on paper"
     ),
-    cta: { label: "Start a project", href: "/#contact" },
+    cta: { label: "Start a project", href: "/quote" },
   },
 
   // ── Brand Identity ─────────────────────────────────────────────
@@ -906,7 +906,7 @@ export const services: Service[] = [
       "custom-web-apps",
       "Engineering team planning a web application at a whiteboard"
     ),
-    cta: { label: "Scope your app", href: "/#contact" },
+    cta: { label: "Scope your app", href: "/quote" },
   },
 ];
 

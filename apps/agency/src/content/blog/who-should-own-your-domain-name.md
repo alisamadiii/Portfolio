@@ -95,7 +95,7 @@ One honest caveat: if what you actually want is to hand everything to one compan
 
 You hold the deed, I build the house, and the day you outgrow me (or I ride off into the sunset) you walk away with everything and owe nobody a thing. Now if you'll excuse me, I have to go explain to my accountant why I keep telling people not to pay me.
 
-If you're starting a project and want it set up this way, [get in touch](/#contact). First job: I'll help you buy a domain. From someone else.
+If you're starting a project and want it set up this way, [get in touch](/contact). First job: I'll help you buy a domain. From someone else.
 
 ## Straight answers
 

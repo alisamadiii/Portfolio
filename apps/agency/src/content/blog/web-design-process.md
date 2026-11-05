@@ -155,7 +155,7 @@ The trade is simple: less process, less cost, live in a day — in exchange for 
 
 ## What all this costs
 
-The four steps describe the work; the invoice describes the scope. My [pricing is public](/pricing): flat numbers, no "book a call to find out." The [website plans](/websites) spell out exactly what each one includes. Short version: the process you just read doesn't change with the price. A one-day site and a three-week site go through the same hands and the same testing — one of them just has more pages to test.
+The four steps describe the work; the invoice describes the scope. My [pricing is public](/pricing): flat numbers, no "book a call to find out." The [website plans](/) spell out exactly what each one includes. Short version: the process you just read doesn't change with the price. A one-day site and a three-week site go through the same hands and the same testing — one of them just has more pages to test.
 
 ## When you should not hire me
 
@@ -173,7 +173,7 @@ Discovery, Strategy, Execution, Launch & Scale. Four steps, one goal: a website 
 
 The process isn't there to slow things down or make it look complicated so you feel like you got your money's worth. It's there so nothing important gets skipped, so you always know what happens next, and so the site that launches is the site we actually agreed on — no surprises, no bloat, no "call us to change a comma."
 
-If that's how you'd want your own site built, have a look at [my pricing](/pricing) — it's simple and there's no "starting at" nonsense — or [get in touch](/#contact) and tell me what you're working on. Worst case, I talk you out of it and you keep your money. Best case, you get a website you're not slightly embarrassed to send people to.
+If that's how you'd want your own site built, have a look at [my pricing](/pricing) — it's simple and there's no "starting at" nonsense — or [get in touch](/contact) and tell me what you're working on. Worst case, I talk you out of it and you keep your money. Best case, you get a website you're not slightly embarrassed to send people to.
 
 ## Straight answers (the questions I actually get)
 

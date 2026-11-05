@@ -1,144 +1,260 @@
 ---
-// Homepage: the growth partnership (Google Ads + website) landing page.
-// Design from the Claude Design canvas ("option C"), standalone: it renders
-// its own <html>/<head>, fonts and global styles instead of Layout.astro, so
-// it has no ClientRouter (links into it do a full page load). Analytics comes
-// from the shared <Analytics />; the quote form posts to the same API as
-// QuoteForm.astro and fires the same GA4 / Google Ads events.
-import HeroFlow from "../components/HeroFlow.astro";
+// Homepage: custom websites for businesses. The growth partnership (Google
+// Ads + website) lives on /lead-generation, and /websites 301s here.
+// Design from the Claude Design canvas, standalone like /lead-generation: own
+// <html>/<head>, fonts and global styles, no ClientRouter. Prices are hidden
+// while SHOW_PRICING is false: the page lists every feature we can build in
+// category columns (featureGroups) and routes to a free consultation or a
+// custom quote. Flip the flag to bring back the WEBSITE_PLANS / CARE /
+// NEWSLETTER cards, the priced Offer schema and the "From $" lines. Project
+// cards come from src/data/projects.ts, reviews from the Elfsight widget.
 import Analytics from "../components/Analytics.astro";
-import { WEBSITE_FROM, fmtPrice } from "../data/pricing";
+import GoogleReviews from "../components/GoogleReviews.astro";
+import { CARE, NEWSLETTER, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
+import { PROJECTS } from "../data/projects";
 
-const SITE = "https://www.alisamadii.com";
-const PATH = "/";
-
+const SHOW_PRICING = false;
+const SITE = 'https://www.alisamadii.com';
+const PATH = '/';
+const url = new URL(PATH, SITE).href;
 // Hub lead-capture + booking scripts (this page is standalone, so they're
-// added here rather than inherited from Layout.astro).
-const apiBase = import.meta.env.DEV
-  ? "http://localhost:3000"
-  : "https://api.alisamadii.com";
+// added here rather than inherited from Layout.astro). leads.js keeps the ad
+// click (gclid/UTM) in a cookie so a quote sent from /quote is still credited.
+const apiBase = import.meta.env.DEV ? 'http://localhost:3000' : 'https://api.alisamadii.com';
 const captureScripts =
   `<script src="${apiBase}/leads.js" data-key="46fcf77a-5308-4518-abb3-8a6245a2dc56" defer></script>` +
   `<script src="${apiBase}/booking.js" data-key="46fcf77a-5308-4518-abb3-8a6245a2dc56" defer></script>`;
-const url = new URL(PATH, SITE).href;
-const title = "Lead Generation Agency | Google Ads + Websites";
-const description =
-  "More calls and booked jobs for your business, wherever you sell: managed Google Ads, a website built to convert, and every lead tracked back to its source.";
-const showShippedStrip = false;
-// Prices are off the homepage for now. Flip to true to render the pricing
-// section, nav links, Offer schema and priced form labels again.
-const SHOW_PRICING = false;
-const websiteSetup = fmtPrice(WEBSITE_FROM.setup);
-const websiteMonthly = fmtPrice(WEBSITE_FROM.monthly);
-const ogImage = "/images/agency/hero-leads.webp";
-const videoSrc = "/hero-video.mp4";
+const setup = fmtPrice(WEBSITE_FROM.setup);
+const monthly = fmtPrice(WEBSITE_FROM.monthly);
+const care = fmtPrice(CARE.monthly);
+// Horizontal add-on rows under the plan cards, same layout for each (priced mode only).
+const addOns = [
+  { ...CARE, title: `${CARE.name} plan`, tag: `${care}/mo instead of ${fmtPrice(WEBSITE_FROM.monthly)}/mo · optional`, cta: "Add Care" },
+  { ...NEWSLETTER, title: NEWSLETTER.name, tag: `${fmtPrice(NEWSLETTER.monthly)}/mo · optional add-on`, fine: undefined, cta: "Add Newsletter" },
+];
+const title = SHOW_PRICING
+  ? 'Web Design for Small Businesses | Ali Samadi Agency'
+  : 'Custom Website Design & Development for Small Businesses | Ali Samadi Agency';
+const description = SHOW_PRICING
+  ? `Custom, hand-coded websites for businesses anywhere. Easy to edit yourself, yours to keep. From ${setup} + ${monthly}/mo.`
+  : 'Custom-designed, hand-coded websites you edit yourself with AI. Shopify stores, web apps, AI receptionists, local SEO and reviews, all set up in your own accounts. Free consultation.';
+const ogImage = '/og/websites.jpg';
+const quoteHref = '/quote?plan=website';
+// "custom" pre-checks the "Not sure yet" chip on the quote form.
+const customQuoteHref = '/quote?plan=custom';
+
+const projects = ['fla2z-construction', 'mohammad-samadi', 'hazara-oregon']
+  .map((slug) => PROJECTS.find((p) => p.slug === slug))
+  .filter((p) => p !== undefined);
+
+// Everything we can build, grouped in the columns the features section
+// renders. Column order matters: the big builds come first. The same array
+// feeds the OfferCatalog schema so markup and UI never drift.
+type Feature = { icon: keyof typeof icons; name: string; note?: string; isNew?: boolean };
+type FeatureGroup = { label: string; title: string; dark?: boolean; features: Feature[] };
+
+// 20px lucide-style stroke icons, inline so the page stays dependency-free.
+const icons = {
+  "pen-tool": '<path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/>',
+  code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  "shopping-bag": '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  layout: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
+  bot: '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+  sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>',
+  key: '<path d="m21 2-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  "bar-chart": '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+  gauge: '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+  "map-pin": '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  nfc: '<path d="M6 8.32a7.43 7.43 0 0 1 0 7.36"/><path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58"/><path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8"/><path d="M16.37 2a20.16 20.16 0 0 1 0 20"/>',
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  "qr-code": '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+  shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  megaphone: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  plug: '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/>',
+} as const;
+
+const featureGroups: FeatureGroup[] = [
+  {
+    label: "Build",
+    title: "What we design and code",
+    dark: true,
+    features: [
+      { icon: "pen-tool", name: "Custom design", note: "Designed around your business, never a template" },
+      { icon: "code", name: "Hand-coded development", note: "Fast, accessible, mobile-first" },
+      { icon: "shopping-bag", name: "Custom Shopify store", note: "A storefront on your own Shopify" },
+      { icon: "layout", name: "Web apps & client portals", note: "Dashboards, logins, databases" },
+      { icon: "bot", name: "AI receptionist & chatbot", note: "Answers calls and chats, books the job", isNew: true },
+    ],
+  },
+  {
+    label: "Client Hub",
+    title: "Run it yourself",
+    features: [
+      { icon: "sparkles", name: "Edit anything with AI", note: "Chat, preview, publish in a minute" },
+      { icon: "key", name: "Set up in your own accounts", note: "Domain, hosting and code are yours" },
+      { icon: "search", name: "Essential SEO foundation", note: "Sitemap, schema, meta, Search Console" },
+      { icon: "bar-chart", name: "Analytics", note: "Visits, calls and forms in one place" },
+      { icon: "gauge", name: "Speed reports", note: "Core Web Vitals, checked for you" },
+    ],
+  },
+  {
+    label: "Local growth",
+    title: "Get found and reviewed",
+    features: [
+      { icon: "map-pin", name: "Google Business Profile optimization", note: "Every field filled, tuned for the map pack" },
+      { icon: "nfc", name: "NFC review cards", note: "Customers tap their phone to leave a review" },
+      { icon: "star", name: "Review link", note: "One link straight to your Google review form" },
+      { icon: "qr-code", name: "QR code for receipts and texts", note: "Printed or texted, scans to your review page" },
+    ],
+  },
+  {
+    label: "Ongoing",
+    title: "We keep it working",
+    features: [
+      { icon: "shield", name: "Care plan", note: "Monitoring, monthly report, edits done for you" },
+      { icon: "mail", name: "Managed newsletter", note: "We write and send it from your own domain" },
+      { icon: "megaphone", name: "Google Ads management", note: "Campaigns, call tracking, monthly tuning" },
+      { icon: "plug", name: "Booking, CRM & payment integrations", note: "Calendars, Stripe, your existing tools" },
+    ],
+  },
+];
+
+const faqs = [
+  {
+    q: "How much does a website cost?",
+    a: SHOW_PRICING
+      ? `Websites start at ${setup} setup + ${monthly}/mo. Shopify stores, web apps and integrations are quoted per project after a short call.`
+      : "It depends on the features you pick. Every project is scoped on a free call and priced in writing before any work starts, so there are no surprises later.",
+  },
+  {
+    q: "What's included after launch?",
+    a: SHOW_PRICING
+      ? `Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support are included, all for ${monthly}/mo. Rather have us make the edits? The ${care}/mo Care plan adds monitoring, a monthly report, and up to an hour of edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.`
+      : "Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support come with it. Rather have us make the edits? The Care plan adds monitoring, a monthly report, and edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.",
+  },
+  {
+    q: "What brings in local calls?",
+    a: SHOW_PRICING
+      ? "Core is the website itself. Local Growth adds the pieces that bring in local calls: we optimize your Google Business Profile and give you an NFC review card, so happy customers can tap their phone and leave a review on the spot."
+      : "The local growth pieces: we optimize your Google Business Profile, give you an NFC review card and a QR code for receipts and texts, so happy customers can tap or scan and leave a review on the spot.",
+  },
+  {
+    q: 'How fast can my site go live?',
+    a: 'Simple sites launch the day after you approve the design. Larger multi-page sites take one to two weeks.',
+  },
+  {
+    q: 'I already have a website. Can you redesign it?',
+    a: "Yes. We rebuild it, move your content over, and redirect old pages so you keep the rankings you've earned.",
+  },
+  {
+    q: 'Who owns the website?',
+    a: 'You do: domain, code, and content. The code lives in a repository you own.',
+  },
+];
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
+    // Organization, founder and WebSite nodes mirror Layout.astro (same @ids):
+    // the homepage is where Google reads the site name, logo and profiles.
     {
-      "@type": "ProfessionalService",
-      "@id": "https://www.alisamadii.com/#organization",
-      name: "Ali Samadi Agency",
-      legalName: "Ali Samadii LLC",
-      url: "https://www.alisamadii.com",
-      logo: "https://www.alisamadii.com/images/agency/logo.png",
-      email: "agency@alisamadii.com",
-      telephone: "+1-971-382-8969",
-      areaServed: "Worldwide",
+      "@type": ["Organization", "ProfessionalService"],
+      "@id": `${SITE}/#organization`,
+      "name": "Ali Samadi Agency",
+      "legalName": "Ali Samadii LLC",
+      "url": SITE,
+      "logo": { "@type": "ImageObject", "url": `${SITE}/icon-512.png`, "width": 512, "height": 512 },
+      "email": "agency@alisamadii.com",
+      "telephone": "+19713828969",
+      "priceRange": "$$$",
+      "areaServed": "Worldwide",
+      "founder": { "@id": `${SITE}/#person-ali` },
+      "sameAs": ["https://www.instagram.com/alisamadiillc/"],
+    },
+    {
+      "@type": "Person",
+      "@id": `${SITE}/#person-ali`,
+      "name": "Ali Samadi",
+      "jobTitle": "Founder",
+      "worksFor": { "@id": `${SITE}/#organization` },
+      "sameAs": ["https://x.com/alisamadii_", "https://github.com/alisamadiii", "https://www.linkedin.com/in/alireza17/"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE}/#website`,
+      "url": SITE,
+      "name": "Ali Samadi Agency",
+      "publisher": { "@id": `${SITE}/#organization` },
     },
     {
       "@type": "Service",
-      name: "Google Ads management + conversion website",
-      serviceType: "Lead generation",
-      provider: {
-        "@id": "https://www.alisamadii.com/#organization",
-      },
-      areaServed: "Worldwide",
-      url: url,
-      ...(SHOW_PRICING
-        ? {
-            offers: [
-              {
-                "@type": "Offer",
-                name: "Launch",
-                price: "1200",
-                priceCurrency: "USD",
-                description:
-                  "One Google Ads campaign managing up to $3k/mo in ads, custom website, hosting & care, conversion tracking, monthly report.",
-                priceSpecification: {
-                  "@type": "UnitPriceSpecification",
-                  price: 1200,
-                  priceCurrency: "USD",
-                  unitText: "MONTH",
-                },
-              },
-            ],
-          }
-        : {}),
+      "name": "Website design for small businesses",
+      "serviceType": "Web design and development",
+      "provider": { "@id": `${SITE}/#organization` },
+      "areaServed": "Worldwide",
+      "url": url,
+      ...(SHOW_PRICING ? {} : {
+        "hasOfferCatalog": {
+          "@type": "OfferCatalog",
+          "name": "Website features",
+          "itemListElement": featureGroups.map((group) => ({
+            "@type": "Offer",
+            "name": group.title,
+            "description": group.features.map((f) => f.name).join(", ") + ". Custom quote after a free consultation.",
+          })),
+        },
+      }),
+      ...(SHOW_PRICING ? { "offers": [
+        ...WEBSITE_PLANS.map((plan) => ({
+          "@type": "Offer",
+          "name": plan.name,
+          "price": String(plan.setup),
+          "priceCurrency": "USD",
+          "description": `${fmtPrice(plan.setup)} setup + ${fmtPrice(plan.monthly)}/mo: ${plan.features.join(", ")}.`,
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": String(plan.monthly),
+            "priceCurrency": "USD",
+            "unitText": "MONTH",
+          },
+        })),
+        {
+          "@type": "Offer",
+          "name": `${CARE.name} plan`,
+          "price": String(CARE.monthly),
+          "priceCurrency": "USD",
+          "description": `${care}/mo: ${CARE.features.join(", ")}.`,
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": String(CARE.monthly),
+            "priceCurrency": "USD",
+            "unitText": "MONTH",
+          },
+        },
+        {
+          "@type": "Offer",
+          "name": NEWSLETTER.name,
+          "price": String(NEWSLETTER.monthly),
+          "priceCurrency": "USD",
+          "description": `${fmtPrice(NEWSLETTER.monthly)}/mo: ${NEWSLETTER.features.join(", ")}.`,
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": String(NEWSLETTER.monthly),
+            "priceCurrency": "USD",
+            "unitText": "MONTH",
+          },
+        },
+      ] } : {}),
     },
     {
       "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "What exactly do I get?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "More leads. We run your Google Ads so the right searches find you, send them to a website built to turn clicks into calls, and track every lead to the keyword that drove it. We handle the campaigns, the site, hosting, and monthly reporting. You answer the phone.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Is ad spend included?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "No. Google bills ad spend to your card directly, so you see every dollar. Our monthly fee covers the website and managing your campaigns. The Launch plan covers up to $3,000 in monthly ad spend.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "What's your guarantee?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Before launch we agree in writing on how many qualified leads your campaigns should bring in. If we miss it within 90 days, walk away and keep your website and Google Ads account. A qualified lead is a tracked call of 60+ seconds or a real form inquiry. Applies while ad spend stays at the agreed level and leads are answered in business hours.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Do I own the website?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes. Your code lives in your own GitHub, and your domain and Google Ads account are in your name from day one. If you ever leave, the site and the account go with you.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "What if I already have a website?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "We'll look at it on the first call. Usually we rebuild it, because a site built to convert makes every ad dollar go further, and the build is included at no extra cost.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can I get just a website, without ads?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: SHOW_PRICING
-              ? `Yes. Our website-only plans start at ${websiteSetup} setup + ${websiteMonthly}/mo: custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page.`
-              : "Yes. Our website-only plan covers custom design and build, set up in your own accounts, and editable with AI in Client Hub. You can add Google Ads later. Full details are on our Websites page.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Where do you work?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Anywhere. We work with businesses in every city and region, and everything is handled online: calls, campaigns, the website, and reporting.",
-          },
-        },
-      ],
+      "mainEntity": faqs.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      })),
     },
   ],
 };
@@ -156,2030 +272,400 @@ const jsonLd = {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={`${SITE}${ogImage}`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={title} />
+    <meta property="og:site_name" content="Ali Samadi Agency" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${SITE}${ogImage}`} />
+    <meta name="twitter:creator" content="@alisamadii_" />
     <meta name="theme-color" content="#fffdfb" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono&display=swap"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fragment+Mono&display=swap" />
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <Analytics clientRouter={false} />
   </head>
   <body>
-    <div
-      style="position: relative; background: #fffdfb; color: #221f1c; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 16px; line-height: 1.6; overflow: hidden"
-    >
-      <!-- NAV: dark bar with phone + CTA -->
-      <header
-        class="topnav"
-        style="position: sticky; top: 0; z-index: 50; padding: 14px clamp(12px, 3vw, 24px) 0"
-      >
-        <nav
-          aria-label="Main"
-          style="max-width: 1200px; margin: 0 auto; height: 64px; padding: 0 8px 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-radius: 9999px; background: rgba(26,23,21,0.96); box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 20px 40px -20px rgba(26,23,21,0.6)"
-        >
-          <a
-            href="/"
-            class="tlink"
-            style="display: flex; align-items: center; gap: 10px; color: #fffdfb"
-            ><img
-              src="/images/agency/logo.png"
-              alt="Ali Samadi Agency logo"
-              style="width: 28px; height: 28px"
-              width="400"
-              height="400"
-              loading="lazy"
-              decoding="async"
-            /><span
-              style="font-size: 19px; font-weight: 800; letter-spacing: -0.03em"
-              >alisamadii</span
-            ><span
-              class="cap hide-sm"
-              style="margin-left: 4px; padding: 3px 9px; border-radius: 9999px; background: rgba(252,132,100,0.16); color: #fc8464; font-size: 10.5px"
-              >Growth</span
-            ></a
-          >
-          <div
-            class="hide-sm"
-            style="display: flex; gap: 22px; font-size: 14.5px; font-weight: 600"
-          >
-            <a href="#who" class="navlink">Who it's for</a><a
-              href="#how"
-              class="navlink">How it works</a
-            >{
-              SHOW_PRICING && (
-                <a href="#pricing" class="navlink">
-                  Pricing
-                </a>
-              )
-            }<a href="#guarantee" class="navlink">Guarantee</a><a
-              href="#faq"
-              class="navlink">FAQ</a
-            >
-          </div>
-          <div style="display: flex; align-items: center; gap: 16px">
-            <a
-              href="tel:+19713828969"
-              class="mono tlink hide-sm"
-              style="font-size: 13px; color: #c9bfb5">(971) 382-8969</a
-            >
-            <a
-              href="#contact"
-              class="btn cta navcta"
-              style="min-height: 48px; padding: 0 20px; font-size: 14.5px"
-              >Start a Project ↗</a
-            >
-            <button
-              type="button"
-              class="btn burger show-sm"
-              id="menu-btn"
-              aria-label="Open menu"
-              aria-controls="mobile-menu"
-              aria-expanded="false"
-              ><svg
-                class="ico-close"
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                ><path d="M6 6l12 12M18 6L6 18"></path></svg
-              ><svg
-                class="ico-open"
-                aria-hidden="true"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                ><path d="M4 7h16M4 12h16M4 17h16"></path></svg
-              ></button
-            >
-          </div>
-        </nav>
-        <div
-          id="mobile-menu"
-          hidden
-          class="mpanel"
-          style="max-width: 1200px; margin: 8px auto 0; padding: 8px 20px 20px; border-radius: 24px; background: rgba(26,23,21,0.97); box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 30px 60px -20px rgba(26,23,21,0.7); flex-direction: column"
-        >
-          <a href="#who" class="mlink" data-close-menu
-            >Who it's for<span aria-hidden="true" style="color: #fc8464">→</span
-            ></a
-          >
-          <a href="#how" class="mlink" data-close-menu
-            >How it works<span aria-hidden="true" style="color: #fc8464">→</span
-            ></a
-          >
-          {
-            SHOW_PRICING && (
-              <a href="#pricing" class="mlink" data-close-menu>
-                Pricing
-                <span aria-hidden="true" style="color: #fc8464">
-                  →
-                </span>
-              </a>
-            )
-          }
-          <a href="#guarantee" class="mlink" data-close-menu
-            >Guarantee<span aria-hidden="true" style="color: #fc8464">→</span
-            ></a
-          >
-          <a href="#faq" class="mlink" data-close-menu
-            >FAQ<span aria-hidden="true" style="color: #fc8464">→</span></a
-          >
-          <a
-            href="https://hub.alisamadii.com"
-            class="mlink"
-            style="color: #fc8464">Already a customer? Open your app</a
-          >
-          <div
-            style="display: flex; flex-direction: column; gap: 10px; padding-top: 18px"
-          >
-            <a
-              href="#contact"
-              class="btn cta"
-              data-close-menu
-              style="width: 100%">Start a Project ↗</a
-            >
-            <a
-              href="tel:+19713828969"
-              class="btn"
-              style="display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 9999px; box-shadow: inset 0 0 0 1px rgba(246,239,233,0.2); color: #f6efe9; font-weight: 700"
-              >Call (971) 382-8969</a
-            >
-          </div>
-        </div>
-      </header>
+<div style="position: relative; background: #fffdfb; color: #221f1c; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 16px; line-height: 1.6; overflow: hidden">
 
-      <main id="top">
-        <!-- HERO C: centered copy over the brand flow diagram -->
-        <section
-          class="hero"
-          style="position: relative; margin-top: -78px; min-height: calc(130px + 55.9vw); padding-top: 150px; background: #fbf6f2"
-        >
-          <HeroFlow
-            class="hero-img"
-            style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none"
-          />
-          <div
-            aria-hidden="true"
-            class="hero-ov"
-            style="position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(rgba(255,253,251,0), #fffdfb); pointer-events: none"
-          >
-          </div>
-          <div
-            class="wrap hero-copy"
-            style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 22px"
-          >
-            <p class="pill cap" style="margin: 0; color: #3d3833">
-              <span
-                class="blink"
-                style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a; box-shadow: 0 0 0 4px rgba(47,138,74,0.15)"
-              ></span>Lead generation agency
-            </p>
-            <h1
-              style="margin: 0; max-width: 16ch; font-size: clamp(42px, 5vw, 66px); line-height: 1.03; font-weight: 800; letter-spacing: -0.045em; color: #221f1c; text-wrap: balance"
-            >
-              More calls, more booked jobs, <span style="color: #e0603d"
-                >more revenue.</span
-              >
-            </h1>
-            <p
-              style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.5vw, 19px); line-height: 1.55; color: #5a524b"
-            >
-              We run the Google Ads that bring in customers and build the
-              website that turns them into booked jobs. Every lead tracked back
-              to its source.
-            </p>
-            <div
-              class="hero-btns"
-              style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin-top: 4px"
-            >
-              <a href="#contact" class="btn cta"
-                >Start a Project <span aria-hidden="true">↗</span></a
-              >
-              <a
-                href="#video"
-                class="btn ghost watch"
-                data-video-open
-                aria-haspopup="dialog"
-                ><span
-                  aria-hidden="true"
-                  class="play-dot"
-                  style="position: relative; width: 40px; height: 40px; border-radius: 9999px; background: #221f1c; color: #fffdfb; display: flex; align-items: center; justify-content: center"
-                  ><svg
-                    class="play-ico"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    ><path
-                      d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"
-                    ></path></svg
-                  ></span
-                >Watch how we build</a
-              >
-            </div>
-            <a
-              href="https://hub.alisamadii.com"
-              class="tlink"
-              style="font-size: 14px; font-weight: 500; color: #5a524b"
-              >Already a customer? <span style="color: #c4502e"
-                >Open your app →</span
-              ></a
-            >
-          </div>
-        </section>
+<!-- vertical column lines across the page -->
+<div aria-hidden="true" class="wrap" style="position: absolute; inset: 0 0 0 0; left: 0; right: 0; pointer-events: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+<span style="border-left: 1px solid rgba(34,31,28,0.05)"></span><span style="border-left: 1px solid rgba(34,31,28,0.05)"></span><span style="border-left: 1px solid rgba(34,31,28,0.05)"></span><span style="border-left: 1px solid rgba(34,31,28,0.05); border-right: 1px solid rgba(34,31,28,0.05)"></span>
+</div>
 
-        <!-- VIDEO below the hero (same frame as the concise page) -->
-        <section
-          id="video"
-          style="position: relative; padding: 40px 0 120px; background: #fffdfb"
-        >
-          <div
-            class="wrap"
-            style="display: flex; flex-direction: column; align-items: center"
-          >
-            <div
-              class="reveal"
-              style="position: relative; width: 100%; max-width: 980px; margin-top: 0"
-            >
-              <div
-                style="position: relative; z-index: 2; padding: 6px; border-radius: 24px; background: rgba(255,254,252,0.55); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 24px 80px -24px rgba(27,26,23,0.35)"
-              >
-                <div
-                  style="border-radius: 18px; background: #fffefc; overflow: hidden; text-align: left"
-                >
-                  <div
-                    style="height: 44px; padding: 0 16px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid rgba(27,26,23,0.07); background: #f6f5f3"
-                  >
-                    <div aria-hidden="true" style="display: flex; gap: 6px">
-                      <span
-                        style="width: 10px; height: 10px; border-radius: 9999px; background: #cdc8bf"
-                      ></span><span
-                        style="width: 10px; height: 10px; border-radius: 9999px; background: #cdc8bf"
-                      ></span><span
-                        style="width: 10px; height: 10px; border-radius: 9999px; background: #cdc8bf"
-                      ></span>
-                    </div>
-                    <div
-                      class="mono"
-                      style="flex: 1; max-width: 360px; margin: 0 auto; height: 28px; border-radius: 9px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: #6b665d"
-                    >
-                      <svg
-                        aria-hidden="true"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        ><rect x="5" y="11" width="14" height="10" rx="2"
-                        ></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg
-                      >yourbusiness.com
-                    </div>
-                    <div aria-hidden="true" style="width: 46px"></div>
-                  </div>
-                  <div
-                    style="position: relative; aspect-ratio: 2688 / 1520; background: #f6efe6"
-                  >
-                    <img
-                      src="/images/agency/video-poster.webp"
-                      alt="Ali Samadi Agency: Google Ads, websites that convert, and email newsletters for growing businesses."
-                      style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block"
-                      width="1920"
-                      height="1086"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div
-                      style="position: absolute; left: 0; right: 0; bottom: 5%; display: flex; align-items: center; justify-content: center"
-                    >
-                      <button
-                        type="button"
-                        class="btn playbtn"
-                        data-video-open
-                        aria-haspopup="dialog"
-                        aria-label="Play the video: watch how we build"
-                        style="display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 20px 6px 6px; border-radius: 9999px; background: #1b1a17; color: #f6f5f3; font-size: 15px; font-weight: 600; box-shadow: 0 8px 24px rgba(27,26,23,0.22)"
-                        ><span
-                          aria-hidden="true"
-                          style="width: 40px; height: 40px; border-radius: 9999px; background: #f6f5f3; color: #1b1a17; display: flex; align-items: center; justify-content: center"
-                          ><svg
-                            class="play-ico"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            ><path
-                              d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"
-                            ></path></svg
-                          ></span
-                        >Watch how we build <span
-                          class="mono"
-                          style="font-size: 12px; color: #a39d92">[0:30]</span
-                        ></button
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div
-                class="hide-sm vchip"
-                style="position: absolute; z-index: 3; left: -88px; top: 18%; display: inline-flex; align-items: center; gap: 10px; padding: 7px 18px 7px 7px; border-radius: 9999px; background: rgba(255,254,252,0.96); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 14px 34px rgba(27,26,23,0.10); font-size: 15px; font-weight: 600; white-space: nowrap"
-              >
-                <span
-                  aria-hidden="true"
-                  style="width: 36px; height: 36px; border-radius: 9999px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center; font-size: 15px"
-                  >▤</span
-                >Website that converts
-              </div>
-              <div
-                class="hide-sm vchip"
-                style="position: absolute; z-index: 3; right: -76px; top: 10%; display: inline-flex; align-items: center; gap: 10px; padding: 7px 18px 7px 7px; border-radius: 9999px; background: rgba(255,254,252,0.96); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 14px 34px rgba(27,26,23,0.10); font-size: 15px; font-weight: 600; white-space: nowrap"
-              >
-                <span
-                  aria-hidden="true"
-                  class="mono"
-                  style="width: 36px; height: 36px; border-radius: 9999px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center; font-size: 11px"
-                  >Ad</span
-                >Managed Google Ads
-              </div>
-              <div
-                class="hide-sm vchip"
-                style="position: absolute; z-index: 3; left: -56px; bottom: -28px; display: inline-flex; align-items: center; gap: 10px; padding: 7px 18px 7px 7px; border-radius: 9999px; background: rgba(255,254,252,0.96); box-shadow: 0 0 0 1px rgba(27,26,23,0.06), 0 14px 34px rgba(27,26,23,0.10); font-size: 15px; font-weight: 600; white-space: nowrap"
-              >
-                <span
-                  aria-hidden="true"
-                  style="width: 36px; height: 36px; border-radius: 9999px; background: rgba(27,26,23,0.05); display: flex; align-items: center; justify-content: center"
-                  ><svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    ><path
-                      d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"
-                    ></path></svg
-                  ></span
-                >Every lead tracked
-              </div>
-            </div>
-          </div>
-          <!-- shipped strip (hidden) -->
-          {
-            showShippedStrip && (
-              <div
-                class="wrap strip"
-                style="position: relative; padding-top: 96px; padding-bottom: 110px; display: flex; flex-direction: column; align-items: center; gap: 22px"
-              >
-                <p class="cap" style="margin: 0; color: #4a433d">
-                  Live sites we've designed &amp; built
-                </p>
-                <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 40px; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: rgba(34,31,28,0.55)">
-                  <li style="display: flex; align-items: center; gap: 8px">
-                    <span aria-hidden="true">◐</span>Hazara Community of Oregon
-                  </li>
-                  <li style="display: flex; align-items: center; gap: 8px">
-                    <span aria-hidden="true">✦</span>EmpowerHer
-                  </li>
-                  <li style="display: flex; align-items: center; gap: 8px">
-                    <span aria-hidden="true">▲</span>Mohammad Samadi
-                  </li>
-                  <li style="display: flex; align-items: center; gap: 8px">
-                    <span aria-hidden="true">●</span>Pinnacle Tax Group
-                  </li>
-                  <li style="display: flex; align-items: center; gap: 8px">
-                    <span aria-hidden="true">◇</span>Aether Properties
-                  </li>
-                </ul>
-              </div>
-            )
-          }
-        </section>
+<main id="top">
+<!-- HERO -->
+<section style="position: relative; min-height: 900px; display: flex; flex-direction: column">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 78%; pointer-events: none; background: radial-gradient(60% 70% at 8% 100%, rgba(252,132,100,0.55), transparent 70%), radial-gradient(55% 65% at 92% 100%, rgba(255,181,154,0.75), transparent 70%), radial-gradient(70% 55% at 50% 105%, rgba(252,132,100,0.45), transparent 70%), radial-gradient(40% 40% at 30% 80%, rgba(255,227,214,0.9), transparent 70%), radial-gradient(40% 40% at 72% 78%, rgba(255,227,214,0.9), transparent 70%), linear-gradient(to bottom, rgba(255,253,251,0), rgba(255,214,196,0.55)); filter: blur(6px)"></div>
+<img src="/images/agency/clouds.webp" alt="Decorative clouds background" aria-hidden="true" fetchpriority="high" decoding="async" style="position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; pointer-events: none" width="2752" height="1536">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 30%; background: linear-gradient(#fffdfb, rgba(255,253,251,0))"></div>
 
-        <!-- WHO -->
-        <section id="who" style="position: relative; padding: 100px 0">
-          <div
-            class="wrap"
-            style="display: flex; flex-direction: column; gap: 56px"
-          >
-            <div
-              style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px 48px"
-            >
-              <div style="display: flex; flex-direction: column; gap: 18px">
-                <p
-                  class="pill cap"
-                  style="margin: 0; align-self: flex-start; color: #3d3833"
-                >
-                  <span aria-hidden="true" style="color: #fc8464">✦</span>Who we
-                  work with
-                </p><h2 class="h2">Sound familiar?</h2>
-              </div>
-              <p
-                style="flex: 0 1 420px; margin: 0; font-size: 17px; color: #5a524b"
-              >
-                Three kinds of business we help most, and what we change first.
-              </p>
-            </div>
-            <div
-              style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px"
-            >
-              <article
-                class="card lift"
-                style="padding: 32px; display: flex; flex-direction: column; gap: 16px"
-              >
-                <span class="cap" style="color: #c4502e">Service pros</span>
-                <h3
-                  style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em"
-                >
-                  “The work is good. The phone just isn't ringing enough.”
-                </h3>
-                <p style="margin: 0; font-size: 15px; color: #5a524b">
-                  We build a site made to convert and point Google Ads at it, so
-                  people searching for your service nearby find you first.
-                </p>
-                <a
-                  href="#contact"
-                  class="tlink"
-                  style="margin-top: auto; padding-top: 8px; font-size: 15px; font-weight: 700"
-                  >Start a Project ↗</a
-                >
-              </article>
-              <article
-                class="card lift"
-                style="padding: 32px; display: flex; flex-direction: column; gap: 16px; background: #221f1c; color: #f6efe9; box-shadow: 0 30px 60px -30px rgba(34,31,28,0.6)"
-              >
-                <span class="cap" style="color: #fc8464"
-                  >Already running ads</span
-                >
-                <h3
-                  style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em"
-                >
-                  “We pay Google every month and can't tell what we get for it.”
-                </h3>
-                <p style="margin: 0; font-size: 15px; color: #c9bfb5">
-                  We rebuild the campaigns around searches that turn into jobs,
-                  and track every call and form back to the keyword behind it.
-                </p>
-                <a
-                  href="#contact"
-                  class="tlink"
-                  style="margin-top: auto; padding-top: 8px; font-size: 15px; font-weight: 700; color: #fc8464"
-                  >Start a Project ↗</a
-                >
-              </article>
-              <article
-                class="card lift"
-                style="padding: 32px; display: flex; flex-direction: column; gap: 16px"
-              >
-                <span class="cap" style="color: #c4502e"
-                  >Established businesses</span
-                >
-                <h3
-                  style="margin: 0; font-size: 24px; line-height: 1.2; font-weight: 800; letter-spacing: -0.03em"
-                >
-                  “Our website looks fine, but it doesn't bring in work.”
-                </h3>
-                <p style="margin: 0; font-size: 15px; color: #5a524b">
-                  We replace it with a site built around one goal, getting the
-                  call, and send paying traffic to it from the first month.
-                </p>
-                <a
-                  href="#contact"
-                  class="tlink"
-                  style="margin-top: auto; padding-top: 8px; font-size: 15px; font-weight: 700"
-                  >Start a Project ↗</a
-                >
-              </article>
-            </div>
-          </div>
-        </section>
+<!-- top bar -->
+<div class="wrap" style="position: relative; height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<p class="mono hide-sm" style="margin: 0; font-size: 13px; color: #3d3833">WORKING WORLDWIDE</p>
+<div aria-hidden="true" class="dots" style="position: absolute; left: 50%; top: 0; width: min(720px, 70%); height: 200px; transform: translateX(-50%)"></div>
+<a href="/" class="tlink" style="position: relative; margin: 0 auto; display: flex; align-items: center; gap: 10px; color: #221f1c"><img src="/images/agency/logo.png" alt="Ali Samadi Agency logo" style="width: 32px; height: 32px" width="400" height="400" loading="lazy" decoding="async"><span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">alisamadii</span></a>
+<p class="mono hide-sm" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a; box-shadow: 0 0 0 4px rgba(47,138,74,0.15)"></span>TAKING NEW PROJECTS</p>
+</div>
 
-        <!-- HOW -->
-        <section id="how" style="position: relative; padding: 100px 0">
-          <div
-            class="wrap"
-            style="display: flex; flex-direction: column; gap: 56px"
-          >
-            <div
-              style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px"
-            >
-              <p class="pill cap" style="margin: 0; color: #3d3833">
-                <span aria-hidden="true" style="color: #fc8464">✦</span>How it
-                works
-              </p>
-              <h2 class="h2" style="max-width: 16ch">
-                From search to booked job, one team runs it all
-              </h2>
-            </div>
-            <ol
-              style="position: relative; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 24px"
-            >
-              <li
-                aria-hidden="true"
-                class="hide-sm"
-                style="position: absolute; left: 16%; right: 16%; top: 27px; border-top: 2px dashed rgba(252,132,100,0.5)"
-              >
-              </li>
-              <li
-                style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"
-              >
-                <span
-                  class="mono"
-                  style="width: 56px; height: 56px; border-radius: 9999px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 10px 24px -10px rgba(34,31,28,0.3); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #c4502e"
-                  >01</span
-                ><h3
-                  style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em"
-                >
-                  Find the searches that pay
-                </h3><p
-                  style="margin: 0; max-width: 320px; font-size: 15px; color: #5a524b"
-                >
-                  We find the searches your customers actually type, then build
-                  the campaigns and write the ads. Google bills the ad spend to
-                  you directly, so you see every dollar.
-                </p>
-              </li>
-              <li
-                style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"
-              >
-                <span
-                  class="mono"
-                  style="width: 56px; height: 56px; border-radius: 9999px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 10px 24px -10px rgba(34,31,28,0.3); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #c4502e"
-                  >02</span
-                ><h3
-                  style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em"
-                >
-                  Send them to a page built to convert
-                </h3><p
-                  style="margin: 0; max-width: 320px; font-size: 15px; color: #5a524b"
-                >
-                  A fast page built around one job: turning a click into a call
-                  or a booked job. A clear offer and a call button on every
-                  screen.
-                </p>
-              </li>
-              <li
-                style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"
-              >
-                <span
-                  class="mono"
-                  style="width: 56px; height: 56px; border-radius: 9999px; background: #fc8464; box-shadow: 0 10px 24px -8px rgba(239,108,75,0.6); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #221f1c"
-                  >03</span
-                ><h3
-                  style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em"
-                >
-                  Track every lead, cut cost per lead monthly
-                </h3><p
-                  style="margin: 0; max-width: 320px; font-size: 15px; color: #5a524b"
-                >
-                  Every call and form is tied to the keyword that drove it. Each
-                  month we cut what isn't working, put more behind what is, and
-                  walk you through the numbers.
-                </p>
-              </li>
-            </ol>
-            <div
-              style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px"
-            >
-              <span class="cap" style="margin-right: 6px; color: #6d645c"
-                >What we do</span
-              >
-              <a href="/services/google-ads" class="svc">Google Ads</a><a
-                href="/services/google-ads"
-                class="svc">Local Services Ads</a
-              ><a href="/newsletter" class="svc">Email newsletters</a><a
-                href="/websites"
-                class="svc">Websites</a
-              ><a href="/services/seo-analytics" class="svc"
-                >SEO &amp; analytics</a
-              ><a href="/services/ecommerce" class="svc">Shopify stores</a><a
-                href="/services/custom-web-apps"
-                class="svc">Custom web apps</a
-              >
-              <a
-                href="/services"
-                class="tlink"
-                style="margin-left: 6px; font-size: 14px; font-weight: 700"
-                >All services →</a
-              >
-            </div>
-          </div>
-        </section>
+<!-- headline -->
+<div class="wrap" style="position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px; padding-top: 110px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span><span aria-hidden="true" style="color: #fc8464">✦</span>Web design for small businesses<span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span></p>
+<h1 style="margin: 0; max-width: 13ch; font-size: clamp(44px, 6vw, 80px); line-height: 1.02; font-weight: 800; letter-spacing: -0.045em; color: #221f1c; text-wrap: balance">A website that works as hard as <span style="color: #e0603d">you do.</span></h1>
+<p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: #5a524b">Custom-designed, hand-coded websites for businesses anywhere. Live in about a day, easy to edit yourself, and yours to keep.</p>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 6px">
+<a href={quoteHref} class="btn cta">Get a free consultation</a>
+<p class="cap" style="margin: 0; color: #6d645c">{SHOW_PRICING ? `From ${setup} + ${monthly}/mo` : 'Custom-built'} · no templates · you own it</p>
+</div>
+</div>
 
-        <!-- PRICING (dark, premium), hidden while SHOW_PRICING is false -->
-        {
-          SHOW_PRICING && (
-            <section
-              id="pricing"
-              class="night"
-              style="position: relative; padding: 120px 0 110px; background: #1a1715; color: #f6efe9; overflow: hidden"
-            >
-              <div
-                aria-hidden="true"
-                style="position: absolute; left: 50%; top: -260px; width: 1100px; height: 700px; transform: translateX(-50%); border-radius: 9999px; background: radial-gradient(closest-side, rgba(252,132,100,0.28), transparent); pointer-events: none"
-              />
-              <div
-                class="wrap"
-                style="position: relative; display: flex; flex-direction: column; gap: 56px"
-              >
-                <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
-                  <p class="pill cap" style="margin: 0">
-                    <span aria-hidden="true" style="color: #fc8464">
-                      ✦
-                    </span>
-                    Pricing
-                  </p>
-                  <h2 class="h2" style="max-width: 16ch">
-                    Website and Google Ads,{" "}
-                    <span style="color: #fc8464">one monthly price</span>
-                  </h2>
-                  <p style="margin: 0; max-width: 540px; font-size: 17px; color: #c9bfb5">
-                    One plan, $300 one-time setup. Bigger tiers are on the way.
-                    Google bills the ad spend to you directly.
-                  </p>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px; align-items: stretch">
-                  <article style="position: relative; padding: 32px; border-radius: 24px; background: linear-gradient(180deg, #2a2420 0%, #221d1a 100%); box-shadow: inset 0 0 0 1.5px #fc8464, 0 40px 80px -30px rgba(252,132,100,0.45); display: flex; flex-direction: column; gap: 18px">
-                    <span
-                      class="cap"
-                      style="position: absolute; top: -13px; left: 50%; transform: translateX(-50%); padding: 6px 14px; border-radius: 9999px; background: #fc8464; color: #221f1c; font-size: 10.5px; white-space: nowrap"
-                    >
-                      Now enrolling
-                    </span>
-                    <div style="display: flex; justify-content: space-between; align-items: center">
-                      <>
-                        <h3 style="margin: 0; font-size: 20px; font-weight: 800">
-                          Launch
-                        </h3>
-                        <span
-                          class="cap"
-                          style="font-size: 10.5px; color: #fc8464"
-                        >
-                          Ads up to $3K/mo
-                        </span>
-                      </>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px">
-                      <>
-                        <p style="margin: 0; display: flex; align-items: baseline; gap: 6px">
-                          <>
-                            <span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">
-                              $1,200
-                            </span>
-                            <span
-                              class="mono"
-                              style="font-size: 14px; color: #a89e94"
-                            >
-                              /mo
-                            </span>
-                          </>
-                        </p>
-                        <p
-                          class="mono"
-                          style="margin: 0; font-size: 13px; color: #a89e94"
-                        >
-                          + $300 one-time setup
-                        </p>
-                      </>
-                    </div>
-                    <p style="margin: 0; font-size: 15px; color: #c9bfb5">
-                      For a business ready to turn on paid leads for the first
-                      time. One focused campaign, one site built to convert it.
-                    </p>
-                    <ul style="margin: 0; padding: 18px 0 0; border-top: 1px solid rgba(246,239,233,0.1); list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Custom website, hosting &amp; care
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        1 Google Ads campaign, manages up to $3k/mo in ads
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Form &amp; GA4 conversion tracking
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Monthly performance report
-                      </li>
-                    </ul>
-                    <a
-                      href="#contact"
-                      data-plan="launch"
-                      class="btn cta"
-                      style="margin-top: auto"
-                    >
-                      Start a Project ↗
-                    </a>
-                  </article>
+<!-- shipped strip -->
+<div class="wrap" style="position: relative; padding-top: 80px; padding-bottom: 150px; display: flex; flex-direction: column; align-items: center; gap: 22px">
+<p class="cap" style="margin: 0; color: #4a433d">Live sites we've designed &amp; built</p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 40px; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: rgba(34,31,28,0.62)">
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">◐</span>Hazara Community of Oregon</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">✦</span>EmpowerHer</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">▲</span>Florida A2Z Construction</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">◆</span>Mohammad Samadi</li>
+</ul>
+</div>
+</section>
 
-                  <article
-                    aria-disabled="true"
-                    style="padding: 32px; border-radius: 24px; background: rgba(246,239,233,0.04); box-shadow: inset 0 0 0 1px rgba(246,239,233,0.1); display: flex; flex-direction: column; gap: 18px; opacity: 0.4; user-select: none"
-                  >
-                    <div style="display: flex; justify-content: space-between; align-items: center">
-                      <>
-                        <h3 style="margin: 0; font-size: 20px; font-weight: 800">
-                          Growth
-                        </h3>
-                        <span
-                          class="cap"
-                          style="font-size: 10.5px; color: #a89e94"
-                        >
-                          Ads up to $6K/mo
-                        </span>
-                      </>
-                    </div>
-                    <p style="margin: 0; display: flex; align-items: baseline; gap: 6px">
-                      <>
-                        <span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">
-                          $3,500
-                        </span>
-                        <span
-                          class="mono"
-                          style="font-size: 14px; color: #a89e94"
-                        >
-                          /mo
-                        </span>
-                      </>
-                    </p>
-                    <p style="margin: 0; font-size: 15px; color: #c9bfb5">
-                      For a business with several services to sell. A landing
-                      page and campaign for each, with every call tracked.
-                    </p>
-                    <ul style="margin: 0; padding: 18px 0 0; border-top: 1px solid rgba(246,239,233,0.1); list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Everything in Launch
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Multiple campaigns, manages up to $6k/mo in ads
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Call tracking on every lead source
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        A landing page for each service
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Local Services Ads setup
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Biweekly strategy call
-                      </li>
-                    </ul>
-                    <span
-                      class="btn ghost-d"
-                      style="margin-top: auto; cursor: not-allowed; pointer-events: none"
-                    >
-                      Coming soon
-                    </span>
-                  </article>
+<!-- BENEFITS -->
+<section id="benefits" style="position: relative; padding: 120px 0 100px">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Benefits</p>
+<h2 class="h2" style="max-width: 16ch">Everything a small business site should be</h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 20px">
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-launch.webp" alt="A launch timeline moving from approved to built to live" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
 
-                  <article
-                    aria-disabled="true"
-                    style="padding: 32px; border-radius: 24px; background: rgba(246,239,233,0.04); box-shadow: inset 0 0 0 1px rgba(246,239,233,0.1); display: flex; flex-direction: column; gap: 18px; opacity: 0.4; user-select: none"
-                  >
-                    <div style="display: flex; justify-content: space-between; align-items: center">
-                      <>
-                        <h3 style="margin: 0; font-size: 20px; font-weight: 800">
-                          Scale
-                        </h3>
-                        <span
-                          class="cap"
-                          style="font-size: 10.5px; color: #a89e94"
-                        >
-                          Ads up to $10K/mo
-                        </span>
-                      </>
-                    </div>
-                    <p style="margin: 0; display: flex; align-items: baseline; gap: 6px">
-                      <>
-                        <span style="font-size: 48px; font-weight: 800; letter-spacing: -0.04em">
-                          $4,500
-                        </span>
-                        <span
-                          class="mono"
-                          style="font-size: 14px; color: #a89e94"
-                        >
-                          /mo
-                        </span>
-                      </>
-                    </p>
-                    <p style="margin: 0; font-size: 15px; color: #c9bfb5">
-                      For a business covering several cities or locations that
-                      wants the whole search page working for it.
-                    </p>
-                    <ul style="margin: 0; padding: 18px 0 0; border-top: 1px solid rgba(246,239,233,0.1); list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Everything in Growth
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Unlimited campaigns, manages up to $10k/mo in ads
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Landing pages per service &amp; location
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Local SEO &amp; Google Business Profile
-                      </li>
-                      <li>
-                        <span aria-hidden="true" style="color: #fc8464">
-                          ✓
-                        </span>{" "}
-                        Weekly strategy call
-                      </li>
-                    </ul>
-                    <span
-                      class="btn ghost-d"
-                      style="margin-top: auto; cursor: not-allowed; pointer-events: none"
-                    >
-                      Coming soon
-                    </span>
-                  </article>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center">
-                  <p class="cap" style="margin: 0; color: #a89e94">
-                    $300 setup · Website included · Month-to-month · Ad spend
-                    paid to Google directly
-                  </p>
-                  <p style="margin: 0; font-size: 15px; color: #c9bfb5">
-                    Just need a website, no ads?{" "}
-                    <strong style="color: #fffdfb">From {websiteSetup} + {websiteMonthly}/mo</strong> ·{" "}
-                    <a
-                      href="/websites"
-                      class="tlink"
-                      style="color: #fc8464; font-weight: 700"
-                    >
-                      See website plans →
-                    </a>
-                  </p>
-                </div>
-              </div>
-            </section>
-          )
-        }
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Live in about a day</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Simple sites launch the day after you approve. Bigger ones take one to two weeks.</p></div>
+</article>
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-edit.webp" alt="A desktop editor publishing a new headline that updates the live website" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
 
-        <!-- GUARANTEE -->
-        <section
-          id="guarantee"
-          style="position: relative; padding: 110px 0 80px"
-        >
-          <div class="wrap">
-            <div
-              class="card"
-              style="padding: clamp(32px, 5vw, 64px); display: flex; flex-direction: column; gap: 40px; background: linear-gradient(180deg, #fff 0%, #fff6f2 100%)"
-            >
-              <div
-                style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px"
-              >
-                <p class="pill cap" style="margin: 0; color: #3d3833">
-                  <span aria-hidden="true" style="color: #fc8464">✦</span>Our
-                  guarantee
-                </p>
-                <h2 class="h2" style="max-width: 15ch">
-                  Hit the lead number, <span style="color: #e0603d"
-                    >or walk away</span
-                  >
-                </h2>
-              </div>
-              <div style="width: 100%; max-width: 640px; align-self: center">
-                <article
-                  style="padding: 28px; border-radius: 20px; background: #221f1c; color: #f6efe9; display: flex; flex-direction: column; gap: 12px"
-                >
-                  <div style="display: flex; align-items: center; gap: 12px">
-                    <span
-                      aria-hidden="true"
-                      style="width: 40px; height: 40px; border-radius: 9999px; background: #fc8464; color: #221f1c; display: flex; align-items: center; justify-content: center; font-weight: 800"
-                      >✓</span
-                    ><span class="cap" style="color: #fc8464"
-                      >Lead guarantee · 90 days</span
-                    >
-                  </div>
-                  <p style="margin: 0; font-size: 16px; color: #e6ddd4">
-                    Before launch we agree in writing on how many qualified
-                    leads your campaigns should bring in. If we miss it within
-                    90 days, walk away and keep your website and Google Ads
-                    account.
-                  </p>
-                </article>
-              </div>
-              <p
-                style="margin: 0; max-width: 760px; align-self: center; text-align: center; font-size: 13px; line-height: 1.55; color: #6d645c"
-              >
-                A qualified lead is a tracked call of 60+ seconds or a real form
-                inquiry. Applies while ad spend stays at the agreed level and
-                leads are answered in business hours.
-              </p>
-            </div>
-          </div>
-        </section>
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Edit it yourself</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Change text, photos, and prices in your Client Hub on your computer. Live in about a minute.</p></div>
+</article>
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-seo.webp" alt="A local search results page with your business as the top result" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
 
-        <!-- FAQ -->
-        <section id="faq" style="position: relative; padding: 80px 0 100px">
-          <div
-            class="wrap"
-            style="display: flex; flex-wrap: wrap; gap: 40px 64px; align-items: flex-start"
-          >
-            <div
-              style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 18px"
-            >
-              <p
-                class="pill cap"
-                style="margin: 0; align-self: flex-start; color: #3d3833"
-              >
-                <span aria-hidden="true" style="color: #fc8464">✦</span>FAQ
-              </p><h2 class="h2">Common questions</h2><p
-                style="margin: 0; font-size: 16px; color: #5a524b"
-              >
-                Still unsure? <button
-                  type="button"
-                  data-booking
-                  class="tlink"
-                  style="font-weight: 700;background:none;border:none;padding:0;font:inherit;cursor:pointer;"
-                  >Book a meeting</button
-                >
-              </p>
-            </div>
-            <div
-              class="card"
-              style="flex: 999 1 560px; min-width: 0; overflow: hidden"
-            >
-              <details
-                open=""
-                style="border-bottom: 1px solid rgba(34,31,28,0.07)"
-              >
-                <summary
-                  style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700"
-                  >What exactly do I get?<span
-                    aria-hidden="true"
-                    class="mono pm"
-                    style="font-size: 20px; color: #c4502e"></span></summary
-                ><p
-                  style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
-                >
-                  More leads. We run your Google Ads so the right searches find
-                  you, send them to a website built to turn clicks into calls,
-                  and track every lead to the keyword that drove it. We handle
-                  the campaigns, the site, hosting, and monthly reporting. You
-                  answer the phone.
-                </p>
-              </details>
-              <details style="border-bottom: 1px solid rgba(34,31,28,0.07)">
-                <summary
-                  style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700"
-                  >Is ad spend included?<span
-                    aria-hidden="true"
-                    class="mono pm"
-                    style="font-size: 20px; color: #c4502e"></span></summary
-                ><p
-                  style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
-                >
-                  No. Google bills ad spend to your card directly, so you see
-                  every dollar. Our monthly fee covers the website and managing
-                  your campaigns. The Launch plan covers up to $3,000 in monthly
-                  ad spend.
-                </p>
-              </details>
-              <details style="border-bottom: 1px solid rgba(34,31,28,0.07)">
-                <summary
-                  style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700"
-                  >What's your guarantee?<span
-                    aria-hidden="true"
-                    class="mono pm"
-                    style="font-size: 20px; color: #c4502e"></span></summary
-                ><p
-                  style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
-                >
-                  Before launch we agree in writing on how many qualified leads
-                  your campaigns should bring in. If we miss it within 90 days,
-                  walk away and keep your website and Google Ads account. A
-                  qualified lead is a tracked call of 60+ seconds or a real form
-                  inquiry. Applies while ad spend stays at the agreed level and
-                  leads are answered in business hours.
-                </p>
-              </details>
-              <details style="border-bottom: 1px solid rgba(34,31,28,0.07)">
-                <summary
-                  style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700"
-                  >Do I own the website?<span
-                    aria-hidden="true"
-                    class="mono pm"
-                    style="font-size: 20px; color: #c4502e"></span></summary
-                ><p
-                  style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
-                >
-                  Yes. Your code lives in your own GitHub, and your domain and
-                  Google Ads account are in your name from day one. If you ever
-                  leave, the site and the account go with you.
-                </p>
-              </details>
-              <details style="border-bottom: 1px solid rgba(34,31,28,0.07)">
-                <summary
-                  style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700"
-                  >What if I already have a website?<span
-                    aria-hidden="true"
-                    class="mono pm"
-                    style="font-size: 20px; color: #c4502e"></span></summary
-                ><p
-                  style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
-                >
-                  We'll look at it on the first call. Usually we rebuild it,
-                  because a site built to convert makes every ad dollar go
-                  further, and the build is included at no extra cost.
-                </p>
-              </details>
-              <details style="border-bottom: 1px solid rgba(34,31,28,0.07)">
-                <summary
-                  style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700"
-                  >Can I get just a website, without ads?<span
-                    aria-hidden="true"
-                    class="mono pm"
-                    style="font-size: 20px; color: #c4502e"></span></summary
-                ><p
-                  style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
-                >
-                  Yes. Our website-only plans {
-                    SHOW_PRICING ? `start at ${websiteSetup} setup + ${websiteMonthly}/mo and cover` : "cover"
-                  } custom design and build, set up in your own accounts, and
-                  editable with AI in Client Hub. You can add Google Ads later. Full details are on our <a
-                    href="/websites"
-                    class="tlink">Websites page</a
-                  >.
-                </p>
-              </details>
-              <details>
-                <summary
-                  style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700"
-                  >Where do you work?<span
-                    aria-hidden="true"
-                    class="mono pm"
-                    style="font-size: 20px; color: #c4502e"></span></summary
-                ><p
-                  style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b"
-                >
-                  Anywhere. We work with businesses in every city and region,
-                  and everything is handled online: calls, campaigns, the
-                  website, and reporting.
-                </p>
-              </details>
-            </div>
-          </div>
-        </section>
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Built to be found</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Technical SEO, structured data, and fast pages from day one, ready for Google and AI search.</p></div>
+</article>
+<article class="card lift" style="padding: 12px 12px 30px; display: flex; flex-direction: column; gap: 24px">
+<div style="position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">
+<img src="/images/agency/benefit-own.webp" alt="A website repository owned by you, linked to your domain, code and content" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
 
-        <!-- CONTACT with clouds -->
-        <section
-          id="contact"
-          style="position: relative; padding: 120px 0 180px; overflow: hidden"
-        >
-          <img
-            src="/images/agency/clouds.webp"
-            alt="Decorative clouds background"
-            aria-hidden="true"
-            style="position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; pointer-events: none"
-            width="2752"
-            height="1536"
-            loading="lazy"
-            decoding="async"
-          />
-          <div
-            class="wrap"
-            style="position: relative; display: flex; flex-wrap: wrap; gap: 48px 64px; align-items: center"
-          >
-            <div
-              style="flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 22px"
-            >
-              <p
-                class="pill cap"
-                style="margin: 0; align-self: flex-start; color: #3d3833"
-              >
-                <span
-                  class="blink"
-                  style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a"
-                ></span>Get in touch
-              </p>
-              <h2
-                style="margin: 0; max-width: 12ch; font-size: clamp(44px, 6vw, 76px); line-height: 1.02; font-weight: 800; letter-spacing: -0.045em; text-wrap: balance"
-              >
-                Let's get your phone <span style="color: #e0603d">ringing.</span
-                >
-              </h2>
-              <p
-                style="margin: 0; max-width: 460px; font-size: 18px; color: #5a524b"
-              >
-                Tell us about your business and your area. We'll reply with a
-                plan for your site and your ads.
-              </p>
-              <dl
-                style="margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 18px 24px"
-              >
-                <div>
-                  <dt class="cap" style="font-size: 11px; color: #6d645c">
-                    Email
-                  </dt><dd style="margin: 4px 0 0">
-                    <a
-                      href="mailto:agency@alisamadii.com"
-                      class="tlink"
-                      style="color: #221f1c; font-weight: 700"
-                      >agency@alisamadii.com</a
-                    >
-                  </dd>
-                </div>
-                <div>
-                  <dt class="cap" style="font-size: 11px; color: #6d645c">
-                    Schedule
-                  </dt><dd style="margin: 4px 0 0">
-                    <button
-                      type="button"
-                      data-booking
-                      class="tlink"
-                      style="color: #221f1c; font-weight: 700;background:none;border:none;padding:0;font:inherit;cursor:pointer;"
-                      >Book a Meeting</button
-                    >
-                  </dd>
-                </div>
-                <div>
-                  <dt class="cap" style="font-size: 11px; color: #6d645c">
-                    Phone
-                  </dt><dd style="margin: 4px 0 0">
-                    <a
-                      href="tel:+19713828969"
-                      class="tlink"
-                      style="color: #221f1c; font-weight: 700"
-                      >+1 (971) 382-8969</a
-                    >
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            <form
-              id="quote-form"
-              class="card quote-form"
-              data-lead-form="Quote"
-              data-success="Thanks, we'll reply within a day."
-              style="flex: 1 1 420px; max-width: 520px; padding: 32px; background: rgba(255,255,255,0.96); display: flex; flex-direction: column; gap: 14px"
-            >
-              <h3
-                style="margin: 0 0 4px; font-size: 24px; font-weight: 800; letter-spacing: -0.03em"
-              >
-                Get a free quote
-              </h3>
-              <div
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 12px"
-              >
-                <label
-                  style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"
-                  >Name<input
-                    class="fld"
-                    type="text"
-                    name="name"
-                    autocomplete="name"
-                    required
-                  /></label
-                >
-                <label
-                  style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"
-                  >Email<input
-                    class="fld"
-                    type="email"
-                    name="email"
-                    autocomplete="email"
-                    required
-                  /></label
-                >
-              </div>
-              <label
-                style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"
-                >I'm interested in
-                <select class="fld" name="plan" id="quote-plan">
-                  <option value="launch" selected
-                    >{
-                      SHOW_PRICING
-                        ? "Launch · $1,200/mo + $300 setup"
-                        : "Google Ads + website"
-                    }</option
-                  >
-                  <option value="website"
-                    >{
-                      SHOW_PRICING
-                        ? `Website only · from ${websiteSetup} + ${websiteMonthly}/mo`
-                        : "Website only"
-                    }</option
-                  >
-                  <option value="ecommerce">E-commerce storefront</option>
-                  <option value="newsletter"
-                    >Newsletter for my business · quoted</option
-                  >
-                  <option value="custom">Custom / not sure yet</option>
-                </select></label
-              >
-              <label
-                style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700"
-                >Your goals<textarea
-                  class="fld"
-                  name="message"
-                  required
-                  maxlength="2000"
-                  placeholder="What do you sell, where, and how do leads come in today?"
-                ></textarea></label
-              >
-              <input
-                type="text"
-                name="_hp"
-                tabindex="-1"
-                autocomplete="off"
-                aria-hidden="true"
-                style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"
-              />
-              <p
-                data-lead-message
-                role="status"
-                style="margin: 0; font-size: 14px; font-weight: 700"
-              >
-              </p>
-              <button
-                type="submit"
-                id="quote-submit"
-                class="btn cta"
-                style="width: 100%">Request a Quote</button
-              >
-            </form>
-          </div>
-        </section>
-      </main>
+</div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">You own everything</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Domain, code, and content are yours. Leave anytime and take it all with you.</p></div>
+</article>
+</div>
+</div>
+</section>
 
-      <dialog id="video-dialog" class="vdialog" aria-label="Watch how we build">
-        <button
-          type="button"
-          class="vclose"
-          data-video-close
-          aria-label="Close video">✕</button
-        >
-        <video
-          src={videoSrc}
-          poster="/images/agency/video-poster.webp"
-          controls
-          playsinline
-          preload="none"></video>
-      </dialog>
+<!-- SERVICES BENTO -->
+<section id="services" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px 48px">
+<div style="display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>What's included</p><h2 class="h2" style="max-width: 14ch">One plan. The whole website.</h2></div>
+<p style="flex: 0 1 420px; margin: 0; font-size: 17px; color: #5a524b">{SHOW_PRICING ? 'No add-on menus or surprise invoices. One setup fee for design and build, then one flat monthly for Client Hub and support.' : 'Every project is scoped on a short call and priced in writing before we start. Design, build, Client Hub and support, all in one place.'}</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 18px">
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px; background: #221f1c; color: #f6efe9; box-shadow: 0 30px 60px -30px rgba(34,31,28,0.6)">
+<span class="cap" style="color: #fc8464">01 · Design &amp; build</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Custom design, hand-coded</h3>
+<p style="margin: 0; font-size: 15px; color: #c9bfb5">Designed around your business and built from scratch on a modern stack. Never a template, never a page builder.</p>
+<div style="margin-top: auto; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 8px"><span class="mono" style="padding: 5px 10px; border-radius: 9999px; background: rgba(246,239,233,0.08); font-size: 11px">Mobile-first</span><span class="mono" style="padding: 5px 10px; border-radius: 9999px; background: rgba(246,239,233,0.08); font-size: 11px">Accessible</span><span class="mono" style="padding: 5px 10px; border-radius: 9999px; background: rgba(246,239,233,0.08); font-size: 11px">Fast</span></div>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">02 · Client Hub</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Edit anything, break nothing</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Change text, images, and pages by chatting with AI, preview it, then publish. Analytics and speed reports in one dashboard.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">03 · SEO</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Found on Google &amp; AI search</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Sitemap, schema, meta tags, Core Web Vitals, and Search Console, set up at launch.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">04 · Yours to keep</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Set up in your own accounts</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Domain, hosting, and code live in accounts you own, with full access from day one. No lock-in.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<span class="cap" style="color: #c4502e">05 · Newsletter</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Bring customers back</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Add our <a href="/newsletter" class="tlink">newsletter platform</a> to email past customers from your own domain.</p>
+</article>
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(160deg, #fff 30%, #ffe9df 100%)">
+<span class="cap" style="color: #c4502e">06 · Need more?</span>
+<h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Shopify stores &amp; web apps</h3>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Custom storefronts on your Shopify, web apps, and AI receptionists that answer calls and chats, quoted per project.</p>
+<a href="/services" class="tlink" style="margin-top: auto; font-size: 15px; font-weight: 700">See all services →</a>
+</article>
+</div>
+</div>
+</section>
 
-      <footer
-        style="position: relative; padding: 48px 0 40px; background: #1a1715; color: #c9bfb5"
-      >
-        <div
-          class="wrap"
-          style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px 40px"
-        >
-          <div
-            style="display: flex; flex-direction: column; gap: 10px; max-width: 440px"
-          >
-            <a
-              href="/"
-              class="tlink"
-              style="display: flex; align-items: center; gap: 10px; color: #fffdfb"
-              ><img
-                src="/images/agency/logo.png"
-                alt="Ali Samadi Agency logo"
-                style="width: 28px; height: 28px"
-                width="400"
-                height="400"
-                loading="lazy"
-                decoding="async"
-              /><span
-                style="font-size: 19px; font-weight: 800; letter-spacing: -0.03em"
-                >alisamadii</span
-              ></a
-            >
-            <p style="margin: 0; font-size: 14px">
-              Lead generation for businesses everywhere: Google Ads, websites
-              that convert, and email that brings customers back.
-            </p>
-          </div>
-          <div
-            class="foot-r"
-            style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px"
-          >
-            <p
-              class="cap"
-              style="margin: 0; display: flex; align-items: center; gap: 10px; color: #fffdfb"
-            >
-              <span
-                class="blink"
-                style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a"
-              ></span>Currently taking new clients
-            </p>
-            <p class="cap" style="margin: 0; font-size: 11px; color: #8a8076">
-              © Ali Samadii LLC d/b/a Ali Samadi Agency
-            </p>
-          </div>
-        </div>
-        <nav
-          aria-label="Footer"
-          class="wrap"
-          style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(246,239,233,0.08); display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 14px"
-        >
-          <a href="/websites" class="tlink" style="color: #c9bfb5">Websites</a
-          ><a href="/services" class="tlink" style="color: #c9bfb5">Services</a
-          >{
-            SHOW_PRICING && (
-              <a href="/pricing" class="tlink" style="color: #c9bfb5">
-                Pricing
-              </a>
-            )
-          }<a href="/locations" class="tlink" style="color: #c9bfb5"
-            >Locations</a
-          ><a href="/about" class="tlink" style="color: #c9bfb5">About</a><a
-            href="/work"
-            class="tlink"
-            style="color: #c9bfb5">Work</a
-          ><a href="/blog" class="tlink" style="color: #c9bfb5">Blog</a><a
-            href="/contact"
-            class="tlink"
-            style="color: #c9bfb5">Contact</a
-          ><a href="/privacy" class="tlink" style="color: #8a8076">Privacy</a><a
-            href="/terms"
-            class="tlink"
-            style="color: #8a8076">Terms</a
-          >
-        </nav>
-      </footer>
-    </div>
+<!-- HOW WE WORK -->
+<section id="how" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>How we work</p>
+<h2 class="h2" style="max-width: 15ch">From first call to live site, in three steps</h2>
+</div>
+<ol style="position: relative; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 24px">
+<li aria-hidden="true" class="hide-sm" style="position: absolute; left: 16%; right: 16%; top: 27px; border-top: 2px dashed rgba(252,132,100,0.5)"></li>
+<li style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"><span class="mono" style="width: 56px; height: 56px; border-radius: 9999px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 10px 24px -10px rgba(34,31,28,0.3); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #c4502e">01</span><h3 style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em">Free consultation</h3><p style="margin: 0; max-width: 300px; font-size: 15px; color: #5a524b">A short call about your business. You get a clear scope and a flat price in writing.</p></li>
+<li style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"><span class="mono" style="width: 56px; height: 56px; border-radius: 9999px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 10px 24px -10px rgba(34,31,28,0.3); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #c4502e">02</span><h3 style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em">Design &amp; build</h3><p style="margin: 0; max-width: 300px; font-size: 15px; color: #5a524b">You review real pages, not mockups. We write the copy and wire up SEO, forms, and analytics.</p></li>
+<li style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 0 12px"><span class="mono" style="width: 56px; height: 56px; border-radius: 9999px; background: #fc8464; box-shadow: 0 10px 24px -8px rgba(239,108,75,0.6); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #221f1c">03</span><h3 style="margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em">Launch &amp; we run it</h3><p style="margin: 0; max-width: 300px; font-size: 15px; color: #5a524b">Live on your domain. Hosting, updates, and edits are covered. Just message us.</p></li>
+</ol>
+</div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 48px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Projects</p><h2 class="h2">Real sites, in use today</h2></div>
+<a href="/work" class="btn dark">See all work ↗</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px">
+{projects.map((p) => (
+<a href={p.url} target="_blank" rel="noopener" class="card lift tlink" style="color: #221f1c; padding: 10px 10px 22px; display: flex; flex-direction: column; gap: 18px"><div style="aspect-ratio: 16 / 11; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)"><img src={p.image.src} alt={p.image.alt} style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block" width="1600" height="1000" loading="lazy" decoding="async"></div><div style="padding: 0 12px; display: flex; flex-direction: column; gap: 4px"><span class="cap" style="font-size: 11px; color: #6d645c">{p.category}</span><span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{p.name}</span><span style="font-size: 14px; color: #5a524b">{p.description.replace(' — ', ': ')}</span></div></a>
+))}
+</div>
+</div>
+</section>
+
+<!-- GOOGLE REVIEWS (Elfsight, lazy-loaded) -->
+<GoogleReviews />
+
+<!-- FEATURES: everything we can build, in category columns. Replaces the
+     priced plan cards while SHOW_PRICING is false. -->
+{!SHOW_PRICING && (
+<section id="features" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>What we can build</p>
+<h2 class="h2" style="max-width: 14ch">Pick what your business needs</h2>
+<p style="margin: 0; max-width: 520px; font-size: 17px; color: #5a524b">Every project is scoped around the features you pick, so the price depends on what's inside. Book a free call and we'll put it in writing.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); gap: 18px; align-items: stretch">
+{featureGroups.map((group, i) => (
+<article class="card lift" style={`padding: 32px; display: flex; flex-direction: column; gap: 26px${group.dark ? "; background: #221f1c; color: #f6efe9; box-shadow: 0 30px 60px -30px rgba(34,31,28,0.6)" : ""}`}>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="cap" style={`color: ${group.dark ? "#fc8464" : "#c4502e"}`}>0{i + 1} · {group.label}</span>
+<h3 style="margin: 0; font-size: 24px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">{group.title}</h3>
+</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 18px 24px">
+{group.features.map((f) => (
+<li style="display: flex; align-items: flex-start; gap: 12px">
+<span aria-hidden="true" style={`flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: ${group.dark ? "rgba(246,239,233,0.08)" : "rgba(252,132,100,0.14)"}; color: ${group.dark ? "#fc8464" : "#c4502e"}`}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={icons[f.icon]} /></span>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<span style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3">{f.name}{f.isNew && <span class="cap" style="padding: 2px 8px; border-radius: 9999px; background: #fc8464; color: #221f1c; font-size: 10px">New</span>}</span>
+{f.note && <span style={`font-size: 13px; line-height: 1.45; color: ${group.dark ? "#c9bfb5" : "#6d645c"}`}>{f.note}</span>}
+</span>
+</li>
+))}
+</ul>
+</article>
+))}
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px">
+<a href={quoteHref} class="btn cta">Get a free consultation</a>
+<a href={customQuoteHref} class="btn dark" style="min-height: 54px; padding: 0 28px; font-size: 16px">Request a custom quote</a>
+</div>
+<p class="cap" style="margin: 0; color: #6d645c">A free 20-minute call · scope and price in writing · no obligation</p>
+</div>
+</div>
+</section>
+)}
+
+<!-- PRICING: plan cards + add-ons, only while SHOW_PRICING is true -->
+{SHOW_PRICING && (
+<section id="pricing" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Pricing</p>
+<h2 class="h2">Simple, flat pricing</h2>
+<p style="margin: 0; max-width: 480px; font-size: 17px; color: #5a524b">Pick a plan, pay one setup fee, then one flat monthly. In writing before we start, no hidden fees.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 1100px; margin: 0 auto">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 18px; align-items: stretch">
+{WEBSITE_PLANS.map((plan) => (
+<article class="card" style={`padding: 32px; display: flex; flex-direction: column; gap: 18px${plan.featured ? "; box-shadow: 0 0 0 2px #fc8464, 0 30px 60px -24px rgba(239,108,75,0.45)" : ""}`}>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">{plan.name}</h3>{plan.featured && <span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: #fc8464; font-size: 10.5px">Most popular</span>}</div>
+<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">{fmtPrice(plan.setup)}</span> <span class="mono" style="font-size: 14px; color: #6d645c">setup + {fmtPrice(plan.monthly)}/mo</span></p>
+<p style="margin: 0; font-size: 15px; color: #5a524b">{plan.blurb}</p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
+{plan.features.map((f) => <li><span aria-hidden="true" style="color: #2f8a4a">✓</span> {f}</li>)}
+</ul>
+<a href={`/quote?plan=${plan.id}`} class={plan.featured ? "btn cta" : "btn dark"} style="margin-top: auto; justify-content: center">Get a free consultation</a>
+</article>
+))}
+<article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px"><h3 style="margin: 0; font-size: 20px; font-weight: 800">Custom</h3><span class="cap" style="padding: 4px 10px; border-radius: 9999px; background: rgba(34,31,28,0.06); font-size: 10.5px">Scoped to you</span></div>
+<p style="margin: 0"><span style="font-size: 44px; font-weight: 800; letter-spacing: -0.04em">Let's talk</span></p>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Need an online store, a web app, or booking integrations? We quote after a short discovery call.</p>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Custom Shopify storefronts</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Web apps &amp; client portals</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Booking, CRM &amp; payment integrations</li>
+<li><span aria-hidden="true" style="color: #2f8a4a">✓</span> Set up in your own accounts</li>
+</ul>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px">
+<a href="/quote?plan=ecommerce" class="btn dark" style="justify-content: center">Request a custom quote</a>
+<a href="/ecommerce" class="tlink" style="text-align: center; font-size: 14px; font-weight: 600">How our storefronts work →</a>
+</div>
+</article>
+</div>
+{addOns.map((addOn) => (
+<article class="card" style="padding: 28px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 32px">
+<div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap"><h3 style="margin: 0; font-size: 20px; font-weight: 800">{addOn.title}</h3><span class="mono" style="font-size: 14px; color: #6d645c">{addOn.tag}</span></div>
+<p style="margin: 0; font-size: 15px; color: #5a524b">{addOn.blurb}</p>
+{addOn.fine && <p style="margin: 0; font-size: 13px; color: #6d645c">{addOn.fine}</p>}
+</div>
+<ul style="flex: 1 1 280px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 15px">
+{addOn.features.map((f) => <li><span aria-hidden="true" style="color: #2f8a4a">✓</span> {f}</li>)}
+</ul>
+<a href={`/quote?plan=${addOn.id}`} class="btn dark" style="flex: 0 0 auto; min-width: 170px; justify-content: center">{addOn.cta}</a>
+</article>
+))}
+</div>
+</div>
+</section>
+)}
+
+<!-- FAQ -->
+<section id="faq" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-wrap: wrap; gap: 40px 64px; align-items: flex-start">
+<div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>FAQ</p><h2 class="h2">Good questions</h2></div>
+<div class="card" style="flex: 999 1 560px; min-width: 0; overflow: hidden">
+{faqs.map((f, i) => (
+<details open={i === 0} style={i < faqs.length - 1 ? 'border-bottom: 1px solid rgba(34,31,28,0.07)' : undefined}><summary style="min-height: 64px; padding: 20px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 700">{f.q}<span aria-hidden="true" class="mono pm" style="font-size: 20px; color: #c4502e"></span></summary><p style="margin: 0; padding: 0 26px 22px; font-size: 15px; line-height: 1.65; color: #5a524b">{f.a}</p></details>
+))}
+</div>
+</div>
+</section>
+
+<!-- CTA with clouds -->
+<section id="contact" style="position: relative; padding: 140px 0 220px; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 100%; pointer-events: none; background: radial-gradient(60% 70% at 8% 100%, rgba(252,132,100,0.55), transparent 70%), radial-gradient(55% 65% at 92% 100%, rgba(255,181,154,0.75), transparent 70%), radial-gradient(70% 55% at 50% 105%, rgba(252,132,100,0.45), transparent 70%), radial-gradient(40% 40% at 30% 80%, rgba(255,227,214,0.9), transparent 70%), radial-gradient(40% 40% at 72% 78%, rgba(255,227,214,0.9), transparent 70%), linear-gradient(to bottom, rgba(255,253,251,0), rgba(255,214,196,0.55)); filter: blur(6px)"></div>
+<img src="/images/agency/clouds.webp" alt="Decorative clouds background" aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; pointer-events: none" width="2752" height="1536" loading="lazy" decoding="async">
+<div class="wrap" style="position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a"></span>Taking new projects</p>
+<h2 style="margin: 0; max-width: 14ch; font-size: clamp(44px, 6vw, 80px); line-height: 1.02; font-weight: 800; letter-spacing: -0.045em; text-wrap: balance">Let's build <span style="color: #e0603d">yours.</span></h2>
+<p style="margin: 0; max-width: 520px; font-size: 18px; color: #5a524b">A free 20-minute call. You'll leave with a plan and a flat price, whether or not you hire us.</p>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px">
+<a href={quoteHref} class="btn cta">Get a free consultation</a>
+<a href="tel:+19713828969" class="btn dark" style="min-height: 54px">+1 (971) 382-8969</a>
+</div>
+</div>
+</section>
+</main>
+
+<footer style="position: relative; padding: 28px 0 120px; background: #fffdfb">
+<div class="wrap" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px">
+<p class="cap" style="margin: 0; color: #6d645c">© Ali Samadii LLC d/b/a Ali Samadi Agency</p>
+<p class="cap" style="margin: 0; display: flex; flex-wrap: wrap; gap: 8px 20px"><a href="/lead-generation" class="tlink" style="color: #3d3833">Lead generation</a><a href="/services" class="tlink" style="color: #3d3833">Services</a><a href="/work" class="tlink" style="color: #3d3833">Work</a><a href="/about" class="tlink" style="color: #3d3833">About</a><a href="/blog" class="tlink" style="color: #3d3833">Blog</a><a href="/contact" class="tlink" style="color: #3d3833">Contact</a><a href="/privacy" class="tlink" style="color: #3d3833">Privacy</a><a href="/terms" class="tlink" style="color: #3d3833">Terms</a></p>
+</div>
+</footer>
+
+<!-- floating nav -->
+<nav aria-label="Page" style="position: fixed; z-index: 50; left: 50%; bottom: 22px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 7px; border-radius: 9999px; background: rgba(255,253,251,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 20px 40px -16px rgba(34,31,28,0.35)">
+<a href="#top" aria-label="Back to top" class="tlink" style="width: 46px; height: 46px; border-radius: 9999px; background: linear-gradient(180deg, #ff9a7c, #ef6c4b); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5)"><img src="/images/agency/logo.png" alt="Ali Samadi Agency logo" style="width: 26px; height: 26px; border-radius: 6px" width="400" height="400" loading="lazy" decoding="async"></a>
+<span class="cap hide-sm" style="display: flex; gap: 6px; padding: 0 10px">
+<a href="#benefits" class="navlink">Benefits</a><a href="#services" class="navlink">Services</a><a href="#how" class="navlink">How we work</a><a href="#projects" class="navlink">Projects</a>{SHOW_PRICING ? <a href="#pricing" class="navlink">Pricing</a> : <a href="#features" class="navlink">Features</a>}
+</span>
+<details class="wmenu show-sm">
+<summary class="btn" aria-label="Menu" style="display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: 9999px; background: rgba(34,31,28,0.06); color: #221f1c; font-size: 15px; font-weight: 700"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>Menu</summary>
+<div class="wmenu-panel" style="position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); width: min(340px, calc(100vw - 24px)); padding: 8px 18px 16px; border-radius: 24px; background: rgba(255,253,251,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 30px 60px -20px rgba(34,31,28,0.45); display: flex; flex-direction: column">
+<a href="#benefits" class="wlink">Benefits<span aria-hidden="true">→</span></a>
+<a href="#services" class="wlink">Services<span aria-hidden="true">→</span></a>
+<a href="#how" class="wlink">How we work<span aria-hidden="true">→</span></a>
+<a href="#projects" class="wlink">Projects<span aria-hidden="true">→</span></a>
+{SHOW_PRICING ? <a href="#pricing" class="wlink">Pricing<span aria-hidden="true">→</span></a> : <a href="#features" class="wlink">Features<span aria-hidden="true">→</span></a>}
+<a href="#faq" class="wlink">FAQ<span aria-hidden="true">→</span></a>
+<a href="tel:+19713828969" class="wlink" style="border-bottom: 0">Call +1 (971) 382-8969<span aria-hidden="true">↗</span></a>
+</div>
+</details>
+<a href="#contact" class="btn dark">Let's talk</a>
+</nav>
+
+</div>
     <script>
-      // Mobile menu
-      const menuBtn = document.getElementById("menu-btn");
-      const menu = document.getElementById("mobile-menu");
-      const setMenu = (open: boolean) => {
-        if (!menuBtn || !menu) return;
-        menu.hidden = !open;
-        menuBtn.setAttribute("aria-expanded", String(open));
-        menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-      };
-      menuBtn?.addEventListener("click", () => setMenu(menu?.hidden ?? false));
-      document
-        .querySelectorAll("[data-close-menu]")
-        .forEach((el) => el.addEventListener("click", () => setMenu(false)));
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") setMenu(false);
-      });
-      matchMedia("(min-width: 901px)").addEventListener("change", (e) => {
-        if (e.matches) setMenu(false);
-      });
-
-      // Pricing buttons preselect the plan in the quote form (?plan= works too)
-      const planSelect = document.getElementById(
-        "quote-plan"
-      ) as HTMLSelectElement | null;
-      const qp = new URLSearchParams(location.search).get("plan");
-      if (
-        planSelect &&
-        qp &&
-        [...planSelect.options].some((o) => o.value === qp)
-      )
-        planSelect.value = qp;
-      document.querySelectorAll<HTMLElement>("[data-plan]").forEach((el) =>
-        el.addEventListener("click", () => {
-          if (planSelect && el.dataset.plan) planSelect.value = el.dataset.plan;
-        })
-      );
-
-      // Submission is handled by the shared lead-capture script (leads.js) via the
-      // form's data-lead-form attribute; nothing to wire up here.
-
-      // Video dialog
-      const dlg = document.getElementById(
-        "video-dialog"
-      ) as HTMLDialogElement | null;
-      const vid = dlg?.querySelector("video");
-      document.querySelectorAll("[data-video-open]").forEach((b) =>
-        b.addEventListener("click", (e) => {
-          if (!dlg) return;
-          e.preventDefault();
-          dlg.showModal();
-          vid?.play().catch(() => {});
-        })
-      );
-
-      // Scroll reveal: fade + slide up once (no blur: filter on whole sections is GPU-heavy), as each block enters the viewport.
-      // Content stays visible without JS (the hidden state needs .js-reveal).
-      if (
-        !matchMedia("(prefers-reduced-motion: reduce)").matches &&
-        "IntersectionObserver" in window
-      ) {
-        document.documentElement.classList.add("js-reveal");
-        const io = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((en) => {
-              if (!en.isIntersecting) return;
-              en.target.classList.add("in");
-              io.unobserve(en.target);
-            });
-          },
-          { rootMargin: "0px 0px -12% 0px" }
-        );
-        document
-          .querySelectorAll(
-            ".reveal, main > section:not(.hero):not(#video) > .wrap"
-          )
-          .forEach((el) => {
-            el.classList.add("reveal");
-            io.observe(el);
-          });
-      }
-      dlg
-        ?.querySelector("[data-video-close]")
-        ?.addEventListener("click", () => dlg.close());
-      dlg?.addEventListener("click", (e) => {
-        if (e.target === dlg) dlg.close();
-      });
-      dlg?.addEventListener("close", () => vid?.pause());
+      // Mobile menu (a <details> in the floating pill): close after picking a link
+      const wmenu = document.querySelector<HTMLDetailsElement>('.wmenu');
+      wmenu?.querySelectorAll('a').forEach((l) => l.addEventListener('click', () => (wmenu.open = false)));
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wmenu) wmenu.open = false; });
+      document.addEventListener('click', (e) => { if (wmenu?.open && !wmenu.contains(e.target as Node)) wmenu.open = false; });
     </script>
     <Fragment set:html={captureScripts} />
   </body>
 </html>
 
 <style is:global>
-  body {
-    margin: 0;
-    background: #fffdfb;
-  }
-  * {
-    box-sizing: border-box;
-  }
-  a {
-    color: #c4502e;
-  }
-  .mono {
-    font-family: "Fragment Mono", ui-monospace, monospace;
-    letter-spacing: 0.02em;
-  }
-  .cap {
-    font-family: "Fragment Mono", ui-monospace, monospace;
-    font-size: 12.5px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  .wrap {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding-left: clamp(20px, 4vw, 40px);
-    padding-right: clamp(20px, 4vw, 40px);
-  }
-  .h2 {
-    margin: 0;
-    font-size: clamp(34px, 4.4vw, 56px);
-    line-height: 1.04;
-    font-weight: 800;
-    letter-spacing: -0.04em;
-    color: #221f1c;
-    text-wrap: balance;
-  }
-  .night .h2 {
-    color: #fffdfb;
-  }
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 7px 14px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow:
-      0 0 0 1px rgba(34, 31, 28, 0.08),
-      0 6px 18px rgba(34, 31, 28, 0.06);
-  }
-  .night .pill {
-    background: rgba(246, 239, 233, 0.06);
-    box-shadow: inset 0 0 0 1px rgba(246, 239, 233, 0.12);
-    color: #d8cec5;
-  }
-  .btn {
-    cursor: pointer;
-    border: 0;
-    font-family: inherit;
-    text-decoration: none;
-    transition:
-      transform 160ms cubic-bezier(0.2, 0.7, 0.2, 1),
-      box-shadow 200ms,
-      background-color 200ms,
-      color 200ms;
-  }
-  .btn:active {
-    transform: scale(0.97);
-  }
-  .cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    min-height: 54px;
-    padding: 0 28px;
-    border-radius: 9999px;
-    background: linear-gradient(180deg, #ff9a7c 0%, #fc8464 45%, #ef6c4b 100%);
-    color: #221f1c;
-    font-size: 16px;
-    font-weight: 700;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      0 0 0 1px rgba(196, 80, 46, 0.35),
-      0 12px 30px -8px rgba(239, 108, 75, 0.6);
-  }
-  .cta:hover {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      0 0 0 1px rgba(196, 80, 46, 0.45),
-      0 18px 40px -8px rgba(239, 108, 75, 0.75);
-  }
-  .ghost-d {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 52px;
-    padding: 0 24px;
-    border-radius: 9999px;
-    color: #f6efe9;
-    box-shadow: inset 0 0 0 1px rgba(246, 239, 233, 0.25);
-    font-size: 15px;
-    font-weight: 700;
-  }
-  .ghost-d:hover {
-    box-shadow: inset 0 0 0 1px #fc8464;
-    color: #fc8464;
-  }
-  .ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 54px;
-    padding: 0 22px 0 7px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.85);
-    color: #221f1c;
-    font-size: 16px;
-    font-weight: 700;
-    box-shadow:
-      0 0 0 1px rgba(34, 31, 28, 0.1),
-      0 10px 24px -14px rgba(34, 31, 28, 0.4);
-  }
-  .ghost:hover {
-    background: #fff;
-  }
-  .tlink {
-    text-decoration: none;
-  }
-  .tlink:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  :focus-visible {
-    outline: 2px solid #c4502e;
-    outline-offset: 3px;
-  }
-  .night :focus-visible,
-  .topnav :focus-visible {
-    outline-color: #fc8464;
-  }
-  .card {
-    border-radius: 24px;
-    background: #fff;
-    box-shadow:
-      0 0 0 1px rgba(34, 31, 28, 0.06),
-      0 1px 2px rgba(34, 31, 28, 0.04),
-      0 18px 40px -20px rgba(34, 31, 28, 0.18);
-  }
-  .lift {
-    transition:
-      transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1),
-      box-shadow 260ms;
-  }
-  .lift:hover {
-    transform: translateY(-4px);
-    box-shadow:
-      0 0 0 1px rgba(34, 31, 28, 0.06),
-      0 30px 60px -24px rgba(34, 31, 28, 0.28);
-  }
-  .navlink {
-    color: #c9bfb5;
-    text-decoration: none;
-    padding: 8px 4px;
-  }
-  .navlink:hover {
-    color: #fffdfb;
-  }
-  .svc {
-    padding: 9px 16px;
-    border-radius: 9999px;
-    background: #fff;
-    box-shadow: 0 0 0 1px rgba(34, 31, 28, 0.1);
-    color: #221f1c;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-    transition:
-      background-color 200ms,
-      color 200ms;
-  }
-  .svc:hover {
-    background: #221f1c;
-    color: #fffdfb;
-  }
-  .fld {
-    width: 100%;
-    height: 50px;
-    padding: 0 16px;
-    border-radius: 14px;
-    border: 1px solid rgba(34, 31, 28, 0.14);
-    background: #fffdfb;
-    font-family: inherit;
-    font-size: 15px;
-    color: #221f1c;
-  }
-  textarea.fld {
-    height: 116px;
-    padding: 14px 16px;
-    resize: vertical;
-  }
-  select.fld {
-    appearance: none;
-    background-image:
-      linear-gradient(45deg, transparent 50%, #221f1c 50%),
-      linear-gradient(135deg, #221f1c 50%, transparent 50%);
-    background-position:
-      calc(100% - 22px) 22px,
-      calc(100% - 16px) 22px;
-    background-size:
-      6px 6px,
-      6px 6px;
-    background-repeat: no-repeat;
-  }
-  .fld:focus {
-    outline: 2px solid #fc8464;
-    outline-offset: 1px;
-    border-color: transparent;
-  }
-  details summary {
-    list-style: none;
-    cursor: pointer;
-  }
-  details summary::-webkit-details-marker {
-    display: none;
-  }
-  details .pm::after {
-    content: "+";
-  }
-  details[open] .pm::after {
-    content: "−";
-  }
-  .playbtn:hover {
-    background: #fc8464 !important;
-    color: #221f1c !important;
-  }
-  .blink {
-    animation: blink 2s ease-in-out infinite;
-  }
-  @keyframes blink {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.35;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .blink {
-      animation: none;
-    }
-  }
-  .show-sm {
-    display: none !important;
-  }
-  .mpanel {
-    display: none;
-  }
-  .burger {
-    width: 46px;
-    height: 46px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #fffdfb;
-    align-items: center;
-    justify-content: center;
-  }
-  .burger:hover {
-    background: rgba(255, 255, 255, 0.14);
-  }
-  .mlink {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 4px;
-    border-bottom: 1px solid rgba(246, 239, 233, 0.08);
-    color: #f6efe9;
-    font-size: 17px;
-    font-weight: 700;
-    text-decoration: none;
-  }
-  .mlink:hover {
-    color: #fc8464;
-  }
-  @media (max-width: 900px) {
-    .hide-sm {
-      display: none !important;
-    }
-    .show-sm {
-      display: inline-flex !important;
-    }
-    .mpanel {
-      display: flex;
-    }
-    .hero {
-      min-height: 0 !important;
-      padding-top: 124px !important;
-      display: flex;
-      flex-direction: column;
-    }
-    .hero-copy {
-      order: 1;
-    }
-    .hero-ov {
-      display: none !important;
-    }
-    .hero-img {
-      order: 2;
-      position: relative !important;
-      inset: auto !important;
-      display: block;
-      width: 100% !important;
-      height: auto !important;
-      aspect-ratio: 1 / 1;
-      margin-top: 28px;
-      object-position: 78% 100% !important;
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
-      mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
-    }
-    .vband {
-      background: linear-gradient(
-        to bottom,
-        #181411 0,
-        #181411 150px,
-        #fffdfb 150px
-      ) !important;
-      padding-top: 8px !important;
-    }
-    .vstack {
-      gap: 56px !important;
-    }
-    main > section:not(.hero):not(.vband) {
-      padding-top: 76px !important;
-      padding-bottom: 76px !important;
-    }
-  }
-  @media (max-width: 900px) {
-    .hero {
-      background: #fffdfb !important;
-      padding-top: 120px !important;
-      padding-bottom: 40px !important;
-    }
-    .hero-img {
-      display: none !important;
-    }
-    #video {
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
-    }
-  }
-  @media (max-width: 1279px) {
-    .hero {
-      min-height: 0 !important;
-      padding-bottom: 40px !important;
-      background: #fffdfb !important;
-    }
-    .hero-img,
-    .hero-ov {
-      display: none !important;
-    }
-    .vchip {
-      display: none !important;
-    }
-  }
-  @media (max-width: 900px) {
-    .strip {
-      padding-top: 56px !important;
-      padding-bottom: 16px !important;
-    }
-    .foot-r {
-      align-items: flex-start !important;
-    }
-  }
-  @media (max-width: 560px) {
-    .navcta {
-      display: none !important;
-    }
-    .hero-btns > a {
-      flex: 1 1 100%;
-      justify-content: center;
-    }
-  }
+body{margin:0;background:#fffdfb}
+*{box-sizing:border-box}
+a{color:#c4502e}
+.mono{font-family:'Fragment Mono',ui-monospace,monospace;letter-spacing:0.02em}
+.cap{font-family:'Fragment Mono',ui-monospace,monospace;font-size:12.5px;letter-spacing:0.06em;text-transform:uppercase}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding-left:clamp(20px,4vw,40px);padding-right:clamp(20px,4vw,40px)}
+.h2{margin:0;font-size:clamp(34px,4.4vw,56px);line-height:1.04;font-weight:800;letter-spacing:-0.04em;color:#221f1c;text-wrap:balance}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:9999px;background:rgba(255,255,255,0.8);box-shadow:0 0 0 1px rgba(34,31,28,0.08),0 6px 18px rgba(34,31,28,0.06)}
+.btn{cursor:pointer;border:0;font-family:inherit;text-decoration:none;transition:transform 160ms cubic-bezier(0.2,0.7,0.2,1),box-shadow 200ms,background-color 200ms,color 200ms}
+.btn:active{transform:scale(0.97)}
+.cta{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:0 28px;border-radius:9999px;background:linear-gradient(180deg,#ff9a7c 0%,#fc8464 45%,#ef6c4b 100%);color:#221f1c;font-size:16px;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,0.55),0 0 0 1px rgba(196,80,46,0.35),0 12px 30px -8px rgba(239,108,75,0.6)}
+.cta:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,0.55),0 0 0 1px rgba(196,80,46,0.45),0 18px 40px -8px rgba(239,108,75,0.75)}
+.dark{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 22px;border-radius:9999px;background:#221f1c;color:#fffdfb;font-size:15px;font-weight:700}
+.dark:hover{background:#000}
+.tlink{text-decoration:none}
+.tlink:hover{text-decoration:underline;text-underline-offset:3px}
+:focus-visible{outline:2px solid #c4502e;outline-offset:3px}
+.card{border-radius:24px;background:#fff;box-shadow:0 0 0 1px rgba(34,31,28,0.06),0 1px 2px rgba(34,31,28,0.04),0 18px 40px -20px rgba(34,31,28,0.18)}
+.lift{transition:transform 260ms cubic-bezier(0.2,0.7,0.2,1),box-shadow 260ms}
+.lift:hover{transform:translateY(-4px);box-shadow:0 0 0 1px rgba(34,31,28,0.06),0 30px 60px -24px rgba(34,31,28,0.28)}
+.navlink{color:#3d3833;text-decoration:none;padding:8px 6px;border-radius:8px}
+.navlink:hover{color:#c4502e}
+.dots{background-image:radial-gradient(#221f1c 1.2px,transparent 1.6px);background-size:18px 18px;-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 0%,#000 0%,transparent 70%);opacity:0.22}
+.ph{background-color:#fbefe9;background-image:repeating-linear-gradient(135deg,rgba(34,31,28,0.04) 0 1px,transparent 1px 12px)}
+details summary{list-style:none;cursor:pointer}
+details summary::-webkit-details-marker{display:none}
+details .pm::after{content:'+'}
+details[open] .pm::after{content:'−'}
+.blink{animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+@media (prefers-reduced-motion: reduce){.blink{animation:none}}
+.show-sm{display:none !important}
+.wmenu{position:static}
+.wmenu summary{list-style:none}
+.wmenu summary::-webkit-details-marker{display:none}
+.wlink{display:flex;justify-content:space-between;align-items:center;padding:13px 4px;border-bottom:1px solid rgba(34,31,28,0.07);color:#221f1c;font-size:16px;font-weight:700;text-decoration:none}
+.wlink span{color:#c4502e}
+.wlink:hover{color:#c4502e}
+@media (max-width:860px){.hide-sm{display:none !important}.show-sm{display:block !important}}
 
-  .mpanel[hidden] {
-    display: none !important;
-  }
-  .burger .ico-close {
-    display: none;
-  }
-  .burger[aria-expanded="true"] .ico-close {
-    display: block;
-  }
-  .burger[aria-expanded="true"] .ico-open {
-    display: none;
-  }
-  html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 96px;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-  }
-  .vdialog {
-    width: min(1100px, 94vw);
-    padding: 0;
-    border: 0;
-    border-radius: 20px;
-    background: #000;
-    overflow: visible;
-  }
-  .vdialog::backdrop {
-    background: rgba(26, 23, 21, 0.82);
-    backdrop-filter: blur(6px);
-  }
-  .vdialog video {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 20px;
-  }
-  .vclose {
-    position: absolute;
-    top: -48px;
-    right: 0;
-    width: 40px;
-    height: 40px;
-    border: 0;
-    border-radius: 9999px;
-    background: #fffdfb;
-    color: #221f1c;
-    font-size: 16px;
-    cursor: pointer;
-  }
-
-  /* ── Motion ─────────────────────────────────────────────────────────── */
-
-  @keyframes ping {
-    0% {
-      transform: scale(1);
-      opacity: 0.55;
-    }
-    80%,
-    100% {
-      transform: scale(1.9);
-      opacity: 0;
-    }
-  }
-  @keyframes dlgIn {
-    from {
-      opacity: 0;
-      transform: translateY(12px) scale(0.97);
-      filter: blur(6px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-      filter: blur(0);
-    }
-  }
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .play-dot {
-    isolation: isolate;
-  }
-  .play-dot::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 9999px;
-    background: #221f1c;
-    animation: ping 2.4s cubic-bezier(0, 0, 0.2, 1) 1.4s infinite;
-    z-index: -1;
-  }
-  .play-ico {
-    transition: transform 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  .watch:hover .play-ico,
-  .playbtn:hover .play-ico {
-    transform: scale(1.15);
-  }
-  .js-reveal .reveal {
-    opacity: 0;
-    transform: translateY(24px);
-    transition:
-      opacity 900ms cubic-bezier(0.2, 0.7, 0.2, 1),
-      transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  .js-reveal .reveal.in {
-    opacity: 1;
-    transform: none;
-  }
-  .vdialog[open] {
-    animation: dlgIn 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  .vdialog[open]::backdrop {
-    animation: fadeIn 320ms ease-out;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hero-img,
-    .play-dot::after,
-    .vdialog[open],
-    .vdialog[open]::backdrop {
-      animation: none;
-    }
-    .js-reveal .reveal {
-      opacity: 1;
-      transform: none;
-      filter: none;
-      transition: none;
-    }
-  }
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+@media (max-width:860px){
+main > section:not(:first-child){padding-top:72px !important;padding-bottom:72px !important}
+main > section:first-child{min-height:0 !important}
+}
 </style>

@@ -1,13 +1,13 @@
-# Agency homepage content (growth partnership)
+# Agency lead generation page content (growth partnership)
 
-Source: https://www.alisamadii.com/ (apps/agency/src/pages/index.astro + src/html/main/home.html + src/components/GrowthPlans.astro)
+Source: https://www.alisamadii.com/lead-generation (apps/agency/src/pages/lead-generation.astro + src/html/main/home.html + src/components/GrowthPlans.astro). This page was the homepage until the website offer moved to `/` and `/websites` became a 301 to it.
 
 - **Title:** Jacksonville Lead Generation Agency | Google Ads + Websites
 - **Meta description:** More calls and booked jobs for local service businesses: managed Google Ads, a website built to convert, and every lead tracked. One monthly price.
 
 > Notes for the redesign:
 > - Copy is pulled from the rendered live page. Prices, plan names, the guarantee and FAQ come from `apps/agency/src/data/pricing.ts`, so keep reading from there instead of hardcoding them.
-> - Hidden behind flags in `src/pages/index.astro` (don't bring them back): the client work section, the reviews section, and the proof strip.
+> - Hidden behind flags in `src/pages/lead-generation.astro` (don't bring them back): the client work section, the reviews section, and the proof strip.
 > - Rules: no em dashes, no invented results, numbers or testimonials. Accent color is coral #fc8464.
 > - Every "Start a Project" button goes to `/quote?plan=<id>` (launch, growth, scale, website, ecommerce, newsletter, custom). Quote success fires GA4 `generate_lead` plus the Google Ads conversion, so keep `QuoteForm.astro`.
 
@@ -256,7 +256,7 @@ GET LEADS
 [Locations](/locations)
 WEBSITES
 
-[Local Business Websites](/websites)
+[Local Business Websites](/)
 [Web Development](/services/web-development)
 [E-commerce](/ecommerce)
 [UI/UX Design](/services/ui-ux-design)

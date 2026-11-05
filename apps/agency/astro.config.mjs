@@ -13,7 +13,9 @@ export default defineConfig({
   adapter: node({ mode: "standalone" }),
   trailingSlash: "never",
   // Jacksonville pages were removed (agency no longer markets one city).
+  // /websites became the homepage (lead-gen moved to /lead-generation).
   redirects: {
+    "/websites": { status: 301, destination: "/" },
     "/locations/jacksonville": "/locations",
     "/blog/how-much-does-a-website-cost-jacksonville": "/blog",
   },

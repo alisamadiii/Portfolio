@@ -129,7 +129,7 @@ To put it all in one place — email sending on my client sites means:
 - Spam-filtered and locked to your inbox
 - Set up as part of your website build, no extra plan
 
-If your current website's contact form goes to a Gmail address, or worse, goes nowhere and you've been wondering why it's so quiet — [get in touch](/#contact). The form on my site uses exactly the system described above, so consider your first message a product demo. If it doesn't arrive, I owe you a very awkward apology.
+If your current website's contact form goes to a Gmail address, or worse, goes nowhere and you've been wondering why it's so quiet — [get in touch](/contact). The form on my site uses exactly the system described above, so consider your first message a product demo. If it doesn't arrive, I owe you a very awkward apology.
 
 ## Straight answers
 

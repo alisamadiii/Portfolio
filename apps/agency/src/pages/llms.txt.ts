@@ -43,7 +43,8 @@ export const GET: APIRoute = async () => {
 
 ## Pages
 
-- [Home](https://www.alisamadii.com/): how we bring in leads, plans, and FAQ.
+- [Home: Websites for Small Businesses](https://www.alisamadii.com/): a custom website, designed, built, and set up in your own accounts, editable with AI through Client Hub. Features: custom design and development, Client Hub AI editing, own-account setup, SEO, analytics and speed reports, Google Business Profile optimization, NFC review cards and QR review links, Shopify stores, web apps, AI receptionist and chatbot. Custom quote after a free consultation.
+- [Lead Generation](https://www.alisamadii.com/lead-generation): the growth partnership. Managed Google Ads plus a website built to convert, every call and form tracked to its source, a 90-day lead guarantee, and FAQ.
 - [About](https://www.alisamadii.com/about): who we are, how we bring in leads, the founder.
 - [Work](https://www.alisamadii.com/work): websites built for clients and concept projects.
 - [Services](https://www.alisamadii.com/services): everything we offer.
@@ -51,7 +52,6 @@ export const GET: APIRoute = async () => {
 - [Contact](https://www.alisamadii.com/contact): email, booking, phone.
 - [Blog](https://www.alisamadii.com/blog): articles on Google Ads, local search, and websites that convert.
 - [Docs](https://www.alisamadii.com/docs): plain-language guides — the Client Hub dashboard, the build/handoff process, and client ownership.
-- [Websites for Small Businesses](https://www.alisamadii.com/websites): a custom website without ads, designed, built, and set up in your own accounts, editable with AI through Client Hub. Features: custom design and development, Client Hub AI editing, own-account setup, SEO, analytics and speed reports, Google Business Profile optimization, NFC review cards and QR review links, Shopify stores, web apps, AI receptionist and chatbot. Custom quote after a free consultation.
 - [Business Newsletter](https://www.alisamadii.com/newsletter): a managed email newsletter for businesses, own domain, branded templates, writing and sending handled. ${fmtPrice(NEWSLETTER.monthly)}/mo add-on.
 - [Pest Control Lead Generation](https://www.alisamadii.com/pest-control): managed Google Ads for pest control companies plus a website with click-to-call, per-pest and per-city pages, review walls, and booking forms. From ${fmtPrice(FROM_PRICE)}/mo.
 

@@ -84,10 +84,10 @@ It is **the client's budget that Google charges them**, not money you receive. E
 
 ### Website changes, in short
 
-- **Homepage:** "More calls, more booked jobs, more revenue". Ads first, website second.
+- **Lead generation page (`/lead-generation`, the homepage until the website offer moved to `/`):** "More calls, more booked jobs, more revenue". Ads first, website second.
 - **Services:** grouped as _Get leads_ / _Convert them_ / _Run the business_. There is a new **Google Ads** service page.
 - **About, contact, quote, blog, the 15 city pages, and the pest control, handyman and restaurants pages:** all reworded around leads.
-- **Hidden for now:** past projects, reviews, the stats on the homepage and about page. You have no ad results to show yet, and we never invent numbers. Turn them back on later in `index.astro` and `about.astro` by setting the `SHOW_...` flags to `true`.
+- **Hidden for now:** past projects, reviews, the stats on the homepage and about page. You have no ad results to show yet, and we never invent numbers. Turn them back on later in `lead-generation.astro` and `about.astro` by setting the `SHOW_...` flags to `true`.
 - **All prices and the guarantee text** live in one file: `apps/agency/src/data/pricing.ts`. Change it there and every page updates.
 
 ---
