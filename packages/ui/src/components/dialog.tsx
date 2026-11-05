@@ -56,7 +56,9 @@ function DialogContent({
 }) {
   return (
     <DialogPortal>
-      <DialogOverlay className={overlayClassName}>
+      {/* The popup lives inside the backdrop, and Base UI skips a nested
+          dialog's backdrop unless forced, which would hide the popup too. */}
+      <DialogOverlay forceRender className={overlayClassName}>
         {overlayChildren}
         <DialogPrimitive.Popup
           data-slot="dialog-content"

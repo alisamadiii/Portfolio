@@ -1,0 +1,32 @@
+@import "@workspace/ui/globals.css";
+
+/* The Next apps set these through next/font; here the font comes from the
+   <link> in index.html. */
+:root {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+/* App palette: warm charcoal, so client designs stand out, with the agency
+   coral as the accent. <html> always carries .dark. */
+.dark {
+  --background: oklch(0.17 0.008 60);
+  --foreground: oklch(0.96 0.01 80);
+  --card: oklch(0.225 0.01 60);
+  --card-foreground: oklch(0.96 0.01 80);
+  --popover: oklch(0.225 0.01 60);
+  --popover-foreground: oklch(0.96 0.01 80);
+  --primary: oklch(0.76 0.15 42);
+  --primary-foreground: oklch(0.2 0.03 42);
+  --secondary: oklch(0.29 0.012 60);
+  --secondary-foreground: oklch(0.96 0.01 80);
+  --muted: oklch(0.29 0.012 60);
+  --muted-foreground: oklch(0.72 0.015 70);
+  --accent: oklch(0.29 0.012 60);
+  --accent-foreground: oklch(0.96 0.01 80);
+  --border: oklch(1 0.01 80 / 10%);
+  --input: oklch(1 0.01 80 / 15%);
+  --ring: oklch(0.76 0.15 42);
+}
