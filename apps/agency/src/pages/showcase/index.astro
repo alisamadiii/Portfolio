@@ -104,6 +104,7 @@ const schema = [
                   href={`/showcase/${p.slug}`}
                   class="lift"
                   data-showcase-card
+                  data-astro-prefetch="viewport"
                   title={p.name}
                   data-search={[p.name, p.category, p.city].filter(Boolean).join(" ").toLowerCase()}
                   style="text-decoration:none;color:rgb(27,26,23);border-radius:14px;overflow:hidden;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.08) 0px 0px 0px 1px, rgba(27,26,23,0.06) 0px 8px 24px;display:flex;flex-direction:column;min-width:0;"

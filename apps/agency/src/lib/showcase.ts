@@ -68,6 +68,35 @@ const unescapeXml = (s: string) =>
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&");
 
+// Stale-while-revalidate: after TTL the old value is still returned at once
+// and a refresh runs in the background, so no visitor ever waits on R2 once
+// the server is warm. A failed load is not kept: the next call tries again.
+const TTL = 5 * 60 * 1000;
+type Cached<T> = { get: () => Promise<T> };
+
+const cached = <T>(loader: () => Promise<T>): Cached<T> => {
+  let value: { at: number; data: T } | null = null;
+  let pending: Promise<T> | null = null;
+  const refresh = () => {
+    pending ??= loader()
+      .then((data) => {
+        value = { at: Date.now(), data };
+        return data;
+      })
+      .finally(() => {
+        pending = null;
+      });
+    return pending;
+  };
+  return {
+    get: () => {
+      if (!value) return refresh();
+      if (Date.now() - value.at > TTL) refresh().catch(() => {});
+      return Promise.resolve(value.data);
+    },
+  };
+};
+
 // Every top-level folder, plus which of the showcase files each one has, from
 // one paginated listing of the whole bucket (small: one folder per client).
 const listBucket = async () => {
@@ -144,17 +173,20 @@ const loadPresentation = async (slug: string) => {
   );
 };
 
-const decks = new Map<string, { at: number; html: Promise<string | null> }>();
+const decks = new Map<string, Cached<string | null>>();
 
 export const getPresentation = async (slug: string) => {
   if (!SLUG.test(slug)) return null;
-  const hit = decks.get(slug);
-  if (!hit || Date.now() - hit.at > TTL) {
-    const html = loadPresentation(slug).catch(() => null);
-    decks.set(slug, { at: Date.now(), html });
-    return html;
+  let deck = decks.get(slug);
+  if (!deck) {
+    deck = cached(() => loadPresentation(slug));
+    decks.set(slug, deck);
   }
-  return hit.html;
+  try {
+    return await deck.get();
+  } catch {
+    return null;
+  }
 };
 
 const str = (v: unknown) =>
@@ -244,9 +276,6 @@ const toProject = (
   };
 };
 
-const TTL = 5 * 60 * 1000;
-let cache: { at: number; projects: Promise<ShowcaseProject[]> } | null = null;
-
 const load = async () => {
   const { slugs, keys } = await listBucket();
   const projects = await Promise.all(
@@ -264,18 +293,17 @@ const load = async () => {
     .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
 };
 
+const projects = cached(async () => {
+  const list = await load();
+  // warm the decks too, so opening a project never waits on R2
+  for (const p of list) if (p.hasPresentation) void getPresentation(p.slug);
+  return list;
+});
+
 export const listShowcase = async (): Promise<ShowcaseProject[]> => {
   if (!r2()) return [];
-  if (!cache || Date.now() - cache.at > TTL) {
-    const projects = load();
-    cache = { at: Date.now(), projects };
-    // a failed load is not cached: the next request tries again
-    projects.catch(() => {
-      if (cache?.projects === projects) cache = null;
-    });
-  }
   try {
-    return await cache.projects;
+    return await projects.get();
   } catch (err) {
     console.error("showcase:", err);
     return [];
