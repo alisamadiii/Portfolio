@@ -1,0 +1,263 @@
+---
+// Showcase: websites already designed for local businesses, read live from
+// the client-websites R2 bucket (src/lib/showcase.ts). Visitors only ever see
+// each site's screen recording, never its HTML. On-demand so a new upload
+// shows up within the cache window without a redeploy.
+import MockupLayout from "../../layouts/MockupLayout.astro";
+import ShowcaseForm from "../../components/ShowcaseForm.astro";
+import { listShowcase, mediaUrl } from "../../lib/showcase";
+
+export const prerender = false;
+
+const SITE = "https://www.alisamadii.com";
+const pageUrl = `${SITE}/showcase`;
+const projects = await listShowcase();
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=60, stale-while-revalidate=300"
+);
+
+const schema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: "Showcase", item: pageUrl },
+    ],
+  },
+  {
+    "@type": "ItemList",
+    "@id": `${pageUrl}#projects`,
+    itemListElement: projects.map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: p.name,
+      url: `${pageUrl}/${p.slug}`,
+    })),
+  },
+];
+---
+
+<MockupLayout
+  title="Showcase: Websites Already Built for Local Businesses | Ali Samadi"
+  description="We design websites for local businesses before they ask. Find yours, watch the preview, and keep it if you like it. Not listed? Request a free preview."
+  canonical={pageUrl}
+  og={{
+    title: "Showcase: find your website, already built",
+    description:
+      "Websites already designed for local businesses. Find yours, or request a free preview.",
+    url: pageUrl,
+    twitterDescription:
+      "Websites already designed for local businesses. Find yours.",
+  }}
+  schema={schema}
+  pageType="CollectionPage"
+>
+  <main id="top">
+    <!-- Hero -->
+    <section style="padding: 140px 0 48px;">
+      <div class="wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px;">
+        <p class="eyebrow"><span></span>Showcase</p>
+        <h1 class="hero-h1" style="margin:0;max-width:18ch;font-size:clamp(40px,6vw,76px);line-height:1.02;font-weight:600;letter-spacing:-0.035em;">
+          Your new website might <span style="color:rgb(194,69,31);font-style:italic;">already exist</span>
+        </h1>
+        <p style="margin:0;max-width:60ch;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
+          We design websites for local businesses before they ask. Find yours,
+          watch the preview, and if you like it, it's yours to keep. Can't find
+          your business? We'll build you a free preview.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:8px;">
+          {
+            projects.length > 0 && (
+              <a href="#projects" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgb(252,132,100);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;box-shadow:rgba(252,132,100,0.32) 0px 8px 24px;">Find your business <span aria-hidden="true">↓</span></a>
+            )
+          }
+          <a href="#free-preview" class="btn btn-tertiary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgba(27,26,23,0.05);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;">Request a free preview</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    {
+      projects.length > 0 && (
+        <section id="projects" style="padding: 48px 0 24px; border-top: 1px solid rgba(27,26,23,0.06); scroll-margin-top: 96px;">
+          <div class="wrap" style="display:flex;flex-direction:column;gap:32px;">
+            <div style="display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;">
+              <h2 style="margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
+                Ready-made websites
+              </h2>
+              {projects.length > 6 && (
+                <input
+                  type="search"
+                  data-showcase-search
+                  placeholder="Search by business or city"
+                  aria-label="Search by business or city"
+                  style="width:min(320px,100%);min-height:44px;padding:0 16px;border-radius:11px;border:1px solid rgba(27,26,23,0.1);background:rgb(255,254,252);font:inherit;font-size:15px;color:rgb(27,26,23);"
+                />
+              )}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+              {projects.map((p) => (
+                <a
+                  href={`/showcase/${p.slug}`}
+                  class="lift"
+                  data-showcase-card
+                  title={p.name}
+                  data-search={[p.name, p.category, p.city].filter(Boolean).join(" ").toLowerCase()}
+                  style="text-decoration:none;color:rgb(27,26,23);border-radius:14px;overflow:hidden;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.08) 0px 0px 0px 1px, rgba(27,26,23,0.06) 0px 8px 24px;display:flex;flex-direction:column;min-width:0;"
+                >
+                  {/* 16:9 like the recordings; cover so a slightly off ratio never shows bars */}
+                  <div style="position:relative;aspect-ratio:16/9;overflow:hidden;background:rgb(240,236,231);border-bottom:1px solid rgba(27,26,23,0.08);">
+                    {p.hasVideo ? (
+                      <video
+                        data-showcase-video
+                        src={mediaUrl(p.slug, "preview.mp4")}
+                        poster={p.hasPoster ? mediaUrl(p.slug, "preview.jpg") : undefined}
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        aria-label={`Preview of the website for ${p.name}`}
+                        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"
+                      />
+                    ) : p.hasPoster ? (
+                      <img
+                        src={mediaUrl(p.slug, "preview.jpg")}
+                        alt={`Preview of the website for ${p.name}`}
+                        loading="lazy"
+                        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"
+                      />
+                    ) : (
+                      // Not recorded yet: a sketch of the site in a browser window.
+                      <div
+                        aria-hidden="true"
+                        style="position:absolute;inset:0;padding:18px 18px 0;background:linear-gradient(160deg, rgb(246,240,234), rgb(240,228,218));"
+                      >
+                        <div style="height:100%;border-radius:10px 10px 0 0;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.08) 0px 0px 0px 1px, rgba(27,26,23,0.08) 0px 10px 30px;display:flex;flex-direction:column;overflow:hidden;">
+                          <div style="height:22px;flex-shrink:0;display:flex;align-items:center;gap:5px;padding:0 10px;border-bottom:1px solid rgba(27,26,23,0.06);">
+                            <span style="width:6px;height:6px;border-radius:9999px;background:rgb(237,106,94);" />
+                            <span style="width:6px;height:6px;border-radius:9999px;background:rgb(245,191,79);" />
+                            <span style="width:6px;height:6px;border-radius:9999px;background:rgb(98,197,84);" />
+                            <span style="margin-left:8px;height:10px;flex:0 1 46%;border-radius:9999px;background:rgba(27,26,23,0.06);" />
+                          </div>
+                          <div style="flex:1;display:flex;gap:14px;padding:16px 18px;min-height:0;">
+                            <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
+                              <span style="width:34%;height:6px;border-radius:9999px;background:rgba(252,132,100,0.55);" />
+                              <span style="font-size:17px;line-height:1.15;font-weight:700;letter-spacing:-0.02em;color:rgb(27,26,23);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{p.name}</span>
+                              <span style="width:88%;height:5px;border-radius:9999px;background:rgba(27,26,23,0.08);" />
+                              <span style="width:64%;height:5px;border-radius:9999px;background:rgba(27,26,23,0.08);" />
+                              <span style="margin-top:4px;width:72px;height:18px;border-radius:6px;background:rgb(27,26,23);" />
+                            </div>
+                            <div style="width:38%;border-radius:8px;background:linear-gradient(135deg, rgba(252,132,100,0.25), rgba(27,26,23,0.06));" />
+                          </div>
+                        </div>
+                        <span class="mono" style="position:absolute;right:12px;bottom:12px;padding:5px 9px;border-radius:9999px;background:rgb(27,26,23);color:rgb(246,245,243);font-size:9.5px;letter-spacing:0.12em;text-transform:uppercase;">Preview coming soon</span>
+                      </div>
+                    )}
+                  </div>
+                  <div style="padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px;min-width:0;">
+                    {(p.category || p.city) && (
+                      <p class="mono" style="margin:0;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:rgb(107,102,93);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {[p.category, p.city].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                    <h3 style="margin:0;font-size:17px;line-height:1.4;font-weight:600;display:flex;align-items:baseline;gap:6px;min-width:0;">
+                      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{p.name}</span>
+                      <span aria-hidden="true" style="flex-shrink:0;color:rgb(133,128,117);">→</span>
+                    </h3>
+                    {p.summary && (
+                      <p style="margin:0;font-size:14px;line-height:1.5;color:rgb(103,98,90);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {p.summary}
+                      </p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+            <p data-showcase-empty hidden style="margin:0;font-size:16px;color:rgb(103,98,90);">
+              No match. <a href="#free-preview" class="tlink" style="color:rgb(194,69,31);">Request a free preview</a> and we'll build one for you.
+            </p>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- How it works -->
+    <section style="padding: 72px 0; border-top: 1px solid rgba(27,26,23,0.06);">
+      <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
+        {
+          [
+            ["Like it?", "It's yours to keep. We'll talk through the price and the details together, then make it live under your name."],
+            ["Not for you?", "No problem, no pressure. It stays here in the showcase until you're ready to come back and claim it."],
+            ["Not listed?", "Tell us about your business and we'll design a free preview for you. No cost, no obligation."],
+          ].map(([title, body]) => (
+            <div style="padding:28px;border-radius:18px;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.06) 0px 0px 0px 1px;display:flex;flex-direction:column;gap:10px;">
+              <h3 style="margin:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;">{title}</h3>
+              <p style="margin:0;font-size:16px;line-height:1.6;color:rgb(103,98,90);">{body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Free preview -->
+    <section id="free-preview" style="padding: 24px 0 96px; scroll-margin-top: 96px;">
+      <div class="wrap">
+        <div style="max-width:760px;margin-inline:auto;">
+          <ShowcaseForm
+            kind="preview"
+            heading="Can't find your business?"
+            intro="Request a free preview. We'll design a website for your business and send you the video, usually within a few days."
+          />
+          <p style="margin:20px 0 0;text-align:center;font-size:15px;color:rgb(103,98,90);">
+            Rather talk first?
+            <a href="https://cal.com/alisamadii" target="_blank" rel="noopener" class="tlink" style="color:rgb(194,69,31);">Book a meeting</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script is:inline data-astro-rerun>
+    (function initShowcase() {
+      // Play previews only while on screen, so the grid never decodes every
+      // video at once.
+      const videos = document.querySelectorAll("[data-showcase-video]");
+      const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!still && "IntersectionObserver" in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              const v = entry.target;
+              if (entry.isIntersecting) {
+                const played = v.play();
+                if (played && typeof played.catch === "function") played.catch(() => {});
+              } else {
+                v.pause();
+              }
+            }
+          },
+          { threshold: 0.4 }
+        );
+        videos.forEach((v) => io.observe(v));
+      }
+
+      const search = document.querySelector("[data-showcase-search]");
+      const empty = document.querySelector("[data-showcase-empty]");
+      if (search) {
+        search.addEventListener("input", () => {
+          const q = search.value.trim().toLowerCase();
+          let shown = 0;
+          document.querySelectorAll("[data-showcase-card]").forEach((card) => {
+            const match = !q || card.dataset.search.includes(q);
+            card.style.display = match ? "flex" : "none";
+            if (match) shown++;
+          });
+          if (empty) empty.hidden = shown > 0;
+        });
+      }
+    })();
+  </script>
+</MockupLayout>

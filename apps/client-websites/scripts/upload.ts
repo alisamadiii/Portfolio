@@ -3,17 +3,23 @@
 // skill cannot reach R2 itself.
 //
 //   pnpm --filter client-websites upload <folder> --slug joes-plumbing \
-//     [--name "Joe's Plumbing"] [--meta ./meta.json] [--presentation ./deck.html]
+//     [--name "Joe's Plumbing"] [--meta ./meta.json] [--presentation ./deck.html] \
+//     [--video ./preview.mp4] [--poster ./preview.jpg]
 //
-// Replaces the whole <slug>/ prefix, except that a presentation.html already
-// in the bucket is kept when this upload brings none. Needs a read + write R2
-// token in .env.
+// Replaces the whole <slug>/ prefix, except that a presentation.html,
+// preview.mp4 or preview.jpg already in the bucket is kept when this upload
+// brings none. Needs a read + write R2 token in .env.
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
 import { getMimeType } from "hono/utils/mime";
 
-import { metaSchema, PRESENTATION_FILE } from "../server/meta";
+import {
+  metaSchema,
+  PRESENTATION_FILE,
+  PREVIEW_POSTER_FILE,
+  PREVIEW_VIDEO_FILE,
+} from "../server/meta";
 import { deleteObject, listKeys, putObject } from "../server/r2";
 
 const META_FILE = "_meta.json";
@@ -46,24 +52,36 @@ const { values, positionals } = parseArgs({
     name: { type: "string" },
     meta: { type: "string" },
     presentation: { type: "string" },
+    video: { type: "string" },
+    poster: { type: "string" },
   },
 });
 
 const folder = positionals[0];
 const slug = values.slug ?? "";
-if (!folder) fail("Usage: upload <folder> --slug <slug> [--name <name>] [--meta <file>] [--presentation <file>]");
+if (!folder) fail("Usage: upload <folder> --slug <slug> [--name <name>] [--meta <file>] [--presentation <file>] [--video <file>] [--poster <file>]");
 if (!SLUG.test(slug)) fail("--slug is required: lowercase letters, numbers and hyphens.");
 
 const root = resolve(folder!);
-// --presentation wins over a presentation.html already in the folder
-const deck = values.presentation
-  ? await readFile(values.presentation).catch((err: Error) =>
-      fail(`Could not read ${values.presentation}: ${err.message}`)
-    )
-  : null;
+const readFlag = (path: string | undefined) =>
+  path
+    ? readFile(path).catch((err: Error) =>
+        fail(`Could not read ${path}: ${err.message}`)
+      )
+    : null;
+// Files that can come from a flag instead of the folder. A flag wins over the
+// folder's own copy; with neither, the copy already in the bucket is kept.
+const extras = [
+  { file: PRESENTATION_FILE, body: await readFlag(values.presentation), type: "text/html; charset=utf-8" },
+  { file: PREVIEW_VIDEO_FILE, body: await readFlag(values.video), type: "video/mp4" },
+  { file: PREVIEW_POSTER_FILE, body: await readFlag(values.poster), type: "image/jpeg" },
+];
 const files = (await walk(root)).filter((file) => {
   const name = relative(root, file);
-  return name !== META_FILE && !(deck && name === PRESENTATION_FILE);
+  return (
+    name !== META_FILE &&
+    !extras.some((extra) => extra.body && name === extra.file)
+  );
 });
 if (!files.some((file) => relative(root, file) === "index.html")) {
   fail(`${root} has no index.html at its top level.`);
@@ -86,13 +104,15 @@ const meta = metaSchema.safeParse({
 });
 if (!meta.success) fail(`Invalid meta: ${meta.error.message}`);
 
-const hasDeck =
-  deck !== null ||
-  files.some((file) => relative(root, file) === PRESENTATION_FILE);
-const deckKey = `${slug}/${PRESENTATION_FILE}`;
-const stale = (await listKeys(`${slug}/`)).filter(
-  (key) => hasDeck || key !== deckKey
+const kept = new Set(
+  extras
+    .filter(
+      (extra) =>
+        !extra.body && !files.some((file) => relative(root, file) === extra.file)
+    )
+    .map((extra) => `${slug}/${extra.file}`)
 );
+const stale = (await listKeys(`${slug}/`)).filter((key) => !kept.has(key));
 await Promise.all(stale.map(deleteObject));
 
 for (const file of files) {
@@ -104,9 +124,10 @@ for (const file of files) {
   );
   console.log(`  ${key}`);
 }
-if (deck) {
-  await putObject(deckKey, deck, "text/html; charset=utf-8");
-  console.log(`  ${deckKey}`);
+for (const extra of extras) {
+  if (!extra.body) continue;
+  await putObject(`${slug}/${extra.file}`, extra.body, extra.type);
+  console.log(`  ${slug}/${extra.file}`);
 }
 await putObject(
   `${slug}/${META_FILE}`,

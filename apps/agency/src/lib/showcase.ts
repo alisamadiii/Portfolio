@@ -1,0 +1,289 @@
+import { AwsClient } from "aws4fetch";
+
+// /showcase data: pre-built client sites from the client-websites R2 bucket
+// (contract in apps/client-websites/README.md). Every folder is listed; the
+// video and poster are optional. The site's HTML is never read or served here,
+// only preview.mp4, preview.jpg, presentation.html (speaker notes stripped)
+// and a whitelisted subset of _meta.json.
+
+export const SLUG = /^[a-z0-9][a-z0-9-]*$/;
+export const MEDIA_FILES = {
+  "preview.mp4": "video/mp4",
+  "preview.jpg": "image/jpeg",
+} as const;
+export type MediaFile = keyof typeof MEDIA_FILES;
+
+export type ShowcaseProject = {
+  slug: string;
+  name: string;
+  category: string | null;
+  address: string | null;
+  // Google Maps link for the business (the stored mapsUrl, else a search)
+  mapsUrl: string | null;
+  city: string | null;
+  rating: number | null;
+  reviewCount: number | null;
+  hours: string[];
+  title: string | null;
+  summary: string | null;
+  features: string[];
+  hasVideo: boolean;
+  hasPoster: boolean;
+  hasPresentation: boolean;
+  uploadedAt: string | null;
+};
+
+const env = (name: string): string | undefined =>
+  process.env[name] ?? import.meta.env[name];
+
+let cachedClient: { client: AwsClient; base: string } | null | undefined;
+
+const r2 = () => {
+  if (cachedClient === undefined) {
+    const endpoint = env("SHOWCASE_R2_ENDPOINT");
+    const accessKeyId = env("SHOWCASE_R2_ACCESS_KEY_ID");
+    const secretAccessKey = env("SHOWCASE_R2_SECRET_ACCESS_KEY");
+    const bucket = env("SHOWCASE_R2_BUCKET");
+    cachedClient =
+      endpoint && accessKeyId && secretAccessKey && bucket
+        ? {
+            client: new AwsClient({
+              accessKeyId,
+              secretAccessKey,
+              service: "s3",
+              region: "auto",
+            }),
+            base: `${endpoint.replace(/\/+$/, "")}/${bucket}`,
+          }
+        : null;
+  }
+  return cachedClient;
+};
+
+const unescapeXml = (s: string) =>
+  s
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&");
+
+// Every top-level folder, plus which of the showcase files each one has, from
+// one paginated listing of the whole bucket (small: one folder per client).
+const listBucket = async () => {
+  const conn = r2();
+  if (!conn) return { slugs: [], keys: new Set<string>() };
+  const slugs = new Set<string>();
+  const keys = new Set<string>();
+  let cursor: string | null = null;
+  do {
+    const query = new URLSearchParams({ "list-type": "2" });
+    if (cursor) query.set("continuation-token", cursor);
+    const res = await conn.client.fetch(`${conn.base}?${query.toString()}`);
+    if (!res.ok) throw new Error(`Showcase list failed (${res.status})`);
+    const xml = await res.text();
+    for (const m of xml.matchAll(/<Key>(.*?)<\/Key>/g)) {
+      const key = unescapeXml(m[1]!);
+      const slug = key.slice(0, key.indexOf("/"));
+      if (!SLUG.test(slug)) continue;
+      slugs.add(slug);
+      if (/^[^/]+\/(_meta\.json|preview\.mp4|preview\.jpg|presentation\.html)$/.test(key)) {
+        keys.add(key);
+      }
+    }
+    cursor = /<IsTruncated>true<\/IsTruncated>/.test(xml)
+      ? unescapeXml(
+          xml.match(
+            /<NextContinuationToken>(.*?)<\/NextContinuationToken>/
+          )?.[1] ?? ""
+        ) || null
+      : null;
+  } while (cursor);
+  return { slugs: [...slugs], keys };
+};
+
+// Streams one whitelisted media file. Range and conditional headers are
+// forwarded so Safari can seek and browsers can revalidate.
+export const getMedia = (
+  slug: string,
+  file: MediaFile,
+  headers: Record<string, string>
+) => {
+  const conn = r2();
+  if (!conn || !SLUG.test(slug)) return null;
+  return conn.client.fetch(
+    `${conn.base}/${encodeURIComponent(slug)}/${file}`,
+    { headers }
+  );
+};
+
+// The walkthrough deck as public HTML. Speaker notes are Ali's sales notes,
+// so <aside> notes are removed and the notes UI hidden. Decks that keep notes
+// anywhere else (a .notes element, a notes array in the script) can't be
+// cleaned reliably and are not published: null, so no button shows.
+const LEFTOVER_NOTES = [/class=["'][^"']*\bnotes\b/i, /\bN\s*=\s*\[/];
+
+const loadPresentation = async (slug: string) => {
+  const conn = r2();
+  if (!conn) return null;
+  const res = await conn.client.fetch(`${conn.base}/${slug}/presentation.html`);
+  if (!res.ok) {
+    await res.body?.cancel();
+    return null;
+  }
+  const html = (await res.text())
+    .replace(/<aside\b[^>]*>[\s\S]*?<\/aside>/gi, "")
+    .replace(/\s*·\s*N notes/g, "");
+  if (LEFTOVER_NOTES.some((re) => re.test(html))) return null;
+  // Shown inside the showcase page's overlay, which has its own close button:
+  // the deck's toolbar buttons are hidden (not removed, its script still binds
+  // them) and the keyboard, click and swipe navigation keep working.
+  return html.replace(
+    /<\/head>/i,
+    '<meta name="robots" content="noindex"><style>#notes,#bar,button{display:none!important}</style></head>'
+  );
+};
+
+const decks = new Map<string, { at: number; html: Promise<string | null> }>();
+
+export const getPresentation = async (slug: string) => {
+  if (!SLUG.test(slug)) return null;
+  const hit = decks.get(slug);
+  if (!hit || Date.now() - hit.at > TTL) {
+    const html = loadPresentation(slug).catch(() => null);
+    decks.set(slug, { at: Date.now(), html });
+    return html;
+  }
+  return hit.html;
+};
+
+const str = (v: unknown) =>
+  typeof v === "string" && v.trim() ? v.trim() : null;
+const num = (v: unknown) =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
+const strings = (v: unknown) =>
+  Array.isArray(v) ? v.map(str).filter((s): s is string => s !== null) : [];
+const obj = (v: unknown): Record<string, unknown> =>
+  v && typeof v === "object" && !Array.isArray(v)
+    ? (v as Record<string, unknown>)
+    : {};
+
+// Opens the business itself on Google Maps: a Place ID search lands on its
+// profile. A stored mapsUrl is used only without a Place ID, and never when
+// it is a directions link (/maps/dir/), which opens a route instead.
+const mapsUrlOf = (business: Record<string, unknown>, slug: string) => {
+  const placeId = str(business.placeId);
+  const address = str(business.address);
+  const search = (params: Record<string, string>) =>
+    `https://www.google.com/maps/search/?${new URLSearchParams({ api: "1", ...params })}`;
+  const query = [str(business.name) ?? slug, address].filter(Boolean).join(", ");
+  if (placeId) return search({ query, query_place_id: placeId });
+  const stored = str(business.mapsUrl);
+  if (
+    stored &&
+    !/\/maps\/dir\//i.test(stored) &&
+    /^https:\/\/(www\.)?(google\.[a-z.]+|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|goo\.gl)\//i.test(stored)
+  ) {
+    return stored;
+  }
+  return address ? search({ query }) : null;
+};
+
+// "123 Main St, Orlando, FL 32801" -> "Orlando, FL"
+const cityOf = (address: string | null) => {
+  const parts = address?.split(",").map((p) => p.trim()) ?? [];
+  if (parts.length < 3) return null;
+  const state = parts[parts.length - 1]!.replace(/\s*\d{5}(-\d{4})?$/, "");
+  return `${parts[parts.length - 2]}, ${state}`;
+};
+
+const readMeta = async (slug: string) => {
+  const conn = r2();
+  if (!conn) return null;
+  const res = await conn.client.fetch(`${conn.base}/${slug}/_meta.json`);
+  if (!res.ok) {
+    await res.body?.cancel();
+    return null;
+  }
+  try {
+    return obj(await res.json());
+  } catch {
+    return null;
+  }
+};
+
+const toProject = (
+  slug: string,
+  meta: Record<string, unknown>,
+  keys: Set<string>
+): ShowcaseProject | null => {
+  const business = obj(meta.business);
+  const showcase = obj(meta.showcase);
+  if (showcase.hidden === true) return null;
+  const address = str(business.address);
+  return {
+    slug,
+    name: str(business.name) ?? str(meta.name) ?? slug,
+    category: str(business.category),
+    address,
+    mapsUrl: mapsUrlOf(business, slug),
+    city: cityOf(address),
+    rating: num(business.rating),
+    reviewCount: num(business.reviewCount),
+    hours: strings(business.hours),
+    title: str(showcase.title),
+    summary:
+      str(showcase.summary) ??
+      str(showcase.description) ??
+      str(meta.description),
+    features: strings(showcase.features),
+    hasVideo: keys.has(`${slug}/preview.mp4`),
+    hasPoster: keys.has(`${slug}/preview.jpg`),
+    hasPresentation: keys.has(`${slug}/presentation.html`),
+    uploadedAt: str(meta.uploadedAt),
+  };
+};
+
+const TTL = 5 * 60 * 1000;
+let cache: { at: number; projects: Promise<ShowcaseProject[]> } | null = null;
+
+const load = async () => {
+  const { slugs, keys } = await listBucket();
+  const projects = await Promise.all(
+    slugs.map(async (slug) =>
+      toProject(
+        slug,
+        keys.has(`${slug}/_meta.json`) ? ((await readMeta(slug)) ?? {}) : {},
+        keys
+      )
+    )
+  );
+  return projects
+    .filter((p): p is ShowcaseProject => p !== null)
+    // alphabetical by business name, so visitors can scan for theirs
+    .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+};
+
+export const listShowcase = async (): Promise<ShowcaseProject[]> => {
+  if (!r2()) return [];
+  if (!cache || Date.now() - cache.at > TTL) {
+    const projects = load();
+    cache = { at: Date.now(), projects };
+    // a failed load is not cached: the next request tries again
+    projects.catch(() => {
+      if (cache?.projects === projects) cache = null;
+    });
+  }
+  try {
+    return await cache.projects;
+  } catch (err) {
+    console.error("showcase:", err);
+    return [];
+  }
+};
+
+export const getShowcase = async (slug: string) =>
+  (await listShowcase()).find((p) => p.slug === slug) ?? null;
+
+export const mediaUrl = (slug: string, file: MediaFile) =>
+  `/showcase/media/${slug}/${file}`;

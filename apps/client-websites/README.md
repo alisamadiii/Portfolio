@@ -13,6 +13,8 @@ This is what an uploader (the Claude Design skill, or `pnpm upload`) must write.
   about.html            or about/index.html
   images/...
   presentation.html     optional: client walkthrough deck, one self-contained file
+  preview.mp4           optional: screen recording; lists the site on the agency /showcase
+  preview.jpg           optional: poster frame for preview.mp4
 ```
 
 - Upload over the S3-compatible API: endpoint `https://<account_id>.r2.cloudflarestorage.com`, region `auto`, bucket `client-websites`, key `<slug>/<path>`.
@@ -20,6 +22,7 @@ This is what an uploader (the Claude Design skill, or `pnpm upload`) must write.
 - Relative links and asset paths are safest. Root-absolute ones (`/images/x.png`, `/about`) also work in the deployed app.
 - Content type is taken from the file extension when served, so the stored one does not matter.
 - `presentation.html` is opened by the viewer's Presentation button and is not listed as a site page. Without it the button reads "No presentation". Re-uploading a site without a deck keeps the deck already there.
+- `preview.mp4` puts the site on the agency site's public `/showcase` (unless `showcase.hidden` is true). The agency only ever serves `preview.mp4`, `preview.jpg` and these `_meta.json` fields: `name`, `business` name/category/address/rating/reviewCount/hours, `showcase` (description = `showcase.summary`, `showcase.description` or top-level `description`). `design` is never shown. `presentation.html` is published at `/showcase/<slug>/presentation` with its speaker notes removed, but only when every note is an `<aside>`: a deck that keeps notes anywhere else (a `.notes` element, a notes array in its script) gets no Presentation button. Never the HTML. Keep the video small (H.264, 1080p or less, under ~20 MB) and with `faststart` so it plays before it fully loads. Re-uploading without a video or poster keeps the ones already there.
 
 `_meta.json`: only `name` is required. Unknown keys are ignored. A folder with a missing or invalid file still shows up, under its slug.
 
@@ -46,6 +49,12 @@ This is what an uploader (the Claude Design skill, or `pnpm upload`) must write.
     "hours": ["Monday: 8:00 AM - 5:00 PM"],
     "lat": 28.5383,
     "lng": -81.3792
+  },
+  "showcase": {
+    "title": "Modern site for a family plumber",
+    "summary": "Free text shown on the public showcase page",
+    "features": ["Online booking", "Service area pages"],
+    "hidden": false
   }
 }
 ```
@@ -65,7 +74,7 @@ Upload a folder by hand:
 pnpm --filter client-websites upload ./my-design --slug joes-plumbing --name "Joe's Plumbing"
 ```
 
-It reads `./my-design/_meta.json` if present (or `--meta <file>`), stamps `uploadedAt`, and replaces the whole `<slug>/` prefix. `--presentation <file>` stores that file as `presentation.html`. Needs a read and write token.
+It reads `./my-design/_meta.json` if present (or `--meta <file>`), stamps `uploadedAt`, and replaces the whole `<slug>/` prefix. `--presentation <file>` stores that file as `presentation.html`, `--video <file>` as `preview.mp4`, `--poster <file>` as `preview.jpg`. Needs a read and write token.
 
 ## Deploy (Coolify)
 

@@ -126,7 +126,20 @@ export const SEARCH_PAGES: SearchPage[] = [
       "clients",
       "examples",
       "sites we built",
+    ],
+  },
+  {
+    title: "Showcase",
+    description:
+      "Websites already built for local businesses. Find yours or request a free preview.",
+    url: "/showcase",
+    keywords: [
       "showcase",
+      "find my website",
+      "free preview",
+      "ready-made website",
+      "already built",
+      "claim",
     ],
   },
   {

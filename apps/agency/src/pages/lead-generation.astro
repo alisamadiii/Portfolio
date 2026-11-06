@@ -8,19 +8,12 @@
 // QuoteForm.astro and fires the same GA4 / Google Ads events.
 import HeroFlow from "../components/HeroFlow.astro";
 import Analytics from "../components/Analytics.astro";
+import FormSubmit from "../components/FormSubmit.astro";
 import { WEBSITE_FROM, fmtPrice } from "../data/pricing";
 
 const SITE = "https://www.alisamadii.com";
 const PATH = "/lead-generation";
 
-// Hub lead-capture + booking scripts (this page is standalone, so they're
-// added here rather than inherited from Layout.astro).
-const apiBase = import.meta.env.DEV
-  ? "http://localhost:3000"
-  : "https://api.alisamadii.com";
-const captureScripts =
-  `<script src="${apiBase}/leads.js" data-key="46fcf77a-5308-4518-abb3-8a6245a2dc56" defer></script>` +
-  `<script src="${apiBase}/booking.js" data-key="46fcf77a-5308-4518-abb3-8a6245a2dc56" defer></script>`;
 const url = new URL(PATH, SITE).href;
 const title = "Lead Generation Agency | Google Ads + Websites";
 const description =
@@ -1171,12 +1164,13 @@ const jsonLd = {
               </p><h2 class="h2">Common questions</h2><p
                 style="margin: 0; font-size: 16px; color: #5a524b"
               >
-                Still unsure? <button
-                  type="button"
-                  data-booking
+                Still unsure? <a
+                  href="https://cal.com/alisamadii"
+                  target="_blank"
+                  rel="noopener"
                   class="tlink"
-                  style="font-weight: 700;background:none;border:none;padding:0;font:inherit;cursor:pointer;"
-                  >Book a meeting</button
+                  style="font-weight: 700"
+                  >Book a meeting ↗</a
                 >
               </p>
             </div>
@@ -1368,12 +1362,13 @@ const jsonLd = {
                   <dt class="cap" style="font-size: 11px; color: #6d645c">
                     Schedule
                   </dt><dd style="margin: 4px 0 0">
-                    <button
-                      type="button"
-                      data-booking
+                    <a
+                      href="https://cal.com/alisamadii"
+                      target="_blank"
+                      rel="noopener"
                       class="tlink"
-                      style="color: #221f1c; font-weight: 700;background:none;border:none;padding:0;font:inherit;cursor:pointer;"
-                      >Book a Meeting</button
+                      style="color: #221f1c; font-weight: 700"
+                      >Book a Meeting ↗</a
                     >
                   </dd>
                 </div>
@@ -1394,7 +1389,7 @@ const jsonLd = {
             <form
               id="quote-form"
               class="card quote-form"
-              data-lead-form="Quote"
+              data-form="Quote"
               data-success="Thanks, we'll reply within a day."
               style="flex: 1 1 420px; max-width: 520px; padding: 32px; background: rgba(255,255,255,0.96); display: flex; flex-direction: column; gap: 14px"
             >
@@ -1471,7 +1466,7 @@ const jsonLd = {
                 style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"
               />
               <p
-                data-lead-message
+                data-form-message
                 role="status"
                 style="margin: 0; font-size: 14px; font-weight: 700"
               >
@@ -1621,8 +1616,8 @@ const jsonLd = {
         })
       );
 
-      // Submission is handled by the shared lead-capture script (leads.js) via the
-      // form's data-lead-form attribute; nothing to wire up here.
+      // Submission is handled by FormSubmit via the form's data-form attribute;
+      // nothing to wire up here.
 
       // Video dialog
       const dlg = document.getElementById(
@@ -1672,7 +1667,7 @@ const jsonLd = {
       });
       dlg?.addEventListener("close", () => vid?.pause());
     </script>
-    <Fragment set:html={captureScripts} />
+    <FormSubmit />
   </body>
 </html>
 

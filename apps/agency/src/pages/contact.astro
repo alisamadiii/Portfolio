@@ -30,10 +30,9 @@ const channels = [
   {
     label: "Schedule",
     value: "Book a Meeting",
-    href: "#",
+    href: "https://cal.com/alisamadii",
     note: "Pick a time that works and we'll talk through your project.",
-    external: false,
-    booking: true,
+    external: true,
   },
   {
     label: "Phone",
@@ -112,11 +111,7 @@ const channels = [
               );
               const cardStyle =
                 "text-align:left;text-decoration:none;color:rgb(27,26,23);border-radius:18px;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.08) 0px 10px 28px;padding:26px;display:flex;flex-direction:column;gap:10px;";
-              return c.booking ? (
-                <button type="button" data-booking class="lift" style={`${cardStyle}border:none;cursor:pointer;font:inherit;width:100%;`}>
-                  {inner}
-                </button>
-              ) : (
+              return (
                 <a
                   href={c.href}
                   target={c.external ? "_blank" : undefined}

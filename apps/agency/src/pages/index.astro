@@ -17,13 +17,6 @@ const SHOW_PRICING = false;
 const SITE = 'https://www.alisamadii.com';
 const PATH = '/';
 const url = new URL(PATH, SITE).href;
-// Hub lead-capture + booking scripts (this page is standalone, so they're
-// added here rather than inherited from Layout.astro). leads.js keeps the ad
-// click (gclid/UTM) in a cookie so a quote sent from /quote is still credited.
-const apiBase = import.meta.env.DEV ? 'http://localhost:3000' : 'https://api.alisamadii.com';
-const captureScripts =
-  `<script src="${apiBase}/leads.js" data-key="46fcf77a-5308-4518-abb3-8a6245a2dc56" defer></script>` +
-  `<script src="${apiBase}/booking.js" data-key="46fcf77a-5308-4518-abb3-8a6245a2dc56" defer></script>`;
 const setup = fmtPrice(WEBSITE_FROM.setup);
 const monthly = fmtPrice(WEBSITE_FROM.monthly);
 const care = fmtPrice(CARE.monthly);
@@ -316,11 +309,12 @@ const jsonLd = {
 
 <!-- headline -->
 <div class="wrap" style="position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px; padding-top: 110px">
-<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span><span aria-hidden="true" style="color: #fc8464">✦</span>Web design for small businesses<span aria-hidden="true" style="width: 14px; height: 14px; border-radius: 9999px; box-shadow: inset 0 0 0 1.5px rgba(34,31,28,0.2)"></span></p>
+<a href="/showcase" class="pill cap lift" style="margin: 0; color: #3d3833; text-decoration: none; white-space: nowrap"><span style="padding: 2px 8px; border-radius: 9999px; background: #221f1c; color: #fffdfb">Showcase</span>Find your website<span aria-hidden="true" style="color: #e0603d">→</span></a>
 <h1 style="margin: 0; max-width: 13ch; font-size: clamp(44px, 6vw, 80px); line-height: 1.02; font-weight: 800; letter-spacing: -0.045em; color: #221f1c; text-wrap: balance">A website that works as hard as <span style="color: #e0603d">you do.</span></h1>
 <p style="margin: 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: #5a524b">Custom-designed, hand-coded websites for businesses anywhere. Live in about a day, easy to edit yourself, and yours to keep.</p>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 6px">
 <a href={quoteHref} class="btn cta">Get a free consultation</a>
+<p class="cap" style="margin: 0; color: #6d645c">Not in the <a href="/showcase" class="tlink" style="color: #e0603d">showcase</a>? <a href="/showcase#free-preview" class="tlink" style="color: #e0603d">Request a free preview</a></p>
 <p class="cap" style="margin: 0; color: #6d645c">{SHOW_PRICING ? `From ${setup} + ${monthly}/mo` : 'Custom-built'} · no templates · you own it</p>
 </div>
 </div>
@@ -584,7 +578,7 @@ const jsonLd = {
 <footer style="position: relative; padding: 28px 0 120px; background: #fffdfb">
 <div class="wrap" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px">
 <p class="cap" style="margin: 0; color: #6d645c">© Ali Samadii LLC d/b/a Ali Samadi Agency</p>
-<p class="cap" style="margin: 0; display: flex; flex-wrap: wrap; gap: 8px 20px"><a href="/lead-generation" class="tlink" style="color: #3d3833">Lead generation</a><a href="/services" class="tlink" style="color: #3d3833">Services</a><a href="/work" class="tlink" style="color: #3d3833">Work</a><a href="/about" class="tlink" style="color: #3d3833">About</a><a href="/blog" class="tlink" style="color: #3d3833">Blog</a><a href="/contact" class="tlink" style="color: #3d3833">Contact</a><a href="/privacy" class="tlink" style="color: #3d3833">Privacy</a><a href="/terms" class="tlink" style="color: #3d3833">Terms</a></p>
+<p class="cap" style="margin: 0; display: flex; flex-wrap: wrap; gap: 8px 20px"><a href="/lead-generation" class="tlink" style="color: #3d3833">Lead generation</a><a href="/services" class="tlink" style="color: #3d3833">Services</a><a href="/work" class="tlink" style="color: #3d3833">Work</a><a href="/showcase" class="tlink" style="color: #3d3833">Showcase</a><a href="/about" class="tlink" style="color: #3d3833">About</a><a href="/blog" class="tlink" style="color: #3d3833">Blog</a><a href="/contact" class="tlink" style="color: #3d3833">Contact</a><a href="/privacy" class="tlink" style="color: #3d3833">Privacy</a><a href="/terms" class="tlink" style="color: #3d3833">Terms</a></p>
 </div>
 </footer>
 
@@ -601,6 +595,7 @@ const jsonLd = {
 <a href="#services" class="wlink">Services<span aria-hidden="true">→</span></a>
 <a href="#how" class="wlink">How we work<span aria-hidden="true">→</span></a>
 <a href="#projects" class="wlink">Projects<span aria-hidden="true">→</span></a>
+<a href="/showcase" class="wlink">Showcase<span aria-hidden="true">→</span></a>
 {SHOW_PRICING ? <a href="#pricing" class="wlink">Pricing<span aria-hidden="true">→</span></a> : <a href="#features" class="wlink">Features<span aria-hidden="true">→</span></a>}
 <a href="#faq" class="wlink">FAQ<span aria-hidden="true">→</span></a>
 <a href="tel:+19713828969" class="wlink" style="border-bottom: 0">Call +1 (971) 382-8969<span aria-hidden="true">↗</span></a>
@@ -617,7 +612,6 @@ const jsonLd = {
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wmenu) wmenu.open = false; });
       document.addEventListener('click', (e) => { if (wmenu?.open && !wmenu.contains(e.target as Node)) wmenu.open = false; });
     </script>
-    <Fragment set:html={captureScripts} />
   </body>
 </html>
 

@@ -5,9 +5,9 @@
 // and reads fields via form.elements, no ids. Pricing cards deep-link with
 // ?plan=launch|growth|scale|website|website-local|care|ecommerce|newsletter|custom
 // (comma-separated for several), which pre-checks those plan chips on load.
-// Plans are checkboxes sharing name="plan"; leads.js joins them as "a, b".
-// Submits to the portfolio quote API, which relays to agency@alisamadii.com
-// via the SES contact backend (recipient fixed server-side).
+// Plans are checkboxes sharing name="plan"; FormSubmit joins them as "a, b".
+// Sent by FormSubmit to the api's /api/agency/send, which emails it to
+// a@alisamadii.com (recipient fixed server-side).
 import { CARE, NEWSLETTER, PLANS, WEBSITE_PLANS } from "../data/pricing";
 
 interface Props {
@@ -92,7 +92,7 @@ const labelClass =
 
     <form
       class:list={["quote-form space-y-5", compact ? "mt-5" : "mt-8"]}
-      data-lead-form="Quote"
+      data-form="Quote"
       data-success="Thanks, we'll reply within a day."
     >
       <div
@@ -190,7 +190,7 @@ const labelClass =
           class={`${inputClass} resize-none`}></textarea>
       </div>
 
-      {/* Honeypot: hidden from people, bots fill it in (leads.js drops those). */}
+      {/* Honeypot: hidden from people, bots fill it in (the send endpoint drops those). */}
       <input
         type="text"
         name="_hp"
@@ -210,8 +210,8 @@ const labelClass =
         >
           Request a Quote
         </button>
-        {/* leads.js shows the thank-you here after a successful submit. */}
-        <p data-lead-message class="text-sm" role="status"></p>
+        {/* FormSubmit shows the thank-you here after a successful submit. */}
+        <p data-form-message class="text-sm" role="status"></p>
       </div>
     </form>
   </div>
@@ -219,8 +219,8 @@ const labelClass =
 
 <script is:inline data-astro-rerun>
   // Pre-check plans from ?plan=a,b (pricing cards + offer CTAs deep-link here).
-  // Submission is handled by the shared lead-capture script (leads.js); this form
-  // just needs data-lead-form, which it has.
+  // Submission is handled by FormSubmit (Layout); this form just needs
+  // data-form, which it has.
   (() => {
     const plans = (new URLSearchParams(location.search).get("plan") || "")
       .split(",")

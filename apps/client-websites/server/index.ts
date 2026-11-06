@@ -10,6 +10,7 @@ import Stripe from "stripe";
 import {
   metaSchema,
   PRESENTATION_FILE,
+  PREVIEW_VIDEO_FILE,
   type Project,
   type ProjectDetail,
 } from "./meta";
@@ -190,6 +191,7 @@ app.get("/api/projects/:slug", async (c) => {
     ...project,
     pages,
     hasPresentation: html.includes(PRESENTATION_FILE),
+    hasPreviewVideo: keys.includes(`${slug}/${PREVIEW_VIDEO_FILE}`),
   };
   return c.json(detail);
 });

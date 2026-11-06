@@ -1,0 +1,457 @@
+---
+// One showcase project: the site's screen recording plus the public details
+// from its _meta.json, with request / book / free-preview actions.
+import MockupLayout from "../../layouts/MockupLayout.astro";
+import ShowcaseForm from "../../components/ShowcaseForm.astro";
+import {
+  getPresentation,
+  getShowcase,
+  mediaUrl,
+  SLUG,
+} from "../../lib/showcase";
+
+export const prerender = false;
+
+const slug = Astro.params.slug ?? "";
+const project = SLUG.test(slug) ? await getShowcase(slug) : null;
+if (!project) return Astro.rewrite("/404");
+const hasDeck =
+  project.hasPresentation && (await getPresentation(project.slug)) !== null;
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "public, max-age=60, stale-while-revalidate=300"
+);
+
+const SITE = "https://www.alisamadii.com";
+const pageUrl = `${SITE}/showcase/${project.slug}`;
+
+// Google's "Monday: 9:00 AM - 9:00 PM" lines, with consecutive days that share
+// the same hours folded into one row ("Mon - Sat").
+const hours = project.hours
+  .map((line) => {
+    const i = line.indexOf(":");
+    const day = (i > 0 ? line.slice(0, i) : line).trim();
+    const time = (i > 0 ? line.slice(i + 1) : "")
+      .trim()
+      .replace(/\s*[-–—]\s*/g, " – ")
+      .replace(/[\u2009\u202f]/g, " ");
+    return { day: day.slice(0, 3), time: time || "Closed" };
+  })
+  .reduce<{ first: string; last: string; time: string }[]>((rows, { day, time }) => {
+    const prev = rows[rows.length - 1];
+    if (prev && prev.time === time) prev.last = day;
+    else rows.push({ first: day, last: day, time });
+    return rows;
+  }, [])
+  .map((r) => ({
+    days: r.first === r.last ? r.first : `${r.first} – ${r.last}`,
+    time: r.time,
+    closed: /closed/i.test(r.time),
+  }));
+const meta = [project.category, project.city].filter(Boolean).join(" · ");
+const description =
+  project.summary ??
+  `A website already designed for ${project.name}${project.city ? ` in ${project.city}` : ""}. Watch the preview and keep it if you like it.`;
+
+const schema = [
+  {
+    "@type": "BreadcrumbList",
+    "@id": `${pageUrl}#breadcrumb`,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: "Showcase", item: `${SITE}/showcase` },
+      { "@type": "ListItem", position: 3, name: project.name, item: pageUrl },
+    ],
+  },
+  project.hasVideo && {
+    "@type": "VideoObject",
+    name: `Website preview for ${project.name}`,
+    description,
+    contentUrl: `${SITE}${mediaUrl(project.slug, "preview.mp4")}`,
+    ...(project.hasPoster
+      ? { thumbnailUrl: `${SITE}${mediaUrl(project.slug, "preview.jpg")}` }
+      : {}),
+    ...(project.uploadedAt ? { uploadDate: project.uploadedAt } : {}),
+  },
+].filter(Boolean);
+---
+
+<MockupLayout
+  title={`${project.name}: Website Preview | Ali Samadi Showcase`}
+  description={description}
+  canonical={pageUrl}
+  og={{
+    title: `A new website for ${project.name}`,
+    description,
+    url: pageUrl,
+    twitterDescription: description,
+  }}
+  schema={schema}
+>
+  <main id="top">
+    <section style="padding: 120px 0 48px;">
+      <div class="wrap" style="display:flex;flex-direction:column;gap:32px;">
+        <a href="/showcase" class="tlink" style="align-self:flex-start;font-size:15px;color:rgb(103,98,90);text-decoration:none;">← All showcase websites</a>
+
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:760px;">
+          {meta && <p class="eyebrow"><span></span>{meta}</p>}
+          <h1 class="hero-h1" style="margin:0;font-size:clamp(36px,5vw,64px);line-height:1.04;font-weight:600;letter-spacing:-0.035em;">
+            {project.title ?? <>A new website for <span style="color:rgb(194,69,31);font-style:italic;">{project.name}</span></>}
+          </h1>
+          {
+            project.summary && (
+              <p style="margin:0;font-size:clamp(17px,1.6vw,20px);line-height:1.55;color:rgb(103,98,90);">
+                {project.summary}
+              </p>
+            )
+          }
+        </div>
+
+        {
+          (project.hasVideo || project.hasPoster) && (
+            <div style="padding:6px;border-radius:18px;background:rgba(27,26,23,0.03);box-shadow:rgba(27,26,23,0.04) 0px 0px 0px 1px, rgba(27,26,23,0.1) 0px 14px 34px;">
+              {project.hasVideo ? (
+                <video
+                  src={mediaUrl(project.slug, "preview.mp4")}
+                  poster={project.hasPoster ? mediaUrl(project.slug, "preview.jpg") : undefined}
+                  controls
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  aria-label={`Preview of the website for ${project.name}`}
+                  style="display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:14px;background:rgb(240,236,231);"
+                />
+              ) : (
+                <img
+                  src={mediaUrl(project.slug, "preview.jpg")}
+                  alt={`Preview of the website for ${project.name}`}
+                  style="display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:14px;background:rgb(240,236,231);"
+                />
+              )}
+            </div>
+          )
+        }
+
+        <div style="display:flex;flex-wrap:wrap;gap:12px;">
+          <a href="#request" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgb(252,132,100);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;box-shadow:rgba(252,132,100,0.32) 0px 8px 24px;">Request this website</a>
+          {
+            hasDeck && (
+              <button type="button" data-deck-open class="btn btn-tertiary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;border:none;background:rgba(27,26,23,0.05);color:rgb(27,26,23);font:inherit;font-size:16px;font-weight:500;cursor:pointer;">Presentation</button>
+            )
+          }
+          <a href="https://cal.com/alisamadii" target="_blank" rel="noopener" class="btn btn-tertiary" style="display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 26px;border-radius:11px;background:rgba(27,26,23,0.05);color:rgb(27,26,23);font-size:16px;font-weight:500;text-decoration:none;">Book a meeting</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy notice: the owner can have the listing taken down -->
+    <section style="padding: 0 0 32px;">
+      <div class="wrap">
+        <aside
+          aria-label="About this preview"
+          style="padding:20px 24px;border-radius:14px;background:rgb(255,245,204);box-shadow:rgba(181,134,0,0.35) 0px 0px 0px 1px;display:flex;gap:14px;align-items:flex-start;"
+        >
+          <span aria-hidden="true" style="flex-shrink:0;width:28px;height:28px;border-radius:9999px;background:rgb(245,190,40);color:rgb(27,26,23);display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;">!</span>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.6;color:rgb(74,62,30);">
+            <p style="margin:0;font-weight:600;color:rgb(27,26,23);">Your business, your call</p>
+            <p style="margin:0;">
+              We designed this website on our own to show {project.name} what
+              it could look like. It uses public details from your Google
+              Business Profile, like your name, hours, reviews and photos. It
+              is an independent concept, not your live website, and it is not
+              affiliated with or endorsed by your business.
+            </p>
+            <p style="margin:0;">
+              Leaving it here costs you nothing, commits you to nothing and
+              changes nothing about your business or your listing on Google.
+              But if you'd rather we didn't show it, just tell us and we'll
+              take it down, no questions asked.
+            </p>
+            <a
+              href={`mailto:agency@alisamadii.com?subject=${encodeURIComponent(`Remove showcase: ${project.name}`)}&body=${encodeURIComponent(`Please remove ${pageUrl} from your showcase.`)}`}
+              class="tlink"
+              style="align-self:flex-start;color:rgb(194,69,31);font-weight:500;"
+            >
+              Ask us to remove it
+            </a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Keep it -->
+    <section style="padding: 24px 0 48px;">
+      <div class="wrap">
+        <div style="padding:clamp(24px,4vw,40px);border-radius:18px;background:rgb(27,26,23);color:rgb(246,245,243);display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <h2 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em;">Like it? It's yours to keep.</h2>
+            <p style="margin:0;font-size:16px;line-height:1.6;color:rgba(246,245,243,0.72);">
+              We'll talk through the price and every detail together, then make
+              it live for your business.
+            </p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <h2 style="margin:0;font-size:24px;font-weight:600;letter-spacing:-0.02em;">Not for you? No problem.</h2>
+            <p style="margin:0;font-size:16px;line-height:1.6;color:rgba(246,245,243,0.72);">
+              It stays here in the showcase until you're ready. Come back any
+              time and request it.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Details -->
+    {
+      (project.features.length > 0 || project.address || project.rating !== null || project.hours.length > 0) && (
+        <section style="padding: 48px 0; border-top: 1px solid rgba(27,26,23,0.06);">
+          <div class="wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px;">
+            {project.features.length > 0 && (
+              <div style="display:flex;flex-direction:column;gap:16px;">
+                <h2 style="margin:0;font-size:clamp(24px,2.6vw,32px);font-weight:600;letter-spacing:-0.02em;">What's in it</h2>
+                <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:1.5;">
+                  {project.features.map((f) => (
+                    <li style="display:flex;gap:10px;">
+                      <span aria-hidden="true" style="color:rgb(194,69,31);">✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {(project.address || project.rating !== null || project.hours.length > 0) && (
+              <div style="display:flex;flex-direction:column;gap:16px;">
+                <h2 style="margin:0;font-size:clamp(24px,2.6vw,32px);font-weight:600;letter-spacing:-0.02em;">The business</h2>
+                <dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:10px 20px;font-size:16px;line-height:1.5;">
+                  <dt style="color:rgb(107,102,93);">Name</dt>
+                  <dd style="margin:0;">{project.name}</dd>
+                  {project.category && (
+                    <>
+                      <dt style="color:rgb(107,102,93);">Category</dt>
+                      <dd style="margin:0;">{project.category}</dd>
+                    </>
+                  )}
+                  {project.address && (
+                    <>
+                      <dt style="color:rgb(107,102,93);">Address</dt>
+                      <dd style="margin:0;display:flex;align-items:flex-start;gap:8px;">
+                        {project.mapsUrl ? (
+                          <a href={project.mapsUrl} target="_blank" rel="noopener" class="tlink" style="color:rgb(27,26,23);text-decoration:underline;text-decoration-color:rgba(27,26,23,0.25);text-underline-offset:3px;">
+                            {project.address} <span aria-hidden="true" style="color:rgb(133,128,117);">↗</span>
+                          </a>
+                        ) : (
+                          <span>{project.address}</span>
+                        )}
+                        <button
+                          type="button"
+                          data-copy={project.address}
+                          aria-label="Copy address"
+                          title="Copy address"
+                          style="flex-shrink:0;margin-top:1px;width:28px;height:28px;border:0;border-radius:8px;background:rgba(27,26,23,0.05);color:rgb(103,98,90);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;"
+                        >
+                          <svg data-icon="copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                          <svg data-icon="done" hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgb(47,107,63)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                        </button>
+                      </dd>
+                    </>
+                  )}
+                  {project.rating !== null && (
+                    <>
+                      <dt style="color:rgb(107,102,93);">Google rating</dt>
+                      <dd style="margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0;">
+                          <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z" />
+                          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+                          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+                          <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z" />
+                        </svg>
+                        <span style="font-weight:600;">{project.rating.toFixed(1)}</span>
+                        <span aria-label={`${project.rating.toFixed(1)} out of 5 stars`} style="display:inline-flex;gap:1px;color:#FBBC04;font-size:15px;letter-spacing:0;">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <span aria-hidden="true" style={project.rating! >= n - 0.25 ? "" : "color:rgba(27,26,23,0.15);"}>★</span>
+                          ))}
+                        </span>
+                        {project.reviewCount !== null && (
+                          <span style="color:rgb(103,98,90);">({project.reviewCount.toLocaleString("en-US")} reviews)</span>
+                        )}
+                      </dd>
+                    </>
+                  )}
+                  {project.hours.length > 0 && (
+                    <>
+                      <dt style="color:rgb(107,102,93);">Hours</dt>
+                      <dd style="margin:0;">
+                        <table style="border-collapse:collapse;font-variant-numeric:tabular-nums;">
+                          <tbody>
+                            {hours.map((row) => (
+                              <tr>
+                                <th scope="row" style="padding:0 20px 6px 0;text-align:left;font-weight:500;white-space:nowrap;vertical-align:top;">{row.days}</th>
+                                <td style={`padding:0 0 6px;white-space:nowrap;${row.closed ? "color:rgb(133,128,117);" : ""}`}>{row.time}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </dd>
+                    </>
+                  )}
+                </dl>
+              </div>
+            )}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Request -->
+    <section id="request" style="padding: 48px 0 32px; border-top: 1px solid rgba(27,26,23,0.06); scroll-margin-top: 96px;">
+      <div class="wrap">
+        <div style={`max-width:${project.hasVideo || project.hasPoster ? "1120px" : "760px"};margin-inline:auto;`}>
+          <ShowcaseForm
+            kind="claim"
+            project={{ slug: project.slug, name: project.name }}
+            heading={`Want this website for ${project.name}?`}
+            intro="Leave your details and we'll reach out within a day to talk price and next steps. No obligation."
+          >
+            {
+              (project.hasVideo || project.hasPoster) && (
+                <div
+                  slot="aside"
+                  style="height:100%;min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:clamp(20px,3vw,32px);background:radial-gradient(90% 70% at 100% 0%, rgba(252,132,100,0.22), transparent 60%), rgb(27,26,23);color:rgb(246,245,243);"
+                >
+                  <p class="mono" style="margin:0;display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(246,245,243,0.7);">
+                    <span aria-hidden="true" style="width:7px;height:7px;border-radius:9999px;background:rgb(252,132,100);box-shadow:0 0 0 4px rgba(252,132,100,0.2);" />
+                    Your new website
+                  </p>
+                  <div style="border-radius:12px;overflow:hidden;aspect-ratio:16/9;background:rgb(240,236,231);box-shadow:rgba(0,0,0,0.35) 0px 18px 40px;">
+                    {project.hasVideo ? (
+                      <video
+                        src={mediaUrl(project.slug, "preview.mp4")}
+                        poster={project.hasPoster ? mediaUrl(project.slug, "preview.jpg") : undefined}
+                        autoplay
+                        muted
+                        loop
+                        playsinline
+                        preload="metadata"
+                        aria-label={`Preview of the website for ${project.name}`}
+                        style="display:block;width:100%;height:100%;object-fit:cover;"
+                      />
+                    ) : (
+                      <img
+                        src={mediaUrl(project.slug, "preview.jpg")}
+                        alt={`Preview of the website for ${project.name}`}
+                        loading="lazy"
+                        style="display:block;width:100%;height:100%;object-fit:cover;"
+                      />
+                    )}
+                  </div>
+                  <p style="margin:0;font-size:15px;line-height:1.5;color:rgba(246,245,243,0.75);">
+                    Built for <strong style="color:rgb(246,245,243);font-weight:600;">{project.name}</strong>. Like it? It's yours to keep.
+                  </p>
+                </div>
+              )
+            }
+          </ShowcaseForm>
+          <p style="margin:20px 0 0;text-align:center;font-size:15px;color:rgb(103,98,90);">
+            Rather talk first?
+            <a href="https://cal.com/alisamadii" target="_blank" rel="noopener" class="tlink" style="color:rgb(194,69,31);">Book a meeting</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Not your business -->
+    <section style="padding: 32px 0 96px;">
+      <div class="wrap" style="text-align:center;">
+        <p style="margin:0;font-size:17px;color:rgb(103,98,90);">
+          Not your business?
+          <a href="/showcase#free-preview" class="tlink" style="color:rgb(194,69,31);">Request a free preview</a>
+          of your own website.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  {
+    hasDeck && (
+      <div
+        data-deck
+        data-src={`/showcase/${project.slug}/presentation`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${project.name} presentation`}
+        hidden
+        style="position:fixed;inset:0;z-index:100;background:rgb(14,13,12);"
+      >
+        <iframe
+          title={`${project.name} presentation`}
+          style="position:absolute;inset:0;width:100%;height:100%;border:0;display:block;"
+        />
+        <button
+          type="button"
+          data-deck-close
+          aria-label="Close presentation"
+          style="position:absolute;top:16px;right:16px;z-index:1;width:44px;height:44px;border:0;border-radius:9999px;background:rgba(14,13,12,0.6);color:#fff;font-size:20px;line-height:1;cursor:pointer;backdrop-filter:blur(8px);"
+        >
+          ✕
+        </button>
+      </div>
+    )
+  }
+
+  <script is:inline data-astro-rerun>
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(button.dataset.copy);
+        } catch {
+          return;
+        }
+        const [copy, done] = button.querySelectorAll("svg");
+        copy.hidden = true;
+        done.hidden = false;
+        button.setAttribute("aria-label", "Address copied");
+        setTimeout(() => {
+          copy.hidden = false;
+          done.hidden = true;
+          button.setAttribute("aria-label", "Copy address");
+        }, 1500);
+      });
+    });
+  </script>
+
+  <script is:inline data-astro-rerun>
+    (function initDeck() {
+      const overlay = document.querySelector("[data-deck]");
+      const openBtn = document.querySelector("[data-deck-open]");
+      if (!overlay || !openBtn) return;
+      const frame = overlay.querySelector("iframe");
+      const onKey = (e) => {
+        if (e.key === "Escape") close();
+      };
+      // The deck is same origin, so Escape pressed inside it closes too; every
+      // other key is left to the deck (arrows, F for full screen).
+      frame.addEventListener("load", () => {
+        frame.contentWindow.addEventListener("keydown", onKey);
+        frame.contentWindow.focus();
+      });
+      function open() {
+        if (!frame.src) frame.src = overlay.dataset.src;
+        overlay.hidden = false;
+        document.body.style.overflow = "hidden";
+        document.addEventListener("keydown", onKey);
+        frame.contentWindow?.focus();
+      }
+      function close() {
+        overlay.hidden = true;
+        document.body.style.overflow = "";
+        document.removeEventListener("keydown", onKey);
+        openBtn.focus();
+      }
+      openBtn.addEventListener("click", open);
+      overlay.querySelector("[data-deck-close]").addEventListener("click", close);
+    })();
+  </script>
+</MockupLayout>

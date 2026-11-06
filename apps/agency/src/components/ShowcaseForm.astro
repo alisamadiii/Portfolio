@@ -1,0 +1,229 @@
+---
+// Lead forms for /showcase. Sent by FormSubmit (data-form), which emails every
+// field to Ali, so the hidden ones arrive with the message.
+//   kind="claim"   request a listed site (hidden project = its slug)
+//   kind="preview" ask for a free preview of a business that isn't listed
+// Optional slot="aside": shown beside the form (right on desktop, on top on
+// phones), e.g. the project's preview video.
+interface Props {
+  kind: "claim" | "preview";
+  project?: { slug: string; name: string };
+  heading: string;
+  intro?: string;
+}
+const { kind, project, heading, intro } = Astro.props;
+const hasAside = Astro.slots.has("aside");
+
+const inputClass =
+  "w-full rounded-xl border border-charcoal/[0.08] bg-white px-4 py-3.5 text-sm text-charcoal transition-all focus:border-accent/30 focus:ring-2 focus:ring-accent/30 focus:outline-none";
+const labelClass =
+  "mb-2 block text-xs font-medium tracking-[0.1em] text-warmgray uppercase";
+---
+
+<div
+  class="rounded-[18px] bg-charcoal/[0.03] p-1.5 ring-1 ring-charcoal/[0.04]"
+>
+  <div
+    class:list={[
+      "overflow-hidden rounded-[14px] bg-white text-charcoal",
+      hasAside && "grid lg:grid-cols-2",
+    ]}
+  >
+    {
+      hasAside && (
+        <div class="lg:order-last">
+          <slot name="aside" />
+        </div>
+      )
+    }
+    <div class="p-6 sm:p-8">
+    <h2 class="text-2xl font-semibold tracking-[-0.02em] text-charcoal">
+      {heading}
+    </h2>
+    {
+      intro && (
+        <p class="mt-2 max-w-[52ch] text-sm leading-relaxed text-warmgray">
+          {intro}
+        </p>
+      )
+    }
+
+    <form
+      class="mt-6 space-y-5"
+      data-form={kind === "claim" ? "Showcase request" : "Free preview request"}
+      data-success={kind === "claim"
+        ? "Thanks! We'll reach out within a day to talk it through."
+        : "Thanks! We'll send your free preview as soon as it's ready."}
+    >
+      {
+        project && (
+          <>
+            <input type="hidden" name="project" value={project.slug} />
+            <input type="hidden" name="business" value={project.name} />
+          </>
+        )
+      }
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <span class={labelClass}>Name</span>
+          <input
+            name="name"
+            type="text"
+            required
+            maxlength="200"
+            autocomplete="name"
+            aria-label="Name"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <span class={labelClass}>Email</span>
+          <input
+            name="email"
+            type="email"
+            required
+            maxlength="200"
+            autocomplete="email"
+            aria-label="Email"
+            class={inputClass}
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div>
+          <span class={labelClass}>
+            Phone <span class="text-muted normal-case">(optional)</span>
+          </span>
+          <input
+            name="phone"
+            type="tel"
+            maxlength="40"
+            autocomplete="tel"
+            aria-label="Phone (optional)"
+            class={inputClass}
+          />
+        </div>
+        {
+          kind === "preview" ? (
+            <div>
+              <span class={labelClass}>Business name</span>
+              <input
+                name="business"
+                type="text"
+                required
+                maxlength="200"
+                autocomplete="organization"
+                aria-label="Business name"
+                class={inputClass}
+              />
+            </div>
+          ) : (
+            <div>
+              <span class={labelClass}>
+                Best time to call{" "}
+                <span class="text-muted normal-case">(optional)</span>
+              </span>
+              <input
+                name="best_time"
+                type="text"
+                maxlength="200"
+                aria-label="Best time to call (optional)"
+                class={inputClass}
+              />
+            </div>
+          )
+        }
+      </div>
+
+      {
+        kind === "preview" && (
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <span class={labelClass}>City</span>
+              <input
+                name="city"
+                type="text"
+                required
+                maxlength="200"
+                autocomplete="address-level2"
+                aria-label="City"
+                class={inputClass}
+              />
+            </div>
+            <div>
+              <span class={labelClass}>
+                Current website{" "}
+                <span class="text-muted normal-case">(optional)</span>
+              </span>
+              <input
+                name="website"
+                type="text"
+                maxlength="300"
+                autocomplete="url"
+                aria-label="Current website (optional)"
+                class={inputClass}
+              />
+            </div>
+          </div>
+        )
+      }
+
+      {
+        kind === "preview" && (
+          <div>
+            <span class={labelClass}>Google Maps link to your business</span>
+            <input
+              name="google_maps"
+              type="url"
+              required
+              maxlength="500"
+              inputmode="url"
+              placeholder="https://maps.app.goo.gl/..."
+              aria-label="Google Maps link to your business"
+              class={inputClass}
+            />
+            <p class="mt-2 text-xs text-warmgray">
+              Find your business on Google Maps, tap Share, then Copy link. We
+              build the preview from your Business Profile.
+            </p>
+          </div>
+        )
+      }
+
+      <div>
+        <span class={labelClass}>
+          {kind === "preview" ? "Anything we should know?" : "Message"}{" "}
+          <span class="text-muted normal-case">(optional)</span>
+        </span>
+        <textarea
+          name="message"
+          rows="3"
+          maxlength="5000"
+          aria-label="Message (optional)"
+          class={`${inputClass} resize-none`}></textarea>
+      </div>
+
+      {/* Honeypot: hidden from people, bots fill it in (the send endpoint drops those). */}
+      <input
+        type="text"
+        name="_hp"
+        tabindex="-1"
+        autocomplete="off"
+        style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"
+        aria-hidden="true"
+      />
+
+      <div class="flex flex-col gap-3 pt-1">
+        <button
+          type="submit"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-charcoal px-5 py-3 text-sm font-medium text-cream transition-all duration-300 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:px-8"
+        >
+          {kind === "claim" ? "Request this website" : "Request my free preview"}
+        </button>
+        <p data-form-message class="text-sm" role="status"></p>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>

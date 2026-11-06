@@ -1,0 +1,66 @@
+---
+// Sends every <form data-form="Name"> on the page to the api's /api/agency/send,
+// which emails it to Ali. Inline on purpose: the site loads no external
+// scripts. Included once per document (Layout + the two standalone pages).
+//   data-form="Quote"            form name, shown as the email's heading
+//   data-success="Thanks!"       message shown after a successful send
+//   [data-form-message]          where success / error text goes
+//   input[name=_hp]              honeypot, hidden from people
+const endpoint = `${
+  import.meta.env.DEV ? "http://localhost:3000" : "https://api.alisamadii.com"
+}/api/agency/send`;
+---
+
+<script is:inline data-astro-rerun define:vars={{ endpoint }}>
+  document.querySelectorAll("form[data-form]").forEach((form) => {
+    if (form.dataset.bound) return;
+    form.dataset.bound = "1";
+    const button = form.querySelector('[type="submit"]');
+    const message = form.querySelector("[data-form-message]");
+    const show = (text, ok) => {
+      if (!message) return;
+      message.textContent = text;
+      message.style.color = ok ? "rgb(47,107,63)" : "rgb(185,28,28)";
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const fields = {};
+      let hp = "";
+      new FormData(form).forEach((value, name) => {
+        if (typeof value !== "string") return;
+        if (name === "_hp") hp = value;
+        else if (fields[name]) fields[name] += ", " + value; // checkboxes
+        else fields[name] = value;
+      });
+
+      if (button) button.disabled = true;
+      show("Sending...", true);
+      try {
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            form: form.dataset.form,
+            fields,
+            pageUrl: location.href,
+            hp,
+          }),
+        });
+        const body = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(body?.error || "");
+        form.reset();
+        show(form.dataset.success || "Thanks, we'll be in touch soon.", true);
+      } catch (error) {
+        // TypeError = network failure; its message ("Failed to fetch") is not for people
+        show(
+          (!(error instanceof TypeError) && error.message) ||
+            "Something went wrong. Please try again or email a@alisamadii.com.",
+          false
+        );
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+  });
+</script>

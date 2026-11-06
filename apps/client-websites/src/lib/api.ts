@@ -14,9 +14,10 @@ export type {
   PaymentLink,
 } from "../../server/payments-schema";
 
-// Kept in step with PRESENTATION_FILE in server/meta.ts, which pulls in zod
-// and so stays out of the browser bundle.
+// Kept in step with PRESENTATION_FILE / PREVIEW_VIDEO_FILE in server/meta.ts,
+// which pulls in zod and so stays out of the browser bundle.
 export const PRESENTATION = "presentation.html";
+export const PREVIEW_VIDEO = "preview.mp4";
 
 // Own backend only (same origin, Basic Auth handled by the browser).
 export const api = axios.create({ baseURL: "/api" });

@@ -8,6 +8,7 @@ import {
   InfoIcon,
   PresentationIcon,
   StarIcon,
+  VideoIcon,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
@@ -33,6 +34,7 @@ import {
   getProject,
   httpUrl,
   PRESENTATION,
+  PREVIEW_VIDEO,
   type ProjectDetail,
 } from "@/lib/api";
 
@@ -111,6 +113,23 @@ export const ProjectPage = () => {
                 No presentation
               </Button>
             ))}
+          {data?.hasPreviewVideo && (
+            <Button
+              variant="outline"
+              size="sm"
+              render={
+                <a
+                  href={`/sites/${slug}/${PREVIEW_VIDEO}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Listed on the agency site's /showcase"
+                />
+              }
+            >
+              <VideoIcon />
+              Showcase video
+            </Button>
+          )}
           {data && (
             <PaymentDialog slug={slug} name={data.meta?.business?.name ?? ""} />
           )}

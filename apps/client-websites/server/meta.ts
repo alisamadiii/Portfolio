@@ -30,6 +30,16 @@ export const metaSchema = z.object({
       lng: z.number().optional(),
     })
     .optional(),
+  // Public listing on the agency site's /showcase. Only folders with a
+  // preview.mp4 are listed; their HTML is never served there.
+  showcase: z
+    .object({
+      title: z.string().optional(),
+      summary: z.string().optional(),
+      features: z.array(z.string()).optional(),
+      hidden: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 export type Meta = z.infer<typeof metaSchema>;
@@ -45,8 +55,14 @@ export type Project = {
 // A project's walkthrough deck always lives at <slug>/presentation.html.
 export const PRESENTATION_FILE = "presentation.html";
 
+// Showcase media: the screen recording the agency site shows instead of the
+// site itself, plus an optional poster frame.
+export const PREVIEW_VIDEO_FILE = "preview.mp4";
+export const PREVIEW_POSTER_FILE = "preview.jpg";
+
 export type ProjectDetail = Project & {
   // site .html files relative to the project folder, index.html first
   pages: string[];
   hasPresentation: boolean;
+  hasPreviewVideo: boolean;
 };
