@@ -43,7 +43,7 @@ export const GET: APIRoute = async () => {
 
 ## Pages
 
-- [Home: Websites for Small Businesses](https://www.alisamadii.com/): a custom website, designed, built, and set up in your own accounts, editable with AI through Client Hub. Features: custom design and development, Client Hub AI editing, own-account setup, SEO, analytics and speed reports, Google Business Profile optimization, NFC review cards and QR review links, Shopify stores, web apps, AI receptionist and chatbot. Custom quote after a free consultation.
+- [Home: Websites for Small Businesses](https://www.alisamadii.com/): a custom website, designed, built, and set up in your own accounts, editable with AI through Client Hub. Features: custom design and development, Client Hub AI editing, hosting and SSL, 24/7 uptime monitoring, own-account setup, SEO, analytics and speed reports, Google Business Profile optimization, NFC review cards and QR review links, Shopify stores, web apps, AI receptionist and chatbot. Custom quote after a free consultation.
 - [Lead Generation](https://www.alisamadii.com/lead-generation): the growth partnership. Managed Google Ads plus a website built to convert, every call and form tracked to its source, a 90-day lead guarantee, and FAQ.
 - [About](https://www.alisamadii.com/about): who we are, how we bring in leads, the founder.
 - [Work](https://www.alisamadii.com/work): websites built for clients and concept projects.
@@ -92,7 +92,7 @@ ${locations}
 
 Guides for clients: how the Client Hub works (AI editing, analytics, emails,
 speed tests), the step-by-step build process, and the ownership/handoff
-model where the client owns every account.
+model where every account is in the client's name and ownership transfers in full once the project is paid.
 
 ${docsList}
 

@@ -226,9 +226,9 @@ export const services: Service[] = [
         text: "Your content lives in a simple git-based CMS: change text and images from a dashboard, and every save deploys the site automatically. No developer needed for updates.",
       },
       {
-        title: "You own everything",
+        title: "Built to be yours",
         icon: "shield",
-        text: "Code in your repository, content in your CMS, domain in your name. Leave anytime and take it all with you.",
+        text: "Code in your repository, content in your CMS, domain in your name. Once paid in full, it is yours outright: leave anytime and take it all with you.",
       },
     ],
     process: [

@@ -54,6 +54,7 @@ const icons = {
   layout: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
   bot: '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
   sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>',
+  server: '<rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>',
   key: '<path d="m21 2-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
   "bar-chart": '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
@@ -62,6 +63,7 @@ const icons = {
   nfc: '<path d="M6 8.32a7.43 7.43 0 0 1 0 7.36"/><path d="M9.46 6.21a11.76 11.76 0 0 1 0 11.58"/><path d="M12.91 4.1a15.91 15.91 0 0 1 .01 15.8"/><path d="M16.37 2a20.16 20.16 0 0 1 0 20"/>',
   star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
   "qr-code": '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+  activity: '<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
   shield: '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
   megaphone: '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
@@ -86,6 +88,7 @@ const featureGroups: FeatureGroup[] = [
     title: "Run it yourself",
     features: [
       { icon: "sparkles", name: "Edit anything with AI", note: "Chat, preview, publish in a minute" },
+      { icon: "server", name: "Hosting & SSL", note: "Fast global hosting with free SSL, set up for you" },
       { icon: "key", name: "Set up in your own accounts", note: "Domain, hosting and code are yours" },
       { icon: "search", name: "Essential SEO foundation", note: "Sitemap, schema, meta, Search Console" },
       { icon: "bar-chart", name: "Analytics", note: "Visits, calls and forms in one place" },
@@ -107,6 +110,7 @@ const featureGroups: FeatureGroup[] = [
     title: "We keep it working",
     features: [
       { icon: "shield", name: "Care plan", note: "Monitoring, monthly report, edits done for you" },
+      { icon: "activity", name: "24/7 site monitor", note: "Uptime checked every 10 minutes, we know before you do" },
       { icon: "mail", name: "Managed newsletter", note: "We write and send it from your own domain" },
       { icon: "megaphone", name: "Google Ads management", note: "Campaigns, call tracking, monthly tuning" },
       { icon: "plug", name: "Booking, CRM & payment integrations", note: "Calendars, Stripe, your existing tools" },
@@ -124,8 +128,8 @@ const faqs = [
   {
     q: "What's included after launch?",
     a: SHOW_PRICING
-      ? `Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support are included, all for ${monthly}/mo. Rather have us make the edits? The ${care}/mo Care plan adds monitoring, a monthly report, and up to an hour of edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.`
-      : "Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support come with it. Rather have us make the edits? The Care plan adds monitoring, a monthly report, and edits done for you. Your domain, hosting, and code are set up in your own accounts, so you own everything.",
+      ? `Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support are included, all for ${monthly}/mo. Rather have us make the edits? The ${care}/mo Care plan adds monitoring, a monthly report, and up to an hour of edits done for you. Your domain, hosting, and code are set up in your own accounts, and once the project is paid in full, everything is yours.`
+      : "Client Hub: edit text, images, and pages by chatting with AI, preview the change, then publish. Analytics, speed reports, and support come with it. Rather have us make the edits? The Care plan adds monitoring, a monthly report, and edits done for you. Your domain, hosting, and code are set up in your own accounts, and once the project is paid in full, everything is yours.",
   },
   {
     q: "What brings in local calls?",
@@ -143,7 +147,7 @@ const faqs = [
   },
   {
     q: 'Who owns the website?',
-    a: 'You do: domain, code, and content. The code lives in a repository you own.',
+    a: 'You do, once the project is paid in full: domain, code, and content, all in accounts in your name.',
   },
 ];
 
@@ -315,7 +319,7 @@ const jsonLd = {
 <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 6px">
 <a href={quoteHref} class="btn cta">Get a free consultation</a>
 <p class="cap" style="margin: 0; color: #6d645c">Not in the <a href="/showcase" class="tlink" style="color: #e0603d">showcase</a>? <a href="/showcase#free-preview" class="tlink" style="color: #e0603d">Request a free preview</a></p>
-<p class="cap" style="margin: 0; color: #6d645c">{SHOW_PRICING ? `From ${setup} + ${monthly}/mo` : 'Custom-built'} · no templates · you own it</p>
+<p class="cap" style="margin: 0; color: #6d645c">{SHOW_PRICING ? `From ${setup} + ${monthly}/mo` : 'Custom-built'} · no templates · yours to own</p>
 </div>
 </div>
 
@@ -365,7 +369,7 @@ const jsonLd = {
 <img src="/images/agency/benefit-own.webp" alt="A website repository owned by you, linked to your domain, code and content" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block" width="1600" height="893" loading="lazy" decoding="async">
 
 </div>
-<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">You own everything</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Domain, code, and content are yours. Leave anytime and take it all with you.</p></div>
+<div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Built to be yours</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Domain, code, and content are set up in your name. Once the project is paid in full, it is yours outright: leave anytime and take it all with you.</p></div>
 </article>
 </div>
 </div>
@@ -398,7 +402,7 @@ const jsonLd = {
 <article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
 <span class="cap" style="color: #c4502e">04 · Yours to keep</span>
 <h3 style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em">Set up in your own accounts</h3>
-<p style="margin: 0; font-size: 15px; color: #5a524b">Domain, hosting, and code live in accounts you own, with full access from day one. No lock-in.</p>
+<p style="margin: 0; font-size: 15px; color: #5a524b">Domain, hosting, and code live in accounts in your name. Once the project is paid in full, it is yours outright. No lock-in.</p>
 </article>
 <article class="card" style="padding: 32px; display: flex; flex-direction: column; gap: 14px">
 <span class="cap" style="color: #c4502e">05 · Newsletter</span>
