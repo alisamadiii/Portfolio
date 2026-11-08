@@ -44,8 +44,6 @@ export type PreviewSession = {
   error: string | null;
   /** AI provider bound at session creation (single-session lookups). */
   provider?: "gemini" | "claude";
-  /** Gemini key tier for free-tier notices (single-session lookups). */
-  geminiTier?: "free" | "paid";
   createdAt: string;
 };
 

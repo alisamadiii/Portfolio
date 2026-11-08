@@ -58,7 +58,6 @@ export type PreviewSessionInfo = {
   previewUrl: string;
   error: string | null;
   provider?: "gemini" | "claude";
-  geminiTier?: "free" | "paid";
   createdAt: string;
 };
 
