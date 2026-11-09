@@ -1,5 +1,5 @@
-// Two fixed lines so "me." stays on line one.
-const lines = ["“I don't want anyone to hire me.", "I want to be my own boss.”"];
+// Two fixed lines so the break stays after "company,".
+const lines = ["“I build like it's my own company,", "now I want to build for yours.”"];
 
 export function AnimatedQuote() {
   // Running index across both lines → continuous per-letter stagger.
