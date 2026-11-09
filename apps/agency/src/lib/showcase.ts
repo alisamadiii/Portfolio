@@ -17,6 +17,8 @@ export type ShowcaseProject = {
   slug: string;
   name: string;
   category: string | null;
+  // the /showcase filter tab, grouped from the category
+  industry: Industry;
   address: string | null;
   // Google Maps link for the business (the stored mapsUrl, else a search)
   mapsUrl: string | null;
@@ -31,7 +33,28 @@ export type ShowcaseProject = {
   hasPoster: boolean;
   hasPresentation: boolean;
   uploadedAt: string | null;
+  // earliest LastModified of the folder's objects in R2
+  createdAt: string | null;
 };
+
+// Showcase filter tabs, in display order. A project's industry is the first
+// whose pattern matches its business.category ("Used car dealer & auto
+// repair" -> automotive), or showcase.industry in _meta.json when set to one
+// of these ids. Anything unmatched lands in "other".
+export const INDUSTRIES = [
+  { id: "restaurants", label: "Restaurants", match: /restaurant|cafe|coffee|bakery|grill|pizza|bar\b|diner|food|catering/i },
+  { id: "automotive", label: "Automotive", match: /auto|car\b|car |dealer|tire|mechanic|body shop|towing|detailing/i },
+  { id: "beauty", label: "Beauty & barber", match: /barber|salon|beauty|nail|spa\b|lash|brow|tattoo/i },
+  { id: "home-services", label: "Home services", match: /plumb|hvac|roof|electric|handyman|landscap|lawn|pest|clean|paint|contractor|pool/i },
+  { id: "health", label: "Health", match: /dent|clinic|doctor|chiropract|therap|medical|pharmacy|fitness|gym|yoga/i },
+  { id: "other", label: "Other", match: null },
+] as const;
+export type Industry = (typeof INDUSTRIES)[number]["id"];
+
+const industryOf = (override: string | null, category: string | null): Industry =>
+  INDUSTRIES.find((i) => i.id === override)?.id ??
+  INDUSTRIES.find((i) => i.match && category && i.match.test(category))?.id ??
+  "other";
 
 const env = (name: string): string | undefined =>
   process.env[name] ?? import.meta.env[name];
@@ -97,12 +120,13 @@ const cached = <T>(loader: () => Promise<T>): Cached<T> => {
   };
 };
 
-// Every top-level folder, plus which of the showcase files each one has, from
-// one paginated listing of the whole bucket (small: one folder per client).
+// Every top-level folder with its creation time (earliest object
+// LastModified), plus which of the showcase files each one has, from one
+// paginated listing of the whole bucket (small: one folder per client).
 const listBucket = async () => {
   const conn = r2();
-  if (!conn) return { slugs: [], keys: new Set<string>() };
-  const slugs = new Set<string>();
+  if (!conn) return { slugs: new Map<string, string>(), keys: new Set<string>() };
+  const slugs = new Map<string, string>();
   const keys = new Set<string>();
   let cursor: string | null = null;
   do {
@@ -111,11 +135,15 @@ const listBucket = async () => {
     const res = await conn.client.fetch(`${conn.base}?${query.toString()}`);
     if (!res.ok) throw new Error(`Showcase list failed (${res.status})`);
     const xml = await res.text();
-    for (const m of xml.matchAll(/<Key>(.*?)<\/Key>/g)) {
-      const key = unescapeXml(m[1]!);
+    for (const m of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+      const key = unescapeXml(m[1]!.match(/<Key>(.*?)<\/Key>/)?.[1] ?? "");
       const slug = key.slice(0, key.indexOf("/"));
       if (!SLUG.test(slug)) continue;
-      slugs.add(slug);
+      const modified = m[1]!.match(/<LastModified>(.*?)<\/LastModified>/)?.[1] ?? "";
+      const seen = slugs.get(slug);
+      if (seen === undefined || (modified && (!seen || modified < seen))) {
+        slugs.set(slug, modified);
+      }
       if (/^[^/]+\/(_meta\.json|preview\.mp4|preview\.jpg|presentation\.html)$/.test(key)) {
         keys.add(key);
       }
@@ -128,7 +156,7 @@ const listBucket = async () => {
         ) || null
       : null;
   } while (cursor);
-  return { slugs: [...slugs], keys };
+  return { slugs, keys };
 };
 
 // Streams one whitelisted media file. Range and conditional headers are
@@ -247,16 +275,19 @@ const readMeta = async (slug: string) => {
 const toProject = (
   slug: string,
   meta: Record<string, unknown>,
-  keys: Set<string>
+  keys: Set<string>,
+  createdAt: string | null
 ): ShowcaseProject | null => {
   const business = obj(meta.business);
   const showcase = obj(meta.showcase);
   if (showcase.hidden === true) return null;
   const address = str(business.address);
+  const category = str(business.category);
   return {
     slug,
     name: str(business.name) ?? str(meta.name) ?? slug,
-    category: str(business.category),
+    category,
+    industry: industryOf(str(showcase.industry), category),
     address,
     mapsUrl: mapsUrlOf(business, slug),
     city: cityOf(address),
@@ -273,24 +304,26 @@ const toProject = (
     hasPoster: keys.has(`${slug}/preview.jpg`),
     hasPresentation: keys.has(`${slug}/presentation.html`),
     uploadedAt: str(meta.uploadedAt),
+    createdAt,
   };
 };
 
 const load = async () => {
   const { slugs, keys } = await listBucket();
   const projects = await Promise.all(
-    slugs.map(async (slug) =>
+    [...slugs].map(async ([slug, createdAt]) =>
       toProject(
         slug,
         keys.has(`${slug}/_meta.json`) ? ((await readMeta(slug)) ?? {}) : {},
-        keys
+        keys,
+        createdAt || null
       )
     )
   );
   return projects
     .filter((p): p is ShowcaseProject => p !== null)
-    // alphabetical by business name, so visitors can scan for theirs
-    .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+    // newest first by R2 creation time; ISO strings compare as dates
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 };
 
 const projects = cached(async () => {

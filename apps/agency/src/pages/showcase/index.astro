@@ -5,13 +5,46 @@
 // shows up within the cache window without a redeploy.
 import MockupLayout from "../../layouts/MockupLayout.astro";
 import ShowcaseForm from "../../components/ShowcaseForm.astro";
-import { listShowcase, mediaUrl } from "../../lib/showcase";
+import { INDUSTRIES, listShowcase, mediaUrl } from "../../lib/showcase";
 
 export const prerender = false;
 
 const SITE = "https://www.alisamadii.com";
 const pageUrl = `${SITE}/showcase`;
 const projects = await listShowcase();
+
+// 6 per page so the grid never loads more than 6 videos. Search runs on the
+// server over every project, then the matches are paginated.
+const PER_PAGE = 6;
+const q = (Astro.url.searchParams.get("q") ?? "").trim().slice(0, 80);
+const needle = q.toLowerCase();
+// tabs: only industries that have at least one project, with counts
+const tabs = INDUSTRIES.map((i) => ({
+  ...i,
+  count: projects.filter((p) => p.industry === i.id).length,
+})).filter((t) => t.count > 0);
+const industryParam = Astro.url.searchParams.get("industry");
+const industry = tabs.find((t) => t.id === industryParam)?.id ?? null;
+const matches = projects.filter(
+  (p) =>
+    (!industry || p.industry === industry) &&
+    (!needle ||
+      [p.name, p.category, p.city].filter(Boolean).join(" ").toLowerCase().includes(needle))
+);
+const pageCount = Math.max(1, Math.ceil(matches.length / PER_PAGE));
+const page = Math.min(
+  pageCount,
+  Math.max(1, Number.parseInt(Astro.url.searchParams.get("page") ?? "1", 10) || 1)
+);
+const shown = matches.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+const pageHref = (n: number, ind: string | null = industry) => {
+  const params = new URLSearchParams();
+  if (ind) params.set("industry", ind);
+  if (q) params.set("q", q);
+  if (n > 1) params.set("page", String(n));
+  const query = params.toString();
+  return `/showcase${query ? `?${query}` : ""}#projects`;
+};
 
 Astro.response.headers.set(
   "Cache-Control",
@@ -43,7 +76,7 @@ const schema = [
 <MockupLayout
   title="Showcase: Websites Already Built for Local Businesses | Ali Samadi"
   description="We design websites for local businesses before they ask. Find yours, watch the preview, and keep it if you like it. Not listed? Request a free preview."
-  canonical={pageUrl}
+  canonical={page > 1 && !q && !industry ? `${pageUrl}?page=${page}` : pageUrl}
   og={{
     title: "Showcase: find your website, already built",
     description:
@@ -88,25 +121,41 @@ const schema = [
               <h2 style="margin:0;font-size:clamp(30px,3.6vw,44px);line-height:1.08;font-weight:600;letter-spacing:-0.025em;">
                 Ready-made websites
               </h2>
-              {projects.length > 6 && (
-                <input
-                  type="search"
-                  data-showcase-search
-                  placeholder="Search by business or city"
-                  aria-label="Search by business or city"
-                  style="width:min(320px,100%);min-height:44px;padding:0 16px;border-radius:11px;border:1px solid rgba(27,26,23,0.1);background:rgb(255,254,252);font:inherit;font-size:15px;color:rgb(27,26,23);"
-                />
+              {projects.length > PER_PAGE && (
+                <form method="get" action="/showcase#projects" role="search" style="width:min(320px,100%);">
+                  {industry && <input type="hidden" name="industry" value={industry} />}
+                  <input
+                    type="search"
+                    name="q"
+                    value={q}
+                    placeholder="Search by business or city"
+                    aria-label="Search by business or city"
+                    style="width:100%;min-height:44px;padding:0 16px;border-radius:11px;border:1px solid rgba(27,26,23,0.1);background:rgb(255,254,252);font:inherit;font-size:15px;color:rgb(27,26,23);"
+                  />
+                </form>
               )}
             </div>
+            {tabs.length > 1 && (
+              <nav aria-label="Filter by industry" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:-8px 0 0;padding-bottom:2px;">
+                {[{ id: null, label: "All", count: projects.length }, ...tabs].map((t) => (
+                  <a
+                    href={pageHref(1, t.id)}
+                    aria-current={t.id === industry ? "page" : undefined}
+                    style={`flex-shrink:0;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:9999px;font-size:15px;font-weight:500;text-decoration:none;white-space:nowrap;${t.id === industry ? "background:rgb(27,26,23);color:rgb(246,245,243);" : "background:rgba(27,26,23,0.05);color:rgb(27,26,23);"}`}
+                  >
+                    {t.label}
+                    <span style={`font-size:13px;${t.id === industry ? "color:rgba(246,245,243,0.6);" : "color:rgb(133,128,117);"}`}>{t.count}</span>
+                  </a>
+                ))}
+              </nav>
+            )}
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
-              {projects.map((p) => (
+              {shown.map((p) => (
                 <a
                   href={`/showcase/${p.slug}`}
                   class="lift"
-                  data-showcase-card
                   data-astro-prefetch="viewport"
                   title={p.name}
-                  data-search={[p.name, p.category, p.city].filter(Boolean).join(" ").toLowerCase()}
                   style="text-decoration:none;color:rgb(27,26,23);border-radius:14px;overflow:hidden;background:rgb(255,254,252);box-shadow:rgba(27,26,23,0.08) 0px 0px 0px 1px, rgba(27,26,23,0.06) 0px 8px 24px;display:flex;flex-direction:column;min-width:0;"
                 >
                   {/* 16:9 like the recordings; cover so a slightly off ratio never shows bars */}
@@ -177,7 +226,30 @@ const schema = [
                 </a>
               ))}
             </div>
-            <p data-showcase-empty hidden style="margin:0;font-size:16px;color:rgb(103,98,90);">
+            {pageCount > 1 && (
+              <nav aria-label="Showcase pages" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;">
+                {page > 1 && (
+                  <a href={pageHref(page - 1)} rel="prev" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:10px;background:rgba(27,26,23,0.05);color:rgb(27,26,23);font-size:15px;font-weight:500;text-decoration:none;">
+                    <span aria-hidden="true">←</span>&nbsp;Prev
+                  </a>
+                )}
+                {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+                  <a
+                    href={pageHref(n)}
+                    aria-current={n === page ? "page" : undefined}
+                    style={`display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;padding:0 10px;border-radius:10px;font-size:15px;font-weight:500;text-decoration:none;${n === page ? "background:rgb(27,26,23);color:rgb(246,245,243);" : "background:rgba(27,26,23,0.05);color:rgb(27,26,23);"}`}
+                  >
+                    {n}
+                  </a>
+                ))}
+                {page < pageCount && (
+                  <a href={pageHref(page + 1)} rel="next" style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border-radius:10px;background:rgba(27,26,23,0.05);color:rgb(27,26,23);font-size:15px;font-weight:500;text-decoration:none;">
+                    Next&nbsp;<span aria-hidden="true">→</span>
+                  </a>
+                )}
+              </nav>
+            )}
+            <p hidden={shown.length > 0} style="margin:0;font-size:16px;color:rgb(103,98,90);">
               No match. <a href="#free-preview" class="tlink" style="color:rgb(194,69,31);">Request a free preview</a> and we'll build one for you.
             </p>
           </div>
@@ -243,21 +315,6 @@ const schema = [
           { threshold: 0.4 }
         );
         videos.forEach((v) => io.observe(v));
-      }
-
-      const search = document.querySelector("[data-showcase-search]");
-      const empty = document.querySelector("[data-showcase-empty]");
-      if (search) {
-        search.addEventListener("input", () => {
-          const q = search.value.trim().toLowerCase();
-          let shown = 0;
-          document.querySelectorAll("[data-showcase-card]").forEach((card) => {
-            const match = !q || card.dataset.search.includes(q);
-            card.style.display = match ? "flex" : "none";
-            if (match) shown++;
-          });
-          if (empty) empty.hidden = shown > 0;
-        });
       }
     })();
   </script>
