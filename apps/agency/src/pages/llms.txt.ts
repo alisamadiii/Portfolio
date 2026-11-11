@@ -43,7 +43,7 @@ export const GET: APIRoute = async () => {
 
 ## Pages
 
-- [Home: Websites for Small Businesses](https://www.alisamadii.com/): a custom website, designed, built, and set up in your own accounts, editable with AI through Client Hub. Features: custom design and development, Client Hub AI editing, hosting and SSL, 24/7 uptime monitoring, own-account setup, SEO, analytics and speed reports, Google Business Profile optimization, NFC review cards and QR review links, Shopify stores, web apps, AI receptionist and chatbot. Custom quote after a free consultation.
+- [Home: Websites for Small Businesses](https://www.alisamadii.com/): a custom website, designed, built, and set up in your own accounts, editable with AI through Client Hub. Features: custom design and development, Client Hub AI editing, hosting and SSL, 24/7 uptime monitoring, own-account setup, SEO, analytics and speed reports, Google Business Profile optimization, NFC review cards and QR review links, Shopify stores, web apps, AI receptionist and chatbot. Already on Shopify, Wix or Square: a custom hand-coded website connected to that account, so products, checkout, bookings, forms and payments keep running there and the site is edited in Client Hub. Custom quote after a free consultation.
 - [Lead Generation](https://www.alisamadii.com/lead-generation): the growth partnership. Managed Google Ads plus a website built to convert, every call and form tracked to its source, a 90-day lead guarantee, and FAQ.
 - [About](https://www.alisamadii.com/about): who we are, how we bring in leads, the founder.
 - [Work](https://www.alisamadii.com/work): websites built for clients and concept projects.
@@ -72,7 +72,7 @@ export const GET: APIRoute = async () => {
 Every growth plan is a custom website plus fully managed Google Ads. ${fmtPrice(TERMS.setup)} setup, ${TERMS.minimumMonths}-month minimum, then month-to-month. Ad spend is not included; Google bills it to the client directly.
 
 ${PLANS.map((p) => `- ${p.name}: ${fmtPrice(p.monthly)}/mo, manages up to ${fmtPrice(p.adSpendCap)}/mo in ad spend. ${p.features.join("; ")}.`).join("\n")}
-- Website only (no ads): scoped per project around the features picked, custom quote after a free consultation. Core features: ${WEBSITE_PLANS[0].features.join("; ")}. Local growth add-ons: ${WEBSITE_PLANS[1].features.slice(1).join("; ")}. Also: custom Shopify stores, web apps and client portals, AI receptionist and chatbot.
+- Website only (no ads): scoped per project around the features picked, custom quote after a free consultation. Core features: ${WEBSITE_PLANS[0].features.join("; ")}. Local growth add-ons: ${WEBSITE_PLANS[1].features.slice(1).join("; ")}. Also: custom websites on Shopify, Wix and Square (their backend keeps checkout, bookings and payments), web apps and client portals, AI receptionist and chatbot.
 - ${CARE.name} plan (optional, replaces the Client Hub monthly): ${fmtPrice(CARE.monthly)}/mo. ${CARE.features.join("; ")}. ${CARE.fine}
 - ${NEWSLETTER.name} (optional add-on): ${fmtPrice(NEWSLETTER.monthly)}/mo. ${NEWSLETTER.features.join("; ")}.
 - E-commerce storefronts, web apps and integrations: custom quote after a discovery call.

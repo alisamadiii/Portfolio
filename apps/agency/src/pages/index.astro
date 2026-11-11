@@ -30,7 +30,7 @@ const title = SHOW_PRICING
   : 'Custom Website Design & Development for Small Businesses | Ali Samadi Agency';
 const description = SHOW_PRICING
   ? `Custom, hand-coded websites for businesses anywhere. Easy to edit yourself, yours to keep. From ${setup} + ${monthly}/mo.`
-  : 'Custom-designed, hand-coded websites you edit yourself with AI. Shopify stores, web apps, AI receptionists, local SEO and reviews, all set up in your own accounts. Free consultation.';
+  : 'Custom-designed, hand-coded websites you edit yourself with AI. Custom sites on your Shopify, Wix or Square, web apps, AI receptionists, local SEO and reviews, all in your own accounts. Free consultation.';
 const ogImage = '/og/websites.jpg';
 const quoteHref = '/quote?plan=website';
 // "custom" pre-checks the "Not sure yet" chip on the quote form.
@@ -79,6 +79,7 @@ const featureGroups: FeatureGroup[] = [
       { icon: "pen-tool", name: "Custom design", note: "Designed around your business, never a template" },
       { icon: "code", name: "Hand-coded development", note: "Fast, accessible, mobile-first" },
       { icon: "shopping-bag", name: "Custom Shopify store", note: "A storefront on your own Shopify" },
+      { icon: "plug", name: "Custom site on Wix or Square", note: "Your design, their backend for bookings and checkout" },
       { icon: "layout", name: "Web apps & client portals", note: "Dashboards, logins, databases" },
       { icon: "bot", name: "AI receptionist & chatbot", note: "Answers calls and chats, books the job", isNew: true },
     ],
@@ -118,6 +119,57 @@ const featureGroups: FeatureGroup[] = [
   },
 ];
 
+// "Already on Shopify, Wix or Square?" cards. Glyph paths are simple-icons
+// marks (Shopify #95BF47, Wix #0C6EFC, Square #3E4348); inline because this page ships no Tailwind,
+// so ShopifyLogo.astro's utility classes would not apply here.
+const platforms = [
+  {
+    name: "Shopify",
+    color: "#95BF47",
+    tint: "#eef5e3",
+    // Bag glyph + wordmark as text; Wix's mark already is the wordmark.
+    viewBox: "0 0 24 24",
+    wordmark: true,
+    path: "M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zM11.71 11.305s-.81-.424-1.774-.424c-1.447 0-1.504.906-1.504 1.141 0 1.232 3.24 1.715 3.24 4.629 0 2.295-1.44 3.76-3.406 3.76-2.354 0-3.54-1.465-3.54-1.465l.646-2.086s1.245 1.066 2.28 1.066c.675 0 .975-.545.975-.932 0-1.619-2.654-1.694-2.654-4.359-.034-2.237 1.571-4.416 4.827-4.416 1.257 0 1.875.361 1.875.361l-.945 2.715-.02.01zM11.17.83c.136 0 .271.038.405.135-.984.465-2.064 1.639-2.508 3.992-.656.213-1.293.405-1.889.578C7.697 3.75 8.951.84 11.17.84V.83zm1.235 2.949v.135c-.754.232-1.583.484-2.394.736.466-1.777 1.333-2.645 2.085-2.971.193.501.309 1.176.309 2.1zm.539-2.234c.694.074 1.141.867 1.429 1.755-.349.114-.735.231-1.158.366v-.252c0-.752-.096-1.371-.271-1.871v.002zm2.992 1.289c-.02 0-.06.021-.078.021s-.289.075-.714.21c-.423-1.233-1.176-2.37-2.508-2.37h-.115C12.135.209 11.669 0 11.265 0 8.159 0 6.675 3.877 6.21 5.846c-1.194.365-2.063.636-2.16.674-.675.213-.694.232-.772.87-.075.462-1.83 14.063-1.83 14.063L15.009 24l.927-21.166z",
+    title: "A storefront that looks nothing like a theme",
+    body: "We design the front of your store from scratch and build it on your own Shopify. Products, inventory, checkout and payments keep running in Shopify exactly as they do today.",
+    keeps: ["Products & inventory stay in Shopify", "Checkout & payments untouched", "Your account, your store"],
+    cta: "Redesign my Shopify store",
+    href: "/quote?plan=ecommerce",
+    more: { label: "See Shopify storefronts", href: "/ecommerce" },
+  },
+  {
+    name: "Wix",
+    color: "#0C6EFC",
+    tint: "#e6effd",
+    viewBox: "0 7 24 10",
+    wordmark: false,
+    path: "m0 7.354 2.113 9.292h.801a1.54 1.54 0 0 0 1.506-1.218l1.351-6.34a.171.171 0 0 1 .167-.137c.08 0 .15.058.167.137l1.352 6.34a1.54 1.54 0 0 0 1.506 1.218h.805l2.113-9.292h-.565c-.62 0-1.159.43-1.296 1.035l-1.26 5.545-1.106-5.176a1.76 1.76 0 0 0-2.19-1.324c-.639.176-1.113.716-1.251 1.365l-1.094 5.127-1.26-5.537A1.33 1.33 0 0 0 .563 7.354H0zm13.992 0a.951.951 0 0 0-.951.95v8.342h.635a.952.952 0 0 0 .951-.95V7.353h-.635zm1.778 0 3.158 4.66-3.14 4.632h1.325c.368 0 .712-.181.918-.486l1.756-2.59a.12.12 0 0 1 .197 0l1.754 2.59c.206.305.55.486.918.486h1.326l-3.14-4.632L24 7.354h-1.326c-.368 0-.712.181-.918.486l-1.772 2.617a.12.12 0 0 1-.197 0L18.014 7.84a1.108 1.108 0 0 0-.918-.486H15.77z",
+    title: "A custom website, powered by your Wix backend",
+    body: "We design and hand-code a website that is nothing like a Wix template, then connect it to your Wix account. Bookings, forms, checkout, payments and members keep running in Wix. You edit the site itself in Client Hub.",
+    keeps: ["Bookings, forms & checkout stay in Wix", "Edit text & photos in Client Hub", "Your Wix plan, your account"],
+    cta: "Redesign my Wix site",
+    href: "/quote?plan=website",
+    more: undefined,
+  },
+  {
+    name: "Square",
+    color: "#3E4348",
+    tint: "#ebecee",
+    viewBox: "0 0 24 24",
+    wordmark: true,
+    path: "M4.01 0A4.01 4.01 0 000 4.01v15.98c0 2.21 1.8 4 4.01 4.01h15.98C22.2 24 24 22.2 24 19.99V4A4.01 4.01 0 0019.99 0H4zm1.62 4.36h12.74c.7 0 1.26.57 1.26 1.27v12.74c0 .7-.56 1.27-1.26 1.27H5.63c-.7 0-1.26-.57-1.26-1.27V5.63a1.27 1.27 0 011.26-1.27zm3.83 4.35a.73.73 0 00-.73.73v5.09c0 .4.32.72.72.72h5.1a.73.73 0 00.73-.72V9.44a.73.73 0 00-.73-.73h-5.1Z",
+    title: "A headless site on top of your Square",
+    body: "We design and hand-code a website that is nothing like a Square Online template, then connect it to your Square account. Catalog, checkout, appointments and payments keep running in Square. You edit the site itself in Client Hub.",
+    keeps: ["Catalog, checkout & appointments stay in Square", "Edit text & photos in Client Hub", "Your Square account, your data"],
+    cta: "Redesign my Square site",
+    href: "/quote?plan=website",
+    more: undefined,
+    // Third card sits under the pair, full width.
+    span: true,
+  },
+];
+
 const faqs = [
   {
     q: "How much does a website cost?",
@@ -136,6 +188,10 @@ const faqs = [
     a: SHOW_PRICING
       ? "Core is the website itself. Local Growth adds the pieces that bring in local calls: we optimize your Google Business Profile and give you an NFC review card, so happy customers can tap their phone and leave a review on the spot."
       : "The local growth pieces: we optimize your Google Business Profile, give you an NFC review card and a QR code for receipts and texts, so happy customers can tap or scan and leave a review on the spot.",
+  },
+  {
+    q: 'I already use Shopify, Wix or Square. Do I have to switch?',
+    a: 'No. We design and hand-code a custom website that connects to your existing Shopify, Wix or Square account. Products, checkout, bookings, forms and payments keep running there, and you edit the site itself in Client Hub.',
   },
   {
     q: 'How fast can my site go live?',
@@ -196,11 +252,18 @@ const jsonLd = {
         "hasOfferCatalog": {
           "@type": "OfferCatalog",
           "name": "Website features",
-          "itemListElement": featureGroups.map((group) => ({
-            "@type": "Offer",
-            "name": group.title,
-            "description": group.features.map((f) => f.name).join(", ") + ". Custom quote after a free consultation.",
-          })),
+          "itemListElement": [
+            ...featureGroups.map((group) => ({
+              "@type": "Offer",
+              "name": group.title,
+              "description": group.features.map((f) => f.name).join(", ") + ". Custom quote after a free consultation.",
+            })),
+            ...platforms.map((p) => ({
+              "@type": "Offer",
+              "name": `Custom website on ${p.name}`,
+              "description": p.body,
+            })),
+          ],
         },
       }),
       ...(SHOW_PRICING ? { "offers": [
@@ -371,6 +434,40 @@ const jsonLd = {
 </div>
 <div style="padding: 0 18px; display: flex; flex-direction: column; gap: 8px"><h3 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Built to be yours</h3><p style="margin: 0; max-width: 46ch; font-size: 16px; color: #5a524b">Domain, code, and content are set up in your name. Once the project is paid in full, it is yours outright: leave anytime and take it all with you.</p></div>
 </article>
+</div>
+</div>
+</section>
+
+<!-- PLATFORMS: already on Shopify, Wix or Square? Custom design on top, they keep
+     running the store or site where they do today. -->
+<section id="platforms" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 56px">
+<div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px">
+<p class="pill cap" style="margin: 0; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Already on Shopify, Wix or Square?</p>
+<h2 class="h2" style="max-width: 16ch">Keep your platform. Skip the template.</h2>
+<p style="margin: 0; max-width: 620px; font-size: 17px; color: #5a524b">You don't have to settle for the themes Shopify, Wix or Square hand out. We design and build a custom website around your business, you edit it in Client Hub, and your platform keeps doing the backend work: products, checkout, bookings, forms and payments.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 18px">
+{platforms.map((p) => (
+<article class="card lift" style={`position: relative; overflow: hidden; padding: clamp(26px, 4vw, 40px); display: flex; flex-direction: column; gap: 22px; background: linear-gradient(160deg, #fff 45%, ${p.tint} 100%); ${'span' in p && p.span ? 'grid-column: 1 / -1' : ''}`}>
+<svg aria-hidden="true" viewBox={p.viewBox} fill={p.color} style={`position: absolute; right: -8%; bottom: -14%; width: ${'span' in p && p.span ? '22%' : p.wordmark ? '46%' : '62%'}; opacity: 0.07; pointer-events: none`}><path d={p.path} /></svg>
+<div style="position: relative; display: flex; align-items: center; gap: 18px; min-height: 80px">
+<svg viewBox={p.viewBox} fill={p.color} role="img" aria-label={`${p.name} logo`} style={p.wordmark ? 'width: 76px; height: 76px; flex: none' : 'height: 68px; width: auto; flex: none'}><path d={p.path} /></svg>
+{p.wordmark && <span aria-hidden="true" style="font-size: clamp(40px, 5vw, 58px); font-weight: 800; letter-spacing: -0.045em; line-height: 1; color: #221f1c">{p.name}</span>}
+</div>
+<h3 style="position: relative; margin: 0; max-width: 18ch; font-size: 27px; line-height: 1.15; font-weight: 800; letter-spacing: -0.03em; text-wrap: balance">{p.title}</h3>
+<p style="position: relative; margin: 0; max-width: 48ch; font-size: 16px; color: #5a524b">{p.body}</p>
+<ul style="position: relative; margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px">
+{p.keeps.map((k) => (
+<li class="mono" style="display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 9999px; background: rgba(255,255,255,0.85); box-shadow: 0 0 0 1px rgba(34,31,28,0.08); font-size: 11.5px; color: #3d3833"><span aria-hidden="true" style={`width: 7px; height: 7px; border-radius: 9999px; background: ${p.color}`}></span>{k}</li>
+))}
+</ul>
+<div style="position: relative; margin-top: auto; padding-top: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px">
+<a href={p.href} class="btn dark">{p.cta}</a>
+{p.more && <a href={p.more.href} class="tlink" style="font-size: 15px; font-weight: 700">{p.more.label} →</a>}
+</div>
+</article>
+))}
 </div>
 </div>
 </section>
@@ -590,12 +687,13 @@ const jsonLd = {
 <nav aria-label="Page" style="position: fixed; z-index: 50; left: 50%; bottom: 22px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); display: flex; align-items: center; gap: 8px; padding: 7px 7px 7px 7px; border-radius: 9999px; background: rgba(255,253,251,0.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 20px 40px -16px rgba(34,31,28,0.35)">
 <a href="#top" aria-label="Back to top" class="tlink" style="width: 46px; height: 46px; border-radius: 9999px; background: linear-gradient(180deg, #ff9a7c, #ef6c4b); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5)"><img src="/images/agency/logo.png" alt="Ali Samadi Agency logo" style="width: 26px; height: 26px; border-radius: 6px" width="400" height="400" loading="lazy" decoding="async"></a>
 <span class="cap hide-sm" style="display: flex; gap: 6px; padding: 0 10px">
-<a href="#benefits" class="navlink">Benefits</a><a href="#services" class="navlink">Services</a><a href="#how" class="navlink">How we work</a><a href="#projects" class="navlink">Projects</a>{SHOW_PRICING ? <a href="#pricing" class="navlink">Pricing</a> : <a href="#features" class="navlink">Features</a>}
+<a href="#benefits" class="navlink">Benefits</a><a href="#platforms" class="navlink">Platforms</a><a href="#services" class="navlink">Services</a><a href="#how" class="navlink">How we work</a><a href="#projects" class="navlink">Projects</a>{SHOW_PRICING ? <a href="#pricing" class="navlink">Pricing</a> : <a href="#features" class="navlink">Features</a>}
 </span>
 <details class="wmenu show-sm">
 <summary class="btn" aria-label="Menu" style="display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: 9999px; background: rgba(34,31,28,0.06); color: #221f1c; font-size: 15px; font-weight: 700"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>Menu</summary>
 <div class="wmenu-panel" style="position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); width: min(340px, calc(100vw - 24px)); padding: 8px 18px 16px; border-radius: 24px; background: rgba(255,253,251,0.97); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 30px 60px -20px rgba(34,31,28,0.45); display: flex; flex-direction: column">
 <a href="#benefits" class="wlink">Benefits<span aria-hidden="true">→</span></a>
+<a href="#platforms" class="wlink">Shopify, Wix &amp; Square<span aria-hidden="true">→</span></a>
 <a href="#services" class="wlink">Services<span aria-hidden="true">→</span></a>
 <a href="#how" class="wlink">How we work<span aria-hidden="true">→</span></a>
 <a href="#projects" class="wlink">Projects<span aria-hidden="true">→</span></a>
