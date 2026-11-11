@@ -1,0 +1,54 @@
+---
+// Blog index: published posts from the Wix Blog app, newest first.
+import Layout from "../../layouts/Layout.astro";
+import { getPosts, type BlogPost } from "../../lib/wix";
+
+let posts: BlogPost[] = [];
+let failed = false;
+try {
+  posts = await getPosts();
+} catch (e) {
+  failed = true;
+  console.error("[wix] blog fetch failed", e);
+}
+const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+---
+
+<Layout title="Blog · Northline demo" description="Tips from the Northline team. Posts are written and published in Wix Blog.">
+  <section class="py-20 sm:py-28">
+    <div class="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-12">
+      <div class="flex flex-col items-center text-center gap-4">
+        <p class="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 shadow-card font-mono text-xs uppercase tracking-wider text-ink-soft"><span class="size-2 rounded-full bg-wix"></span>Written in Wix Blog</p>
+        <h1 class="text-5xl sm:text-6xl font-extrabold tracking-[-0.04em] leading-[1.02] text-balance">From the Northline crew</h1>
+        <p class="max-w-xl text-lg text-ink-soft">Posts are written and published in the Wix Blog editor. This page reads them on every load.</p>
+      </div>
+
+      {failed && <p class="mx-auto rounded-2xl border border-dashed border-ink/15 p-6 text-ink-soft">Blog temporarily unavailable. Is the Wix Blog app installed?</p>}
+      {!failed && posts.length === 0 && (
+        <div class="mx-auto max-w-lg rounded-2xl border border-dashed border-ink/15 p-6 text-center text-ink-soft">
+          <p class="font-bold text-ink">No published posts yet</p>
+          <p>Drafts are invisible to the site. In the Wix dashboard open Blog → the post → <strong>Publish</strong>, then reload.</p>
+        </div>
+      )}
+
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {posts.map((p) => (
+          <a href={`/blog/${p.slug}`} class="group rounded-3xl bg-white shadow-card overflow-hidden flex flex-col transition hover:-translate-y-1">
+            <div class="aspect-[16/10] bg-sand overflow-hidden">
+              {p.coverUrl ? (
+                <img src={p.coverUrl} alt="" class="size-full object-cover transition group-hover:scale-[1.03]" loading="lazy" width="800" height="500" />
+              ) : (
+                <div class="size-full bg-[radial-gradient(60%_70%_at_20%_100%,rgb(252_132_100/0.5),transparent_70%),radial-gradient(55%_65%_at_90%_0%,rgb(255_181_154/0.6),transparent_70%)]"></div>
+              )}
+            </div>
+            <div class="p-6 flex flex-col gap-3">
+              <p class="font-mono text-xs text-ink-mute">{fmt(p.firstPublishedDate)}{p.minutesToRead ? ` · ${p.minutesToRead} min read` : ""}</p>
+              <h2 class="text-xl font-extrabold tracking-tight group-hover:text-coral-deep">{p.title}</h2>
+              {p.excerpt && <p class="text-ink-soft text-[15px] line-clamp-3">{p.excerpt}</p>}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>

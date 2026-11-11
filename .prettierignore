@@ -3,3 +3,4 @@ pnpm-lock.yaml
 .lintstagedrc
 .next
 src/lib/AnimateItem.tsx
+demo/

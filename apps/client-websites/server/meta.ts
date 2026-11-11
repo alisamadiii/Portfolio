@@ -37,6 +37,9 @@ export const metaSchema = z.object({
       title: z.string().optional(),
       summary: z.string().optional(),
       features: z.array(z.string()).optional(),
+      // one of the INDUSTRIES ids in src/lib/industries.ts; overrides the
+      // industry grouped from business.category
+      industry: z.string().optional(),
       hidden: z.boolean().optional(),
     })
     .optional(),

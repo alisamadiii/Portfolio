@@ -1,0 +1,150 @@
+---
+// Product page: gallery, option pickers, variant price, add to cart. Variants
+// are embedded as JSON so the picker resolves the variant client-side; the
+// add call goes through /api/cart with the visitor cookie.
+import Layout from "../../layouts/Layout.astro";
+import { getProductBySlug, wixImage } from "../../lib/wix";
+
+const { slug } = Astro.params;
+const product = slug ? await getProductBySlug(slug) : undefined;
+if (!product) return new Response(null, { status: 404 });
+const money = (amount: string) => new Intl.NumberFormat("en-US", { style: "currency", currency: product.currency }).format(Number(amount));
+const first = product.variants.find((v) => v.inStock) ?? product.variants[0];
+const gallery = product.images.length ? product.images : product.image ? [product.image] : [];
+---
+
+<Layout title={`${product.name} · Northline shop`} description={product.descriptionHtml.replace(/<[^>]+>/g, "").slice(0, 150) || product.name}>
+  <section class="py-12 sm:py-20">
+    <div class="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-8">
+      <a href="/shop" class="self-start font-bold text-coral-deep hover:underline underline-offset-4">← Shop</a>
+      <div class="grid gap-10 lg:grid-cols-[1.1fr_1fr] items-start">
+        <!-- gallery -->
+        <div class="flex flex-col gap-3">
+          <div class="aspect-square rounded-3xl bg-sand overflow-hidden shadow-card">
+            {gallery[0] && <img id="main-img" src={wixImage(gallery[0], 1000, 1000)} alt={product.name} class="size-full object-cover" width="1000" height="1000" />}
+          </div>
+          {gallery.length > 1 && (
+            <div class="grid grid-cols-5 gap-3">
+              {gallery.map((g, i) => (
+                <button type="button" data-thumb={wixImage(g, 1000, 1000)} class:list={["aspect-square rounded-2xl overflow-hidden bg-sand ring-2 transition", i === 0 ? "ring-ink" : "ring-transparent hover:ring-ink/30"]} aria-label={`Image ${i + 1}`}>
+                  <img src={wixImage(g, 200, 200)} alt="" class="size-full object-cover" loading="lazy" width="200" height="200" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <!-- buy box -->
+        <form id="buy" class="flex flex-col gap-6 lg:sticky lg:top-24" data-product={product.id} data-variants={JSON.stringify(product.variants)}>
+          <div class="flex flex-col gap-3">
+            <p class="inline-flex items-center gap-2 self-start rounded-full bg-white px-3 py-1 shadow-card font-mono text-[11px] uppercase tracking-wider text-ink-soft"><span class="size-1.5 rounded-full bg-wix"></span>Wix Stores</p>
+            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-[-0.04em] leading-[1.05] text-balance">{product.name}</h1>
+            <p class="text-2xl font-extrabold tracking-tight"><span data-price>{money(first?.price ?? product.priceFrom)}</span>{first?.compareAt && <span class="ml-2 text-base font-semibold text-ink-mute line-through" data-compare>{money(first.compareAt)}</span>}</p>
+          </div>
+
+          {product.options.map((o) => (
+            <fieldset class="flex flex-col gap-2.5">
+              <legend class="text-sm font-bold">{o.name}: <span class="font-semibold text-ink-soft" data-choice-label={o.name}>{first?.choices[o.name]}</span></legend>
+              <div class="flex flex-wrap gap-2">
+                {o.choices.map((c) => (
+                  <label class="cursor-pointer">
+                    <input type="radio" name={o.name} value={c.name} checked={first?.choices[o.name] === c.name} class="peer sr-only" />
+                    {o.render === "SWATCH_CHOICES" ? (
+                      <span class="block size-9 rounded-full ring-2 ring-offset-2 ring-offset-cream ring-transparent peer-checked:ring-ink peer-focus-visible:ring-coral-deep transition" style={`background:${c.colorCode ?? "#ddd"}`} title={c.name}></span>
+                    ) : (
+                      <span class:list={["inline-flex items-center h-10 px-4 rounded-full bg-white shadow-card text-sm font-bold peer-checked:bg-ink peer-checked:text-cream transition", !c.inStock && "opacity-50 line-through"]}>{c.name}</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ))}
+
+          <div class="flex items-center gap-3">
+            <div class="inline-flex items-center rounded-full bg-white shadow-card">
+              <button type="button" data-qty="-1" class="size-12 grid place-items-center font-bold text-lg rounded-l-full hover:bg-sand" aria-label="Decrease quantity">−</button>
+              <input name="quantity" type="number" min="1" max="99" value="1" class="w-10 text-center font-bold outline-none bg-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" aria-label="Quantity" />
+              <button type="button" data-qty="1" class="size-12 grid place-items-center font-bold text-lg rounded-r-full hover:bg-sand" aria-label="Increase quantity">+</button>
+            </div>
+            <button type="submit" class="flex-1 inline-flex items-center justify-center h-12 px-6 rounded-full bg-ink text-cream font-bold hover:bg-black disabled:opacity-50" disabled={!first || !first.inStock}>{first?.inStock ? "Add to cart" : "Sold out"}</button>
+          </div>
+          <p data-status class="text-sm min-h-5 text-ink-soft" aria-live="polite"></p>
+
+          {product.descriptionHtml && <div class="prose text-ink-soft leading-relaxed [&_p]:mb-3 [&_strong]:text-ink" set:html={product.descriptionHtml} />}
+          <ul class="flex flex-col gap-1.5 text-sm text-ink-soft border-t border-ink/5 pt-5">
+            <li class="flex gap-3"><span class="text-wix font-bold">✓</span>Price, stock and photos managed in Wix Stores</li>
+            <li class="flex gap-3"><span class="text-wix font-bold">✓</span>Secure checkout and payments on Wix</li>
+            <li class="flex gap-3"><span class="text-wix font-bold">✓</span>Order shows up in your Wix dashboard</li>
+          </ul>
+        </form>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  type Variant = { id: string; choices: Record<string, string>; price: string; compareAt?: string; inStock: boolean };
+  const form = document.querySelector<HTMLFormElement>("#buy")!;
+  const variants = JSON.parse(form.dataset.variants || "[]") as Variant[];
+  const productId = form.dataset.product!;
+  const price = form.querySelector<HTMLElement>("[data-price]")!;
+  const compare = form.querySelector<HTMLElement>("[data-compare]");
+  const submit = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
+  const status = form.querySelector<HTMLElement>("[data-status]")!;
+  const qty = form.querySelector<HTMLInputElement>("input[name=quantity]")!;
+  const money = (n: string) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(n));
+  let current: Variant | undefined;
+
+  function resolve() {
+    const picked: Record<string, string> = {};
+    form.querySelectorAll<HTMLInputElement>("input[type=radio]:checked").forEach((r) => (picked[r.name] = r.value));
+    current = variants.find((v) => Object.entries(picked).every(([k, val]) => v.choices[k] === val));
+    for (const [k, val] of Object.entries(picked)) {
+      const l = form.querySelector<HTMLElement>(`[data-choice-label="${CSS.escape(k)}"]`);
+      if (l) l.textContent = val;
+    }
+    if (current) {
+      price.textContent = money(current.price);
+      if (compare) compare.textContent = current.compareAt ? money(current.compareAt) : "";
+    }
+    submit.disabled = !current || !current.inStock;
+    submit.textContent = !current ? "Unavailable" : current.inStock ? "Add to cart" : "Sold out";
+  }
+  form.querySelectorAll("input[type=radio]").forEach((r) => r.addEventListener("change", resolve));
+  form.querySelectorAll<HTMLButtonElement>("[data-qty]").forEach((b) =>
+    b.addEventListener("click", () => (qty.value = String(Math.min(99, Math.max(1, Number(qty.value) + Number(b.dataset.qty)))))),
+  );
+  document.querySelectorAll<HTMLButtonElement>("[data-thumb]").forEach((b) =>
+    b.addEventListener("click", () => {
+      document.querySelector<HTMLImageElement>("#main-img")!.src = b.dataset.thumb!;
+      document.querySelectorAll("[data-thumb]").forEach((x) => x.classList.replace("ring-ink", "ring-transparent"));
+      b.classList.replace("ring-transparent", "ring-ink");
+    }),
+  );
+  resolve();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!current) return;
+    submit.disabled = true;
+    status.className = "text-sm min-h-5 text-ink-soft";
+    status.textContent = "Adding…";
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add", productId, variantId: current.id, quantity: Number(qty.value) }),
+      });
+      const data = (await res.json()) as { ok?: boolean; count?: number; error?: string };
+      if (!res.ok || !data.ok) throw new Error(data.error || "Could not add");
+      status.className = "text-sm min-h-5 text-green-700";
+      status.innerHTML = `Added. <a href="/cart" class="font-bold underline underline-offset-4">View cart (${data.count})</a>`;
+      document.querySelectorAll<HTMLElement>("[data-cart-count]").forEach((el) => { el.textContent = String(data.count ?? 0); el.hidden = !data.count; });
+    } catch (err) {
+      status.className = "text-sm min-h-5 text-coral-deep";
+      status.textContent = err instanceof Error ? err.message : "Could not add";
+    } finally {
+      submit.disabled = false;
+    }
+  });
+</script>

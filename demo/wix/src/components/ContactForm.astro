@@ -1,0 +1,107 @@
+---
+// Contact form whose fields come from a Wix Forms schema; submissions post to
+// /api/contact which writes into Wix Forms & Submissions. Without WIX_FORM_ID
+// the card explains how to connect one.
+import { getForm, type FormField } from "../lib/wix";
+
+const formId = import.meta.env.WIX_FORM_ID as string | undefined;
+let fields: FormField[] = [];
+let formName = "";
+let error: string | undefined;
+if (formId) {
+  try {
+    ({ name: formName, fields } = await getForm(formId));
+  } catch (e) {
+    error = "Could not load the Wix form. Check WIX_FORM_ID.";
+    console.error("[wix] form schema failed", e);
+  }
+}
+const sent = Astro.url.searchParams.get("sent") === "1";
+const inputClass = "w-full rounded-xl border border-ink/10 bg-white px-4 py-3 text-[15px] outline-none focus:border-coral focus:ring-4 focus:ring-coral/20";
+---
+
+<section id="contact" class="scroll-mt-20 py-20 sm:py-28 bg-sand">
+  <div class="mx-auto max-w-6xl px-5 sm:px-8 grid gap-12 lg:grid-cols-[1fr_1.2fr] items-start">
+    <div class="flex flex-col gap-5">
+      <p class="inline-flex items-center gap-2 self-start rounded-full bg-white px-3.5 py-1.5 shadow-card font-mono text-xs uppercase tracking-wider text-ink-soft">
+        <span class="size-2 rounded-full bg-wix"></span>Lands in your Wix inbox
+      </p>
+      <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-balance">Get a free quote</h2>
+      <p class="text-ink-soft text-lg">Same-day replies on weekdays. This form is a Wix form: the fields, notifications and the inbox all live in Wix. The design is ours.</p>
+      <ul class="flex flex-col gap-2 text-ink-soft">
+        <li class="flex gap-3"><span class="text-coral-deep font-bold">✓</span>Licensed &amp; insured, 24/7 emergency line</li>
+        <li class="flex gap-3"><span class="text-coral-deep font-bold">✓</span>Flat quotes before any work starts</li>
+        <li class="flex gap-3"><span class="text-coral-deep font-bold">✓</span>Serving the whole metro area</li>
+      </ul>
+    </div>
+
+    <div class="rounded-3xl bg-white p-6 sm:p-8 shadow-card">
+      {!formId ? (
+        <div class="rounded-2xl border border-dashed border-ink/15 p-6 flex flex-col gap-3 text-ink-soft">
+          <p class="font-bold text-ink">Connect a Wix form</p>
+          <p>In the Wix dashboard open <strong>Forms &amp; Submissions</strong>, create a form (Name, Email, Phone, Message), then copy the form id from the URL into <code class="font-mono text-sm bg-sand px-1.5 py-0.5 rounded">WIX_FORM_ID</code>. The inputs render from that form's fields.</p>
+        </div>
+      ) : error ? (
+        <p class="rounded-2xl border border-dashed border-ink/15 p-6 text-ink-soft">{error}</p>
+      ) : (
+        <form id="wix-form" method="post" action="/api/contact" class="grid grid-cols-2 gap-4">
+          <p class="col-span-2 font-mono text-xs uppercase tracking-wider text-ink-mute">{formName}</p>
+          {fields.map((f) => (
+            <label class:list={["flex flex-col gap-1.5 text-sm font-semibold", f.half ? "col-span-2 sm:col-span-1" : "col-span-2"]}>
+              <span>{f.label}{f.required && <span class="text-coral-deep"> *</span>}</span>
+              {f.kind === "textarea" ? (
+                <textarea name={f.target} required={f.required} rows="4" class={inputClass}></textarea>
+              ) : f.kind === "select" ? (
+                <select name={f.target} required={f.required} class={inputClass}>
+                  <option value="">Choose…</option>
+                  {f.options?.map((o) => <option value={o}>{o}</option>)}
+                </select>
+              ) : (
+                <input
+                  name={f.target}
+                  required={f.required}
+                  type={f.kind === "email" ? "email" : f.kind === "phone" ? "tel" : f.kind === "number" ? "number" : "text"}
+                  autocomplete={f.kind === "email" ? "email" : f.kind === "phone" ? "tel" : f.target.includes("name") ? "name" : undefined}
+                  class={inputClass}
+                />
+              )}
+            </label>
+          ))}
+          <button type="submit" class="col-span-2 mt-2 inline-flex items-center justify-center h-12 rounded-full bg-ink text-cream font-bold hover:bg-black disabled:opacity-60">Send request</button>
+          <p data-status class:list={["col-span-2 text-sm min-h-5", sent ? "text-green-700" : "text-ink-soft"]} aria-live="polite">{sent ? "Sent. It is in the Wix inbox now." : ""}</p>
+        </form>
+      )}
+    </div>
+  </div>
+</section>
+
+<script>
+  // Progressive enhancement: post JSON, show inline status, no reload.
+  const form = document.querySelector<HTMLFormElement>("#wix-form");
+  const status = form?.querySelector<HTMLParagraphElement>("[data-status]");
+  const button = form?.querySelector<HTMLButtonElement>("button[type=submit]");
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!status || !button) return;
+    button.disabled = true;
+    status.className = "text-sm min-h-5 text-ink-soft";
+    status.textContent = "Sending…";
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) throw new Error(data.error || "Something went wrong");
+      form.reset();
+      status.className = "text-sm min-h-5 text-green-700";
+      status.textContent = "Sent. It is in the Wix inbox now.";
+    } catch (err) {
+      status.className = "text-sm min-h-5 text-coral-deep";
+      status.textContent = err instanceof Error ? err.message : "Something went wrong";
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>

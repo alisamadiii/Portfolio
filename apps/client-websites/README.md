@@ -54,6 +54,7 @@ This is what an uploader (the Claude Design skill, or `pnpm upload`) must write.
     "title": "Modern site for a family plumber",
     "summary": "Free text shown on the public showcase page",
     "features": ["Online booking", "Service area pages"],
+    "industry": "home-services",
     "hidden": false
   }
 }

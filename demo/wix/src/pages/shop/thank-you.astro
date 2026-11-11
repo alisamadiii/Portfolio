@@ -1,0 +1,15 @@
+---
+// Wix redirects here after a completed checkout (thankYouPageUrl callback).
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Thank you · Northline shop" description="Order received.">
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-2xl px-5 sm:px-8 flex flex-col items-center text-center gap-6">
+      <span class="grid place-items-center size-16 rounded-full bg-ink text-coral text-3xl">✓</span>
+      <h1 class="text-5xl font-extrabold tracking-[-0.04em]">Order received</h1>
+      <p class="text-lg text-ink-soft">Wix just emailed your confirmation. The order is in the Wix dashboard under Orders, ready to fulfil.</p>
+      <a href="/shop" class="inline-flex items-center h-12 px-7 rounded-full bg-ink text-cream font-bold hover:bg-black">Back to the shop</a>
+    </div>
+  </section>
+</Layout>

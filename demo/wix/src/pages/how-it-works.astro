@@ -1,0 +1,77 @@
+---
+// Prospect-facing explainer: what is custom, what stays in Wix, how to try it.
+import Layout from "../layouts/Layout.astro";
+
+const steps = [
+  { n: "01", title: "We design and code the site", text: "Not a theme, not a template. Pages built around the business, hosted on fast global infrastructure, set up in the owner's own accounts." },
+  { n: "02", title: "Wix keeps running the backend", text: "FAQ, forms, bookings, payments, members: whatever already lives in Wix stays there. The custom site reads and writes through Wix's own APIs." },
+  { n: "03", title: "Owner edits in two places", text: "Words and photos on the site: Client Hub, by chatting with AI. Business data (questions, form fields, appointments): the Wix dashboard, exactly like today." },
+];
+const inWix = ["Services & stats (CMS collections)", "FAQ questions & categories", "Contact form fields & inbox", "Blog posts", "Bookings & calendar", "Store catalog & checkout", "Member accounts", "Email notifications"];
+const inSite = ["Design & layout", "Copy, photos, pages (Client Hub)", "SEO, speed, structured data", "Hosting & domain (your accounts)", "Analytics & call tracking"];
+---
+
+<Layout title="How it works · Northline demo" description="How a custom hand-coded website connects to a Wix backend for FAQ, forms and bookings.">
+  <section class="py-20 sm:py-28">
+    <div class="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-16">
+      <div class="flex flex-col items-center text-center gap-5">
+        <p class="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 shadow-card font-mono text-xs uppercase tracking-wider text-ink-soft"><span class="size-2 rounded-full bg-wix"></span>Custom site + Wix backend</p>
+        <h1 class="max-w-3xl text-5xl sm:text-6xl font-extrabold tracking-[-0.04em] leading-[1.02] text-balance">Keep Wix. Lose the template.</h1>
+        <p class="max-w-xl text-lg text-ink-soft">This whole site is hand-coded. The FAQ and the quote form on the homepage are pulled from a Wix site on every page load.</p>
+      </div>
+
+      <!-- diagram -->
+      <div class="grid gap-4 md:grid-cols-[1fr_auto_1fr] items-stretch">
+        <div class="rounded-3xl bg-white p-7 shadow-card flex flex-col gap-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-coral-deep">The custom site</p>
+          <h2 class="text-2xl font-extrabold tracking-tight">What we build and you edit</h2>
+          <ul class="flex flex-col gap-2 text-ink-soft">
+            {inSite.map((i) => <li class="flex gap-3"><span class="text-coral-deep font-bold">✓</span>{i}</li>)}
+          </ul>
+        </div>
+        <div class="flex md:flex-col items-center justify-center gap-2 font-mono text-xs text-ink-mute px-2">
+          <span class="hidden md:block h-full w-px bg-ink/10"></span>
+          <span class="rounded-full bg-sand px-3 py-1.5 whitespace-nowrap">Wix APIs ⇄</span>
+          <span class="hidden md:block h-full w-px bg-ink/10"></span>
+        </div>
+        <div class="rounded-3xl bg-ink text-cream p-7 shadow-card flex flex-col gap-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-wix">Your Wix account</p>
+          <h2 class="text-2xl font-extrabold tracking-tight">What keeps living in Wix</h2>
+          <ul class="flex flex-col gap-2 text-cream/70">
+            {inWix.map((i) => <li class="flex gap-3"><span class="text-wix font-bold">✓</span>{i}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <!-- steps -->
+      <ol class="grid gap-5 md:grid-cols-3">
+        {steps.map((s) => (
+          <li class="rounded-3xl bg-white p-7 shadow-card flex flex-col gap-3">
+            <span class="font-mono text-sm text-coral-deep">{s.n}</span>
+            <h3 class="text-xl font-extrabold tracking-tight">{s.title}</h3>
+            <p class="text-ink-soft text-[15px]">{s.text}</p>
+          </li>
+        ))}
+      </ol>
+
+      <!-- try it -->
+      <div class="rounded-3xl bg-gradient-to-br from-white to-[#ffe9df] p-8 sm:p-10 shadow-card grid gap-8 lg:grid-cols-[1.2fr_1fr] items-center">
+        <div class="flex flex-col gap-4">
+          <p class="font-mono text-xs uppercase tracking-wider text-ink-soft">Try it live</p>
+          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-balance">Change a question in Wix, reload the homepage</h2>
+          <p class="text-ink-soft">Open the Wix dashboard, edit any FAQ answer, come back and refresh <a href="/#faq" class="font-bold text-coral-deep hover:underline underline-offset-4">the FAQ</a>. Submit <a href="/#contact" class="font-bold text-coral-deep hover:underline underline-offset-4">the quote form</a> and watch it appear in the Wix inbox.</p>
+        </div>
+        <ol class="flex flex-col gap-3 text-sm">
+          {["Wix dashboard → FAQ → edit an answer → Save", "Reload this demo: the new answer is live", "Fill the quote form → Wix → Forms & Submissions"].map((t, i) => (
+            <li class="flex items-center gap-4 rounded-2xl bg-white/80 px-4 py-3 shadow-card"><span class="grid place-items-center size-7 rounded-full bg-ink text-cream font-mono text-xs">{i + 1}</span>{t}</li>
+          ))}
+        </ol>
+      </div>
+
+      <div class="flex flex-col items-center text-center gap-4 pt-4">
+        <p class="text-ink-soft">Already on Wix, Shopify or Square?</p>
+        <a href="https://www.alisamadii.com/quote?plan=website" class="inline-flex items-center h-12 px-7 rounded-full bg-ink text-cream font-bold hover:bg-black">Get a free consultation</a>
+      </div>
+    </div>
+  </section>
+</Layout>

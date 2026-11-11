@@ -1,0 +1,5 @@
+# Standalone project: stops pnpm from climbing to the monorepo root workspace.
+packages: []
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

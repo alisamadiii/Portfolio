@@ -1,0 +1,76 @@
+---
+// Renders Wix Ricos rich content (the blog post body) to HTML. Covers the node
+// types a normal post uses; anything unknown renders its text children.
+import { wixImageUrl, type RichNode } from "../lib/wix";
+
+interface Props {
+  nodes: RichNode[];
+}
+const { nodes } = Astro.props;
+
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
+
+function text(n: RichNode): string {
+  if (n.type !== "TEXT" || !n.textData) return (n.nodes ?? []).map(text).join("");
+  let out = esc(n.textData.text);
+  for (const d of n.textData.decorations ?? []) {
+    if (d.type === "BOLD") out = `<strong>${out}</strong>`;
+    else if (d.type === "ITALIC") out = `<em>${out}</em>`;
+    else if (d.type === "UNDERLINE") out = `<u>${out}</u>`;
+    else if (d.type === "LINK" && d.linkData?.link?.url) out = `<a href="${esc(d.linkData.link.url)}" ${d.linkData.link.target === "BLANK" ? 'target="_blank" rel="noopener"' : ""}>${out}</a>`;
+  }
+  return out;
+}
+
+function render(n: RichNode): string {
+  const kids = () => (n.nodes ?? []).map(render).join("");
+  switch (n.type) {
+    case "PARAGRAPH": {
+      const inner = text(n);
+      return inner ? `<p>${inner}</p>` : "";
+    }
+    case "HEADING": {
+      const l = Math.min(Math.max(n.headingData?.level ?? 2, 2), 4);
+      return `<h${l}>${text(n)}</h${l}>`;
+    }
+    case "BULLETED_LIST": return `<ul>${kids()}</ul>`;
+    case "ORDERED_LIST": return `<ol>${kids()}</ol>`;
+    case "LIST_ITEM": return `<li>${(n.nodes ?? []).map((c) => (c.type === "PARAGRAPH" ? text(c) : render(c))).join("")}</li>`;
+    case "BLOCKQUOTE": return `<blockquote>${kids()}</blockquote>`;
+    case "CODE_BLOCK": return `<pre><code>${text(n)}</code></pre>`;
+    case "DIVIDER": return "<hr>";
+    case "IMAGE": {
+      const src = wixImageUrl(n.imageData?.image?.src?.url ?? n.imageData?.image?.src?.id);
+      if (!src) return "";
+      const cap = n.imageData?.caption ? `<figcaption>${esc(n.imageData.caption)}</figcaption>` : "";
+      return `<figure><img src="${src}" alt="${esc(n.imageData?.altText ?? "")}" loading="lazy" width="${n.imageData?.image?.width ?? ""}" height="${n.imageData?.image?.height ?? ""}">${cap}</figure>`;
+    }
+    default: return kids();
+  }
+}
+const html = nodes.map(render).join("");
+---
+
+<div class="prose" set:html={html} />
+
+<style>
+  .prose { font-size: 17px; line-height: 1.75; color: var(--color-ink-soft); }
+  .prose :global(p) { margin: 0 0 1.25em; }
+  .prose :global(h2), .prose :global(h3), .prose :global(h4) { color: var(--color-ink); font-weight: 800; letter-spacing: -0.02em; margin: 2em 0 0.6em; line-height: 1.2; }
+  .prose :global(h2) { font-size: 1.7em; }
+  .prose :global(h3) { font-size: 1.35em; }
+  .prose :global(h4) { font-size: 1.1em; }
+  .prose :global(ul), .prose :global(ol) { margin: 0 0 1.25em; padding-left: 1.4em; }
+  .prose :global(ul) { list-style: disc; }
+  .prose :global(ol) { list-style: decimal; }
+  .prose :global(li)::marker { color: var(--color-coral-deep); }
+  .prose :global(li) { margin: 0.35em 0; }
+  .prose :global(a) { color: var(--color-coral-deep); text-decoration: underline; text-underline-offset: 3px; }
+  .prose :global(blockquote) { margin: 1.5em 0; padding: 0.2em 0 0.2em 1.2em; border-left: 3px solid var(--color-coral); color: var(--color-ink); font-weight: 600; }
+  .prose :global(figure) { margin: 2em 0; }
+  .prose :global(img) { width: 100%; height: auto; border-radius: 20px; }
+  .prose :global(figcaption) { margin-top: 0.6em; font-size: 0.85em; color: var(--color-ink-mute); text-align: center; }
+  .prose :global(pre) { margin: 0 0 1.25em; padding: 1em 1.2em; border-radius: 16px; background: var(--color-ink); color: var(--color-cream); overflow-x: auto; font-size: 0.9em; }
+  .prose :global(hr) { margin: 2.5em 0; border: 0; border-top: 1px solid rgb(34 31 28 / 0.1); }
+  .prose :global(strong) { color: var(--color-ink); }
+</style>

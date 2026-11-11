@@ -1,0 +1,26 @@
+---
+// Single post, fetched by slug with its rich content.
+import Layout from "../../layouts/Layout.astro";
+import RichContent from "../../components/RichContent.astro";
+import { getPost } from "../../lib/wix";
+
+const { slug } = Astro.params;
+const post = slug ? await getPost(slug) : undefined;
+if (!post) return new Response(null, { status: 404 });
+const date = new Date(post.firstPublishedDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+---
+
+<Layout title={`${post.title} · Northline`} description={post.excerpt || post.title}>
+  <article class="py-16 sm:py-24">
+    <div class="mx-auto max-w-3xl px-5 sm:px-8 flex flex-col gap-8">
+      <a href="/blog" class="self-start font-bold text-coral-deep hover:underline underline-offset-4">← All posts</a>
+      <header class="flex flex-col gap-4">
+        <p class="font-mono text-xs text-ink-mute">{date}{post.minutesToRead ? ` · ${post.minutesToRead} min read` : ""} · <span class="text-wix">Published in Wix</span></p>
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-[-0.04em] leading-[1.05] text-balance">{post.title}</h1>
+        {post.excerpt && <p class="text-lg text-ink-soft">{post.excerpt}</p>}
+      </header>
+      {post.coverUrl && <img src={post.coverUrl} alt="" class="w-full rounded-3xl shadow-card" width="1200" height="750" />}
+      {post.richContent?.nodes?.length ? <RichContent nodes={post.richContent.nodes} /> : <p class="text-ink-soft">This post has no body yet.</p>}
+    </div>
+  </article>
+</Layout>

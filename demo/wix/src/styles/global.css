@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-cream: #fffdfb;
+  --color-sand: #fbf6f2;
+  --color-ink: #221f1c;
+  --color-ink-soft: #5a524b;
+  --color-ink-mute: #8a817a;
+  --color-coral: #fc8464;
+  --color-coral-deep: #c4502e;
+  --color-wix: #0c6efc;
+  --shadow-card: 0 0 0 1px rgb(34 31 28 / 0.06), 0 1px 2px rgb(34 31 28 / 0.04), 0 18px 40px -20px rgb(34 31 28 / 0.18);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .chev {
+  transform: rotate(45deg);
+}

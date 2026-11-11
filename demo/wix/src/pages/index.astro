@@ -1,0 +1,116 @@
+---
+// Demo business homepage. Static sections are ours; the FAQ and the contact
+// form are fed by Wix on every request.
+import Layout from "../layouts/Layout.astro";
+import Faq from "../components/Faq.astro";
+import ContactForm from "../components/ContactForm.astro";
+import { getCollection } from "../lib/wix";
+
+// Services and stats come from two CMS collections ("services", "stats"),
+// edited in the Wix dashboard. The arrays below are the fallback when a
+// collection is missing or blocked, so the page never breaks mid-demo.
+type Service = { title: string; description: string; icon: string };
+type Stat = { label: string; value: string };
+const icons: Record<string, string> = {
+  zap: "M13 3 4 14h7l-1 7 9-11h-7l1-7z",
+  droplet: "M8 3h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM10 16h4M10 12h4",
+  flame: "M12 3c3 4 6 6 6 10a6 6 0 0 1-12 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4 1-6 2-9z",
+  waves: "M4 12h4l2-5 4 10 2-5h4",
+  wrench: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z",
+  shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+};
+const fallbackServices: Service[] = [
+  { title: "Emergency repairs", description: "Burst pipes, no heat, no hot water. On the way within the hour, any day.", icon: "zap" },
+  { title: "Water heaters", description: "Tank and tankless installs with permits pulled and old units hauled away.", icon: "droplet" },
+  { title: "Heating & boilers", description: "Furnace tune-ups, boiler replacements and smart thermostats that pay for themselves.", icon: "flame" },
+  { title: "Drain & sewer", description: "Camera inspections, hydro-jetting and trenchless repairs that keep your yard intact.", icon: "waves" },
+];
+const fallbackStats: Stat[] = [
+  { value: "4.9★", label: "on 600+ Google reviews" },
+  { value: "60 min", label: "average emergency response" },
+  { value: "18 yrs", label: "serving the metro area" },
+];
+const [servicesRes, statsRes] = await Promise.allSettled([getCollection<Service>("services"), getCollection<Stat>("stats")]);
+const services = servicesRes.status === "fulfilled" && servicesRes.value.length ? servicesRes.value : fallbackServices;
+const stats = statsRes.status === "fulfilled" && statsRes.value.length ? statsRes.value : fallbackStats;
+const servicesLive = servicesRes.status === "fulfilled" && servicesRes.value.length > 0;
+if (servicesRes.status === "rejected") console.error("[wix] services collection", servicesRes.reason);
+if (statsRes.status === "rejected") console.error("[wix] stats collection", statsRes.reason);
+---
+
+<Layout title="Northline Plumbing & Heating · Demo" description="Demo site: a custom hand-coded website whose FAQ and contact form run on Wix.">
+  <!-- hero -->
+  <section class="relative overflow-hidden">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 bottom-0 h-3/4 bg-[radial-gradient(60%_70%_at_10%_100%,rgb(252_132_100/0.45),transparent_70%),radial-gradient(55%_65%_at_90%_100%,rgb(255_181_154/0.6),transparent_70%)] blur-xl"></div>
+    <div class="relative mx-auto max-w-6xl px-5 sm:px-8 pt-20 pb-24 sm:pt-28 sm:pb-32 flex flex-col items-center text-center gap-7">
+      <a href="/how-it-works" class="inline-flex items-center gap-2 rounded-full bg-white px-1.5 py-1.5 pr-4 shadow-card text-sm font-semibold text-ink-soft hover:text-ink">
+        <span class="rounded-full bg-ink text-cream px-2.5 py-0.5 text-xs font-mono uppercase tracking-wider">Demo</span>
+        Custom site, Wix backend
+        <span class="text-coral-deep">→</span>
+      </a>
+      <h1 class="max-w-3xl text-5xl sm:text-7xl font-extrabold tracking-[-0.04em] leading-[1.02] text-balance">Plumbing &amp; heating done right, <span class="text-coral-deep">the first time.</span></h1>
+      <p class="max-w-xl text-lg sm:text-xl text-ink-soft">Licensed plumbers and HVAC techs for homes and small businesses. Upfront flat pricing, same-day service, no surprises.</p>
+      <div class="flex flex-col sm:flex-row items-center gap-3">
+        <a href="#contact" class="inline-flex items-center h-13 px-7 rounded-full bg-gradient-to-b from-[#ff9a7c] via-coral to-[#ef6c4b] text-ink font-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_12px_30px_-8px_rgb(239_108_75/0.6)] hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_18px_40px_-8px_rgb(239_108_75/0.75)]">Get a free quote</a>
+        <a href="tel:+15555550123" class="inline-flex items-center h-13 px-6 rounded-full bg-white shadow-card font-bold hover:bg-sand">Call (555) 555-0123</a>
+      </div>
+      <dl class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12">
+        {stats.map((s) => (
+          <div class="flex flex-col">
+            <dt class="order-2 text-sm text-ink-soft">{s.label}</dt>
+            <dd class="order-1 text-3xl font-extrabold tracking-tight">{s.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <!-- services -->
+  <section id="services" class="scroll-mt-20 py-20 sm:py-28">
+    <div class="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-12">
+      <div class="flex flex-col items-center text-center gap-4">
+        <p class="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 shadow-card font-mono text-xs uppercase tracking-wider text-ink-soft">{servicesLive && <span class="size-2 rounded-full bg-wix"></span>}{servicesLive ? "Services · from Wix CMS" : "Services"}</p>
+        <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-balance max-w-2xl">Everything behind your walls, handled</h2>
+      </div>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {services.map((s) => (
+          <article class="rounded-3xl bg-white p-7 shadow-card flex flex-col gap-4 transition hover:-translate-y-1">
+            <span class="grid place-items-center size-11 rounded-2xl bg-ink text-coral">
+              <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={icons[s.icon] ?? icons.wrench} /></svg>
+            </span>
+            <h3 class="text-xl font-extrabold tracking-tight">{s.title}</h3>
+            <p class="text-ink-soft text-[15px]">{s.description}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- why custom -->
+  <section class="py-20 sm:py-28 bg-ink text-cream">
+    <div class="mx-auto max-w-6xl px-5 sm:px-8 grid gap-10 lg:grid-cols-2 items-center">
+      <div class="flex flex-col gap-5">
+        <p class="font-mono text-xs uppercase tracking-wider text-coral">Behind this site</p>
+        <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-balance">Looks nothing like a Wix template. Runs on Wix anyway.</h2>
+        <p class="text-cream/70 text-lg">Design and code are custom. The FAQ, the contact form and the inbox are the Wix tools the owner already pays for and knows how to use.</p>
+        <a href="/how-it-works" class="self-start inline-flex items-center h-11 px-5 rounded-full bg-cream text-ink font-bold hover:bg-white">How it works →</a>
+      </div>
+      <ul class="grid gap-3 sm:grid-cols-2">
+        {[
+          ["Custom design", "Hand-coded, fast, no page builder."],
+          ["Client Hub", "Owner edits text and photos with AI."],
+          ["Wix FAQ", "Questions managed in the Wix dashboard."],
+          ["Wix Forms", "Submissions land in the Wix inbox."],
+        ].map(([t, d]) => (
+          <li class="rounded-2xl bg-cream/5 ring-1 ring-cream/10 p-5 flex flex-col gap-1">
+            <span class="font-bold">{t}</span>
+            <span class="text-sm text-cream/60">{d}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <Faq />
+  <ContactForm />
+</Layout>

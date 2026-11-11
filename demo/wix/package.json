@@ -1,0 +1,26 @@
+{
+  "name": "demo-wix",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Demo: custom hand-coded Astro site powered by a Wix backend (FAQ + forms).",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/netlify": "^6.5.11",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.6",
+    "@tailwindcss/vite": "^4.1.18",
+    "astro": "^5.17.3",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

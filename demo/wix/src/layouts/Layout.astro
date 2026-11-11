@@ -1,0 +1,81 @@
+---
+// Shared shell for the demo. The footer chip shows the server render time so a
+// prospect can see each reload is a fresh pull from Wix.
+import "../styles/global.css";
+import "@fontsource-variable/plus-jakarta-sans";
+import { getCart, visitorToken } from "../lib/wix";
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const path = Astro.url.pathname;
+const rendered = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit", timeZone: "America/New_York" });
+const nav = [
+  { href: "/#services", label: "Services" },
+  { href: "/shop", label: "Shop" },
+  { href: "/blog", label: "Blog" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/#contact", label: "Contact" },
+  { href: "/how-it-works", label: "How it works" },
+];
+// Cart badge: only costs a Wix call when this browser already has a session.
+let cartCount = 0;
+try {
+  const token = await visitorToken(Astro.cookies, false);
+  cartCount = token ? ((await getCart(token))?.count ?? 0) : 0;
+} catch {
+  cartCount = 0;
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23221f1c'/%3E%3Cpath d='M9 22V10l7 8 7-8v12' fill='none' stroke='%23fc8464' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <header class="sticky top-0 z-40 bg-cream/85 backdrop-blur border-b border-ink/5">
+      <div class="mx-auto max-w-6xl px-5 sm:px-8 h-16 flex items-center justify-between gap-6">
+        <a href="/" class="flex items-center gap-2.5 font-extrabold tracking-tight text-lg">
+          <span class="grid place-items-center size-8 rounded-lg bg-ink text-coral">
+            <svg viewBox="0 0 32 32" class="size-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M9 22V10l7 8 7-8v12" /></svg>
+          </span>
+          Northline
+        </a>
+        <nav class="hidden md:flex items-center gap-1 text-sm font-semibold text-ink-soft">
+          {nav.map((n) => (
+            <a href={n.href} class:list={["px-3 py-2 rounded-full hover:text-ink hover:bg-ink/5", (path === n.href || (n.href !== "/" && !n.href.includes("#") && path.startsWith(n.href))) && "text-ink bg-ink/5"]}>{n.label}</a>
+          ))}
+        </nav>
+        <div class="flex items-center gap-2">
+          <a href="/cart" class="relative grid place-items-center size-10 rounded-full hover:bg-ink/5" aria-label="Cart">
+            <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 8.5a2 2 0 0 1-2 1.5H8.5a2 2 0 0 1-2-1.6L5 3H2" /><circle cx="9" cy="21" r="1" /><circle cx="18" cy="21" r="1" /></svg>
+            <span data-cart-count hidden={cartCount === 0} class="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-coral text-ink text-[11px] font-extrabold grid place-items-center">{cartCount}</span>
+          </a>
+          <a href="/#contact" class="inline-flex items-center h-10 px-4 rounded-full bg-ink text-cream text-sm font-bold hover:bg-black">Get a quote</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1"><slot /></main>
+
+    <footer class="border-t border-ink/5 bg-sand">
+      <div class="mx-auto max-w-6xl px-5 sm:px-8 py-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 text-sm text-ink-soft">
+        <div>
+          <p class="font-bold text-ink">Northline Plumbing &amp; Heating</p>
+          <p>Demo business. Custom site by <a href="https://www.alisamadii.com" class="underline underline-offset-2 hover:text-ink">Ali Samadi Agency</a>.</p>
+        </div>
+        <p class="inline-flex items-center gap-2 self-start sm:self-auto rounded-full bg-white px-3.5 py-2 shadow-card font-mono text-xs">
+          <span class="size-2 rounded-full bg-wix"></span>
+          Live from Wix · rendered {rendered} ET
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+---
+// Cart page: the visitor's Wix cart, editable inline, checkout hands off to Wix.
+import Layout from "../layouts/Layout.astro";
+import { getCart, visitorToken, wixImage, type Cart } from "../lib/wix";
+
+const token = await visitorToken(Astro.cookies, false);
+let cart: Cart | undefined;
+let failed = false;
+try {
+  cart = token ? await getCart(token) : undefined;
+} catch (e) {
+  failed = true;
+  console.error("[wix] cart failed", e);
+}
+const error = Astro.url.searchParams.get("error");
+const lines = cart?.lines ?? [];
+---
+
+<Layout title="Cart · Northline shop" description="Your cart.">
+  <section class="py-16 sm:py-24">
+    <div class="mx-auto max-w-4xl px-5 sm:px-8 flex flex-col gap-8">
+      <div class="flex items-end justify-between gap-4">
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-[-0.04em]">Your cart</h1>
+        <a href="/shop" class="font-bold text-coral-deep hover:underline underline-offset-4">Continue shopping →</a>
+      </div>
+
+      {error === "checkout" && <p class="rounded-2xl bg-coral/15 px-5 py-4 text-coral-deep font-semibold">Checkout could not start. Try again.</p>}
+      {failed && <p class="rounded-2xl border border-dashed border-ink/15 p-6 text-ink-soft">Cart temporarily unavailable.</p>}
+
+      <div id="cart" data-empty={lines.length === 0 ? "1" : undefined}>
+        <p class="rounded-2xl border border-dashed border-ink/15 p-8 text-center text-ink-soft" data-empty-msg hidden={lines.length > 0}>Your cart is empty. <a href="/shop" class="font-bold text-coral-deep">Browse the shop</a>.</p>
+
+        <div class="rounded-3xl bg-white shadow-card divide-y divide-ink/5 overflow-hidden" data-lines hidden={lines.length === 0}>
+          {lines.map((l) => (
+            <div class="flex gap-4 p-4 sm:p-5 items-center" data-line={l.id}>
+              <a href={l.slug ? `/shop/${l.slug}` : "/shop"} class="size-20 shrink-0 rounded-2xl bg-sand overflow-hidden">{l.image && <img src={wixImage(l.image, 200, 200)} alt="" class="size-full object-cover" width="200" height="200" />}</a>
+              <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+                <p class="font-extrabold tracking-tight truncate">{l.name}</p>
+                {l.details.length > 0 && <p class="text-sm text-ink-soft">{l.details.join(" · ")}</p>}
+                <p class="text-sm text-ink-soft">{l.price} each</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="inline-flex items-center rounded-full bg-sand">
+                  <button type="button" data-delta="-1" class="size-9 grid place-items-center font-bold hover:bg-ink/5 rounded-l-full" aria-label="Decrease">−</button>
+                  <span class="w-7 text-center font-bold text-sm" data-qty>{l.quantity}</span>
+                  <button type="button" data-delta="1" class="size-9 grid place-items-center font-bold hover:bg-ink/5 rounded-r-full" aria-label="Increase">+</button>
+                </div>
+                <p class="w-20 text-right font-extrabold" data-line-total>{l.lineTotal}</p>
+                <button type="button" data-remove class="size-9 grid place-items-center rounded-full text-ink-mute hover:bg-sand hover:text-coral-deep" aria-label="Remove">✕</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="mt-6 rounded-3xl bg-sand p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5" data-summary hidden={lines.length === 0}>
+          <div>
+            <p class="font-mono text-xs uppercase tracking-wider text-ink-mute">Subtotal</p>
+            <p class="text-3xl font-extrabold tracking-tight" data-subtotal>{cart?.subtotal}</p>
+            <p class="text-sm text-ink-soft">Shipping and tax calculated at checkout.</p>
+          </div>
+          <form method="post" action="/api/checkout">
+            <button type="submit" class="inline-flex items-center justify-center h-13 px-8 rounded-full bg-gradient-to-b from-[#ff9a7c] via-coral to-[#ef6c4b] text-ink font-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_12px_30px_-8px_rgb(239_108_75/0.6)]">Checkout on Wix →</button>
+          </form>
+        </div>
+        <p class="mt-4 text-sm text-ink-soft" data-status aria-live="polite"></p>
+        <p class="mt-6 text-center text-xs text-ink-mute font-mono">Cart stored in Wix · payment, tax and shipping handled on Wix's checkout page</p>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const root = document.querySelector<HTMLElement>("#cart")!;
+  const status = root.querySelector<HTMLElement>("[data-status]")!;
+
+  async function mutate(body: Record<string, unknown>) {
+    status.textContent = "Updating…";
+    const res = await fetch("/api/cart", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = (await res.json()) as { ok?: boolean; error?: string; count: number; subtotal: string; lines: { id: string; quantity: number; lineTotal: string }[] };
+    if (!res.ok || !data.ok) {
+      status.textContent = data.error || "Update failed";
+      return;
+    }
+    status.textContent = "";
+    root.querySelectorAll<HTMLElement>("[data-line]").forEach((row) => {
+      const l = data.lines.find((x) => x.id === row.dataset.line);
+      if (!l) return row.remove();
+      row.querySelector("[data-qty]")!.textContent = String(l.quantity);
+      row.querySelector("[data-line-total]")!.textContent = l.lineTotal;
+    });
+    root.querySelector<HTMLElement>("[data-subtotal]")!.textContent = data.subtotal;
+    const empty = data.lines.length === 0;
+    root.querySelector<HTMLElement>("[data-empty-msg]")!.hidden = !empty;
+    root.querySelector<HTMLElement>("[data-lines]")!.hidden = empty;
+    root.querySelector<HTMLElement>("[data-summary]")!.hidden = empty;
+    document.querySelectorAll<HTMLElement>("[data-cart-count]").forEach((el) => { el.textContent = String(data.count); el.hidden = !data.count; });
+  }
+
+  root.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("button");
+    const row = btn?.closest<HTMLElement>("[data-line]");
+    if (!btn || !row) return;
+    const lineId = row.dataset.line!;
+    if (btn.hasAttribute("data-remove")) return void mutate({ action: "remove", lineId });
+    if (btn.dataset.delta) {
+      const q = Number(row.querySelector("[data-qty]")!.textContent) + Number(btn.dataset.delta);
+      return void mutate({ action: "update", lineId, quantity: q });
+    }
+  });
+</script>

@@ -1,0 +1,46 @@
+---
+// Shop grid from Wix Stores. Prices, stock and images are Wix's; the layout is ours.
+import Layout from "../../layouts/Layout.astro";
+import { getProducts, wixImage, type Product } from "../../lib/wix";
+
+let products: Product[] = [];
+let failed = false;
+try {
+  products = await getProducts();
+} catch (e) {
+  failed = true;
+  console.error("[wix] products failed", e);
+}
+const money = (amount: string, currency: string) => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number(amount));
+---
+
+<Layout title="Shop · Northline demo" description="Parts and supplies from the Northline shop, powered by Wix Stores.">
+  <section class="py-20 sm:py-28">
+    <div class="mx-auto max-w-6xl px-5 sm:px-8 flex flex-col gap-12">
+      <div class="flex flex-col items-center text-center gap-4">
+        <p class="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 shadow-card font-mono text-xs uppercase tracking-wider text-ink-soft"><span class="size-2 rounded-full bg-wix"></span>Wix Stores catalog · Wix checkout</p>
+        <h1 class="text-5xl sm:text-6xl font-extrabold tracking-[-0.04em] leading-[1.02] text-balance">Shop</h1>
+        <p class="max-w-xl text-lg text-ink-soft">Products, prices and stock come from Wix Stores. The cart is Wix's too, and checkout happens on Wix's secure page. Orders land in your Wix dashboard.</p>
+      </div>
+
+      {failed && <p class="mx-auto rounded-2xl border border-dashed border-ink/15 p-6 text-ink-soft">Shop temporarily unavailable. Is Wix Stores installed?</p>}
+      {!failed && products.length === 0 && <p class="mx-auto rounded-2xl border border-dashed border-ink/15 p-6 text-ink-soft">No visible products yet. Add some in Wix → Catalog → Products.</p>}
+
+      <div class="grid gap-6 grid-cols-2 lg:grid-cols-4">
+        {products.map((p) => (
+          <a href={`/shop/${p.slug}`} class="group rounded-3xl bg-white shadow-card overflow-hidden flex flex-col transition hover:-translate-y-1">
+            <div class="relative aspect-square bg-sand overflow-hidden">
+              {p.image ? <img src={wixImage(p.image, 600, 600)} alt={p.name} class="size-full object-cover transition group-hover:scale-[1.03]" loading="lazy" width="600" height="600" /> : null}
+              {p.ribbon && <span class="absolute left-3 top-3 rounded-full bg-ink text-cream px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider">{p.ribbon}</span>}
+              {!p.inStock && <span class="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider text-ink-soft">Sold out</span>}
+            </div>
+            <div class="p-4 sm:p-5 flex flex-col gap-1">
+              <h2 class="font-extrabold tracking-tight group-hover:text-coral-deep">{p.name}</h2>
+              <p class="text-ink-soft text-sm">{p.priceFrom === p.priceTo ? money(p.priceFrom, p.currency) : `From ${money(p.priceFrom, p.currency)}`}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>

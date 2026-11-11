@@ -1,0 +1,49 @@
+---
+// FAQ straight from the Wix FAQ app, grouped by category. A Wix error degrades
+// to a quiet note instead of breaking the page.
+import { getFaq, type FaqCategory } from "../lib/wix";
+
+let categories: FaqCategory[] = [];
+let failed = false;
+try {
+  categories = await getFaq();
+} catch (e) {
+  failed = true;
+  console.error("[wix] FAQ fetch failed", e);
+}
+---
+
+<section id="faq" class="scroll-mt-20 py-20 sm:py-28">
+  <div class="mx-auto max-w-6xl px-5 sm:px-8 grid gap-12 lg:grid-cols-[1fr_1.6fr]">
+    <div class="flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start">
+      <p class="inline-flex items-center gap-2 self-start rounded-full bg-white px-3.5 py-1.5 shadow-card font-mono text-xs uppercase tracking-wider text-ink-soft">
+        <span class="size-2 rounded-full bg-wix"></span>Managed in Wix
+      </p>
+      <h2 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-balance">Questions, answered</h2>
+      <p class="text-ink-soft text-lg">Every question below is edited in the Wix dashboard. Change one there, reload this page, it is already here.</p>
+      <a href="/how-it-works" class="self-start font-bold text-coral-deep hover:underline underline-offset-4">See how that works →</a>
+    </div>
+
+    <div class="flex flex-col gap-10">
+      {failed && (
+        <p class="rounded-2xl border border-dashed border-ink/15 p-6 text-ink-soft">FAQ temporarily unavailable. Check WIX_CLIENT_ID and that the Wix FAQ app is installed.</p>
+      )}
+      {categories.map((cat) => (
+        <div class="flex flex-col gap-3">
+          <h3 class="font-mono text-xs uppercase tracking-wider text-ink-mute px-1">{cat.title}</h3>
+          <div class="rounded-3xl bg-white shadow-card divide-y divide-ink/5 overflow-hidden">
+            {cat.questions.map((q, i) => (
+              <details id={q.slug} open={i === 0 && cat === categories[0]} class="group">
+                <summary class="flex items-center justify-between gap-6 px-6 py-5 font-bold text-[17px] hover:bg-sand/60">
+                  {q.q}
+                  <span class="chev shrink-0 grid place-items-center size-7 rounded-full bg-ink/5 text-coral-deep transition-transform" aria-hidden="true">+</span>
+                </summary>
+                <p class="px-6 pb-6 text-ink-soft leading-relaxed whitespace-pre-line">{q.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

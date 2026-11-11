@@ -1,0 +1,5 @@
+# Netlify site settings: base directory = demo/wix (set in the Netlify UI when
+# creating the site from the Portfolio repo). Env vars: WIX_CLIENT_ID, WIX_FORM_ID.
+[build]
+  command = "pnpm build"
+  publish = "dist"
