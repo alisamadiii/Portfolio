@@ -2,12 +2,7 @@
  * Manage cached GitHub repository snapshots, branch heads, and file/media trees.
  */
 
-import { and, eq } from "drizzle-orm";
-
 import { Repo } from "./types";
-
-import { db } from "./db";
-import { cacheFileTable } from "./db";
 
 import { createOctokitInstance } from "./octokit";
 
@@ -184,25 +179,8 @@ const getRepoSnapshot = async (
   }
 };
 
-// Clear file cache entries
-const clearFileCache = async (
-  owner: string,
-  repo?: string,
-  branch?: string
-) => {
-  const conditions = [];
-  conditions.push(eq(cacheFileTable.owner, owner.toLowerCase()));
-  if (repo) {
-    conditions.push(eq(cacheFileTable.repo, repo.toLowerCase()));
-    if (branch) conditions.push(eq(cacheFileTable.branch, branch));
-  }
-
-  await db.delete(cacheFileTable).where(and(...conditions));
-};
-
 export {
   getBranchHeadInfo,
   getBranchHeadSha,
   getRepoSnapshot,
-  clearFileCache,
 };

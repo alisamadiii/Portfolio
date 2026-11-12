@@ -21,18 +21,7 @@ export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 // Event CRUD on the user's calendars (we only touch `primary`) — narrower
 // than the full calendar scope, no calendar-list access needed.
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
-// Read-only free/busy, needed by the booking widget's availability.
-export const CALENDAR_FREEBUSY_SCOPE =
-  "https://www.googleapis.com/auth/calendar.freebusy";
-// Booking needs both: events to create meetings, freebusy to offer slots.
-// Calendar connections made before booking existed lack freebusy and must
-// reconnect once.
-export const BOOKING_SCOPES = [CALENDAR_SCOPE, CALENDAR_FREEBUSY_SCOPE];
-
-export type IntegrationId =
-  | "google-analytics"
-  | "google-calendar"
-  | "google-booking";
+export type IntegrationId = "google-analytics" | "google-calendar";
 
 type IntegrationProvider = {
   id: IntegrationId;
@@ -45,8 +34,6 @@ type IntegrationProvider = {
 export const INTEGRATIONS: IntegrationProvider[] = [
   { id: "google-analytics", providerId: "google", requiredScope: GA_SCOPE },
   { id: "google-calendar", providerId: "google", requiredScope: CALENDAR_SCOPE },
-  // Same Google connection as google-calendar, stricter scope requirement.
-  { id: "google-booking", providerId: "google", requiredScope: BOOKING_SCOPES },
 ];
 
 /** The integration's token is missing/expired/unscoped — the UI must prompt a reconnect. */

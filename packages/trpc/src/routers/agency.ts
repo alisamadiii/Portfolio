@@ -8,7 +8,6 @@ import {
   ilike,
   inArray,
   isNotNull,
-  isNull,
   lt,
   ne,
   or,
@@ -26,7 +25,6 @@ import {
   AGENCY_LEAD_STATUS_VALUES,
   agencyClient,
   agencyLead,
-  agencyWeeklyReport,
   hubCollaborator,
   hubProject,
   subscriptions,
@@ -47,13 +45,6 @@ import {
   invalidateAds,
   ttlForRange,
 } from "../lib/agency/ads-cache";
-import { getAvailability } from "../lib/agency/booking";
-import {
-  BOOKING_MINUTES,
-  bookingSettingsSchema,
-  isValidSlot,
-  MAX_RANGE_DAYS,
-} from "../lib/agency/booking-slots";
 import { budgetPacing } from "../lib/agency/budget-pacing";
 import {
   buildUpdate,
@@ -79,7 +70,6 @@ import {
   type NegativeListKey,
 } from "../lib/agency/negative-lists";
 import { normalizeOrigin } from "../lib/agency/origins";
-import type { WeeklyReportData } from "../lib/agency/weekly-report";
 import { isAdminUser, roleAtLeast } from "../lib/authz-shared";
 import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
 import { createStarterProject } from "../lib/cms/upload-project";
@@ -107,15 +97,6 @@ import {
   updateConversionAction,
   uploadConversion,
 } from "../lib/google-ads";
-import {
-  BOOKING_SCOPES,
-  CALENDAR_SCOPE,
-  getConnectedAccount,
-} from "../lib/integrations";
-import {
-  deleteLeadMeeting,
-  moveBookingEvent,
-} from "../lib/integrations/calendar";
 import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
 import { ensureStripeCustomer } from "./payments";
@@ -467,17 +448,7 @@ const leadsRouter = createTRPCRouter({
         }
       }
 
-      // Bookings count by meeting time, not capture time; canceled ones drop out.
-      const bookingInRange = and(
-        eq(agencyLead.projectId, ctx.client.projectId),
-        campaignFilter,
-        eq(agencyLead.source, "booking"),
-        isNull(agencyLead.bookingCanceledAt),
-        gte(agencyLead.bookingAt, from),
-        lt(agencyLead.bookingAt, to)
-      );
-
-      const [byStatus, byDay, [won], [bookings], [adQualifiedRow]] =
+      const [byStatus, byDay, [won], [adQualifiedRow]] =
         await Promise.all([
           db
             .select({ status: agencyLead.status, count: count() })
@@ -498,20 +469,6 @@ const leadsRouter = createTRPCRouter({
             .select({ count: count(), valueCents: sum(agencyLead.valueCents) })
             .from(agencyLead)
             .where(wonInRange),
-          db
-            .select({
-              total: count(),
-              fromAds:
-                sql<number>`count(*) filter (where ${channelExpr} = 'google_ads')`.mapWith(
-                  Number
-                ),
-              noShows:
-                sql<number>`count(*) filter (where ${agencyLead.bookingOutcome} = 'no_show')`.mapWith(
-                  Number
-                ),
-            })
-            .from(agencyLead)
-            .where(bookingInRange),
           db
             .select({ count: count() })
             .from(agencyLead)
@@ -545,11 +502,6 @@ const leadsRouter = createTRPCRouter({
         byCampaign,
         byKeyword,
         landingPages,
-        bookings: {
-          total: bookings?.total ?? 0,
-          fromAds: bookings?.fromAds ?? 0,
-          noShows: bookings?.noShows ?? 0,
-        },
         adQualified: adQualifiedRow?.count ?? 0,
       };
     }),
@@ -657,7 +609,6 @@ const adminRouter = createTRPCRouter({
         adsType: agencyClient.adsType,
         googleAdsCustomerId: agencyClient.googleAdsCustomerId,
         googleAdsConversionAction: agencyClient.googleAdsConversionAction,
-        weeklyReport: agencyClient.weeklyReport,
         email: userTable.email,
         name: userTable.name,
         repo: hubProject.repo,
@@ -759,7 +710,6 @@ const adminRouter = createTRPCRouter({
         adsType: z.enum(["search", "lsa", "both"]).nullable(),
         googleAdsCustomerId: z.string().trim().max(20).nullable(),
         googleAdsConversionAction: z.string().trim().max(200).nullable(),
-        weeklyReport: z.boolean(),
       })
     )
     .mutation(async ({ input }) => {
@@ -827,7 +777,6 @@ const adminRouter = createTRPCRouter({
           ? normalizeCustomerId(input.googleAdsCustomerId)
           : null,
         googleAdsConversionAction: input.googleAdsConversionAction || null,
-        weeklyReport: input.weeklyReport,
       };
 
       if (existing) {
@@ -842,19 +791,7 @@ const adminRouter = createTRPCRouter({
       return client!;
     }),
 
-  // Admin Website ⇄ Agency switch: whether the project has an agency workspace
-  // yet (switching to Agency without one creates it first).
-  adminView: adminProcedure
-    .input(z.object({ projectId: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const client = await db.query.agencyClient.findFirst({
-        where: eq(agencyClient.projectId, input.projectId),
-        columns: { id: true },
-      });
-      return { hasAgency: Boolean(client) };
-    }),
-
-  // Give a project an agency workspace from the admin switch. Idempotent; the
+  // Give a project an agency workspace (admin, from the Apps page). Idempotent; the
   // owner is whoever connected the project (the admin when unknown).
   enableForProject: adminProcedure
     .input(z.object({ projectId: z.string().uuid() }))
@@ -878,7 +815,6 @@ const adminRouter = createTRPCRouter({
         .values({
           userId: project.githubConnectedUserId ?? ctx.session.user.id,
           projectId: input.projectId,
-          weeklyReport: false,
         })
         .onConflictDoNothing({ target: agencyClient.projectId })
         .returning();
@@ -1253,222 +1189,10 @@ async function unwireAction(
   }
 }
 
-// ─── Booking ─────────────────────────────────────────────────────
-// Appointment settings + the owner's view of bookings. Visitors book through
-// the public widget endpoint (apps/api .../agency/booking/[projectId]); the
-// calendar behind everything is the OWNER's Google account (client.userId),
-// no matter which hub member manages the booking.
-
-const SLOT_MS = BOOKING_MINUTES * 60 * 1000;
-
-/** The lead must be a live booking belonging to this client. */
-async function findBookingLead(projectId: string, leadId: number) {
-  const lead = await db.query.agencyLead.findFirst({
-    where: and(eq(agencyLead.id, leadId), eq(agencyLead.projectId, projectId)),
-  });
-  if (!lead || lead.source !== "booking" || !lead.bookingAt) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Booking not found." });
-  }
-  return lead;
-}
-
-const bookingRouter = createTRPCRouter({
-  // Connection + settings in one call: what the booking page renders from.
-  status: agencyProcedure.query(async ({ ctx }) => {
-    const [booking, calendar] = await Promise.all([
-      getConnectedAccount(ctx.client.userId, "google", BOOKING_SCOPES),
-      getConnectedAccount(ctx.client.userId, "google", CALENDAR_SCOPE),
-    ]);
-    return {
-      // Connected with both scopes (events + freebusy).
-      connected: Boolean(booking),
-      // Calendar linked before booking existed: one reconnect adds freebusy.
-      needsReconnect: !booking && Boolean(calendar),
-      settings: ctx.client.bookingSettings,
-      // The embed scripts key on projectId; full-access clients see it to build
-      // their install snippet.
-      projectId: ctx.role === "full-access" ? ctx.client.projectId : null,
-    };
-  }),
-
-  setSettings: agencyWriteProcedure
-    .input(z.object({ settings: bookingSettingsSchema.nullable() }))
-    .mutation(async ({ ctx, input }) => {
-      await db
-        .update(agencyClient)
-        .set({ bookingSettings: input.settings })
-        .where(eq(agencyClient.id, ctx.client.id));
-    }),
-
-  // Booked meetings, soonest first; recent past and canceled kept visible.
-  list: agencyProcedure.query(async ({ ctx }) => {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    return db
-      .select({
-        id: agencyLead.id,
-        name: agencyLead.name,
-        email: agencyLead.email,
-        phone: agencyLead.phone,
-        notes: agencyLead.message,
-        bookingAt: agencyLead.bookingAt,
-        bookingEnd: agencyLead.bookingEnd,
-        bookingCanceledAt: agencyLead.bookingCanceledAt,
-        booking: agencyLead.booking,
-        bookingOutcome: agencyLead.bookingOutcome,
-        status: agencyLead.status,
-        channel: agencyLead.channel,
-      })
-      .from(agencyLead)
-      .where(
-        and(
-          eq(agencyLead.projectId, ctx.client.projectId),
-          eq(agencyLead.source, "booking"),
-          isNotNull(agencyLead.bookingAt),
-          gte(agencyLead.bookingAt, since)
-        )
-      )
-      .orderBy(desc(agencyLead.bookingAt))
-      .limit(200);
-  }),
-
-  // Free slots for the hub's reschedule picker; same math as the widget.
-  slots: agencyProcedure
-    .input(z.object({ from: z.string(), to: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const settings = ctx.client.bookingSettings;
-      const fromMs = Date.parse(input.from);
-      const toMs = Date.parse(input.to);
-      if (
-        !settings ||
-        !Number.isFinite(fromMs) ||
-        !Number.isFinite(toMs) ||
-        toMs <= fromMs ||
-        toMs - fromMs > MAX_RANGE_DAYS * 24 * 60 * 60 * 1000
-      ) {
-        return { slots: [] };
-      }
-      const slots = await getAvailability({
-        projectId: ctx.client.projectId,
-        userId: ctx.client.userId,
-        settings,
-        fromMs,
-        toMs,
-      });
-      return { slots };
-    }),
-
-  // How a past meeting went. A plain fact, no status change; null = undo.
-  setOutcome: agencyWriteProcedure
-    .input(
-      z.object({
-        leadId: z.number().int(),
-        outcome: z.enum(["completed", "no_show"]).nullable(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const lead = await findBookingLead(ctx.client.projectId, input.leadId);
-      if (lead.bookingCanceledAt) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "A canceled booking has no outcome.",
-        });
-      }
-      if (!lead.bookingAt || lead.bookingAt > new Date()) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "This meeting hasn't happened yet.",
-        });
-      }
-      await db
-        .update(agencyLead)
-        .set({ bookingOutcome: input.outcome })
-        .where(eq(agencyLead.id, lead.id));
-    }),
-
-  // Cancel: Google emails the visitor; the slot opens up again.
-  cancel: agencyWriteProcedure
-    .input(z.object({ leadId: z.number().int() }))
-    .mutation(async ({ ctx, input }) => {
-      const lead = await findBookingLead(ctx.client.projectId, input.leadId);
-      if (lead.bookingCanceledAt) return;
-      if (lead.booking?.eventId) {
-        await deleteLeadMeeting({
-          userId: ctx.client.userId,
-          eventId: lead.booking.eventId,
-        });
-      }
-      await db
-        .update(agencyLead)
-        .set({ bookingCanceledAt: new Date() })
-        .where(eq(agencyLead.id, lead.id));
-    }),
-
-  // Reschedule: the event moves, Google notifies both sides.
-  reschedule: agencyWriteProcedure
-    .input(z.object({ leadId: z.number().int(), at: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const settings = ctx.client.bookingSettings;
-      const lead = await findBookingLead(ctx.client.projectId, input.leadId);
-      if (lead.bookingCanceledAt) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "This booking was canceled.",
-        });
-      }
-      const atMs = Date.parse(input.at);
-      if (
-        !settings ||
-        !Number.isFinite(atMs) ||
-        atMs % SLOT_MS !== 0 ||
-        !isValidSlot(new Date(atMs).toISOString(), settings, new Date())
-      ) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "That time is not available.",
-        });
-      }
-      const at = new Date(atMs);
-      const end = new Date(atMs + SLOT_MS);
-      try {
-        await db
-          .update(agencyLead)
-          .set({
-            bookingAt: at,
-            bookingEnd: end,
-            booking: {
-              ...lead.booking,
-              rescheduledFrom: lead.bookingAt!.toISOString(),
-            },
-          })
-          .where(eq(agencyLead.id, lead.id));
-      } catch (error) {
-        // Unique (project_id, booking_at): that slot is already booked.
-        if ((error as { code?: string })?.code === "23505") {
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: "That time was just taken.",
-          });
-        }
-        throw error;
-      }
-      if (lead.booking?.eventId) {
-        await moveBookingEvent({
-          userId: ctx.client.userId,
-          eventId: lead.booking.eventId,
-          startISO: at.toISOString(),
-          endISO: end.toISOString(),
-        });
-      }
-    }),
-});
-
 export const agencyRouter = createTRPCRouter({
-  // Null unless the user's agency website has an active agency subscription:
-  // the Hub then shows the website UI (project gallery) instead. Admins get
-  // the agency UI for any client they're set up on, no subscription needed.
-  // The agency workspace for one project, or null when the project isn't an
-  // agency (no client row, no access, or no live agency subscription). The hub
-  // picks the agency UI over the website editor on this.
+  // The project's agency data, or null when it has none (no client row, no
+  // access, or no live agency subscription; admins skip the plan check). The
+  // hub's Leads / Business info pages render behind this.
   project: authenticatedProcedure
     .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
@@ -1494,12 +1218,8 @@ export const agencyRouter = createTRPCRouter({
         owner: project?.owner ?? "",
         repo: project?.repo ?? "",
         websiteUrl: project?.websiteUrl ?? null,
-        hasSite: Boolean(project),
         adsConnected: Boolean(client.googleAdsCustomerId),
         adsType: (client.adsType ?? "search") as "search" | "lsa" | "both",
-        conversionsWired: Boolean(
-          client.googleAdsActions?.lead && client.googleAdsConversionAction
-        ),
         // Only people who can edit the site need the install snippet; it keys
         // on projectId (above), so no separate value is returned here.
         canInstall: role === "full-access",
@@ -1508,9 +1228,7 @@ export const agencyRouter = createTRPCRouter({
 
   leads: leadsRouter,
 
-  booking: bookingRouter,
-
-  // Domains the capture + booking scripts are allowed to run on. One list per
+  // Domains the capture scripts are allowed to run on. One list per
   // project, stored on hub_project and shared with the website Domain card.
   origins: createTRPCRouter({
     get: agencyProcedure.query(async ({ ctx }) => {
@@ -1669,25 +1387,6 @@ export const agencyRouter = createTRPCRouter({
           .where(eq(agencyClient.id, ctx.client.id));
         return { ok: true };
       }),
-  }),
-
-  // Saved copies of the Monday report emails, newest week first.
-  reports: createTRPCRouter({
-    list: agencyProcedure.query(async ({ ctx }) => {
-      await requireFeature(ctx.session.user, ctx.client.projectId, "leads");
-      const rows = await db
-        .select()
-        .from(agencyWeeklyReport)
-        .where(eq(agencyWeeklyReport.projectId, ctx.client.projectId))
-        .orderBy(desc(agencyWeeklyReport.weekFrom))
-        .limit(52);
-      return rows.map((row) => ({
-        id: row.id,
-        weekFrom: row.weekFrom,
-        emailedAt: row.emailedAt,
-        data: row.data as WeeklyReportData,
-      }));
-    }),
   }),
 
   ads: createTRPCRouter({

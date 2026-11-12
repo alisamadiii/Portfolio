@@ -31,14 +31,10 @@ export const hubCollaborator = pgTable(
   {
     id: serial("id").primaryKey(),
     type: text("type").notNull(),
-    // LEGACY: GitHub owner id from the old GitHub-backed invite flow. No code
-    // reads or writes it anymore — collaborators are scoped by projectId.
-    ownerId: integer("owner_id"),
     // = hubProject.id. Cascade handled in application code (deleteProject).
     projectId: uuid("project_id"),
     owner: text("owner").notNull(),
     repo: text("repo").notNull(),
-    branch: text("branch"),
     email: text("email").notNull(),
     userId: text("user_id").references(() => user.id),
     invitedBy: text("invited_by").references(() => user.id),
@@ -135,13 +131,6 @@ export const hubProject = pgTable(
     syncedAt: timestamp("synced_at").notNull().defaultNow(),
     // Per-project settings, with defaults for new projects.
     basePath: text("base_path").notNull().default(""),
-    // Blog sync state: the Blog tab shows an "unpublished changes" banner when
-    // blogEditedAt > blogPublishedAt. Edited is stamped on every blog CRUD
-    // mutation (including deletes, which max(updatedAt) could never detect);
-    // published is stamped when the Publish button fires the blog-sync
-    // repository_dispatch.
-    blogEditedAt: timestamp("blog_edited_at"),
-    blogPublishedAt: timestamp("blog_published_at"),
     // ── useSend per-project team (workspace) ──
     // Every project is its own useSend team, keyed by projectId (Team.externalId).
     // Provisioned at import via POST /api/v1/workspaces. usesendTeamId is the
@@ -151,15 +140,6 @@ export const hubProject = pgTable(
     // use usesendApiKey; it being set is what "emails are provisioned" means.
     usesendTeamId: integer("usesend_team_id"),
     usesendApiKey: text("usesend_api_key"),
-    // Sending uses one shared, env-configured agency domain (alisamadii.com)
-    // that every team may send from — no per-project domain. Emails stay
-    // isolated per team because useSend records each send under the caller's
-    // team. So there's no per-project sending domain column here.
-    usesendDomainId: text("usesend_domain_id"),
-    // Sending domain created in useSend but not yet DNS-verified — setup parks
-    // the id here so it survives refreshes and slow DNS propagation, then moves
-    // into usesendDomainId once verified.
-    usesendPendingDomainId: text("usesend_pending_domain_id"),
     // Per-client Google Analytics. gaPropertyId is the numeric GA4 property id
     // (e.g. "123456789") the project's Analytics tab reports on; gaConnectedUserId
     // is the Better Auth user.id whose stored Google token (account table) we use
@@ -245,36 +225,6 @@ export const githubInstallation = pgTable(
     idxGithubInstallationAccountId: index(
       "idx_github_installation_account_id"
     ).on(table.accountId),
-  })
-);
-
-export const hubCacheFile = pgTable(
-  "hub_cache_file",
-  {
-    id: serial("id").primaryKey(),
-    context: text("context").notNull().default("collection"),
-    owner: text("owner").notNull(),
-    repo: text("repo").notNull(),
-    branch: text("branch").notNull(),
-    parentPath: text("parent_path").notNull(),
-    name: text("name").notNull(),
-    path: text("path").notNull(),
-    type: text("type").notNull(),
-    content: text("content"),
-    sha: text("sha"),
-    size: integer("size"),
-    downloadUrl: text("download_url"),
-    commitSha: text("commit_sha"),
-    commitTimestamp: timestamp("commit_timestamp"),
-    updatedAt: timestamp("updated_at").notNull(),
-  },
-  (table) => ({
-    idxHubCacheFileOwnerRepoBranchParentPath: index(
-      "idx_hub_cache_file_owner_repo_branch_parent_path"
-    ).on(table.owner, table.repo, table.branch, table.parentPath),
-    idxHubCacheFileOwnerRepoBranchPath: uniqueIndex(
-      "idx_hub_cache_file_owner_repo_branch_path"
-    ).on(table.owner, table.repo, table.branch, table.path),
   })
 );
 

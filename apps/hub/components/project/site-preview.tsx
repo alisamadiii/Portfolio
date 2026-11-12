@@ -6,7 +6,6 @@ import { CloudOff, Globe, ShieldCheck } from "lucide-react";
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { useTRPC } from "@workspace/trpc/client";
-import type { FramePolicy } from "@workspace/trpc/lib/frame-policy";
 
 // Logical size the live site renders at inside the preview iframe before it's
 // scaled down to the box width. A desktop-ish viewport so previews look like

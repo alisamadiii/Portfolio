@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { Building2 } from "lucide-react";
 
+import type { Feature } from "@workspace/trpc/lib/payment/plans";
+
 import { Spinner } from "@workspace/ui/components/spinner";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
@@ -24,12 +26,15 @@ import { useAgencyOptional } from "./use-agency";
 export function AgencyBoundary({
   children,
   header,
+  feature = "leads",
   title = "This app isn't set up for your site yet",
   text = "We switch it on for you. Send us a note and we'll have it ready within a day.",
 }: {
   children: ReactNode;
   /** Rendered above the paywall / empty state (usually the page header). */
   header?: ReactNode;
+  /** Plan feature the page needs (Leads/Business info: leads, Google Ads: ads). */
+  feature?: Feature;
   title?: string;
   text?: string;
 }) {
@@ -44,11 +49,11 @@ export function AgencyBoundary({
       </div>
     );
   }
-  if (projectId && !can("leads")) {
+  if (projectId && !can(feature)) {
     return (
       <>
         {header}
-        <ProjectPaywall projectId={projectId} feature="leads" />
+        <ProjectPaywall projectId={projectId} feature={feature} />
       </>
     );
   }

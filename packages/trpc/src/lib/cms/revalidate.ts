@@ -1,7 +1,7 @@
 import { and, eq, sql } from "drizzle-orm";
 
 import { configTable, db } from "./db";
-import { clearFileCache, getBranchHeadSha } from "./github-cache-file";
+import { getBranchHeadSha } from "./github-cache-file";
 import {
   deleteCacheFileMeta,
   getCacheFileMeta,
@@ -30,9 +30,8 @@ export async function revalidateRepoCache(
     const meta = await getCacheFileMeta(owner, repo, branch);
     if (meta?.commitSha === head) return; // cache already at HEAD
 
-    // Branch moved (or nothing cached yet) — clear file + config cache and
+    // Branch moved (or nothing cached yet) — clear the config cache and
     // record the new head so subsequent opens fast-path until the next push.
-    await clearFileCache(owner, repo, branch);
     await deleteCacheFileMeta(owner, repo, branch);
     await upsertCacheFileMeta(owner, repo, branch, {
       commitSha: head,

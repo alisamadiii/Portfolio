@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
-import { Calendar, Inbox, Search } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { Inbox, Search } from "lucide-react";
 
 import { useTRPC } from "@workspace/trpc/client";
 import type { AgencyLeadChannel, AgencyLeadStatus } from "@workspace/drizzle/schema";
@@ -50,7 +50,7 @@ function useLeadsList(input: {
 }
 
 /**
- * Avatar initials + name, with the message / email / booking line under it.
+ * Avatar initials + name, with the message or email line under it.
  * `href` makes the name a link; omit it when the whole row already is one.
  */
 export function LeadNameCell({ lead, href }: { lead: LeadRow; href?: string }) {
@@ -72,13 +72,7 @@ export function LeadNameCell({ lead, href }: { lead: LeadRow; href?: string }) {
         ) : (
           <span className="truncate text-sm font-medium text-ink">{label}</span>
         )}
-        {lead.source === "booking" && lead.bookingAt ? (
-          <span className="flex items-center gap-1 truncate text-xs text-dim">
-            <Calendar className="size-3" />
-            Booked {format(new Date(lead.bookingAt), "MMM d, p")}
-            {lead.bookingCanceledAt ? " (canceled)" : ""}
-          </span>
-        ) : lead.message ? (
+        {lead.message ? (
           <span className="line-clamp-1 max-w-[320px] text-xs text-dim">{lead.message}</span>
         ) : lead.email ? (
           <span className="truncate text-xs text-dim">{lead.email}</span>

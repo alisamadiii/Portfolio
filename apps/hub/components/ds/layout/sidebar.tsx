@@ -24,7 +24,7 @@ const linkClass = (active?: boolean, muted?: boolean) =>
  * 232px sidebar on sidebar tint. Items 34px, 14px text, 16px icons (stroke 1.8).
  * Active item: selected bg + 500 weight + CORAL icon. No left border bars.
  * Desktop: sticky under the 56px top bar, full viewport height, scrolls on its
- * own. Phones: stacks above the content (parent is flex-wrap).
+ * own. Phones: rendered inside AppShell's left drawer.
  */
 export function SidebarLink({
   item,
@@ -94,7 +94,7 @@ export function Sidebar({ label, children }: { label: string; children: ReactNod
   return (
     <nav
       aria-label={label}
-      className="flex flex-[1_1_232px] flex-col gap-0.5 self-start border-r border-line bg-sidebar px-3 py-4 md:sticky md:top-14 md:h-[calc(100dvh-3.5rem)] md:overflow-y-auto"
+      className="flex w-full flex-col gap-0.5 self-start overflow-y-auto border-r border-line bg-sidebar px-3 py-4 md:sticky md:top-14 md:h-[calc(100dvh-3.5rem)]"
     >
       {children}
       <div className="min-h-6 flex-1" />

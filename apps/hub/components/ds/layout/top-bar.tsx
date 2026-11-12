@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronDown, CircleHelp, Sparkles } from "lucide-react";
+import { Check, ChevronDown, CircleHelp, Menu, Sparkles } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -20,7 +20,8 @@ import { cn } from "@workspace/ui/lib/utils";
 import { User } from "@/components/user";
 import { repoPath } from "@/lib/paths";
 
-import { buttonClass } from "../ui/button";
+import { buttonClass, IconButton } from "../ui/button";
+import { useNavDrawer } from "./app-shell";
 import { LetterTile } from "../ui/misc";
 
 /**
@@ -34,32 +35,41 @@ export function TopBar({
   project?: { projectId: string; name: string; plan?: string };
   editorHref?: string;
 }) {
+  const drawer = useNavDrawer();
   return (
-    <header className="sticky top-0 z-30 flex min-h-14 flex-wrap items-center gap-3 border-b border-line bg-surface pl-5 pr-4">
-      <Link href="/" aria-label="Client Hub, all sites" className="flex items-center gap-2.5 text-ink">
-        <span className="flex size-7 items-center justify-center rounded-[7px] bg-coral text-[15px] font-bold text-ink">
-          A
-        </span>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-surface px-3 sm:gap-3 sm:pl-5 sm:pr-4">
+      {drawer && (
+        <IconButton aria-label="Open navigation" className="-ml-1 md:hidden" onClick={drawer.open}>
+          <Menu className="size-[18px]" />
+        </IconButton>
+      )}
+      <Link href="/" aria-label="Client Hub, all sites" className="flex shrink-0 items-center gap-2.5 text-ink">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/agency-icon.png" alt="" width={28} height={28} className="size-7 rounded-[7px]" />
         {!project && <span className="text-[15px] font-semibold tracking-[-0.01em]">Client Hub</span>}
       </Link>
       {project && (
         <>
-          <span className="h-[22px] w-px bg-line" />
+          <span className="hidden h-[22px] w-px bg-line sm:block" />
           <ProjectSwitcher current={project} />
         </>
       )}
-      <div className="flex-1" />
+      <div className="min-w-2 flex-1" />
       {project && editorHref && (
-        <Link href={editorHref} className={buttonClass("outline")}>
+        <Link
+          href={editorHref}
+          aria-label="Edit with AI"
+          className={buttonClass("outline", "md", "shrink-0 px-2.5 sm:px-3.5")}
+        >
           <Sparkles className="size-[15px] text-coral" aria-hidden />
-          Edit with AI
+          <span className="hidden sm:inline">Edit with AI</span>
         </Link>
       )}
       {/* RequestDialog renders its own <button> trigger, so the child is a styled span. */}
       <RequestDialog>
         <span
           aria-label="Help and support"
-          className="inline-flex size-9 items-center justify-center rounded-control text-ink-3 hover:bg-hover"
+          className="hidden size-9 items-center justify-center rounded-control text-ink-3 hover:bg-hover sm:inline-flex"
         >
           <CircleHelp className="size-[18px]" />
         </span>
@@ -82,7 +92,7 @@ function ProjectSwitcher({
         render={
           <button
             type="button"
-            className="inline-flex h-9 max-w-[min(60vw,360px)] items-center gap-2 rounded-control bg-subtle pl-1.5 pr-2.5 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral"
+            className="inline-flex h-9 min-w-0 max-w-[360px] items-center gap-2 rounded-control bg-subtle pl-1.5 pr-2.5 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral"
           >
             <LetterTile name={current.name} size={24} tone="ink" />
             <span className="truncate text-sm font-medium">{current.name}</span>

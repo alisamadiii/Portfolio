@@ -60,6 +60,7 @@ const secret = () => {
 const hmac = (payload: string) =>
   createHmac("sha256", secret()).update(payload).digest("base64url");
 
+// Counterpart of verifyToken: the format broadcast unsubscribe links use.
 export const signToken = (email: string, ttlMs: number) => {
   const exp = ttlMs > 0 ? Date.now() + ttlMs : 0;
   const sig = hmac(`${email}.${exp}`);

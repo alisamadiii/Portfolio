@@ -17,7 +17,6 @@ import { deleteImport } from "@workspace/trpc/lib/content-pilot";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { settleAndCancel } from "@workspace/trpc/lib/payment/settle-subscription";
-import { deleteUsesendDomain } from "@workspace/trpc/lib/usesend";
 
 export const projectRouter = createTRPCRouter({
   /**
@@ -27,8 +26,7 @@ export const projectRouter = createTRPCRouter({
    *
    * Order is chosen so a mid-sequence failure leaves a retryable state (every
    * later step is idempotent): billing settles first as a hard gate, then the
-   * external resources (useSend sending domain),
-   * then the pilot teardown (which auto-closes any live session), then the
+   * pilot teardown (which auto-closes any live session), then the
    * hub-DB rows, then the project row. There is no cross-system transaction, so
    * retrying a half-finished delete converges.
    *
@@ -42,8 +40,6 @@ export const projectRouter = createTRPCRouter({
         .select({
           owner: hubProject.owner,
           repo: hubProject.repo,
-          usesendDomainId: hubProject.usesendDomainId,
-          usesendPendingDomainId: hubProject.usesendPendingDomainId,
         })
         .from(hubProject)
         .where(eq(hubProject.id, projectId))
@@ -54,32 +50,19 @@ export const projectRouter = createTRPCRouter({
       //    is destroyed, and the project survives for a retry.
       await settleAndCancel(projectId);
 
-      // 2. useSend sending domain (active or still-pending). 404-tolerant;
-      //    best-effort so an email-service blip never blocks the delete.
-      for (const id of [
-        project.usesendDomainId,
-        project.usesendPendingDomainId,
-      ]) {
-        if (id != null) {
-          await deleteUsesendDomain(Number(id)).catch((error) =>
-            console.error("[project.delete] usesend domain delete failed", error)
-          );
-        }
-      }
-
-      // 3. content-pilot teardown (any source): workspace clone, every preview
+      // 2. content-pilot teardown (any source): workspace clone, every preview
       //    session (+ transcripts/events/attachments/
       //    staged uploads), and the per-repo setting overrides. Auto-closes a
       //    live editing session, so this never 409s.
       await deleteImport(projectId);
 
-      // 4. Wipe project-scoped hub rows (subscription, collaborators, invites,
+      // 3. Wipe project-scoped hub rows (subscription, collaborators, invites,
       //    config + content cache).
       await deleteProjectChildRows([
         { projectId, owner: project.owner, repo: project.repo },
       ]);
 
-      // 5. Remove the project row from our database (GitHub and uploaded
+      // 4. Remove the project row from our database (GitHub and uploaded
       //    alike; the GitHub repo itself is never touched). Nothing re-adds
       //    projects automatically (only an explicit import inserts), so no
       //    tombstone is needed, and the name is free for a re-import.

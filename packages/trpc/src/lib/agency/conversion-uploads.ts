@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, gte, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/pool";
 import {
@@ -209,8 +209,6 @@ export async function syncConversionUploads(client: Client) {
             (actions.booking ?? actions.lead)
               ? and(
                   eq(agencyLead.source, "booking"),
-                  // A canceled booking never becomes a conversion.
-                  isNull(agencyLead.bookingCanceledAt),
                   pendingStage("lead")
                 )
               : sql`false`,

@@ -11,7 +11,7 @@ import {
 import { IP_LIMIT } from "@workspace/trpc/lib/agency/lead-capture";
 
 // ─── Shared plumbing for the public agency endpoints ─────────────
-// The form capture (forms/[projectId]) and booking (booking/[projectId]) routes
+// The form capture (forms/[projectId]) and contact (contact/[projectId]) routes
 // are both reachable from visitors' browsers on clients' websites: same CORS
 // shape, same origin allowlist, same Postgres rate limiter, same client
 // lookup by form key, same notification email shell.
@@ -86,7 +86,7 @@ export const isAllowedOrigin = (
 
 /**
  * The agency client behind a public `projectId`; null when unknown. The embed
- * scripts (leads.js / booking.js / contact.js) post keyed by the project's projectId — the tenant
+ * scripts (leads.js / contact.js) post keyed by the project's projectId — the tenant
  * id (`agency_client.projectId`), which is the project (`hub_project.projectId`). The
  * website is left-joined to keep its URL + name, plus the project's useSend
  * team key for the contact-email endpoint (server-only, never returned past these
@@ -106,7 +106,6 @@ export async function findClientByProjectId(projectId: string) {
       usesendApiKey: hubProject.usesendApiKey,
       googleAdsCustomerId: agencyClient.googleAdsCustomerId,
       googleAdsActions: agencyClient.googleAdsActions,
-      bookingSettings: agencyClient.bookingSettings,
     })
     .from(agencyClient)
     .innerJoin(userTable, eq(userTable.id, agencyClient.userId))

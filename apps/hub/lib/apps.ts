@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Link2,
   Mail,
+  Megaphone,
   Plug,
   User,
 } from "lucide-react";
@@ -58,6 +59,15 @@ export const APPS: AppDef[] = [
     icon: BarChart3,
     path: "analytics",
     feature: "analytics",
+  },
+  {
+    id: "google-ads",
+    name: "Google Ads",
+    description:
+      "Spend, campaigns, budget pacing, search terms and conversion tracking for your ads.",
+    icon: Megaphone,
+    path: "google-ads",
+    feature: "ads",
   },
   {
     id: "newsletter",

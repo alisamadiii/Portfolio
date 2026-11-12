@@ -7,7 +7,6 @@ import { and, inArray, notInArray, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
 import {
-  hubCacheFile,
   hubCacheFileMeta,
   hubCollaborator,
   hubCollaboratorInvite,
@@ -55,13 +54,12 @@ const deleteProjectChildRows = async (
       )
       .limit(1);
     if (shared) continue;
-    const match = (table: typeof hubConfig | typeof hubCacheFile | typeof hubCacheFileMeta) =>
+    const match = (table: typeof hubConfig | typeof hubCacheFileMeta) =>
       and(
         sql`lower(${table.owner}) = lower(${owner})`,
         sql`lower(${table.repo}) = lower(${repo})`
       );
     await db.delete(hubConfig).where(match(hubConfig));
-    await db.delete(hubCacheFile).where(match(hubCacheFile));
     await db.delete(hubCacheFileMeta).where(match(hubCacheFileMeta));
   }
 };

@@ -1,9 +1,20 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+
+import { Sheet, SheetContent, SheetTitle } from "@workspace/ui/components/sheet";
+
+const NavDrawerContext = createContext<{ open: () => void } | null>(null);
+
+/** Opens the phone nav drawer (null outside AppShell). */
+export const useNavDrawer = () => useContext(NavDrawerContext);
 
 /**
- * Page frame: TopBar on top, then a wrapping row of Sidebar + main.
- * main: flex 999 1 560px, padding 32/40/48, inner column max-w 1120 centered, 20px gap between blocks.
- * Never sticky, never 100vh: on phones the sidebar stacks above the content.
+ * Page frame: sticky TopBar on top, then Sidebar + main.
+ * Desktop (md+): sidebar is a sticky full-height column. Phones: the sidebar
+ * lives in a left drawer opened from the top bar's menu button.
+ * main: padding 32/40/48, inner column max-w 1120 centered, 20px gap between blocks.
  */
 export function AppShell({
   topBar,
@@ -17,18 +28,31 @@ export function AppShell({
   /** Business info steps use the full width. */
   wide?: boolean;
 }) {
+  const [drawer, setDrawer] = useState(false);
+  const pathname = usePathname();
+  // Navigating from the drawer closes it.
+  useEffect(() => setDrawer(false), [pathname]);
+
   return (
-    <div className="flex min-h-screen flex-col bg-canvas font-sans text-sm text-ink">
-      {topBar}
-      <div className="flex flex-1 flex-wrap">
-        {sidebar}
-        <main className="min-w-0 flex-[999_1_560px] px-5 pb-12 pt-8 sm:px-10">
-          <div className={wide ? "flex flex-col gap-5" : "mx-auto flex max-w-[1120px] flex-col gap-5"}>
-            {children}
-          </div>
-        </main>
+    <NavDrawerContext.Provider value={{ open: () => setDrawer(true) }}>
+      <div className="flex min-h-screen flex-col bg-canvas font-sans text-sm text-ink">
+        {topBar}
+        <div className="flex flex-1">
+          <div className="hidden w-[232px] shrink-0 md:flex">{sidebar}</div>
+          <main className="min-w-0 flex-1 px-4 pb-12 pt-6 sm:px-10 sm:pt-8">
+            <div className={wide ? "flex flex-col gap-5" : "mx-auto flex max-w-[1120px] flex-col gap-5"}>
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+      <Sheet open={drawer} onOpenChange={setDrawer}>
+        <SheetContent side="left" className="w-[280px] gap-0 p-0 [&>nav]:h-full [&>nav]:border-r-0 [&>nav]:pt-12">
+          <SheetTitle className="sr-only">Navigation</SheetTitle>
+          {sidebar}
+        </SheetContent>
+      </Sheet>
+    </NavDrawerContext.Provider>
   );
 }
 

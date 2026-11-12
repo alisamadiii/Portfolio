@@ -17,6 +17,5 @@ export {
   hubCollaboratorInvite as collaboratorInviteTable,
   hubConfig as configTable,
   hubProject as orgRepoTable,
-  hubCacheFile as cacheFileTable,
   hubCacheFileMeta as cacheFileMetaTable,
 } from "@workspace/drizzle/schema";

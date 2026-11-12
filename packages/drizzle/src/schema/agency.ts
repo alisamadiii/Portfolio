@@ -1,6 +1,4 @@
-import { sql } from "drizzle-orm";
 import {
-  boolean,
   index,
   integer,
   jsonb,
@@ -98,54 +96,6 @@ export type AdCampaign = {
   adText: { headlines: string[]; descriptions: string[]; callouts: string[] };
 };
 
-// ─── Booking ─────────────────────────────────────────────────────
-// Online appointment booking (booking.js widget). Every meeting is 15 minutes;
-// availability comes from these hours minus Google Calendar busy times.
-
-export type AgencyBookingHours = {
-  /** Keyed by weekday, 0 = Sunday. Missing or empty = closed that day. */
-  [weekday: string]: { from: string; to: string }[] | undefined;
-};
-
-export type AgencyBookingType = {
-  id: string;
-  name: string;
-  description?: string;
-  /** Attach a Google Meet link to the calendar event. */
-  meet?: boolean;
-  active?: boolean;
-};
-
-export type AgencyBookingSettings = {
-  /** IANA timezone the working hours are written in (the owner's). */
-  timezone: string;
-  hours: AgencyBookingHours;
-  /** Earliest a visitor can book, in hours from now. */
-  noticeHours?: number;
-  /** How many days ahead the calendar opens. */
-  horizonDays?: number;
-  /** Free minutes kept after each booking. */
-  bufferMinutes?: number;
-  types: AgencyBookingType[];
-};
-
-// Booking details on a lead (the times live in their own indexed columns).
-export type AgencyLeadBooking = {
-  typeId?: string;
-  /** Copied at booking time so renamed types keep their history. */
-  typeName?: string;
-  /** Google Calendar event on the owner's primary calendar. */
-  eventId?: string;
-  htmlLink?: string;
-  meetUrl?: string;
-  /** The visitor's IANA timezone at booking time. */
-  timezone?: string;
-  /** Previous start time, set when the owner reschedules. */
-  rescheduledFrom?: string;
-  /** Calendar event creation failed; the booking still stands. */
-  eventError?: string;
-};
-
 // Per-stage upload outcome on a lead (the closed deal keeps its own columns).
 export type AgencyLeadUpload = {
   at?: string;
@@ -181,7 +131,7 @@ export const agencyClient = pgTable(
     projectId: uuid("project_id").notNull().unique(),
 
 
-    // The embed scripts (leads.js / booking.js / contact.js) post keyed by the project's
+    // The embed scripts (leads.js / contact.js) post keyed by the project's
     // projectId above (data-key=projectId) — no separate public key. Abuse is bounded
     // by the origins allowlist (now hub_project.origins) + the Postgres rate limiter.
 
@@ -210,11 +160,6 @@ export const agencyClient = pgTable(
     googleAdsActions: jsonb("google_ads_actions").$type<AgencyAdsActions>(),
     // Monthly ad spend target for budget pacing; unset = no pacing shown.
     googleAdsBudget: jsonb("google_ads_budget").$type<AgencyAdsBudget>(),
-    // Monday email with the week's numbers; the email's unsubscribe link clears it.
-    weeklyReport: boolean("weekly_report").notNull().default(true),
-
-    // Working hours + meeting types for the booking widget; unset = booking off.
-    bookingSettings: jsonb("booking_settings").$type<AgencyBookingSettings>(),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
@@ -274,14 +219,6 @@ export const agencyLead = pgTable(
     // New-lead and qualified uploads (Marketing > Conversions presets).
     adsUploads: jsonb("ads_uploads").$type<AgencyLeadUploads>(),
 
-    // Appointment times for booking leads (source "booking").
-    bookingAt: timestamp("booking_at"),
-    bookingEnd: timestamp("booking_end"),
-    bookingCanceledAt: timestamp("booking_canceled_at"),
-    booking: jsonb("booking").$type<AgencyLeadBooking>(),
-    // Outcome of a past meeting, recorded by the owner. Null = not recorded.
-    bookingOutcome: text("booking_outcome").$type<"completed" | "no_show">(),
-
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -298,11 +235,6 @@ export const agencyLead = pgTable(
       table.channel,
       table.createdAt.desc()
     ),
-    // Two visitors can't take the same slot: slots are a fixed 15-minute grid,
-    // so equal start times are the only possible conflict.
-    uniqProjectBookingAt: uniqueIndex("agency_lead_project_booking_at_idx")
-      .on(table.projectId, table.bookingAt)
-      .where(sql`${table.bookingCanceledAt} is null`),
   })
 );
 
@@ -341,24 +273,3 @@ export const agencyRateLimit = pgTable(
   })
 );
 
-// One saved weekly report per client per week: what the Monday email said,
-// kept so the hub can show history and week-over-week comparisons.
-export const agencyWeeklyReport = pgTable(
-  "agency_weekly_report",
-  {
-    id: serial("id").primaryKey(),
-    projectId: uuid("project_id").notNull(),
-    // Monday of the reported week (YYYY-MM-DD).
-    weekFrom: text("week_from").notNull(),
-    // The WeeklyReportData the email rendered (packages/trpc lib/agency/weekly-report).
-    data: jsonb("data").notNull(),
-    emailedAt: timestamp("emailed_at"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => ({
-    uniqProjectWeek: uniqueIndex("agency_weekly_report_project_week_idx").on(
-      table.projectId,
-      table.weekFrom
-    ),
-  })
-);

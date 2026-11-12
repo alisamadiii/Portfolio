@@ -17,7 +17,7 @@ import { AiHelper } from "@/components/agency/business-info/ai-helper";
 import { StepShell } from "@/components/agency/business-info/step-shell";
 import { useAgency } from "@/components/agency/use-agency";
 import { Button, IconButton } from "@/components/ds/ui/button";
-import { Card, CardHeader } from "@/components/ds/ui/card";
+import { Card } from "@/components/ds/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ds/ui/field";
 import { Copy, Plus, X } from "@/components/icon";
 
