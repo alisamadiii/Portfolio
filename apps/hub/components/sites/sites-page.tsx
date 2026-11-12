@@ -184,7 +184,7 @@ export function SitesPage() {
                 </IconButton>
               }
             />
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-48">
               <DropdownMenuItem render={<Link href={repoPath(r.projectId, "website")} />}>
                 <Sparkles className="size-4" />
                 Edit with AI

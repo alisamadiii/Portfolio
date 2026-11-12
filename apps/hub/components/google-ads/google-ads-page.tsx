@@ -560,7 +560,7 @@ function SearchTermsTab({ range }: { range: { from: string; to: string } }) {
         ) : canManage ? (
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button size="sm" trailingIcon={<ChevronDown className="size-3" />}>Exclude</Button>} />
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-40">
               <DropdownMenuItem onClick={() => exclude.mutate({ projectId, campaignId: r.campaignId, term: r.term.slice(0, 80), matchType: "EXACT" })}>
                 Exact match
               </DropdownMenuItem>

@@ -96,7 +96,7 @@ function ProjectSwitcher({
           >
             <LetterTile name={current.name} size={24} tone="ink" />
             <span className="truncate text-sm font-medium">{current.name}</span>
-            {current.plan && <span className="hidden text-xs text-dim sm:inline">{current.plan}</span>}
+            {current.plan && <span className="hidden shrink-0 whitespace-nowrap text-xs text-dim sm:inline">{current.plan}</span>}
             <ChevronDown className="size-3.5 shrink-0" aria-hidden />
           </button>
         }

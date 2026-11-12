@@ -8,15 +8,18 @@ import {
   createTRPCRouter,
 } from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
-import { hubProject } from "@workspace/drizzle/schema";
+import { agencyClient, hubProject } from "@workspace/drizzle/schema";
 
-import { APP_IDS } from "@workspace/trpc/lib/apps";
+import { APP_IDS, type AppId } from "@workspace/trpc/lib/apps";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport } from "@workspace/trpc/lib/content-pilot";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { settleAndCancel } from "@workspace/trpc/lib/payment/settle-subscription";
+
+/** Apps whose data lives on the project's agency_client row. */
+const AGENCY_APPS: readonly AppId[] = ["leads", "google-ads"];
 
 export const projectRouter = createTRPCRouter({
   /**
@@ -88,13 +91,26 @@ export const projectRouter = createTRPCRouter({
    */
   setApps: collaboratorManageProcedure
     .input(z.object({ apps: z.array(z.enum(APP_IDS)).max(APP_IDS.length) }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const apps = [...new Set(input.apps)];
       try {
-        await db
+        const [project] = await db
           .update(hubProject)
           .set({ apps })
-          .where(eq(hubProject.id, input.projectId));
+          .where(eq(hubProject.id, input.projectId))
+          .returning({ ownerId: hubProject.githubConnectedUserId });
+        // Leads and Google Ads keep their data on the project's agency row:
+        // adding either creates it (idempotent), owned by whoever imported
+        // the project. Reading the data still needs the agency plan.
+        if (project && apps.some((id) => AGENCY_APPS.includes(id))) {
+          await db
+            .insert(agencyClient)
+            .values({
+              userId: project.ownerId ?? ctx.session.user.id,
+              projectId: input.projectId,
+            })
+            .onConflictDoNothing({ target: agencyClient.projectId });
+        }
       } catch (error) {
         throw toTRPCError(error);
       }

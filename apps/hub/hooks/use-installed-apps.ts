@@ -51,6 +51,10 @@ export function useInstalledApps(projectId: string) {
       onSettled: () => {
         void queryClient.invalidateQueries({ queryKey: listKey });
         void queryClient.invalidateQueries({ queryKey: snapshotKey });
+        // Adding Leads / Google Ads may create the agency row.
+        void queryClient.invalidateQueries({
+          queryKey: trpc.agency.project.queryKey({ projectId }),
+        });
       },
     })
   );

@@ -1,10 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Search } from "lucide-react";
-import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -13,10 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
-import { useTRPC } from "@workspace/trpc/client";
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
-import { useAgencyOptional } from "@/components/agency/use-agency";
 import { AppCard } from "@/components/ds/features/app-card";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { Button, buttonClass, ButtonLink, IconButton } from "@/components/ds/ui/button";
@@ -25,7 +19,6 @@ import { useEntitlement } from "@/hooks/use-plans";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { APPS, appState, lockedCta, type AppDef, type AppState } from "@/lib/apps";
-import { isAdminUser } from "@/lib/authz-shared";
 import { repoPath } from "@/lib/paths";
 import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 
@@ -99,7 +92,7 @@ export function AppsPage() {
                   </IconButton>
                 }
               />
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="min-w-48">
                 <DropdownMenuItem onClick={() => uninstall(app.id)}>Remove from site</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -115,10 +108,7 @@ export function AppsPage() {
         title="Apps"
         description="Add tools to your site. Apps included in your plan are free to add."
         actions={
-          <>
-            <AdminEnableAgency projectId={projectId} />
-            <ButtonLink href="/billing">Compare plans</ButtonLink>
-          </>
+          <ButtonLink href="/billing">Compare plans</ButtonLink>
         }
       />
       <div className="flex flex-wrap items-center gap-3">
@@ -165,36 +155,5 @@ export function AppsPage() {
         <p className="py-12 text-center text-[13px] text-dim">No apps match.</p>
       )}
     </>
-  );
-}
-
-/**
- * Admin-only: switch on the agency data layer (agency_client row) for a site
- * that has none. Keeps a UI for agency.admin.enableForProject now that the
- * old Website/Agency toggle is gone.
- */
-function AdminEnableAgency({ projectId }: { projectId: string }) {
-  const trpc = useTRPC();
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const user = useCurrentUser().data?.user ?? null;
-  const agency = useAgencyOptional();
-  const enable = useMutation(
-    trpc.agency.admin.enableForProject.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries({
-          queryKey: trpc.agency.project.queryKey({ projectId }),
-        });
-        toast.success("Agency data enabled for this site.");
-        router.refresh();
-      },
-      onError: (error) => toast.error(error.message || "Couldn't enable agency data."),
-    })
-  );
-  if (!user || !isAdminUser(user) || agency) return null;
-  return (
-    <Button size="sm" onClick={() => enable.mutate({ projectId })} disabled={enable.isPending}>
-      Enable agency data
-    </Button>
   );
 }

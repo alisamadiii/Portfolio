@@ -791,41 +791,6 @@ const adminRouter = createTRPCRouter({
       return client!;
     }),
 
-  // Give a project an agency workspace (admin, from the Apps page). Idempotent; the
-  // owner is whoever connected the project (the admin when unknown).
-  enableForProject: adminProcedure
-    .input(z.object({ projectId: z.string().uuid() }))
-    .mutation(async ({ ctx, input }) => {
-      const existing = await db.query.agencyClient.findFirst({
-        where: eq(agencyClient.projectId, input.projectId),
-      });
-      if (existing) return existing;
-      const project = await db.query.hubProject.findFirst({
-        where: eq(hubProject.id, input.projectId),
-        columns: { githubConnectedUserId: true },
-      });
-      if (!project) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Project not found.",
-        });
-      }
-      const [client] = await db
-        .insert(agencyClient)
-        .values({
-          userId: project.githubConnectedUserId ?? ctx.session.user.id,
-          projectId: input.projectId,
-        })
-        .onConflictDoNothing({ target: agencyClient.projectId })
-        .returning();
-      return (
-        client ??
-        (await db.query.agencyClient.findFirst({
-          where: eq(agencyClient.projectId, input.projectId),
-        }))!
-      );
-    }),
-
   // Stripe Checkout link for the Launch plan ($300 setup + $1,200/mo). Paying
   // it creates the project's subscription (webhook keys it on metadata.projectId)
   // and switches the client to the agency UI. The session is pinned to the
