@@ -15,7 +15,7 @@ export const siteConfig = {
   business: {
     /** schema.org type: "Organization" | "LocalBusiness" | etc. */
     type: "Organization",
-    email: "agency@alisamadii.com",
+    email: "a@alisamadii.com",
     /** E.164 format — verify digit count. */
     telephone: "",
     address: {

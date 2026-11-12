@@ -7,7 +7,7 @@ import ContactFormEmail from "@workspace/email/emails/contact-message";
 import { authenticatedProcedure, createTRPCRouter } from "../init";
 import { rateLimit } from "../middleware/rate-limit";
 
-const CONTACT_TO = "agency@alisamadii.com";
+const CONTACT_TO = "a@alisamadii.com";
 
 export const contactRouter = createTRPCRouter({
   send: authenticatedProcedure

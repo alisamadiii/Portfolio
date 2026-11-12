@@ -7,7 +7,7 @@ export const company = {
   description:
     "SOFTWARE DEVELOPMENT, SAAS PRODUCTS, AND ONLINE TECHNOLOGY SERVICES.",
   email: "a@alisamadii.com",
-  agencyEmail: "agency@alisamadii.com",
+  agencyEmail: "a@alisamadii.com",
   ownerName: "Ali Samadi",
   phone: "+1 (971) 382-8969",
   location: "Portland, OR",

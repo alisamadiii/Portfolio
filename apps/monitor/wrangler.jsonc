@@ -27,7 +27,7 @@
     "COOLIFY_URL": "https://coolify.alisamadii.com",
     "SES_REGION": "us-west-2",
     "ALERT_EMAIL_FROM": "Uptime Monitor <alerts@alisamadii.com>",
-    "ALERT_EMAIL_TO": "agency@alisamadii.com"
+    "ALERT_EMAIL_TO": "a@alisamadii.com"
   }
 
   // Secrets (never here — `wrangler secret put <NAME>`; local dev: .dev.vars):

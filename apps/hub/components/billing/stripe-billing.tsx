@@ -535,7 +535,7 @@ const LegalFooter = () => (
       deliverable. If you are interested in a custom-built website with full
       source code ownership, please{" "}
       <a
-        href="mailto:agency@alisamadii.com"
+        href="mailto:a@alisamadii.com"
         className="hover:text-foreground underline underline-offset-2 transition-colors"
       >
         reach out
@@ -561,10 +561,10 @@ const LegalFooter = () => (
       handled on a priority basis depending on your plan. For urgent issues,
       reach us at{" "}
       <a
-        href="mailto:agency@alisamadii.com"
+        href="mailto:a@alisamadii.com"
         className="hover:text-foreground underline underline-offset-2 transition-colors"
       >
-        agency@alisamadii.com
+        a@alisamadii.com
       </a>
       .
     </p>

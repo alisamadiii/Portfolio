@@ -50,7 +50,7 @@ const isRateLimited = (ip: string) => {
 // notification and sends it via useSend to the studio inbox.
 
 const FROM = "Free Quote <noreply@alisamadii.com>";
-const TO = "agency@alisamadii.com";
+const TO = "a@alisamadii.com";
 
 const PLAN_LABELS = {
   launch: "Launch: website + Google Ads ($2,500/mo)",

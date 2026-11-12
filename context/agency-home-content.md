@@ -214,7 +214,7 @@ Tell us about your business and your area. We'll reply with a plan for your site
 
 EMAIL
 
-[agency@alisamadii.com](mailto:agency@alisamadii.com)
+[a@alisamadii.com](mailto:a@alisamadii.com)
 SCHEDULE
 
 [Book a Meeting ↗](https://cal.com/alisamadii)

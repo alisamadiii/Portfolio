@@ -24,7 +24,7 @@ A fully managed web presence for small businesses.
 - Domain registration, DNS configuration, and renewal
 - Business email account setup and administration
 - Ongoing website updates and maintenance
-- Priority technical support via agency@alisamadii.com
+- Priority technical support via a@alisamadii.com
 
 ### Pro — $649.99/month
 

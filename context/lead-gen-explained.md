@@ -197,7 +197,7 @@ The dashboard would show each client's numbers in one place, in place of a manua
 | Ad spend, clicks, CPC, conversions per campaign/keyword | **Google Ads API** (needs a developer token + manager account)                                                                             |
 | Form leads, traffic sources                             | **GA4 Data API** (the repo already has `@workspace/google-analytics` for sending events)                                                   |
 | Calls (number, length, source)                          | **Call tracking tool's API**                                                                                                               |
-| Lead details (name, phone, message)                     | The client site's form (the same idea as `apps/api/app/api/agency/quote/route.ts`, which today emails each quote to agency@alisamadii.com) |
+| Lead details (name, phone, message)                     | The client site's form (the same idea as `apps/api/app/api/agency/quote/route.ts`, which today emails each quote to a@alisamadii.com) |
 | "Became a job?" + job value                             | The client marks it in the dashboard (a simple won/lost button)                                                                            |
 
 **Core screens:**

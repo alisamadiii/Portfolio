@@ -39,7 +39,7 @@ export const GET: APIRoute = async () => {
 > that make the phone ring, build the website that turns clicks into booked
 > jobs, and bring past customers back with email. Every call and form is
 > tracked. The client owns the site and the ad account. Works with
-> businesses in every location, fully online. Contact: agency@alisamadii.com.
+> businesses in every location, fully online. Contact: a@alisamadii.com.
 
 ## Pages
 
