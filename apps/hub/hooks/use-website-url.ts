@@ -80,14 +80,18 @@ export function useWebsiteUrl(): {
 
   const cached = readCache(owner, repo);
 
+  // The project row (listMine, seeded by the project layout) already carries
+  // the URL for every shell page; the GitHub-backed snapshot is only consulted
+  // when no row is in the cache (e.g. the editor's own context).
+  const rowUrl = project?.websiteUrl ?? null;
   const { data, isSuccess, isError } = useQuery(
     trpc.cms.repos.getSnapshot.queryOptions(
       { projectId },
-      { enabled: !!projectId, staleTime: TTL_MS, retry: false }
+      { enabled: !!projectId && project?.role == null, staleTime: TTL_MS, retry: false }
     )
   );
 
-  const websiteUrl = data?.websiteUrl ?? cached?.url ?? null;
+  const websiteUrl = rowUrl ?? data?.websiteUrl ?? cached?.url ?? null;
 
   // Persist resolved URLs (writeCache ignores null) so the next visit is instant.
   useEffect(() => {
@@ -97,7 +101,11 @@ export function useWebsiteUrl(): {
 
   const status: WebsiteUrlStatus = !owner || !repo
     ? "loading"
-    : isSuccess
+    : project?.role != null
+      ? rowUrl
+        ? "ready"
+        : "missing"
+      : isSuccess
       ? websiteUrl
         ? "ready"
         : "missing"

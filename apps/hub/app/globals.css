@@ -1,109 +1,66 @@
 @import "@workspace/ui/globals.css";
+@import "./tokens.css";
 @import "./hub-theme.css";
 
 /*
- * CMS theme overrides. The shared @workspace/ui package ships a neutral theme;
- * CMS keeps its own green primary + warm-neutral palette and tighter radius.
- * next-themes runs with attribute="class" + enableSystem, so the active theme
- * class is `light` or `dark` — override :root, .light AND .dark.
+ * Hub theme. The shared @workspace/ui package ships a neutral shadcn theme;
+ * the hub maps every shadcn variable onto the Client Hub design tokens
+ * (tokens.css) so dialogs, menus, inputs and the untouched canvas editor all
+ * sit in the same warm, light-only palette. There is no dark theme.
  */
 
 @theme inline {
   --color-shell: var(--shell);
 }
 
-:root,
-.light {
-  /* Warm-beige shell (Canvas Editor v2): soft warm gray canvas, off-white
-     panels, pure-white cards, AGENCY green primary. */
-  --shell: oklch(0.955 0.004 85);
-  --background: oklch(0.985 0.003 85);
-  --foreground: oklch(0.205 0.004 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.205 0.004 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.205 0.004 60);
-  /* AGENCY brand orange (#FC8464) — dark foreground for legible button text */
-  --primary: oklch(0.735 0.15 40);
-  --primary-foreground: oklch(0.24 0.03 42);
-  --secondary: oklch(0.935 0.004 85);
-  --secondary-foreground: oklch(0.28 0.005 60);
-  --muted: oklch(0.935 0.004 85);
-  --muted-foreground: oklch(0.545 0.008 70);
-  --accent: oklch(0.935 0.004 85);
-  --accent-foreground: oklch(0.28 0.005 60);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.905 0.004 80);
-  --input: oklch(0.905 0.004 80);
-  --ring: oklch(0.735 0.15 40);
+:root {
+  /* page canvas behind the editor and shell (bg-shell) */
+  --shell: var(--color-canvas);
+  --background: var(--color-surface);
+  --foreground: var(--color-ink);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-ink);
+  /* coral primary with ink text: white on coral fails contrast */
+  --primary: var(--color-coral);
+  --primary-foreground: var(--color-ink);
+  --secondary: var(--color-subtle);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-subtle);
+  --muted-foreground: var(--color-dim);
+  --accent: var(--color-hover);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-danger);
+  --border: var(--color-line);
+  --input: var(--color-line-strong);
+  --ring: var(--color-coral);
+  --radius: 10px;
   --chart-1: oklch(0.83 0.11 45);
   --chart-2: oklch(0.78 0.14 42);
   --chart-3: oklch(0.735 0.15 40);
   --chart-4: oklch(0.66 0.15 38);
   --chart-5: oklch(0.56 0.13 36);
-  --sidebar: var(--background);
-  --sidebar-foreground: oklch(0.205 0.004 60);
-  --sidebar-primary: oklch(0.735 0.15 40);
-  --sidebar-primary-foreground: oklch(0.24 0.03 42);
-  --sidebar-accent: oklch(0.935 0.004 85);
-  --sidebar-accent-foreground: oklch(0.28 0.005 60);
-  --sidebar-border: oklch(0.905 0.004 80);
-  --sidebar-ring: oklch(0.735 0.15 40);
-}
-
-.dark {
-  /* Dark shell = base background; cards (0.216) provide the pop */
-  --shell: oklch(0.147 0.004 49.25);
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.75 0.15 41);
-  --primary-foreground: oklch(0.24 0.03 42);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.75 0.15 41);
-  --chart-1: oklch(0.83 0.11 45);
-  --chart-2: oklch(0.78 0.14 42);
-  --chart-3: oklch(0.75 0.15 41);
-  --chart-4: oklch(0.66 0.15 38);
-  --chart-5: oklch(0.56 0.13 36);
-  --sidebar: var(--background);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.75 0.15 41);
-  --sidebar-primary-foreground: oklch(0.24 0.03 42);
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+  --sidebar: var(--color-sidebar);
+  --sidebar-foreground: var(--color-ink-2);
+  --sidebar-primary: var(--color-coral);
+  --sidebar-primary-foreground: var(--color-ink);
+  --sidebar-accent: var(--color-selected);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: var(--color-line);
+  --sidebar-ring: var(--color-coral);
 }
 
 /*
- * Solid fills for form controls so they pop on the gray shell.
+ * Solid fills for form controls so they pop on the canvas.
  * Intentionally unlayered: must beat the package's utility classes
- * (bg-transparent, dark:bg-input/30), and unlayered CSS outranks
- * every @layer including Tailwind's utilities.
+ * (bg-transparent), and unlayered CSS outranks every @layer including
+ * Tailwind's utilities.
  */
 [data-slot="input"],
 [data-slot="textarea"],
 [data-slot="select-trigger"],
 [data-slot="input-group"] {
-  background-color: var(--card);
-}
-
-.dark [data-slot="input"],
-.dark [data-slot="textarea"],
-.dark [data-slot="select-trigger"],
-.dark [data-slot="input-group"] {
   background-color: var(--card);
 }
 

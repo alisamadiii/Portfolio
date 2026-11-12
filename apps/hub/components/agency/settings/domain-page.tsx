@@ -1,48 +1,28 @@
 "use client";
 
-import { useProject } from "@/hooks/use-project";
-
+import { useAgencyOptional } from "@/components/agency/use-agency";
 import { OriginsPage } from "@/components/agency/origins-page";
+import { PageHeader } from "@/components/ds/layout/page-header";
 import { NotifyEmailCard } from "@/components/settings/notify-email-card";
-import { PageShell } from "@/components/agency/page-shell";
 import { WebsiteUrlCard } from "@/components/settings/website-url-card";
+import { useRouteProjectId } from "@/hooks/use-repo";
 
 /**
- * Agency Site settings › Domain: the site's address (shared WebsiteUrlCard)
- * plus the lead form / booking widget allowed origins, in one page.
+ * Domain: the site's address, where submissions are emailed, and (for sites
+ * with the lead script) the domains the capture script may run on.
  */
 export function AgencyDomainPage() {
-  const projectId = useProject()?.projectId ?? "";
+  const projectId = useRouteProjectId();
+  const agency = useAgencyOptional();
   return (
-    <PageShell
-      eyebrow="SITE SETTINGS"
-      title="Domain"
-      lead="Where your website is hosted, and the sites your lead form and booking widget are allowed to run on."
-    >
-      <section className="flex flex-col gap-4">
-        <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
-          Website address
-        </h2>
-        <WebsiteUrlCard projectId={projectId} />
-      </section>
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
-            Allowed origins
-          </h2>
-          <p className="text-muted-foreground text-[15px]">
-            Your form key only works on these domains, so nobody can use it from
-            anywhere else.
-          </p>
-        </div>
-        <OriginsPage />
-      </section>
-      <section className="flex flex-col gap-4">
-        <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
-          Notification email
-        </h2>
-        <NotifyEmailCard projectId={projectId} />
-      </section>
-    </PageShell>
+    <>
+      <PageHeader
+        title="Domain"
+        description="Where your website is hosted, and where its form submissions are sent."
+      />
+      <WebsiteUrlCard projectId={projectId} />
+      <NotifyEmailCard projectId={projectId} />
+      {agency && <OriginsPage />}
+    </>
   );
 }

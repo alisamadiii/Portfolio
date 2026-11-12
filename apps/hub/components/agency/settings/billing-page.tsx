@@ -10,21 +10,23 @@ import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { useEntitlement } from "@/hooks/use-plans";
 
-import { PageShell } from "@/components/agency/page-shell";
-import { useAgency } from "@/components/agency/use-agency";
+import { DeleteSiteCard } from "@/components/agency/settings/danger-page";
 import {
   ProjectManage,
   ProjectPlans,
 } from "@/components/billing/project-billing";
+import { PageHeader } from "@/components/ds/layout/page-header";
 import { PanelError } from "@/components/settings/panel-error";
+import { useRouteProjectId } from "@/hooks/use-repo";
 
 /**
- * Agency Site settings › Billing. Own page (the website editor's version is
- * ProjectBillingPanel); reuses the billing picker / manage blocks.
+ * Billing: this site's plan and invoices (reusing the picker / manage
+ * blocks), with the delete-site zone at the bottom since deleting settles the
+ * subscription first.
  */
 export function AgencyBillingPage() {
   const trpc = useTRPC();
-  const { projectId } = useAgency();
+  const projectId = useRouteProjectId();
   const user = useCurrentUser().data?.user ?? null;
   const { refresh: refreshPlans } = useEntitlement(projectId);
 
@@ -52,11 +54,8 @@ export function AgencyBillingPage() {
   }, [refetch, refreshPlans]);
 
   return (
-    <PageShell
-      eyebrow="SITE SETTINGS"
-      title="Billing"
-      lead="Your plan and invoices for this project."
-    >
+    <>
+      <PageHeader title="Billing" description="Your plan and invoices for this site." />
       <div className="max-w-screen-md">
         {error ? (
           <PanelError
@@ -85,6 +84,7 @@ export function AgencyBillingPage() {
           />
         )}
       </div>
-    </PageShell>
+      <DeleteSiteCard />
+    </>
   );
 }

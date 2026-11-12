@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -15,14 +14,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import { Textarea } from "@workspace/ui/components/textarea";
 
 import { useTRPC } from "@workspace/trpc/client";
 
 import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import { Plus } from "@/components/icon";
+import { Button as DsButton } from "@/components/ds/ui/button";
+import { Field, Input, Textarea } from "@/components/ds/ui/field";
 
 // Phone calls and walk-ins don't come through the website form; logging them
 // here keeps the numbers (and the closed-deal reporting) complete.
@@ -39,7 +37,7 @@ export function NewLeadDialog() {
       onSuccess: (lead) => {
         queryClient.invalidateQueries({ queryKey: trpc.agency.leads.pathKey() });
         setOpen(false);
-        router.push(href(`/agency/${lead.id}`));
+        router.push(href(`/leads/${lead.id}`));
       },
       onError: (error) => toast.error(error.message),
     })
@@ -49,10 +47,9 @@ export function NewLeadDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button size="lg" className="text-sm md:px-4">
-            <Plus className="size-4" />
+          <DsButton variant="primary" icon={<Plus className="size-4" />}>
             Add lead
-          </Button>
+          </DsButton>
         }
       />
       <DialogContent>
@@ -77,29 +74,25 @@ export function NewLeadDialog() {
             });
           }}
         >
-          <div className="space-y-1.5">
-            <Label htmlFor="lead-name">Name</Label>
-            <Input id="lead-name" name="name" />
-          </div>
+          <Field label="Name">
+            <Input name="name" />
+          </Field>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="lead-phone">Phone</Label>
-              <Input id="lead-phone" name="phone" type="tel" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="lead-email">Email</Label>
-              <Input id="lead-email" name="email" type="email" />
-            </div>
+            <Field label="Phone">
+              <Input name="phone" type="tel" />
+            </Field>
+            <Field label="Email">
+              <Input name="email" type="email" />
+            </Field>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="lead-message">Notes</Label>
-            <Textarea id="lead-message" name="message" rows={3} />
-          </div>
+          <Field label="Notes">
+            <Textarea name="message" rows={3} />
+          </Field>
         </form>
         <DialogFooter>
-          <Button type="submit" form="new-lead" disabled={create.isPending}>
+          <DsButton variant="primary" type="submit" form="new-lead" disabled={create.isPending}>
             Add lead
-          </Button>
+          </DsButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

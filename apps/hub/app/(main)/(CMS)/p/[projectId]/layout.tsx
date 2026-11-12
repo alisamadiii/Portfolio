@@ -1,27 +1,23 @@
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
 
-import { isAdminUser } from "@/lib/authz-shared";
 import { getServerSession } from "@/lib/session-server";
 
-import { AgencySeed } from "@/components/query-seeds";
+import { AgencySeed, ProjectsSeed } from "@/components/query-seeds";
 import { ErrorCard } from "@/components/repo/project-snapshot-gate";
 import { isProjectId } from "@/lib/paths";
 
-// A project has two UIs: the website editor (@website) and, when the project
-// runs on an agency subscription, the lead-generation agency workspace
-// (@agency). Each slot is a full tree with its own shell and pages; this is
-// the only place that decides which one a project gets.
+// One UI for every project. This layout only authenticates and seeds the two
+// queries the shell reads on every page: the caller's project list (name,
+// url, apps, role: DB-only, so no GitHub dependency) and the project's agency
+// data when it has any. The editor route seeds its own GitHub snapshot.
 export default async function Layout({
-  agency,
-  website,
+  children,
   params,
 }: {
   children: React.ReactNode;
-  agency: React.ReactNode;
-  website: React.ReactNode;
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
@@ -29,7 +25,7 @@ export default async function Layout({
     return (
       <ErrorCard
         title="Project not found"
-        description="This project no longer exists in Client Hub — it may have been removed or renamed."
+        description="This project no longer exists in Client Hub. It may have been removed or renamed."
       />
     );
   }
@@ -42,13 +38,23 @@ export default async function Layout({
       : "/sign-in";
   if (!session?.user) return redirect(signInUrl);
 
-  // Admins can force the website UI on an agency project (AdminViewSwitch).
-  const view = (await cookies()).get(`hub-view-${projectId}`)?.value;
-  if (view === "website" && isAdminUser(session.user)) return website;
-
   const caller = createHttpCaller(requestHeaders);
-  const agencyProject = await caller.agency.project.query({ projectId });
-  if (!agencyProject) return website;
+  const [projects, agency] = await Promise.all([
+    caller.cms.repos.listMine.query(),
+    caller.agency.project.query({ projectId }).catch(() => null),
+  ]);
+  if (!projects.some((p) => p.projectId === projectId)) {
+    return (
+      <ErrorCard
+        title="Project not found"
+        description="This project doesn't exist or you don't have access to it."
+      />
+    );
+  }
 
-  return <AgencySeed agency={agencyProject}>{agency}</AgencySeed>;
+  return (
+    <ProjectsSeed projects={projects}>
+      {agency ? <AgencySeed agency={agency}>{children}</AgencySeed> : children}
+    </ProjectsSeed>
+  );
 }

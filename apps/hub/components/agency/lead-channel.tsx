@@ -68,15 +68,16 @@ export function ChannelHelp({ channel }: { channel: AgencyLeadChannel }) {
 }
 
 // Paid channels are warm, free ones cool, manual neutral.
+// Design-system tones: paid = coral, organic = success, the rest neutral/info.
 const CHANNEL_TONE: Record<AgencyLeadChannel, string> = {
-  google_ads: "bg-orange-500/14 text-orange-700 dark:text-orange-300",
-  paid_other: "bg-rose-500/12 text-rose-700 dark:text-rose-300",
-  organic_search: "bg-emerald-500/14 text-emerald-700 dark:text-emerald-300",
-  social: "bg-sky-500/12 text-sky-700 dark:text-sky-300",
-  email: "bg-violet-500/12 text-violet-700 dark:text-violet-300",
-  referral: "bg-teal-500/12 text-teal-700 dark:text-teal-300",
-  direct: "bg-muted text-muted-foreground",
-  manual: "bg-muted text-muted-foreground",
+  google_ads: "bg-coral-soft text-coral-deep",
+  paid_other: "bg-coral-soft text-coral-deep",
+  organic_search: "bg-success-soft text-success-text",
+  social: "bg-info-soft text-info-text",
+  email: "bg-info-soft text-info-text",
+  referral: "bg-info-soft text-info-text",
+  direct: "bg-badge-neutral text-ink-3",
+  manual: "bg-badge-neutral text-ink-3",
 };
 
 export function ChannelBadge({
@@ -104,7 +105,7 @@ export function ChannelBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-semibold whitespace-nowrap",
+        "inline-flex h-[22px] items-center rounded px-2 text-xs font-medium whitespace-nowrap",
         CHANNEL_TONE[channel],
         className
       )}

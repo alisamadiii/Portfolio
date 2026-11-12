@@ -1,0 +1,59 @@
+/* Client Hub design tokens (client-hub-design/tokens/theme.css), Tailwind v4.
+   Light only. Coral fills ALWAYS use ink text; links on white use coral-text.
+   The font token lives in @workspace/ui/globals.css (next/font Inter). */
+
+@theme {
+  /* Surfaces */
+  --color-canvas: #f7f6f4; /* page background */
+  --color-surface: #ffffff; /* cards, top bar */
+  --color-sidebar: #fbfaf8; /* sidebar, table header, soft cards */
+  --color-subtle: #f4f2ef; /* search field, segmented track, subtle buttons */
+  --color-hover: #f0ede9; /* nav + icon button hover */
+  --color-selected: #efebe6; /* active nav item */
+  --color-tile: #f2efeb; /* neutral icon tiles, avatars */
+  --color-next-row: #fffaf7; /* "up next" row in business info */
+  --color-avatar: #e9e5e0; /* avatar fallback circle */
+
+  /* Lines */
+  --color-line: #e7e3de; /* card borders, top bar, sidebar edge */
+  --color-divider: #efece8; /* rows + cells inside cards */
+  --color-line-strong: #dcd7d1; /* inputs, outline buttons */
+  --color-line-hover: #d6d0c9; /* app card hover border */
+  --color-ring-idle: #cfc9c2; /* todo checklist ring, step pill hover */
+
+  /* Text */
+  --color-ink: #221f1c; /* primary text, dark button */
+  --color-ink-2: #3a3531; /* nav text */
+  --color-ink-3: #4a443f; /* secondary body */
+  /* `muted` is shadcn's background token (bg-muted); the design's muted TEXT is `dim`. */
+  --color-dim: #6b6560; /* descriptions, labels (4.5:1 on white) */
+  --color-faint: #8a847e; /* counts, done tasks, empty values */
+
+  /* Brand */
+  --color-coral: #fc8464;
+  --color-coral-soft: #feede6; /* tinted icon tiles, "up next" badge, focus halo */
+  --color-coral-text: #c2502f; /* links on white (4.7:1) */
+  --color-coral-deep: #9a3a1e; /* text/icons on coral-soft */
+
+  /* Status */
+  --color-success: #1f9d55;
+  --color-success-text: #1e7a45;
+  --color-success-soft: #e6f4ec;
+  --color-success-tint: #e9f4ec;
+  --color-info: #2f6fed;
+  --color-info-text: #1a4fb5;
+  --color-info-soft: #e8f0fe;
+  --color-warning: #e0a33a;
+  --color-warning-soft: #fdf6ea;
+  --color-danger: #a12c2c;
+  --color-danger-soft: #fceded;
+  --color-badge-neutral: #f0eeeb;
+
+  /* Radii */
+  --radius-control: 6px; /* buttons, inputs, nav items */
+  --radius-inner: 8px; /* rows/tiles inside cards */
+  --radius-card: 10px; /* cards */
+
+  /* Shadow (used sparingly: segmented-tab chip only) */
+  --shadow-tab: 0 1px 2px rgb(34 31 28 / 0.08);
+}

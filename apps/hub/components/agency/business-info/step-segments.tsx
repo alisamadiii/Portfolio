@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Textarea } from "@workspace/ui/components/textarea";
 
 import {
   joinSegment,
@@ -14,13 +12,12 @@ import {
   type SegmentParts,
 } from "@/components/agency/business-info-config";
 import { AiHelper, VerifyCard } from "@/components/agency/business-info/ai-helper";
-import {
-  FieldHead,
-  FrameCard,
-  StepShell,
-} from "@/components/agency/business-info/step-shell";
+import { StepShell } from "@/components/agency/business-info/step-shell";
 import { useBusinessInfo } from "@/components/agency/business-info/use-business-info";
-import { Plus, Trash } from "@/components/icon";
+import { SegmentCard } from "@/components/ds/business-info/form-parts";
+import { LockedNext } from "@/components/ds/business-info/side-cards";
+import { Button } from "@/components/ds/ui/button";
+import { Field, Input, Textarea } from "@/components/ds/ui/field";
 
 const STEP = stepFor("segments")!;
 const [IDENTIFY, VERIFY] = STEP.prompts!;
@@ -59,79 +56,47 @@ export function StepSegments() {
   return (
     <StepShell
       stepKey="segments"
-      footer={{
-        dirty: bi.dirty,
-        saving: bi.saving,
-        savedAt: bi.savedAt,
-        saveAnd: bi.saveAnd,
-      }}
+      footer={{ dirty: bi.dirty, saving: bi.saving, savedAt: bi.savedAt, saveAnd: bi.saveAnd }}
       aside={
         <>
           <AiHelper prompt={IDENTIFY!} values={bi.values} />
           <VerifyCard prompt={VERIFY!} values={bi.values} />
+          <LockedNext
+            title="Then: check them against competitors"
+            text="Once your segments are in, the next prompt compares them with what competitors target."
+          />
         </>
       }
     >
       {bi.info.isPending ? (
-        <Skeleton className="h-96 w-full rounded-[18px]" />
+        <Skeleton className="h-96 w-full rounded-card" />
       ) : (
         <>
           {pairs.map((pair, i) => (
-            <FrameCard key={i} innerClassName="flex flex-col gap-5">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="flex items-center gap-3 text-[20px] font-semibold">
-                  <span className="bg-foreground/5 flex size-8 items-center justify-center rounded-full font-mono text-[13px] font-medium">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  Segment {i + 1}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Remove segment ${i + 1}`}
-                  className="size-11"
-                  disabled={pairs.length <= 1}
-                  onClick={() => removePair(i)}
-                >
-                  <Trash className="size-4.5" />
-                </Button>
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHead htmlFor={`s${i}who`} label="Who they are" />
+            <SegmentCard key={i} index={i + 1} onDelete={pairs.length > 1 ? () => removePair(i) : undefined}>
+              <Field label="Who they are">
                 <Input
-                  id={`s${i}who`}
                   value={pair.who}
                   placeholder={
                     i === 0
                       ? "e.g. Pest control owners in Jacksonville with 2–10 trucks"
                       : "Who is this group?"
                   }
-                  className="h-auto px-4 py-3.5 text-[17px]"
                   onChange={(e) => setPair(i, { who: e.target.value })}
                 />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHead
-                  htmlFor={`s${i}why`}
-                  label="Why they're a strong match"
-                />
+              </Field>
+              <Field label="Why they're a strong match">
                 <Textarea
-                  id={`s${i}why`}
                   rows={3}
                   value={pair.why}
                   placeholder="What do they need that you're especially good at?"
-                  className="px-4 py-3.5 text-[17px] leading-relaxed"
                   onChange={(e) => setPair(i, { why: e.target.value })}
                 />
-              </div>
-            </FrameCard>
+              </Field>
+            </SegmentCard>
           ))}
-          <Button
-            variant="ghost"
-            className="bg-foreground/5 hover:bg-foreground/8 self-start rounded-[11px] px-4.5 py-3 text-[16px]"
-            onClick={addPair}
-          >
-            <Plus className="size-4" /> Add another segment
+          <Button variant="subtle" size="sm" className="self-start" icon={<Plus className="size-3.5" />} onClick={addPair}>
+            Add another segment
           </Button>
         </>
       )}

@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Check, Copy, Lock } from "lucide-react";
 import { toast } from "sonner";
-
-import { cn } from "@workspace/ui/lib/utils";
 
 import {
   fillText,
@@ -13,13 +11,9 @@ import {
   stepFor,
   type PromptSpec,
 } from "@/components/agency/business-info-config";
-import {
-  ArrowUpRight,
-  Check,
-  Copy,
-  Lock,
-  TriangleAlert,
-} from "@/components/icon";
+import { AiHelper as DsAiHelper } from "@/components/ds/business-info/side-cards";
+import { Button } from "@/components/ds/ui/button";
+import { Card } from "@/components/ds/ui/card";
 import { useRouteProjectId } from "@/hooks/use-repo";
 
 function useCopy(text: string) {
@@ -37,8 +31,8 @@ function useCopy(text: string) {
 }
 
 /**
- * The dark AI helper panel: inputs checklist, prompt preview, copy + open
- * ChatGPT, and the 3-step mini guide.
+ * Light AI helper card: which saved answers the prompt still needs, the
+ * prompt itself (already filled in), copy + open ChatGPT, 3-step guide.
  */
 export function AiHelper({
   prompt,
@@ -51,125 +45,40 @@ export function AiHelper({
   links?: Record<string, string>;
 }) {
   const projectId = useRouteProjectId();
-  const [open, setOpen] = useState(false);
-  const { text, missing } = resolvePrompt(prompt, values);
-  const { copied, copy } = useCopy(text);
-  const complete = missing.length === 0;
-  const paragraphs = text.split("\n\n");
-
+  const { text } = resolvePrompt(prompt, values);
+  const missing = Object.values(prompt.fills)
+    .filter((fill) => !fillText(values, fill))
+    .map((fill) => ({ label: fill.label, step: stepFor(fill.section)?.step ?? 0, section: fill.section }))
+    .filter((m) => m.step > 0);
+  const hrefFor = (step: number) => {
+    const m = missing.find((x) => x.step === step);
+    const section = m?.section ?? BUSINESS_STEP_KEY_BY_NUMBER[step] ?? "";
+    return links?.[section] ?? sectionUrl(projectId, section);
+  };
   return (
-    <div className="flex flex-col gap-5 rounded-[18px] bg-[#1b1a17] p-6 text-[#ece9e2] shadow-[0_24px_60px_rgba(27,26,23,0.22)]">
-      <span className="text-primary flex items-center gap-2.5 font-mono text-[13px] tracking-[0.12em] uppercase">
-        <span className="bg-primary size-1.5 rounded-full" />
-        AI helper
-      </span>
-      <div className="flex flex-col gap-2">
-        <h2 className="text-[23px] leading-tight font-semibold tracking-[-0.02em]">
-          {prompt.helperTitle}
-        </h2>
-        <p className="text-[16px] leading-relaxed text-[#b8b2a7]">
-          {prompt.helperNote}
-        </p>
-      </div>
-
-      <ul className="flex flex-col gap-2.5 text-[16px]">
-        {Object.values(prompt.fills).map((fill) => {
-          const present = Boolean(fillText(values, fill));
-          const step = stepFor(fill.section);
-          return (
-            <li key={fill.key} className="flex flex-wrap items-center gap-2.5">
-              <span
-                aria-hidden
-                className={present ? "text-[#7fbf8c]" : "text-[#e7b25a]"}
-              >
-                {present ? (
-                  <Check className="size-4" />
-                ) : (
-                  <TriangleAlert className="size-4" />
-                )}
-              </span>
-              {fill.label}
-              {!present && step && (
-                <Link
-                  href={links?.[fill.section] ?? sectionUrl(projectId, fill.section)}
-                  className="text-primary ml-auto text-[15px]"
-                >
-                  Add in step {step.step}
-                </Link>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="flex flex-col gap-3 rounded-[11px] bg-[#0b0a09] p-4.5 ring-1 ring-[#ece9e2]/9 ring-inset">
-        {(open ? paragraphs : paragraphs.slice(0, 2)).map((paragraph, i) => (
-          <p
-            key={i}
-            className={cn(
-              "text-[15px] leading-relaxed whitespace-pre-wrap",
-              !open && i === 1 ? "text-[#a39d92]" : "text-[#e8e4dc]"
-            )}
-          >
-            {paragraph}
-          </p>
-        ))}
-        <button
-          type="button"
-          className="text-primary self-start text-[15px] font-medium underline underline-offset-3"
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? "Hide full prompt" : "Show full prompt"}
-        </button>
-      </div>
-
-      <div className="flex flex-wrap gap-2.5">
-        <button
-          type="button"
-          onClick={copy}
-          className={cn(
-            "inline-flex flex-[1_1_140px] items-center justify-center gap-2 rounded-[11px] px-4.5 py-3.5 text-[16px] font-semibold",
-            complete
-              ? "bg-primary text-primary-foreground shadow-[0_8px_24px_rgba(252,132,100,0.28)]"
-              : "bg-[#ece9e2]/10 font-medium text-[#ece9e2]"
-          )}
-        >
-          {copied ? (
-            <Check className="size-4.5" />
-          ) : (
-            <Copy className="size-4.5" />
-          )}
-          {copied ? "Copied" : complete ? "Copy prompt" : "Copy prompt anyway"}
-        </button>
-        <a
-          href="https://chatgpt.com"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex flex-[1_1_140px] items-center justify-center gap-2 rounded-[11px] bg-[#ece9e2]/8 px-4.5 py-3.5 text-[16px] font-medium text-[#ece9e2]"
-        >
-          Open ChatGPT <ArrowUpRight className="size-4.5" />
-        </a>
-      </div>
-
-      <ol className="flex flex-col gap-2.5 border-t border-[#ece9e2]/9 pt-4 text-[15px] text-[#b8b2a7]">
-        <li className="flex gap-3">
-          <span className="font-mono text-[#ece9e2]">1</span>Copy the prompt
-        </li>
-        <li className="flex gap-3">
-          <span className="font-mono text-[#ece9e2]">2</span>Paste it into
-          ChatGPT
-        </li>
-        <li className="flex gap-3">
-          <span className="font-mono text-[#ece9e2]">3</span>
-          {prompt.guideReturn}
-        </li>
-      </ol>
-    </div>
+    <DsAiHelper
+      title={prompt.helperTitle}
+      description={prompt.helperNote}
+      missing={missing.map(({ label, step }) => ({ label, step }))}
+      prompt={text}
+      lastStep={prompt.guideReturn}
+      stepHref={hrefFor}
+    />
   );
 }
 
+const BUSINESS_STEP_KEY_BY_NUMBER: Record<number, string> = {
+  1: "business",
+  2: "segments",
+  3: "messaging",
+  4: "taglines",
+  5: "purpose",
+  6: "keywords",
+  7: "search-ad",
+};
+
 /**
- * Step 2's second prompt: locked light card until a segment exists, then a
+ * Step 2's second prompt: locked soft card until a segment exists, then a
  * light card with its own copy button.
  */
 export function VerifyCard({
@@ -179,7 +88,6 @@ export function VerifyCard({
   prompt: PromptSpec;
   values: Record<string, string[]>;
 }) {
-  const projectId = useRouteProjectId();
   const [open, setOpen] = useState(false);
   const { text, missing } = resolvePrompt(prompt, values);
   const { copied, copy } = useCopy(text);
@@ -187,54 +95,45 @@ export function VerifyCard({
 
   if (locked)
     return (
-      <div className="ring-foreground/7 flex items-start gap-4 rounded-[18px] p-5.5 ring-1">
-        <span
-          aria-hidden
-          className="bg-foreground/5 text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-full"
-        >
-          <Lock className="size-4.5" />
-        </span>
-        <div className="flex flex-col gap-1">
-          <span className="text-[17px] font-semibold">
-            {prompt.helperTitle}
-          </span>
-          <span className="text-muted-foreground text-[15px] leading-normal">
+      <Card soft className="flex gap-3 px-5 py-4">
+        <Lock className="mt-0.5 size-4 shrink-0 text-faint" />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold">{prompt.helperTitle}</span>
+          <span className="text-[13px] leading-normal text-dim">
             {prompt.helperNote} Unlocks once you add a segment.
           </span>
-        </div>
-      </div>
+        </span>
+      </Card>
     );
 
   return (
-    <div className="ring-foreground/7 flex flex-col gap-4 rounded-[18px] p-5.5 ring-1">
+    <Card className="flex flex-col gap-3 p-5">
       <div className="flex flex-col gap-1">
-        <span className="text-[17px] font-semibold">{prompt.helperTitle}</span>
-        <span className="text-muted-foreground text-[15px] leading-normal">
-          {prompt.helperNote}
-        </span>
+        <span className="text-[15px] font-semibold">{prompt.helperTitle}</span>
+        <span className="text-[13px] leading-normal text-dim">{prompt.helperNote}</span>
       </div>
       {open && (
-        <p className="bg-foreground/3 text-muted-foreground rounded-[11px] p-4 text-[14px] leading-relaxed whitespace-pre-wrap">
+        <p className="whitespace-pre-wrap rounded-inner border border-divider bg-canvas px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-2">
           {text}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="dark"
+          size="sm"
           onClick={copy}
-          className="bg-foreground/5 hover:bg-foreground/8 inline-flex items-center gap-2 rounded-[11px] px-4 py-2.5 text-[15px] font-medium"
+          icon={copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
         >
-          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
           {copied ? "Copied" : "Copy prompt"}
-        </button>
+        </Button>
         <button
           type="button"
-          className="text-muted-foreground hover:text-foreground text-[15px] font-medium underline underline-offset-3"
+          className="text-[13px] font-medium text-coral-text"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? "Hide prompt" : "Show prompt"}
         </button>
       </div>
-    </div>
+    </Card>
   );
 }

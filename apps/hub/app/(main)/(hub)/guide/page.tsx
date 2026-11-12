@@ -108,15 +108,15 @@ const DraftBadge = () => (
 
 export default function GuidePage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-14 pb-20">
+    <div className="space-y-14 pb-10">
       <DocumentTitle title="Guide" />
 
       {/* Hero + flow diagram */}
       <div>
-        <h2 className="text-[27px] font-extrabold tracking-tight">
+        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em]">
           How your website editor works
-        </h2>
-        <p className="text-muted-foreground mt-2 max-w-2xl text-[15px] leading-relaxed">
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-dim">
           You edit, you save drafts, you publish when everything looks right.
           Nothing goes live until you press Publish — so you can never break
           your website by experimenting.

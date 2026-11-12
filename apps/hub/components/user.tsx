@@ -2,22 +2,13 @@
 
 import Link from "next/link";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-import { useTheme } from "next-themes";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@workspace/ui/components/avatar";
-import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
@@ -36,7 +27,6 @@ export function User({
   align?: "start" | "center" | "end";
 }) {
   const user = useCurrentUser().data?.user ?? null;
-  const { theme, setTheme } = useTheme();
 
   if (!user) return null;
 
@@ -44,21 +34,16 @@ export function User({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className={cn(className, "rounded-full")}
+          <button
+            type="button"
+            aria-label="Account menu"
+            className={cn(
+              "inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-avatar text-xs font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral",
+              className
+            )}
           >
-            <Avatar className="size-6">
-              <AvatarImage
-                src={`https://unavatar.io/${user?.email}?fallback=false`}
-                alt={user?.name || user.email}
-              />
-              <AvatarFallback>
-                {getInitialsFromName(user.name ?? undefined)}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
+            {getInitialsFromName(user.name ?? undefined) || user.email.slice(0, 2).toUpperCase()}
+          </button>
         }
       />
       <DropdownMenuContent align={align} className="w-[14rem]">
@@ -73,24 +58,7 @@ export function User({
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-muted-foreground w-40 text-xs font-medium">
-            Theme
-          </DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-            <DropdownMenuRadioItem value="light" onClick={onClick}>
-              Light
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="dark" onClick={onClick}>
-              Dark
-            </DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="system" onClick={onClick}>
-              System
-            </DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link href="/">Home</Link>} />
+        <DropdownMenuItem render={<Link href="/">Sites</Link>} />
         <DropdownMenuItem render={<Link href="/billing">Billing</Link>} />
         <DropdownMenuItem render={<Link href="/account">Account</Link>} />
         <DropdownMenuSeparator />

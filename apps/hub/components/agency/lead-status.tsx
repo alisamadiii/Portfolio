@@ -11,17 +11,17 @@ export type PillTone =
   | "neutral"
   | "accent";
 
-// Handoff status tones (light-only hex, matching the shipped business-info half).
+// Design-system status tones (tokens.css).
 const PILL_TONES: Record<PillTone, string> = {
-  info: "bg-[#e4edf1] text-[#2d5e7a]",
-  warning: "bg-[#f6eedb] text-[#8a5a0a]",
-  success: "bg-[#e6efe4] text-[#2f6b3f]",
-  danger: "bg-[#f8e6e7] text-[#a3283a]",
-  neutral: "bg-foreground/5 text-muted-foreground",
-  accent: "bg-primary/16 text-[#c2451f]",
+  info: "bg-info-soft text-info-text",
+  warning: "bg-warning-soft text-ink-3",
+  success: "bg-success-soft text-success-text",
+  danger: "bg-danger-soft text-danger",
+  neutral: "bg-badge-neutral text-ink-3",
+  accent: "bg-coral-soft text-coral-deep",
 };
 
-/** Status pill: tone colour paired with a dot (spec rule 6). */
+/** Status badge: 22px, 4px radius, tone colour paired with a dot. */
 export function StatusPill({
   tone,
   dot = true,
@@ -36,7 +36,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold",
+        "inline-flex h-[22px] items-center gap-1.5 rounded px-2 text-xs font-medium",
         PILL_TONES[tone],
         className
       )}

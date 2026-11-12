@@ -1,52 +1,30 @@
 /*
- * Hub pages theme. Status tokens + card utilities shared with the portal's
- * design language, adapted for CMS's class-based light/dark themes.
+ * Hub pages theme. Status tokens + card utilities shared by the account
+ * pages and the canvas editor. Light only.
  */
 
-:root,
-.light {
-  /* status pills — keeps badges design-accurate without arbitrary colors */
-  --status-success: #15803d;
-  --status-success-bg: #e9f7ee;
+:root {
+  /* status pills, mapped onto the design's status palette (tokens.css) */
+  --status-success: var(--color-success-text);
+  --status-success-bg: var(--color-success-soft);
   --status-review: #7c3aed;
   --status-review-bg: #efeafe;
-  --status-info: #2563eb;
-  --status-info-bg: #eaf1ff;
-  --status-warning: #b45309;
-  --status-warning-bg: #fdf1de;
-  --status-danger: #dc2626;
-  --status-danger-bg: #fdeaea;
-  --status-neutral: #78767b;
-  --status-neutral-bg: #f1f0ee;
+  --status-info: var(--color-info-text);
+  --status-info-bg: var(--color-info-soft);
+  --status-warning: var(--color-coral-deep);
+  --status-warning-bg: var(--color-warning-soft);
+  --status-danger: var(--color-danger);
+  --status-danger-bg: var(--color-danger-soft);
+  --status-neutral: var(--color-dim);
+  --status-neutral-bg: var(--color-badge-neutral);
 
   /* subtle inner divider between rows inside a card */
-  --rule: oklch(0.94 0.002 48);
+  --rule: var(--color-divider);
 
   /* unpublished-draft indicator (page-tree dot, guide banner, publish diff) */
   --draft: #e8a13c;
   --draft-bg: #fdf6e7;
   --draft-fg: #8a5f0e;
-}
-
-.dark {
-  --status-success: #4ade80;
-  --status-success-bg: oklch(0.32 0.06 152);
-  --status-review: #a78bfa;
-  --status-review-bg: oklch(0.32 0.08 294);
-  --status-info: #60a5fa;
-  --status-info-bg: oklch(0.32 0.07 259);
-  --status-warning: #fbbf24;
-  --status-warning-bg: oklch(0.32 0.06 70);
-  --status-danger: #f87171;
-  --status-danger-bg: oklch(0.32 0.08 25);
-  --status-neutral: #a8a6ab;
-  --status-neutral-bg: oklch(0.28 0.006 56);
-
-  --rule: oklch(1 0 0 / 8%);
-
-  --draft: #e0a94a;
-  --draft-bg: oklch(0.32 0.05 70);
-  --draft-fg: #f0c877;
 }
 
 @theme inline {
@@ -128,7 +106,7 @@
   padding: 0.875rem 1.375rem;
 }
 
-/* the full table shell: card surface, uppercase header strip.
+/* the full table shell: card surface, tinted header strip.
    TableBody ships with bg-background, so it needs overriding too. */
 @utility table-card {
   background: var(--card);
@@ -143,9 +121,7 @@
     border-bottom: 1px solid var(--rule);
     color: var(--muted-foreground);
     font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-weight: 500;
   }
 }
 

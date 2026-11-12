@@ -8,9 +8,8 @@ import {
 } from "@/components/document-title";
 import { EditorShell } from "@/components/shell/editor-shell";
 
-/** The canvas editor page body, shared by website projects (/p/[projectId]) and
- * agency projects (/p/[projectId]/website). */
-export function EditorPage({ inAgency = false }: { inAgency?: boolean }) {
+/** The canvas editor page body, mounted at /p/[projectId]/website. */
+export function EditorPage() {
   const project = useProject();
 
   // The shell renders even without a root _site.json — a missing manifest just
@@ -28,7 +27,7 @@ export function EditorPage({ inAgency = false }: { inAgency?: boolean }) {
       />
       {/* Full-bleed: escape RepoLayout's main padding; own scroll surface. */}
       <div className="-m-4 h-[calc(100vh)] overflow-hidden md:-m-8">
-        <EditorShell inAgency={inAgency} />
+        <EditorShell />
       </div>
     </>
   );

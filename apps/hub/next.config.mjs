@@ -30,8 +30,20 @@ const nextConfig = {
       { source: "/billing", has: PORTAL_HOST, destination: `${HUB}/billing?tab=purchases`, permanent: false },
       { source: "/", has: PORTAL_HOST, destination: `${HUB}/account`, permanent: false },
       { source: "/:path*", has: PORTAL_HOST, destination: `${HUB}/:path*`, permanent: false },
+      // One UI per project (2026-11): the editor moved to /website, leads to
+      // /leads, site settings to top-level pages, and booking / calls /
+      // marketing / reports left the hub (GoHighLevel). The /website list
+      // merged into the Sites page at /.
+      { source: "/website", destination: "/", permanent: false },
+      { source: "/p/:projectId/agency", destination: "/p/:projectId/leads", permanent: false },
+      { source: "/p/:projectId/agency/:leadId(\\d+)", destination: "/p/:projectId/leads/:leadId", permanent: false },
+      { source: "/p/:projectId/agency/:path*", destination: "/p/:projectId", permanent: false },
+      { source: "/p/:projectId/marketing/:path*", destination: "/p/:projectId", permanent: false },
+      { source: "/p/:projectId/reports", destination: "/p/:projectId", permanent: false },
+      { source: "/p/:projectId/settings/danger", destination: "/p/:projectId/billing", permanent: false },
+      { source: "/p/:projectId/settings/:section(billing|domain|speed)", destination: "/p/:projectId/:section", permanent: false },
       // Agency pages moved inside their project (/p/[projectId]/...). Old
-      // bookmarks and emailed links land on the project gallery.
+      // bookmarks and emailed links land on the Sites page.
       ...["/agency", "/marketing", "/business-info", "/reports", "/analytics", "/origins", "/newsletter"].flatMap(
         (source) => [
           { source, destination: "/", permanent: false },

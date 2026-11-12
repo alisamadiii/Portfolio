@@ -32,18 +32,26 @@ import { repoPath } from "@/lib/paths";
 
 type Repo = RouterOutputs["deploy"]["installationRepos"][number];
 
-export const DeployButton = () => {
+/**
+ * Opens the import wizard. `trigger` renders the opening control (the Sites
+ * page passes its own primary button); without it, a default button renders.
+ */
+export const DeployButton = ({
+  trigger,
+}: {
+  trigger?: (open: () => void) => React.ReactNode;
+}) => {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button
-        size="lg"
-        className="from-primary to-primary/80 shadow-primary/30 hover:shadow-primary/40 gap-2 rounded-full bg-gradient-to-b px-7 text-[15px] font-semibold shadow-lg transition-shadow"
-        onClick={() => setOpen(true)}
-      >
-        <Plus className="size-5" />
-        Import
-      </Button>
+      {trigger ? (
+        trigger(() => setOpen(true))
+      ) : (
+        <Button size="sm" onClick={() => setOpen(true)}>
+          <Plus className="size-4" />
+          Import
+        </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-background max-w-xl">
           <ImportWizard onClose={() => setOpen(false)} />

@@ -48,7 +48,23 @@ export function AgencySeed({
   return children;
 }
 
-/** cms.repos.getSnapshot({ projectId }), from the /p/[projectId] layout. */
+/** cms.repos.listMine, from the /p/[projectId] layout: every page in the shell reads the project's row from it. */
+export function ProjectsSeed({
+  projects,
+  children,
+}: {
+  projects: RouterOutputs["cms"]["repos"]["listMine"];
+  children: React.ReactNode;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  useState(() => {
+    queryClient.setQueryData(trpc.cms.repos.listMine.queryKey(), projects);
+  });
+  return children;
+}
+
+/** cms.repos.getSnapshot({ projectId }), from the editor layout. */
 export function ProjectSeed({
   projectId,
   snapshot,

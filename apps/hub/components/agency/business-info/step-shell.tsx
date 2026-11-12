@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-
-import { cn } from "@workspace/ui/lib/utils";
+import { Check, ChevronLeft } from "lucide-react";
 
 import { useTRPC } from "@workspace/trpc/client";
 
@@ -14,71 +13,13 @@ import {
   stepFor,
 } from "@/components/agency/business-info-config";
 import { stepStatuses } from "@/components/agency/business-info/status";
-import { useRouteProjectId } from "@/hooks/use-repo";
 import { useAgency } from "@/components/agency/use-agency";
-import {
-  Eyebrow,
-  FieldHead,
-  FrameCard,
-  PageShell,
-} from "@/components/agency/page-shell";
-import { ArrowLeft, ArrowRight, Check } from "@/components/icon";
-
-// Primitives moved to page-shell.tsx; re-exported so existing importers of
-// step-shell (overview-page, step pages) keep working unchanged.
-export { Eyebrow, FieldHead, FrameCard, PageShell };
-
-/** Horizontal step pill bar with live done states. */
-function StepBar({ currentKey }: { currentKey: string }) {
-  const trpc = useTRPC();
-  const { projectId } = useAgency();
-  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
-  const campaigns = useQuery(
-    trpc.agency.campaigns.list.queryOptions({ projectId })
-  );
-  const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? []);
-
-  return (
-    <nav aria-label="Setup steps" className="flex flex-wrap items-center gap-2">
-      {BUSINESS_STEPS.map((step) => {
-        const current = step.key === currentKey;
-        const done = statuses.get(step.step)?.state === "done" && !current;
-        return (
-          <span key={step.key} className="contents">
-            {/* Divider between Part 1 and Part 2. */}
-            {step.step === 6 && (
-              <span aria-hidden className="bg-foreground/16 h-px w-4" />
-            )}
-            <Link
-              href={sectionUrl(projectId, step.key)}
-              aria-current={current ? "step" : undefined}
-              className={cn(
-                "inline-flex items-center gap-2 rounded-full py-2 pr-3.5 pl-2 text-[15px] font-medium",
-                current
-                  ? "bg-foreground text-background"
-                  : "ring-foreground/16 text-muted-foreground hover:text-foreground ring-1 ring-inset"
-              )}
-            >
-              <span
-                className={cn(
-                  "flex size-6 items-center justify-center rounded-full font-mono text-[12px]",
-                  current
-                    ? "bg-primary text-primary-foreground"
-                    : done
-                      ? "bg-[#e6efe4] text-[#2f6b3f]"
-                      : "bg-foreground/5"
-                )}
-              >
-                {done ? <Check className="size-3.5" /> : step.step}
-              </span>
-              {step.shortLabel}
-            </Link>
-          </span>
-        );
-      })}
-    </nav>
-  );
-}
+import { StepFooter } from "@/components/ds/business-info/form-parts";
+import { StepPills } from "@/components/ds/business-info/step-pills";
+import { WithSide } from "@/components/ds/layout/app-shell";
+import { PageHeader } from "@/components/ds/layout/page-header";
+import { ButtonLink } from "@/components/ds/ui/button";
+import { useRouteProjectId } from "@/hooks/use-repo";
 
 function savedLabel(savedAt: Date): string {
   const minutes = Math.floor((Date.now() - savedAt.getTime()) / 60000);
@@ -87,8 +28,8 @@ function savedLabel(savedAt: Date): string {
 }
 
 /**
- * Shared shell for the seven step pages: back link, step bar, header,
- * form + helper columns, footer with save actions.
+ * Shared frame for the seven step pages: back link, step pills with live
+ * done states, eyebrow + title, form | side columns, footer with save actions.
  */
 export function StepShell({
   stepKey,
@@ -111,113 +52,77 @@ export function StepShell({
   };
   children: React.ReactNode;
 }) {
+  const trpc = useTRPC();
   const projectId = useRouteProjectId();
+  const { projectId: agencyProjectId, role } = useAgency();
+  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId: agencyProjectId }));
+  const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId: agencyProjectId }));
+  const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? []);
+  const done = BUSINESS_STEPS.filter((s) => statuses.get(s.step)?.state === "done").map((s) => s.step);
+
   const step = stepFor(stepKey)!;
   const index = BUSINESS_STEPS.findIndex((s) => s.key === stepKey);
   const prev = BUSINESS_STEPS[index - 1];
   const next = BUSINESS_STEPS[index + 1];
   const last = !next;
+  const overview = businessInfoUrl(projectId);
+  const readOnly = role === "view-only";
 
   return (
-    <div className="mx-auto flex w-full max-w-[1360px] flex-col gap-9">
-      <div className="flex flex-col gap-5">
+    <>
+      <div className="flex flex-col gap-4">
         <Link
-          href={businessInfoUrl(projectId)}
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2 self-start text-[15px] font-medium"
+          href={overview}
+          className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-ink-3 hover:text-ink"
         >
-          <ArrowLeft className="size-4" /> Business info overview
+          <ChevronLeft className="size-3.5" /> Business info
         </Link>
-        <StepBar currentKey={stepKey} />
+        <StepPills base={businessInfoUrl(projectId)} current={step.step} done={done} />
       </div>
 
-      <header className="flex flex-wrap items-end justify-between gap-6">
-        <div className="flex max-w-[680px] flex-col gap-3">
-          <Eyebrow>
-            Step {step.step} of {BUSINESS_STEPS.length} · {step.part}
-          </Eyebrow>
-          <h1 className="text-[40px] leading-[1.05] font-semibold tracking-[-0.03em]">
-            {step.title}
-          </h1>
-          <p className="text-muted-foreground text-[19px] leading-relaxed">
-            {step.lead}
-          </p>
-        </div>
-        {headerAside}
-      </header>
+      <PageHeader
+        eyebrow={`Step ${step.step} of ${BUSINESS_STEPS.length} · ${step.part}`}
+        title={step.title}
+        description={step.lead}
+        actions={headerAside}
+      />
 
-      <div className="flex flex-wrap items-start gap-8">
-        <div className="flex min-w-0 flex-[999_1_520px] flex-col gap-5">
-          {children}
-
-          <div className="border-foreground/7 flex flex-wrap items-center justify-between gap-4 border-t pt-3">
-            {prev ? (
-              <Link
-                href={sectionUrl(projectId, prev.key)}
-                className="hover:text-foreground inline-flex items-center gap-2 py-3 text-[16px] font-medium"
-              >
-                <ArrowLeft className="size-4" /> {prev.title}
-              </Link>
-            ) : footer?.savedAt ? (
-              <span className="inline-flex items-center gap-2 text-[15px] text-[#2f6b3f]">
-                <Check className="size-4" /> {savedLabel(footer.savedAt)}
+      <WithSide side={aside}>
+        {children}
+        {footer ? (
+          <div className="flex flex-col gap-2">
+            {footer.savedAt && (
+              <span className="inline-flex items-center gap-1.5 self-end text-[13px] text-success-text">
+                <Check className="size-3.5" /> {savedLabel(footer.savedAt)}
               </span>
-            ) : (
-              <span />
             )}
-            {footer ? (
-              <div className="flex flex-wrap items-center gap-3">
-                {prev && footer.savedAt && (
-                  <span className="mr-1 inline-flex items-center gap-2 text-[15px] text-[#2f6b3f]">
-                    <Check className="size-4" /> {savedLabel(footer.savedAt)}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  disabled={footer.saving}
-                  onClick={() => footer.saveAnd(businessInfoUrl(projectId))}
-                  className="bg-foreground/5 hover:bg-foreground/8 rounded-[11px] px-5 py-3.5 text-[16px] font-medium disabled:opacity-60"
-                >
-                  Save and exit
-                </button>
-                <button
-                  type="button"
-                  disabled={footer.saving}
-                  onClick={() =>
-                    footer.saveAnd(
-                      last ? businessInfoUrl(projectId) : sectionUrl(projectId, next.key)
-                    )
-                  }
-                  className="bg-primary text-primary-foreground inline-flex items-center gap-2.5 rounded-[11px] px-5.5 py-3.5 text-[16px] font-semibold shadow-[0_8px_24px_rgba(252,132,100,0.32)] disabled:opacity-60"
-                >
-                  {footer.saving
-                    ? "Saving…"
-                    : last
-                      ? "Save ad text"
-                      : "Save and continue"}
-                  {!footer.saving &&
-                    (last ? (
-                      <Check className="size-4.5" />
-                    ) : (
-                      <ArrowRight className="size-4.5" />
-                    ))}
-                </button>
-              </div>
-            ) : next ? (
-              <Link
-                href={sectionUrl(projectId, next.key)}
-                className="bg-primary text-primary-foreground inline-flex items-center gap-2.5 rounded-[11px] px-5.5 py-3.5 text-[16px] font-semibold shadow-[0_8px_24px_rgba(252,132,100,0.32)]"
-              >
-                Continue to {next.title.toLowerCase()}{" "}
-                <ArrowRight className="size-4.5" />
-              </Link>
-            ) : null}
+            <StepFooter
+              backHref={prev ? sectionUrl(projectId, prev.key) : overview}
+              backLabel={prev ? prev.title : "Overview"}
+              nextLabel={footer.saving ? "Saving…" : last ? "Save ad text" : "Save and continue"}
+              saving={footer.saving}
+              readOnly={readOnly}
+              onSaveExit={() => footer.saveAnd(overview)}
+              onNext={() => footer.saveAnd(last ? overview : sectionUrl(projectId, next.key))}
+            />
           </div>
-        </div>
-
-        <aside className="flex min-w-0 flex-[1_1_340px] flex-col gap-5">
-          {aside}
-        </aside>
-      </div>
-    </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <Link
+              href={prev ? sectionUrl(projectId, prev.key) : overview}
+              className="flex items-center gap-1.5 text-[13px] font-medium text-ink-3"
+            >
+              <ChevronLeft className="size-3.5" />
+              {prev ? prev.title : "Overview"}
+            </Link>
+            {next && (
+              <ButtonLink variant="primary" href={sectionUrl(projectId, next.key)}>
+                Continue to {next.title.toLowerCase()}
+              </ButtonLink>
+            )}
+          </div>
+        )}
+      </WithSide>
+    </>
   );
 }

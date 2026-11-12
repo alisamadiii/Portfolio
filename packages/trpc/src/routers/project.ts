@@ -2,10 +2,15 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import z from "zod";
 
-import { cmsFullAccessProcedure, createTRPCRouter } from "@workspace/trpc/init";
+import {
+  cmsFullAccessProcedure,
+  collaboratorManageProcedure,
+  createTRPCRouter,
+} from "@workspace/trpc/init";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
+import { APP_IDS } from "@workspace/trpc/lib/apps";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport } from "@workspace/trpc/lib/content-pilot";
@@ -92,6 +97,27 @@ export const projectRouter = createTRPCRouter({
    * reports, campaign URLs, the SEO base URL and the embed-script origin
    * auto-allow. Project owner or admin; null clears it.
    */
+  /**
+   * Replace the set of apps shown for a project (Apps page "Add" / "Remove").
+   * DB-only access check (admins + full-access collaborators) on purpose: the
+   * GitHub-backed procedures 412 on projects without the App installed, and
+   * adding an app must never depend on GitHub.
+   */
+  setApps: collaboratorManageProcedure
+    .input(z.object({ apps: z.array(z.enum(APP_IDS)).max(APP_IDS.length) }))
+    .mutation(async ({ input }) => {
+      const apps = [...new Set(input.apps)];
+      try {
+        await db
+          .update(hubProject)
+          .set({ apps })
+          .where(eq(hubProject.id, input.projectId));
+      } catch (error) {
+        throw toTRPCError(error);
+      }
+      return { apps };
+    }),
+
   setWebsiteUrl: cmsFullAccessProcedure
     .input(z.object({ websiteUrl: z.string().trim().max(255).nullable() }))
     .mutation(async ({ ctx, input }) => {

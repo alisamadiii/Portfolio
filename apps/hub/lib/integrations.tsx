@@ -9,24 +9,6 @@ import { authClient } from "@workspace/auth/auth-client";
 // `id` must match the server registry — status rows are joined on it.
 
 const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
-const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
-// Free/busy read, so the booking widget can offer open slots.
-const CALENDAR_FREEBUSY_SCOPE = "https://www.googleapis.com/auth/calendar.freebusy";
-
-/**
- * Connect (or reconnect) Google Calendar with everything booking needs.
- * The booking page uses this too: calendars linked before booking existed
- * lack the freebusy scope and go through the same consent once more.
- */
-export const connectGoogleCalendar = async (callbackURL: string) =>
-  toError(
-    await authClient.linkSocial({
-      provider: "google",
-      scopes: [CALENDAR_SCOPE, CALENDAR_FREEBUSY_SCOPE],
-      callbackURL,
-    })
-  );
-
 export type IntegrationApp = {
   id: string;
   name: string;
@@ -61,27 +43,6 @@ const GoogleAnalyticsLogo = (
   </svg>
 );
 
-const GoogleCalendarLogo = (
-  <svg className="size-6" viewBox="0 0 24 24">
-    <rect x="3" y="3" width="18" height="18" rx="2.5" fill="#fff" stroke="#dadce0" />
-    <path
-      fill="#1a73e8"
-      d="M5.5 3h13A2.5 2.5 0 0 1 21 5.5V7.5H3V5.5A2.5 2.5 0 0 1 5.5 3z"
-    />
-    <text
-      x="12"
-      y="17.5"
-      textAnchor="middle"
-      fontSize="10"
-      fontWeight="700"
-      fill="#1a73e8"
-      fontFamily="system-ui, sans-serif"
-    >
-      31
-    </text>
-  </svg>
-);
-
 export const INTEGRATION_APPS: IntegrationApp[] = [
   {
     id: "google-analytics",
@@ -99,15 +60,5 @@ export const INTEGRATION_APPS: IntegrationApp[] = [
       ),
     unlinkWarning:
       "This unlinks your whole Google account from sign-in, not just Analytics.",
-  },
-  {
-    id: "google-calendar",
-    name: "Google Calendar",
-    description:
-      "Connect your Google Calendar so meetings you schedule with leads land on your calendar with invites sent automatically.",
-    logo: GoogleCalendarLogo,
-    connect: connectGoogleCalendar,
-    unlinkWarning:
-      "This unlinks your whole Google account from sign-in, not just Calendar.",
   },
 ];

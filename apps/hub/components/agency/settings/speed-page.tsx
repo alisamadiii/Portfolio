@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { Button } from "@workspace/ui/components/button";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useWebsiteUrl } from "@/hooks/use-website-url";
 
-import { PageShell } from "@/components/agency/page-shell";
+import { PageHeader } from "@/components/ds/layout/page-header";
+import { Button, ButtonAnchor } from "@/components/ds/ui/button";
+import { Card } from "@/components/ds/ui/card";
+import { EmptyState } from "@/components/ds/ui/misc";
 import { SpeedMark } from "@/components/analytics/speed-mark";
 
 // Agency fork of components/settings/speed-panel.tsx (website editor).
@@ -135,10 +137,8 @@ const TestingGauge = ({ label }: { label: string }) => {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
   return (
-    <div className="bg-card rounded-lg border p-6">
-      <p className="text-muted-foreground mb-4 text-[12px] font-medium tracking-wide uppercase">
-        {label}
-      </p>
+    <Card className="p-6">
+      <p className="mb-4 text-[13px] font-medium text-dim">{label}</p>
       <div className="flex items-center gap-6">
         <div className="relative size-32 shrink-0">
           <svg viewBox="0 0 100 100" className="size-full -rotate-90">
@@ -182,7 +182,7 @@ const TestingGauge = ({ label }: { label: string }) => {
               strokeDasharray={`${circumference * 0.18} ${circumference}`}
             />
           </svg>
-          <span className="text-muted-foreground absolute inset-0 grid place-items-center text-[22px] font-extrabold tabular-nums">
+          <span className="absolute inset-0 grid place-items-center text-[22px] font-semibold tabular-nums text-dim">
             {pct}%
           </span>
         </div>
@@ -193,7 +193,7 @@ const TestingGauge = ({ label }: { label: string }) => {
           ))}
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 
@@ -220,42 +220,37 @@ export function AgencySpeedPage() {
 
   if (domainStatus === "missing") {
     return (
-      <PageShell eyebrow="SITE SETTINGS" title="Speed" lead={LEAD}>
-        <div className="rounded-lg border border-dashed px-6 py-16 text-center">
-          <div className="bg-status-neutral-bg border-status-neutral/50 text-status-neutral mx-auto grid size-14 place-items-center rounded-2xl border">
-            <SpeedMark className="size-6" />
-          </div>
-          <h3 className="mt-5 text-[20px] font-extrabold tracking-tight">
-            No domain connected
-          </h3>
-          <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14px]">
-            Connect a domain on the Domain page and the speed test will run
-            against your live website.
-          </p>
-        </div>
-      </PageShell>
+      <>
+        <PageHeader title="Speed" description={LEAD} />
+        <Card>
+          <EmptyState
+            icon={<SpeedMark className="size-5" />}
+            title="No domain connected"
+            text="Connect a domain on the Domain page and the speed test will run against your live website."
+          />
+        </Card>
+      </>
     );
   }
 
   return (
-    <PageShell
-      eyebrow="SITE SETTINGS"
-      title="Speed"
-      lead={LEAD}
-      controls={
+    <>
+      <PageHeader
+        title="Speed"
+        description={LEAD}
+        actions={
         <>
           {psi.data && websiteUrl && (
-            <a
+            <ButtonAnchor
               href={`https://pagespeed.web.dev/analysis?url=${encodeURIComponent(websiteUrl)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground text-[13px] underline underline-offset-2"
             >
               Open full report
-            </a>
+            </ButtonAnchor>
           )}
           <Button
-            type="button"
+            variant="primary"
             disabled={psi.isFetching || !websiteUrl}
             onClick={() => psi.refetch()}
           >
@@ -266,21 +261,19 @@ export function AgencySpeedPage() {
                 : "Run speed test"}
           </Button>
         </>
-      }
-    >
+        }
+      />
       {psi.isFetching ? (
         <div className="grid gap-6 lg:grid-cols-2">
           <TestingGauge label="Mobile" />
           <TestingGauge label="Desktop" />
         </div>
       ) : psi.isError ? (
-        <div className="bg-card rounded-lg border p-6">
-          <p className="text-destructive text-[14px]">
-            {psi.error instanceof Error
-              ? psi.error.message
-              : "Speed test failed."}
+        <Card className="p-6">
+          <p className="text-sm text-danger">
+            {psi.error instanceof Error ? psi.error.message : "Speed test failed."}
           </p>
-        </div>
+        </Card>
       ) : psi.data ? (
         <div className="grid gap-6 lg:grid-cols-2">
           {(
@@ -289,10 +282,8 @@ export function AgencySpeedPage() {
               ["Desktop", psi.data.desktop],
             ] as const
           ).map(([label, result]) => (
-            <div key={label} className="bg-card rounded-lg border p-6">
-              <p className="text-muted-foreground mb-4 text-[12px] font-medium tracking-wide uppercase">
-                {label}
-              </p>
+            <Card key={label} className="p-6">
+              <p className="mb-4 text-[13px] font-medium text-dim">{label}</p>
               <div className="flex items-center gap-6">
                 <ScoreGauge score={result.score} />
                 <ul className="min-w-0 flex-1 space-y-2">
@@ -318,35 +309,23 @@ export function AgencySpeedPage() {
                   ))}
                 </ul>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed px-6 py-16 text-center">
-          <div className="bg-status-neutral-bg border-status-neutral/50 text-status-neutral mx-auto grid size-14 place-items-center rounded-2xl border">
-            <SpeedMark className="size-6" />
-          </div>
-          <h3 className="mt-5 text-[20px] font-extrabold tracking-tight">
-            Test your website&apos;s speed
-          </h3>
-          <p className="text-muted-foreground mx-auto mt-2 max-w-[420px] text-[14px]">
-            Run a Google Lighthouse test against{" "}
-            <span className="text-foreground font-medium">
-              {websiteUrl?.replace(/^https?:\/\//, "")}
-            </span>{" "}
-            to see performance scores for mobile and desktop. Takes about 30
-            seconds.
-          </p>
-          <Button
-            type="button"
-            className="mt-6"
-            disabled={!websiteUrl}
-            onClick={() => psi.refetch()}
-          >
-            Run speed test
-          </Button>
-        </div>
+        <Card>
+          <EmptyState
+            icon={<SpeedMark className="size-5" />}
+            title="Test your website's speed"
+            text={`Run a Google Lighthouse test against ${websiteUrl?.replace(/^https?:\/\//, "") ?? "your site"} to see performance scores for mobile and desktop. Takes about 30 seconds.`}
+            action={
+              <Button variant="primary" disabled={!websiteUrl} onClick={() => psi.refetch()}>
+                Run speed test
+              </Button>
+            }
+          />
+        </Card>
       )}
-    </PageShell>
+    </>
   );
 }

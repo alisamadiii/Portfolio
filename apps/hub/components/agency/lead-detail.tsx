@@ -19,10 +19,6 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import type { AgencyLeadStatus } from "@workspace/drizzle/schema";
 
 import {
-  CancelBookingDialog,
-  RescheduleDialog,
-} from "@/components/agency/booking-dialogs";
-import {
   MarkLostDialog,
   MarkWonDialog,
 } from "@/components/agency/lead-status-dialogs";
@@ -37,7 +33,13 @@ import {
   LeadStatusBadge,
   leadStatusLabel,
 } from "@/components/agency/lead-status";
-import { FrameCard } from "@/components/agency/page-shell";
+import { Card } from "@/components/ds/ui/card";
+import { cn as cx } from "@workspace/ui/lib/utils";
+
+/** Bordered card with inner padding (kept from the old page shell). */
+const FrameCard = ({ innerClassName, children }: { innerClassName?: string; children: React.ReactNode }) => (
+  <Card className={cx("p-6", innerClassName)}>{children}</Card>
+);
 import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
 import {
   ArrowLeft,
@@ -158,100 +160,57 @@ const Field = ({
   </div>
 );
 
-/** Reschedule / Cancel for a booking lead, reusing the booking dialogs. */
-function MeetingCard({ lead, projectId }: { lead: Lead; projectId: string }) {
-  const [rescheduling, setRescheduling] = useState(false);
-  const [canceling, setCanceling] = useState(false);
+/** Read-only meeting summary for a booking lead (booking itself lives in GoHighLevel now). */
+function MeetingCard({ lead }: { lead: Lead }) {
   const at = lead.bookingAt ? new Date(lead.bookingAt) : null;
   if (!at) return null;
   const upcoming = at >= new Date() && !lead.bookingCanceledAt;
 
   return (
     <FrameCard innerClassName="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          <div className="bg-primary/16 flex size-14 flex-col items-center justify-center rounded-[12px] text-[#c2451f]">
-            <span className="text-[11px] font-semibold uppercase">
-              {format(at, "MMM")}
-            </span>
-            <span className="text-[22px] leading-none font-semibold">
-              {format(at, "d")}
-            </span>
-          </div>
-          <div>
-            <p className="font-mono text-[12px] tracking-[0.08em] text-muted-foreground uppercase">
-              {lead.bookingCanceledAt
-                ? "Canceled"
-                : upcoming
-                  ? `Upcoming · ${formatDistanceToNow(at)}`
-                  : lead.bookingOutcome === "completed"
-                    ? "Past · Completed"
-                    : lead.bookingOutcome === "no_show"
-                      ? "Past · No-show"
-                      : "Past"}
-            </p>
-            <p className="mt-1 text-[18px] font-semibold">
-              {lead.booking?.typeName ?? "Meeting"}
-            </p>
-            <p className="text-muted-foreground text-[15px]">
-              {format(at, "EEEE, MMM d · p")}
-            </p>
-            <div className="mt-1 flex gap-3 text-[14px]">
-              {lead.booking?.meetUrl && (
-                <a
-                  href={lead.booking.meetUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary inline-flex items-center gap-1 font-medium"
-                >
-                  Google Meet <ExternalLink className="size-3.5" />
-                </a>
-              )}
-              {lead.booking?.htmlLink && (
-                <a
-                  href={lead.booking.htmlLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-                >
-                  Calendar <ExternalLink className="size-3.5" />
-                </a>
-              )}
-            </div>
+      <div className="flex items-start gap-4">
+        <div className="bg-primary/16 flex size-14 flex-col items-center justify-center rounded-[12px] text-coral-deep">
+          <span className="text-[11px] font-semibold">{format(at, "MMM")}</span>
+          <span className="text-[22px] leading-none font-semibold">{format(at, "d")}</span>
+        </div>
+        <div>
+          <p className="text-[12px] text-muted-foreground">
+            {lead.bookingCanceledAt
+              ? "Canceled"
+              : upcoming
+                ? `Upcoming · ${formatDistanceToNow(at)}`
+                : lead.bookingOutcome === "completed"
+                  ? "Past · Completed"
+                  : lead.bookingOutcome === "no_show"
+                    ? "Past · No-show"
+                    : "Past"}
+          </p>
+          <p className="mt-1 text-[18px] font-semibold">{lead.booking?.typeName ?? "Meeting"}</p>
+          <p className="text-muted-foreground text-[15px]">{format(at, "EEEE, MMM d · p")}</p>
+          <div className="mt-1 flex gap-3 text-[14px]">
+            {lead.booking?.meetUrl && (
+              <a
+                href={lead.booking.meetUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary inline-flex items-center gap-1 font-medium"
+              >
+                Google Meet <ExternalLink className="size-3.5" />
+              </a>
+            )}
+            {lead.booking?.htmlLink && (
+              <a
+                href={lead.booking.htmlLink}
+                target="_blank"
+                rel="noreferrer"
+                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+              >
+                Calendar <ExternalLink className="size-3.5" />
+              </a>
+            )}
           </div>
         </div>
-        {upcoming && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setRescheduling(true)}
-            >
-              Reschedule
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setCanceling(true)}>
-              Cancel
-            </Button>
-          </div>
-        )}
       </div>
-
-      {rescheduling && (
-        <RescheduleDialog
-          projectId={projectId}
-          booking={lead}
-          onClose={() => setRescheduling(false)}
-          onDone={() => setRescheduling(false)}
-        />
-      )}
-      {canceling && (
-        <CancelBookingDialog
-          projectId={projectId}
-          booking={lead}
-          onClose={() => setCanceling(false)}
-          onDone={() => setCanceling(false)}
-        />
-      )}
     </FrameCard>
   );
 }
@@ -349,7 +308,7 @@ export function LeadDetail({ id }: { id: number }) {
   return (
     <div className="flex flex-col gap-7">
       <Link
-        href={href("/agency")}
+        href={href("/leads")}
         className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 self-start text-[15px] font-medium"
       >
         <ArrowLeft className="size-4" />
@@ -399,7 +358,7 @@ export function LeadDetail({ id }: { id: number }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-6">
-          {isBooking && <MeetingCard lead={lead} projectId={projectId} />}
+          {isBooking && <MeetingCard lead={lead} />}
 
           {/* Contact */}
           <section className="bg-card ring-foreground/7 flex flex-col gap-3 rounded-[18px] p-6 shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1">

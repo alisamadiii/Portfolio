@@ -182,6 +182,10 @@ export const hubProject = pgTable(
     // emailed. Owner-set in the Emails tab; empty = fall back to the project
     // owner's account email.
     notifyEmail: text("notify_email"),
+    // Apps the client added from the hub's Apps page ("leads" | "analytics" |
+    // "newsletter"). Drives the project sidebar; each app page gates itself by
+    // plan feature, so this is only "what the client chose to show".
+    apps: text("apps").array().notNull().default(sql`'{}'::text[]`),
     // Per-client GitHub. The Better Auth user.id who imported the project — owns
     // it (access filtering + full-access role) and whose stored GitHub OAuth
     // token backstops reads/commits when there's no interactive caller. Set at

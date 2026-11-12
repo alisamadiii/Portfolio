@@ -6,16 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { Input } from "@workspace/ui/components/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -23,12 +14,11 @@ import type { AdCampaign } from "@workspace/drizzle/schema";
 
 import { sectionUrl, stepFor } from "@/components/agency/business-info-config";
 import { AiHelper } from "@/components/agency/business-info/ai-helper";
-import {
-  Eyebrow,
-  FrameCard,
-  StepShell,
-} from "@/components/agency/business-info/step-shell";
+import { StepShell } from "@/components/agency/business-info/step-shell";
 import { useAgency } from "@/components/agency/use-agency";
+import { Button, IconButton } from "@/components/ds/ui/button";
+import { Card, CardHeader } from "@/components/ds/ui/card";
+import { Field, Input, Select, Textarea } from "@/components/ds/ui/field";
 import { Copy, Plus, X } from "@/components/icon";
 
 const STEP = stepFor("search-ad")!;
@@ -102,12 +92,8 @@ function Counter({ length, limit }: { length: number; limit: number }) {
   return (
     <span
       className={cn(
-        "font-mono text-[13px] tabular-nums",
-        length > limit
-          ? "text-destructive"
-          : length > limit - 3
-            ? "text-[#8a5a0a]"
-            : "text-muted-foreground"
+        "text-xs tabular-nums",
+        length > limit ? "text-danger" : length > limit - 3 ? "text-coral-deep" : "text-dim"
       )}
     >
       {length}/{limit}
@@ -236,13 +222,11 @@ export function StepSearchAd() {
       stepKey="search-ad"
       headerAside={
         !loading && (campaigns.data?.length ?? 0) > 0 ? (
-          <div className="flex w-full max-w-[320px] flex-col gap-2">
-            <label className="text-[15px] font-semibold" htmlFor="group">
-              Keyword group
-            </label>
+          <Field label="Keyword group" className="w-full max-w-[320px]">
             <Select
               value={campaignId}
-              onValueChange={(value) => {
+              onChange={(e) => {
+                const value = e.target.value;
                 if (!value) return;
                 setCampaignId(value);
                 try {
@@ -252,79 +236,55 @@ export function StepSearchAd() {
                 }
               }}
             >
-              <SelectTrigger id="group" className="h-auto w-full px-4 py-3 text-[16px]">
-                <SelectValue placeholder="Pick a keyword group">
-                  {(value: string | null) => {
-                    const picked = campaigns.data?.find((c) => c.id === value);
-                    return picked
-                      ? `${picked.name} · ${picked.keywords.length} keywords`
-                      : "Pick a keyword group";
-                  }}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {campaigns.data?.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name} · {c.keywords.length} keywords
-                  </SelectItem>
-                ))}
-              </SelectContent>
+              {campaigns.data?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} · {c.keywords.length} keywords
+                </option>
+              ))}
             </Select>
-          </div>
+          </Field>
         ) : undefined
       }
       footer={{ dirty, saving: save.isPending, savedAt, saveAnd }}
       aside={
         <>
-          <FrameCard innerClassName="flex flex-col gap-4 p-6 shadow-[0_14px_34px_rgba(27,26,23,0.08)]">
+          <Card className="flex flex-col gap-3 p-5">
             <div className="flex items-center justify-between gap-3">
-              <Eyebrow>Live preview</Eyebrow>
-              <span className="text-muted-foreground text-[14px]">
-                Mobile search
-              </span>
+              <span className="text-[15px] font-semibold">Live preview</span>
+              <span className="text-xs text-dim">Mobile search</span>
             </div>
-            <div className="bg-shell flex flex-col gap-2 rounded-[11px] p-4.5">
+            <div className="flex flex-col gap-1.5 rounded-inner border border-divider bg-canvas p-4">
               <div className="flex items-center gap-2.5">
-                <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-full text-[14px] font-extrabold">
+                <span className="flex size-7 items-center justify-center rounded-full bg-coral text-[13px] font-bold text-ink">
                   {domain[0]?.toUpperCase() ?? "A"}
                 </span>
                 <span className="flex flex-col">
-                  <span className="text-[14px] font-semibold">Sponsored</span>
-                  <span className="text-muted-foreground text-[13px]">
-                    {domain}
-                  </span>
+                  <span className="text-[13px] font-semibold">Sponsored</span>
+                  <span className="text-xs text-dim">{domain}</span>
                 </span>
               </div>
-              <span className="text-[20px] leading-snug text-[#2d5e7a]">
+              <span className="text-[17px] leading-snug text-info-text">
                 {[0, 1, 2].map((i) => (
                   <span key={i}>
                     {i > 0 && " | "}
-                    {headlines[i]?.trim() ? (
-                      headlines[i]
-                    ) : (
-                      <span className="text-muted-foreground/70">
-                        Headline {i + 1}
-                      </span>
-                    )}
+                    {headlines[i]?.trim() ? headlines[i] : <span className="text-faint">Headline {i + 1}</span>}
                   </span>
                 ))}
               </span>
               <span
                 className={cn(
-                  "text-[15px] leading-normal",
-                  descriptions[0]?.trim()
-                    ? "text-foreground/80"
-                    : "text-muted-foreground/70"
+                  "text-[13px] leading-normal",
+                  descriptions[0]?.trim() ? "text-ink-2" : "text-faint"
                 )}
               >
                 {descriptions[0]?.trim() ||
                   "Your first description shows here. Write at least two so Google can rotate them."}
               </span>
             </div>
-            <span className="text-muted-foreground text-[14px]">
+            <span className="text-xs text-dim">
               Google picks which lines to show. This is one possible mix.
             </span>
-          </FrameCard>
+          </Card>
           <AiHelper
             prompt={PROMPT}
             values={values}
@@ -338,48 +298,39 @@ export function StepSearchAd() {
       }
     >
       {loading ? (
-        <Skeleton className="h-96 w-full rounded-[18px]" />
+        <Skeleton className="h-96 w-full rounded-card" />
       ) : error ? (
-        <p className="text-destructive text-[15px]">{error.message}</p>
+        <p className="text-sm text-danger">{error.message}</p>
       ) : !campaign || !adText ? (
-        <div className="bg-card ring-foreground/7 rounded-[18px] p-7 ring-1">
-          <p className="text-muted-foreground text-[17px] leading-relaxed">
+        <Card className="p-6">
+          <p className="text-sm leading-relaxed text-dim">
             No keyword groups yet. Add one on the{" "}
-            <Link
-              href={sectionUrl(projectId, "keywords")}
-              className="text-foreground underline underline-offset-2"
-            >
+            <Link href={sectionUrl(projectId, "keywords")} className="font-medium text-coral-text">
               Keywords
             </Link>{" "}
             step first; the prompt and the ad text are saved per group.
           </p>
-        </div>
+        </Card>
       ) : (
         <>
           {OUTPUTS.map((output) => {
             const lines = adText[output.key];
             const filledCount = lines.filter((l) => l.trim()).length;
             return (
-              <section
-                key={output.key}
-                className="bg-card ring-foreground/7 flex flex-col gap-4 rounded-[18px] p-7 shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1"
-              >
+              <Card key={output.key} className="flex flex-col gap-4 p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-[22px] font-semibold tracking-[-0.01em]">
-                    {output.title}
-                  </h2>
-                  <span className="text-muted-foreground font-mono text-[14px]">
+                  <h2 className="text-base font-semibold">{output.title}</h2>
+                  <span className="text-xs text-dim">
                     {filledCount} of {output.max}
-                    {output.min ? ` · min ${output.min}` : ""} · {output.limit}{" "}
-                    chars each
+                    {output.min ? ` · min ${output.min}` : ""} · {output.limit} chars each
                   </span>
                 </div>
 
                 {output.key === "callouts" && (
                   <>
-                    <p className="text-muted-foreground text-[15px]">
-                      Short extras shown under your ad. Pulled from your
-                      features in step 1, edit freely.
+                    <p className="text-[13px] text-dim">
+                      Short extras shown under your ad. Pulled from your features in step 1, edit
+                      freely.
                     </p>
                     {(calloutSuggestions.length > 0 ||
                       lines.length < output.max) && (
@@ -388,7 +339,7 @@ export function StepSearchAd() {
                           <button
                             key={suggestion}
                             type="button"
-                            className="border-foreground/25 hover:border-foreground/50 inline-flex items-center gap-2 rounded-full border border-dashed px-3.5 py-2.5 text-[15px]"
+                            className="inline-flex h-8 items-center gap-1.5 rounded-control border border-dashed border-line-strong px-3 text-[13px] hover:border-ink-3"
                             onClick={() =>
                               setLines(output.key, [
                                 ...lines.filter((l) => l.trim()),
@@ -399,13 +350,9 @@ export function StepSearchAd() {
                             <Plus className="size-4" /> {suggestion}
                           </button>
                         ))}
-                        <button
-                          type="button"
-                          className="bg-foreground/5 hover:bg-foreground/8 inline-flex items-center rounded-full px-3.5 py-2.5 text-[15px] font-medium"
-                          onClick={() => setLines(output.key, [...lines, ""])}
-                        >
+                        <Button variant="subtle" size="sm" onClick={() => setLines(output.key, [...lines, ""])}>
                           Write your own
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </>
@@ -420,7 +367,6 @@ export function StepSearchAd() {
                           rows={2}
                           value={line}
                           placeholder={output.placeholder(i)}
-                          className="px-4 py-3.5 text-[17px] leading-normal"
                           onChange={(e) =>
                             setLines(
                               output.key,
@@ -455,7 +401,7 @@ export function StepSearchAd() {
                           aria-label={`${output.title.slice(0, -1)} ${i + 1}`}
                           value={line}
                           placeholder={output.placeholder(i)}
-                          className="h-auto px-4 py-3.5 pr-18 text-[17px]"
+                          className="pr-16"
                           onChange={(e) =>
                             setLines(
                               output.key,
@@ -480,50 +426,40 @@ export function StepSearchAd() {
                             setLines(output.key, next.slice(0, output.max));
                           }}
                         />
-                        <span className="absolute top-1/2 right-4 -translate-y-1/2">
+                        <span className="absolute top-1/2 right-3 -translate-y-1/2">
                           <Counter length={line.length} limit={output.limit} />
                         </span>
                       </div>
                     )}
-                    <div className="flex shrink-0 items-center gap-0.5 pt-3 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                    <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
                       {line.trim() && (
-                        <button
-                          type="button"
-                          aria-label="Copy line"
-                          className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-[9px]"
-                          onClick={() => copyLine(line.trim())}
-                        >
+                        <IconButton aria-label="Copy line" className="size-8" onClick={() => copyLine(line.trim())}>
                           <Copy className="size-4" />
-                        </button>
+                        </IconButton>
                       )}
-                      <button
-                        type="button"
+                      <IconButton
                         aria-label="Remove line"
-                        className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-[9px]"
-                        onClick={() =>
-                          setLines(
-                            output.key,
-                            lines.filter((_, j) => j !== i)
-                          )
-                        }
+                        className="size-8"
+                        onClick={() => setLines(output.key, lines.filter((_, j) => j !== i))}
                       >
                         <X className="size-4" />
-                      </button>
+                      </IconButton>
                     </div>
                   </div>
                 ))}
 
                 {output.key !== "callouts" && lines.length < output.max && (
-                  <button
-                    type="button"
-                    className="bg-foreground/5 hover:bg-foreground/8 inline-flex items-center gap-2 self-start rounded-[11px] px-4 py-2.5 text-[15px] font-medium"
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    className="self-start"
+                    icon={<Plus className="size-3.5" />}
                     onClick={() => setLines(output.key, [...lines, ""])}
                   >
-                    <Plus className="size-4" /> Add{" "}
-                    {output.title.slice(0, -1).toLowerCase()}
-                  </button>
+                    Add {output.title.slice(0, -1).toLowerCase()}
+                  </Button>
                 )}
-              </section>
+              </Card>
             );
           })}
         </>

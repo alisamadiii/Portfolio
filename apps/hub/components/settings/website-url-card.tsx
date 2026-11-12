@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { Spinner } from "@workspace/ui/components/spinner";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { Button } from "@/components/ds/ui/button";
+import { Card, CardHeader } from "@/components/ds/ui/card";
+import { Input } from "@/components/ds/ui/field";
 import { isAdminUser } from "@/lib/authz-shared";
 import { useProject } from "@/hooks/use-project";
 import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
@@ -18,8 +17,9 @@ import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
 /**
  * The client's live website address (hosted on their own Netlify etc.; the
  * hub only previews and publishes). Feeds speed reports, campaign URLs, the
- * SEO base URL, and is auto-allowed for the embed scripts. Editable by the
- * project owner or an admin; everyone else sees it read-only.
+ * SEO base URL, and is auto-allowed for the embed scripts. Editable by
+ * full-access collaborators (owner) or an admin; everyone else sees it
+ * read-only. Reads the project row, so it never depends on GitHub.
  */
 export function WebsiteUrlCard({ projectId }: { projectId: string }) {
   const trpc = useTRPC();
@@ -27,11 +27,8 @@ export function WebsiteUrlCard({ projectId }: { projectId: string }) {
   const project = useProject();
   const user = useCurrentUser().data?.user ?? null;
 
-  const snapshot = useQuery(
-    trpc.cms.repos.getSnapshot.queryOptions({ projectId }, { enabled: !!projectId })
-  );
-  const websiteUrl = snapshot.data?.websiteUrl ?? null;
-  const canEdit = isAdminUser(user) || !!snapshot.data?.isOwner;
+  const websiteUrl = project?.websiteUrl ?? null;
+  const canEdit = isAdminUser(user) || project?.role === "full-access";
 
   const [url, setUrl] = useState("");
   useEffect(() => setUrl(websiteUrl ?? ""), [websiteUrl]);
@@ -50,43 +47,33 @@ export function WebsiteUrlCard({ projectId }: { projectId: string }) {
   const dirty = url.trim() !== (websiteUrl ?? "");
 
   return (
-    <div className="bg-card rounded-lg border">
-      <div className="border-b p-4">
-        <h3 className="text-[16px] font-extrabold tracking-tight">
-          Website URL
-        </h3>
-        <p className="text-muted-foreground mt-1 text-[13px]">
+    <Card>
+      <CardHeader title="Website address" divided />
+      <div className="flex flex-col gap-3 px-6 py-5">
+        <p className="text-[13px] text-dim">
           {canEdit
-            ? "Where the live site is hosted, for example the client's Netlify domain. Publishing pushes your changes to GitHub and that host deploys them."
+            ? "Where the live site is hosted, for example your Netlify domain. Publishing pushes your changes to GitHub and that host deploys them."
             : "Where the live site is hosted. Only the project owner can change this."}
         </p>
-      </div>
-      {!snapshot.data ? (
-        <div className="flex justify-center py-10">
-          <Spinner className="text-muted-foreground size-5" />
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center gap-3 p-4">
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             placeholder="www.example.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            disabled={!canEdit}
-            className="min-w-56 flex-1"
+            disabled={!canEdit || !project}
+            className="min-w-56 max-w-md flex-1"
           />
           {canEdit && (
             <Button
-              isLoading={save.isPending}
-              disabled={!dirty}
-              onClick={() =>
-                save.mutate({ projectId, websiteUrl: url.trim() || null })
-              }
+              variant="primary"
+              disabled={!dirty || save.isPending}
+              onClick={() => save.mutate({ projectId, websiteUrl: url.trim() || null })}
             >
-              Save
+              {save.isPending ? "Saving…" : "Save"}
             </Button>
           )}
         </div>
-      )}
-    </div>
+      </div>
+    </Card>
   );
 }

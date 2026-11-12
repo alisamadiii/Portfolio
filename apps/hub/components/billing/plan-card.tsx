@@ -43,13 +43,10 @@ export const PlanCard = ({
   return (
     <div
       className={cn(
-        "bg-card relative overflow-hidden rounded-2xl border",
-        compact ? "" : "ring-primary/15 max-w-md shadow-sm ring-4"
+        "relative overflow-hidden rounded-card border border-line bg-surface",
+        !compact && "max-w-md"
       )}
     >
-      {!compact && (
-        <div className="bg-primary/10 pointer-events-none absolute -top-24 -right-24 size-56 rounded-full blur-3xl" />
-      )}
 
       <div className={cn("relative", compact ? "p-5" : "p-6")}>
         {product.isPending ? (
@@ -62,10 +59,10 @@ export const PlanCard = ({
           </div>
         ) : (
           <>
-            <div className="bg-primary text-primary-foreground grid size-11 place-items-center rounded-[12px]">
+            <div className="grid size-10 place-items-center rounded-[9px] bg-coral-soft text-coral-deep">
               <Globe className="size-5" />
             </div>
-            <p className="mt-4 text-[18px] font-extrabold tracking-tight">
+            <p className="mt-4 text-base font-semibold">
               {product.data?.name ?? "Website Management"}
             </p>
             {product.data?.description && (
@@ -75,7 +72,7 @@ export const PlanCard = ({
             )}
 
             <div className="mt-5 flex items-baseline gap-1.5">
-              <span className="text-4xl font-extrabold tracking-tight">
+              <span className="text-[28px] font-semibold tracking-[-0.01em]">
                 {formatPrice(
                   product.data?.priceAmount ?? 2500,
                   product.data?.priceCurrency ?? "usd"
@@ -103,8 +100,7 @@ export const PlanCard = ({
             )}
 
             <Button
-              className="mt-6 w-full rounded-full"
-              size="lg"
+              className="mt-6 w-full"
               disabled={isCheckingOut}
               isLoading={isCheckingOut}
               onClick={onSubscribe}

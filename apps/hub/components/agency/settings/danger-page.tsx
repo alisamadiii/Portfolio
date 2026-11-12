@@ -15,17 +15,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog";
-import { Button } from "@workspace/ui/components/button";
 import { Checkbox } from "@workspace/ui/components/checkbox";
 
 import { useTRPC } from "@workspace/trpc/client";
 
 import { useProject } from "@/hooks/use-project";
 
-import { PageShell } from "@/components/agency/page-shell";
+import { Button } from "@/components/ds/ui/button";
+import { Card } from "@/components/ds/ui/card";
 import { TriangleAlert } from "@/components/icon";
 
-// ─── Agency Site settings › Danger (fork of settings/danger-panel.tsx) ──
+// ─── Delete this site (bottom of the Billing page) ──
 // Permanently deletes everything about the project — all hub data — and
 // cancels + refunds the paid subscription. Never touches the GitHub repo, the
 // user's integration tokens, or emails.
@@ -41,7 +41,7 @@ const PRESERVED = [
   "Your emails and sending setup",
 ];
 
-export const AgencyDangerPage = () => {
+export const DeleteSiteCard = () => {
   const trpc = useTRPC();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -72,20 +72,17 @@ export const AgencyDangerPage = () => {
   if (!repo || !projectId) return null;
 
   return (
-    <PageShell
-      eyebrow="SITE SETTINGS"
-      title="Danger"
-      lead="Permanently delete this project and everything attached to it."
-    >
-      <div className="max-w-screen-md">
-        <div className="ring-destructive/20 bg-card overflow-hidden rounded-lg border shadow-sm ring-1">
-          <div className="border-destructive/15 bg-destructive/4 flex items-center gap-2 border-b px-5.5 py-4.5">
-            <TriangleAlert className="text-destructive size-4.5" />
-            <p className="text-destructive font-bold">Delete this project</p>
-          </div>
+    <section className="flex max-w-screen-md flex-col gap-3">
+      <h2 className="text-base font-semibold">Delete this site</h2>
+      <Card className="overflow-hidden border-danger/30">
+        <div className="flex items-center gap-2 border-b border-divider bg-danger-soft px-6 py-4">
+          <TriangleAlert className="size-4 text-danger" />
+          <p className="text-sm font-semibold text-danger">This cannot be undone</p>
+        </div>
+        <div>
 
-          <div className="space-y-5 px-5.5 py-5">
-            <p className="text-secondary-foreground text-sm">
+          <div className="space-y-5 px-6 py-5">
+            <p className="text-sm text-ink-3">
               This is permanent and cannot be undone. Deleting{" "}
               <span className="font-semibold">{repo}</span> will:
             </p>
@@ -93,14 +90,14 @@ export const AgencyDangerPage = () => {
             <ul className="space-y-2">
               {DELETED.map((item) => (
                 <li key={item} className="flex gap-2 text-[13px]">
-                  <span className="text-destructive mt-1.5 size-1.5 shrink-0 rounded-full bg-current" />
-                  <span className="text-secondary-foreground">{item}</span>
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-danger" />
+                  <span className="text-ink-3">{item}</span>
                 </li>
               ))}
             </ul>
 
-            <div className="border-destructive/15 bg-destructive/4 rounded-md border px-4 py-3">
-              <p className="text-secondary-foreground text-[13px]">
+            <div className="rounded-inner bg-danger-soft px-4 py-3">
+              <p className="text-[13px] text-ink-3">
                 Any active paid subscription for this project is{" "}
                 <span className="font-semibold">
                   cancelled immediately and the unused time is refunded
@@ -115,9 +112,9 @@ export const AgencyDangerPage = () => {
                 {PRESERVED.map((item) => (
                   <li
                     key={item}
-                    className="text-muted-foreground flex gap-2 text-[13px]"
+                    className="flex gap-2 text-[13px] text-dim"
                   >
-                    <span className="bg-muted-foreground/50 mt-1.5 size-1.5 shrink-0 rounded-full" />
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-faint" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -125,29 +122,26 @@ export const AgencyDangerPage = () => {
             </div>
           </div>
 
-          <div className="border-destructive/15 bg-destructive/4 flex flex-col gap-3.5 border-t px-5.5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3.5 border-t border-divider bg-sidebar px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
             <label className="flex cursor-pointer items-center gap-2.5 text-[13px]">
               <Checkbox
                 checked={acknowledged}
                 onCheckedChange={(value) => setAcknowledged(value === true)}
               />
-              <span className="text-secondary-foreground">
-                I understand this permanently deletes everything above.
-              </span>
+              <span className="text-ink-3">I understand this permanently deletes everything above.</span>
             </label>
 
             <AlertDialog open={open} onOpenChange={setOpen}>
               <AlertDialogTrigger
                 render={
                   <Button
-                    variant="destructive"
-                    className="bg-status-danger-bg text-destructive hover:bg-status-danger-bg/70 shrink-0 rounded-full px-6"
+                    variant="outline"
+                    className="shrink-0 border-danger/40 text-danger hover:bg-danger-soft"
                     disabled={!acknowledged || deleteMutation.isPending}
-                    size="lg"
                   />
                 }
               >
-                Delete project
+                Delete site
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -159,31 +153,23 @@ export const AgencyDangerPage = () => {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="grid grid-cols-2 gap-2">
-                  <AlertDialogCancel
-                    render={
-                      <Button
-                        variant="outline"
-                        disabled={deleteMutation.isPending}
-                        size="lg"
-                      />
-                    }
-                  >
+                  <AlertDialogCancel render={<Button disabled={deleteMutation.isPending} />}>
                     Cancel
                   </AlertDialogCancel>
                   <Button
-                    variant="destructive"
+                    variant="dark"
+                    className="bg-danger hover:bg-danger"
                     onClick={() => deleteMutation.mutate({ projectId })}
-                    isLoading={deleteMutation.isPending}
-                    size="lg"
+                    disabled={deleteMutation.isPending}
                   >
-                    Delete project
+                    {deleteMutation.isPending ? "Deleting…" : "Delete site"}
                   </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
         </div>
-      </div>
-    </PageShell>
+      </Card>
+    </section>
   );
 };

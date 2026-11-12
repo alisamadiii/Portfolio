@@ -1,0 +1,1 @@
+ALTER TABLE "hub_project" ADD COLUMN "apps" text[] DEFAULT '{}'::text[] NOT NULL;

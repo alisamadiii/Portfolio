@@ -84,23 +84,20 @@ export const ProjectPaywall = ({
   };
 
   return (
-    <div className="mx-auto flex min-h-[80dvh] max-w-xl flex-col items-center px-4 py-14 sm:py-20">
-      <span className="bg-card text-muted-foreground inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold">
+    <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-10">
+      <span className="inline-flex h-[22px] items-center gap-1.5 rounded bg-coral-soft px-2 text-xs font-medium text-coral-deep">
         <LockKeyhole className="size-3.5" />
         {FEATURES[feature]} · Website plan
       </span>
-      <h2 className="mt-5 text-center text-[30px] leading-[1.1] font-extrabold tracking-tight text-balance sm:text-[36px]">
+      <h2 className="mt-4 text-center text-[26px] font-semibold leading-tight tracking-[-0.02em] text-balance">
         {pitch.title}
       </h2>
-      <p className="text-muted-foreground mt-3 max-w-md text-center text-[15px] text-pretty">
+      <p className="mt-2 max-w-md text-center text-sm leading-relaxed text-dim text-pretty">
         {pitch.body}
       </p>
 
-      <div className="mt-9 w-full max-w-md drop-shadow-[0_24px_48px_rgba(224,96,61,0.18)]">
-        <PlanCard
-          onSubscribe={() => void subscribe()}
-          isCheckingOut={checkingOut}
-        />
+      <div className="mt-8 w-full max-w-md">
+        <PlanCard onSubscribe={() => void subscribe()} isCheckingOut={checkingOut} />
       </div>
     </div>
   );

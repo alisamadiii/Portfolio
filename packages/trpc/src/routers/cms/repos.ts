@@ -20,8 +20,9 @@ import {
   isGithubAppConfigured,
 } from "@workspace/trpc/lib/github-app";
 import { fetchFramePolicy, type FramePolicy } from "@workspace/trpc/lib/frame-policy";
+import type { AppId } from "@workspace/trpc/lib/apps";
 import { db } from "@workspace/drizzle/index";
-import { hubProject } from "@workspace/drizzle/schema";
+import { hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
 
 export const reposRouter = createTRPCRouter({
   // Every project the caller can access — derived entirely from the session.
@@ -41,11 +42,14 @@ export const reposRouter = createTRPCRouter({
             defaultBranch: hubProject.defaultBranch,
             updatedAt: hubProject.githubUpdatedAt,
             websiteUrl: hubProject.websiteUrl,
+            apps: hubProject.apps,
+            githubConnectedUserId: hubProject.githubConnectedUserId,
           })
           .from(hubProject)
           .where(accessibleProjectsWhere(ctx))
           .orderBy(desc(hubProject.githubUpdatedAt));
 
+        const userId = ctx.session.user.id;
         return rows.map((row) => ({
           owner: row.owner,
           repo: row.repo,
@@ -55,6 +59,15 @@ export const reposRouter = createTRPCRouter({
           defaultBranch: row.defaultBranch,
           updatedAt: row.updatedAt.toISOString(),
           websiteUrl: row.websiteUrl ?? null,
+          apps: (row.apps ?? []) as AppId[],
+          // The caller's role on this project, for the shell's nav gating
+          // (settings group only for full access). The importer and admins own
+          // the project; otherwise the collaborator invite's role, else
+          // view-only (agency-owned sites reach here through ownedAgency).
+          role: (ctx.isAdmin || row.githubConnectedUserId === userId
+            ? "full-access"
+            : (ctx.collaborations?.find((c) => c.projectId === row.projectId)
+                ?.role ?? "view-only")) as CollaboratorRole,
         }));
       } catch (error) {
         if (error instanceof TRPCError) throw error;
@@ -130,6 +143,7 @@ export const reposRouter = createTRPCRouter({
             myRole: role,
             isOwner,
             websiteUrl: project.websiteUrl ?? null,
+            apps: (project.apps ?? []) as AppId[],
             source: "upload" as const,
           };
         }
@@ -174,6 +188,7 @@ export const reposRouter = createTRPCRouter({
           myRole: role,
           isOwner,
           websiteUrl: project.websiteUrl ?? null,
+          apps: (project.apps ?? []) as AppId[],
           source: "github" as const,
         };
       } catch (error) {

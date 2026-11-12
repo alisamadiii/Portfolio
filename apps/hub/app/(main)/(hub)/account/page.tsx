@@ -6,6 +6,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { DocumentTitle } from "@/components/document-title";
+import { PageHeader } from "@/components/ds/layout/page-header";
 import { Accounts } from "@/components/account/accounts";
 import { DangerSettings } from "@/components/account/danger";
 import { GeneralAvatar } from "@/components/account/general/avatar";
@@ -15,12 +16,10 @@ import { EmailName } from "@/components/account/general/email-name";
 const PageHeading = () => (
   <>
     <DocumentTitle title="Account" />
-    <div>
-      <h2 className="text-[27px] font-extrabold tracking-tight">Account</h2>
-      <p className="text-muted-foreground mt-1 text-[14.5px]">
-        Your personal details, sign-in methods, and account actions.
-      </p>
-    </div>
+    <PageHeader
+      title="Account"
+      description="Your personal details, sign-in methods, and account actions."
+    />
   </>
 );
 
@@ -89,12 +88,12 @@ const SectionHeading = ({
   <div className="space-y-1">
     <h3
       className={cn(
-        "text-[22px] font-extrabold tracking-tight",
+        "text-base font-semibold",
         destructive && "text-destructive"
       )}
     >
       {title}
     </h3>
-    <p className="text-muted-foreground text-[14.5px]">{description}</p>
+    <p className="text-[13px] text-dim">{description}</p>
   </div>
 );

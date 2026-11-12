@@ -19,49 +19,28 @@ import { CanvasPanelHeader } from "@/components/canvas/canvas-panel-header";
 import { PageFrame } from "@/components/canvas/page-frame";
 import { SessionChatPanel } from "@/components/canvas/session-chat-panel";
 import { type CanvasDevice } from "@/components/canvas/canvas-toolbar";
-import { ShellHeader, type ShellMode } from "@/components/shell/shell-header";
+import { ShellHeader } from "@/components/shell/shell-header";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { ProjectSettingsDialog } from "@/components/shell/project-settings-dialog";
-import { SettingsMode } from "@/components/settings/settings-mode";
 import { useRepo } from "@/hooks/use-repo";
 import { roleAtLeast } from "@/lib/authz-shared";
 
 /**
  * v0-style single-page editor shell: full-width header, a permanent AI chat
  * panel on the left and the canvas on the right, split by a resizable handle.
- * The canvas only ever shows the live preview session; Settings renders as a
- * layer over it so the iframe never remounts. All editing state lives in
- * CanvasEditorProvider.
+ * The canvas only ever shows the live preview session. Site settings are
+ * routed pages under the project (Domain / Speed / Billing), not an overlay.
+ * All editing state lives in CanvasEditorProvider.
  */
-export function EditorShell({ inAgency = false }: { inAgency?: boolean }) {
+export function EditorShell() {
   return (
     <CanvasEditorProvider>
-      <ShellBody inAgency={inAgency} />
+      <ShellBody />
     </CanvasEditorProvider>
   );
 }
 
-/**
- * The chat panel's persisted width (%) from react-resizable-panels' localStorage
- * (keyed by autoSaveId), so the header tabs are positioned correctly on the
- * first paint after a refresh instead of jumping once onLayout fires.
- */
-function readPersistedChatWidth(autoSaveId: string, fallback: number): number {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(
-      `react-resizable-panels:${autoSaveId}`
-    );
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as Record<string, { layout?: number[] }>;
-    const size = Object.values(parsed)[0]?.layout?.[0];
-    return typeof size === "number" && size > 0 ? size : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function ShellBody({ inAgency }: { inAgency: boolean }) {
+function ShellBody() {
   const {
     pages,
     entryPages,
@@ -74,7 +53,6 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
   const { myRole } = useRepo();
   // view-only collaborators get the guide instead of the AI chat panel.
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
-  const [mode, setMode] = useState<ShellMode>("canvas");
   const [docsOpen, setDocsOpen] = useState(false);
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
   const [device, setDevice] = useState<CanvasDevice>("desktop");
@@ -82,13 +60,6 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
   // Splitter drag: a transparent shield keeps the iframe from swallowing
   // pointer events mid-drag.
   const [dragging, setDragging] = useState(false);
-  // The header's mode tabs align with the canvas left edge — the chat panel's
-  // width (%) drives their offset. Initialized from the persisted layout so
-  // they are placed correctly on first paint (before onLayout fires), then
-  // kept live by onLayout.
-  const [chatWidth, setChatWidth] = useState(() =>
-    readPersistedChatWidth("hub-canvas-shell", 26)
-  );
 
   const selectedPage =
     pages.find((page) => page.path === selectedPath) ??
@@ -154,20 +125,12 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
   return (
     <div className="bg-background flex h-full w-full flex-col overflow-hidden">
       <ShellHeader
-        mode={mode}
-        onModeChange={setMode}
-        inAgency={inAgency}
         onToggleDocs={() => setDocsOpen((open) => !open)}
         onOpenProjectSettings={() => setProjectSettingsOpen(true)}
-        chatWidth={chatWidth}
       />
 
       <div className="min-h-0 flex-1">
-        <ResizablePanelGroup
-          direction="horizontal"
-          autoSaveId="hub-canvas-shell"
-          onLayout={(sizes) => setChatWidth(sizes[0] ?? 26)}
-        >
+        <ResizablePanelGroup direction="horizontal" autoSaveId="hub-canvas-shell">
           {/* Left: the AI chat is the primary editing surface — always open.
               View-only collaborators get the guide instead. */}
           <ResizablePanel id="chat" order={1} defaultSize={26} minSize={18} maxSize={42}>
@@ -188,16 +151,7 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
                 previewUrl={previewTabUrl}
               />
               <div className="relative min-h-0 flex-1">
-                {/* Canvas layer — ALWAYS mounted at this tree position so the
-                    preview iframe survives mode switches (only `hidden`
-                    toggles). Settings overlays on top of it. */}
-                <div
-                  className={
-                    mode === "canvas"
-                      ? "flex h-full min-h-0 flex-col"
-                      : "hidden"
-                  }
-                >
+                <div className="flex h-full min-h-0 flex-col">
                   {/* Canvas is preview-only: once the session's dev server is
                       serving, show it — even without a live-site domain (the
                       domain only drives the manifest page tree + publish). */}
@@ -238,14 +192,6 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
                   )}
                 </div>
 
-                {/* Mode overlays — mounted AFTER the canvas layer so its tree
-                    position (and the iframe) stays stable. */}
-                {mode === "settings" && !inAgency && (
-                  <div className="bg-background absolute inset-0 z-10 flex min-h-0">
-                    <SettingsMode />
-                  </div>
-                )}
-
                 {dragging && <div className="absolute inset-0 z-20" />}
               </div>
             </div>
@@ -253,13 +199,11 @@ function ShellBody({ inAgency }: { inAgency: boolean }) {
         </ResizablePanelGroup>
       </div>
 
-      {!inAgency && (
-        <ProjectSettingsDialog
-          projectId={projectId}
-          open={projectSettingsOpen}
-          onOpenChange={setProjectSettingsOpen}
-        />
-      )}
+      <ProjectSettingsDialog
+        projectId={projectId}
+        open={projectSettingsOpen}
+        onOpenChange={setProjectSettingsOpen}
+      />
 
       {/* Client guide — opened from the header's info button. */}
       <Sheet open={docsOpen} onOpenChange={setDocsOpen}>

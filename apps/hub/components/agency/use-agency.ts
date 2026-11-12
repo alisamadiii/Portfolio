@@ -13,18 +13,27 @@ export { agencyHref };
 export type AgencyClient = NonNullable<RouterOutputs["agency"]["project"]>;
 
 /**
- * The agency workspace of the current /p/[projectId] project. Only used inside
- * the @agency slot, which the project layout renders after seeding this query
- * (AgencySeed), so the data is always there on the first render.
+ * The agency data of the current /p/[projectId] project, or null when the
+ * site has none (no agency_client row / plan). The project layout seeds the
+ * query (AgencySeed) when it exists, so there is no loading flash.
  */
-export const useAgency = (): AgencyClient => {
+export const useAgencyOptional = (): AgencyClient | null => {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
   const { data } = useQuery(
     trpc.agency.project.queryOptions({ projectId }, { enabled: !!projectId })
   );
+  return data ?? null;
+};
+
+/**
+ * Same, but throws when missing. Only render consumers inside
+ * <AgencyBoundary>, which shows a paywall / empty state instead.
+ */
+export const useAgency = (): AgencyClient => {
+  const data = useAgencyOptional();
   if (!data) {
-    throw new Error("useAgency is only available inside the agency UI.");
+    throw new Error("useAgency is only available inside <AgencyBoundary>.");
   }
   return data;
 };

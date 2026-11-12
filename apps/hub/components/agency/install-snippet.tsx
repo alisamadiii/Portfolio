@@ -2,9 +2,9 @@
 
 import { toast } from "sonner";
 
-import { Button } from "@workspace/ui/components/button";
-
 import { useAgency } from "@/components/agency/use-agency";
+import { Button } from "@/components/ds/ui/button";
+import { Card, CardHeader } from "@/components/ds/ui/card";
 import { Copy } from "@/components/icon";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");
@@ -24,12 +24,12 @@ const EXAMPLE_FORM = `<form data-lead-form="Contact" data-success="Thanks! We'll
 function CopyBlock({ code }: { code: string }) {
   return (
     <div className="flex items-start gap-2">
-      <code className="bg-muted flex-1 rounded-md p-3 text-[12.5px] break-all whitespace-pre-wrap">
+      <code className="flex-1 rounded-inner border border-divider bg-canvas p-3 text-[12.5px] break-all whitespace-pre-wrap text-ink-2">
         {code}
       </code>
       <Button
-        variant="outline"
         size="sm"
+        aria-label="Copy"
         onClick={() =>
           navigator.clipboard.writeText(code).then(() => toast.success("Copied."))
         }
@@ -48,17 +48,17 @@ export function InstallSnippet() {
   const snippet = `<script src="${API_URL}/leads.js" data-key="${projectId}" defer></script>`;
 
   return (
-    <details className="bg-card rounded-lg border px-5 py-3 text-[14px]">
-      <summary className="cursor-pointer font-semibold">Lead capture setup</summary>
-      <div className="mt-3 space-y-3">
-        <p className="text-muted-foreground">
-          <span className="text-foreground font-medium">1. Add this tag to every page.</span>{" "}
+    <Card className="text-sm">
+      <CardHeader title="Lead capture setup" divided />
+      <div className="space-y-3 px-6 py-5">
+        <p className="text-dim">
+          <span className="font-medium text-ink">1. Add this tag to every page.</span>{" "}
           It remembers which ad or link brought the visitor, even if they
           browse around before submitting.
         </p>
         <CopyBlock code={snippet} />
-        <p className="text-muted-foreground">
-          <span className="text-foreground font-medium">
+        <p className="text-dim">
+          <span className="font-medium text-ink">
             2. Add <code>data-lead-form</code> to each form.
           </span>{" "}
           That attribute is the only required change: the script takes over the
@@ -66,7 +66,7 @@ export function InstallSnippet() {
           individual fields is needed.
         </p>
         <CopyBlock code={EXAMPLE_FORM} />
-        <p className="text-muted-foreground">
+        <p className="text-dim">
           Fields are recognized by each input&apos;s <code>name</code>{" "}
           attribute: <code>name</code>, <code>email</code>, <code>phone</code>{" "}
           and <code>message</code> (and common variants like{" "}
@@ -75,14 +75,14 @@ export function InstallSnippet() {
           contact details. Any other named input still comes through and shows
           on the lead as an extra field.
         </p>
-        <p className="text-muted-foreground">
+        <p className="text-dim">
           Optional: <code>data-success=&quot;…&quot;</code> changes the
           thank-you text, <code>data-redirect=&quot;/thank-you&quot;</code>{" "}
           sends the visitor to a page instead, and the hidden{" "}
           <code>_hp</code> input quietly filters out bots.
         </p>
-        <p className="text-muted-foreground">
-          <span className="text-foreground font-medium">
+        <p className="text-dim">
+          <span className="font-medium text-ink">
             Advanced: keep your own validation &amp; messages.
           </span>{" "}
           The script dispatches three cancelable events on the form so your page
@@ -90,7 +90,7 @@ export function InstallSnippet() {
           script still captures the lead. Call <code>preventDefault()</code> on an
           event to take over that step:
         </p>
-        <ul className="text-muted-foreground list-disc space-y-1 pl-5">
+        <ul className="text-dim list-disc space-y-1 pl-5">
           <li>
             <code>lead:beforesubmit</code> — fires before the request; cancel it
             to run your own validation and block the send.
@@ -106,13 +106,13 @@ export function InstallSnippet() {
             429 &quot;Too many requests.&quot;) to display.
           </li>
         </ul>
-        <p className="text-muted-foreground">
+        <p className="text-dim">
           The attribution, the honeypot, and any <code>data-conversion</code>{" "}
           still work the same — the conversion fires on every real success even
           when you handle the UI yourself. Leave the events alone and the built-in
           behavior above runs unchanged.
         </p>
       </div>
-    </details>
+    </Card>
   );
 }

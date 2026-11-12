@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { useTRPC } from "@workspace/trpc/client";
+
+import { Button } from "@/components/ds/ui/button";
+import { Card, CardHeader } from "@/components/ds/ui/card";
+import { Input } from "@/components/ds/ui/field";
 
 /**
  * Where this project's embed-form submissions (lead / booking / contact) are
@@ -45,15 +47,14 @@ export function NotifyEmailCard({ projectId }: { projectId: string }) {
   const saved = gate.data?.notifyEmail ?? "";
 
   return (
-    <div className="bg-card rounded-lg border p-4">
-      <h3 className="text-[16px] font-extrabold tracking-tight">
-        Notification email
-      </h3>
-      <p className="text-muted-foreground mt-1 text-[13px]">
-        Where lead form, booking and contact submissions are sent. Leave empty
-        to use the account email{user?.email ? ` (${user.email})` : ""}.
+    <Card>
+      <CardHeader title="Notification email" divided />
+      <div className="flex flex-col gap-3 px-6 py-5">
+      <p className="text-[13px] text-dim">
+        Where lead form and contact submissions are sent. Leave empty to use the
+        account email{user?.email ? ` (${user.email})` : ""}.
       </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           type="email"
           value={value}
@@ -66,13 +67,14 @@ export function NotifyEmailCard({ projectId }: { projectId: string }) {
           }}
         />
         <Button
-          isLoading={save.isPending}
-          disabled={gate.isPending || !dirty || value.trim() === saved}
+          variant="primary"
+          disabled={save.isPending || gate.isPending || !dirty || value.trim() === saved}
           onClick={() => save.mutate({ projectId, email: value.trim() })}
         >
-          Save
+          {save.isPending ? "Saving…" : "Save"}
         </Button>
       </div>
-    </div>
+      </div>
+    </Card>
   );
 }
