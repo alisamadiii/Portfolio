@@ -16,3 +16,12 @@ describe("appState", () => {
     expect(appState(leads, [], () => true)).toBe("included");
   });
 });
+
+describe("Google Calendar app", () => {
+  it("is included on every plan and opens /calendar", () => {
+    const gcal = appById("gcal")!;
+    expect(gcal.path).toBe("calendar");
+    expect(appState(gcal, [], () => false)).toBe("included");
+    expect(appState(gcal, ["gcal"], () => false)).toBe("installed");
+  });
+});

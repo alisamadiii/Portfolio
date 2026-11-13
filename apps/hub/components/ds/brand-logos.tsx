@@ -1,6 +1,6 @@
 // Third-party brand marks for apps whose logo users recognize (Google Ads,
-// Google Analytics, Resend). Full color, so they sit on a white tile, never a
-// coral one. Our own apps (Leads, Newsletter) keep their lucide icons.
+// Google Analytics, Google Calendar, Resend). Full color, so they sit on a
+// white tile, never a coral one. Our own apps (Leads, Newsletter) keep their lucide icons.
 
 type LogoProps = { className?: string };
 
@@ -43,6 +43,31 @@ export function ResendLogo({ className }: LogoProps) {
         fill="currentColor"
         d="M156.575 0c49.582 0 79.07 29.488 79.07 68.632 0 39.144-29.488 68.632-79.07 68.632h-25.052L256 256h-87.943l-94.728-90.03c-6.784-6.264-9.916-13.57-9.916-19.833 0-8.873 6.263-16.701 18.267-20.094l48.8-13.048c18.527-4.958 31.314-19.31 31.314-38.1 0-22.964-18.789-36.274-42.014-36.274H0V0h156.575z"
       />
+    </svg>
+  );
+}
+
+export function GoogleCalendarLogo({ className }: LogoProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <path fill="#fff" d="M18.3 5.7H5.7v12.6h12.6z" />
+      <path fill="#EA4335" d="M18.3 24 24 18.3h-5.7z" />
+      <path fill="#FBBC04" d="M24 5.7h-5.7v12.6H24z" />
+      <path fill="#34A853" d="M18.3 18.3H5.7V24h12.6z" />
+      <path fill="#188038" d="M0 18.3v3.8C0 23.1.9 24 1.9 24h3.8v-5.7z" />
+      <path fill="#1967D2" d="M24 5.7V1.9C24 .9 23.1 0 22.1 0h-3.8v5.7z" />
+      <path fill="#4285F4" d="M18.3 0H1.9C.9 0 0 .9 0 1.9v16.4h5.7V5.7h12.6z" />
+      <text
+        x="12"
+        y="16.2"
+        textAnchor="middle"
+        fontFamily="Arial, sans-serif"
+        fontSize="8"
+        fontWeight="700"
+        fill="#4285F4"
+      >
+        31
+      </text>
     </svg>
   );
 }

@@ -185,6 +185,11 @@ export const hubProject = pgTable(
     // project's Resend page right after the OAuth consent.
     resendConnectedUserId: text("resend_connected_user_id"),
     resendAccountId: text("resend_account_id"),
+    // The project's Google Calendar app: the Better Auth user.id who connected
+    // it + which of their Google accounts (account.account_id), since a user
+    // can link several. The dashboard reads calendars with that token.
+    gcalConnectedUserId: text("gcal_connected_user_id"),
+    gcalAccountId: text("gcal_account_id"),
     // Hidden row: an upload reserved but not yet finalized (legacy: old
     // delete tombstones). Every project listing filters hidden=false.
     hidden: boolean("hidden").notNull().default(false),

@@ -65,7 +65,9 @@ export function useInstalledApps(projectId: string) {
     netlify: !!row?.netlify,
     isLoaded: !!projects.data,
     isInstalled: (id: AppId) => installed.includes(id),
-    install: (id: AppId) => setApps.mutate({ projectId, apps: [...installed, id] }),
+    /** `onSuccess` runs once the app is saved (e.g. open its page). */
+    install: (id: AppId, opts?: { onSuccess?: () => void }) =>
+      setApps.mutate({ projectId, apps: [...installed, id] }, { onSuccess: opts?.onSuccess }),
     uninstall: (id: AppId) =>
       setApps.mutate({ projectId, apps: installed.filter((a) => a !== id) }),
     isPending: setApps.isPending,

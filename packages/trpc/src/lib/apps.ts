@@ -6,5 +6,6 @@ export const APP_IDS = [
   "newsletter",
   "google-ads",
   "resend",
+  "gcal",
 ] as const;
 export type AppId = (typeof APP_IDS)[number];

@@ -4,6 +4,7 @@ import {
   BarChart3,
   BookOpen,
   Building2,
+  CalendarDays,
   CreditCard,
   Gauge,
   Globe,
@@ -24,7 +25,12 @@ import { urls } from "@workspace/ui/lib/company";
 import type { AppId } from "@workspace/trpc/lib/apps";
 import { PLANS, type Feature } from "@workspace/trpc/lib/payment/plans";
 
-import { GoogleAdsLogo, GoogleAnalyticsLogo, ResendLogo } from "@/components/ds/brand-logos";
+import {
+  GoogleAdsLogo,
+  GoogleAnalyticsLogo,
+  GoogleCalendarLogo,
+  ResendLogo,
+} from "@/components/ds/brand-logos";
 
 export type { AppId };
 
@@ -32,8 +38,9 @@ export type { AppId };
  * ONE registry drives the project sidebar, the Apps page and Home's widgets.
  * Adding an app later = one entry here (+ its id in @workspace/trpc/lib/apps).
  *
- * Booking, chat, calls, ad campaigns and reports live in GoHighLevel, not
- * here. Don't add pages for them.
+ * Chat, calls, ad campaigns and reports live in GoHighLevel, not here.
+ * Don't add pages for them. (Google Calendar is a read-only dashboard of the
+ * client's own calendars, not a booking system.)
  */
 export type AppDef = {
   id: AppId;
@@ -96,6 +103,14 @@ export const APPS: AppDef[] = [
     icon: Send,
     logo: ResendLogo,
     path: "resend",
+  },
+  {
+    id: "gcal",
+    name: "Google Calendar",
+    description: "See your Google calendars and upcoming appointments in one place.",
+    icon: CalendarDays,
+    logo: GoogleCalendarLogo,
+    path: "calendar",
   },
 ];
 

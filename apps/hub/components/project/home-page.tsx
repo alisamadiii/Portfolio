@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ArrowUpRight, Building2, Sparkles } from "lucide-react";
@@ -37,6 +38,7 @@ export function HomePage() {
   const user = useCurrentUser().data?.user ?? null;
   const { entitlement, can } = useEntitlement(projectId || undefined);
   const { installed, install, isPending } = useInstalledApps(projectId);
+  const router = useRouter();
 
   const websiteUrl = project?.websiteUrl ?? null;
   const sites = useQuery(trpc.websites.getMine.queryOptions(undefined, { enabled: !!websiteUrl }));
@@ -267,7 +269,9 @@ export function HomePage() {
                       {lockedCta(app) === "upgrade" ? "Upgrade" : "Ask us"}
                     </ButtonLink>
                   ) : (
-                    <Button size="sm" onClick={() => install(app.id)} disabled={isPending}>
+                    <Button size="sm" onClick={() =>
+                        install(app.id, { onSuccess: () => router.push(`${base}/${app.path}`) })
+                      } disabled={isPending}>
                       Add
                     </Button>
                   )}

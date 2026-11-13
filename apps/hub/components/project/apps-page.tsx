@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { MoreHorizontal, Search } from "lucide-react";
 
 import {
@@ -36,6 +37,7 @@ export function AppsPage() {
   const projectId = useRouteProjectId();
   const { entitlement, can } = useEntitlement(projectId || undefined);
   const { installed, install, uninstall, isPending } = useInstalledApps(projectId);
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   // Adding is instant (optimistic), so it feels like nothing happened: hold a
@@ -47,7 +49,8 @@ export function AppsPage() {
     if (adding.includes(app.id)) return;
     setAdding((ids) => [...ids, app.id]);
     window.setTimeout(() => {
-      install(app.id);
+      // Land on the new app's page once it's saved.
+      install(app.id, { onSuccess: () => router.push(`${base}/${app.path}`) });
       setAdding((ids) => ids.filter((id) => id !== app.id));
     }, fakeAddDelay());
   };

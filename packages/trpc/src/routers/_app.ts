@@ -8,6 +8,7 @@ import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { deployRouter } from "./deploy";
 import { emailsRouter } from "./emails";
+import { gcalRouter } from "./gcal";
 import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
 import { netlifyRouter } from "./netlify";
@@ -43,6 +44,7 @@ export const appRouter = createTRPCRouter({
   agency: agencyRouter,
   netlify: netlifyRouter,
   resend: resendRouter,
+  gcal: gcalRouter,
 });
 
 // export type definition of API

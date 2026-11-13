@@ -21,9 +21,13 @@ export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 // Event CRUD on the user's calendars (we only touch `primary`) — narrower
 // than the full calendar scope, no calendar-list access needed.
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+// Full calendar access for the project's Google Calendar app: the calendar
+// list plus every calendar's events (verified scope).
+export const CALENDAR_FULL_SCOPE = "https://www.googleapis.com/auth/calendar";
 export type IntegrationId =
   | "google-analytics"
   | "google-calendar"
+  | "gcal"
   | "netlify"
   | "resend";
 
@@ -38,6 +42,8 @@ type IntegrationProvider = {
 export const INTEGRATIONS: IntegrationProvider[] = [
   { id: "google-analytics", providerId: "google", requiredScope: GA_SCOPE },
   { id: "google-calendar", providerId: "google", requiredScope: CALENDAR_SCOPE },
+  // Project Google Calendar app (lib/integrations/calendar, routers/gcal).
+  { id: "gcal", providerId: "google", requiredScope: CALENDAR_FULL_SCOPE },
   // Deploys upload projects to the user's own Netlify account (lib/netlify).
   { id: "netlify", providerId: "netlify" },
   // Client's Resend account: domains, recent emails, API keys (lib/resend).
@@ -60,7 +66,8 @@ export const scopeSatisfied = (
 ) =>
   !required ||
   (Array.isArray(required) ? required : [required]).every((entry) =>
-    scope?.includes(entry)
+    // Whole tokens: ".../auth/calendar" must not match ".../auth/calendar.events".
+    (scope ?? "").split(/[\s,]+/).includes(entry)
   );
 
 /**
@@ -72,13 +79,21 @@ export const scopeSatisfied = (
 export async function getConnectedAccount(
   userId: string,
   providerId: string,
-  requiredScope?: string | string[]
+  requiredScope?: string | string[],
+  /** Pin one linked account (a user can link several Google accounts). */
+  accountId?: string
 ): Promise<ConnectedAccount | null> {
   if (!userId) return null;
   const rows = await db
     .select({ accountId: account.accountId, scope: account.scope })
     .from(account)
-    .where(and(eq(account.userId, userId), eq(account.providerId, providerId)));
+    .where(
+      and(
+        eq(account.userId, userId),
+        eq(account.providerId, providerId),
+        accountId ? eq(account.accountId, accountId) : undefined
+      )
+    );
   if (!requiredScope) return rows[0] ?? null;
   return rows.find((row) => scopeSatisfied(row.scope, requiredScope)) ?? null;
 }
@@ -92,14 +107,16 @@ export async function getConnectedAccount(
 export async function getIntegrationAccessToken(
   userId: string,
   integrationId: IntegrationId,
-  errorName = "This integration"
+  errorName = "This integration",
+  accountId?: string
 ): Promise<string> {
   const integration = INTEGRATIONS.find((entry) => entry.id === integrationId);
   if (!integration) throw reconnectError(errorName);
   const connected = await getConnectedAccount(
     userId,
     integration.providerId,
-    integration.requiredScope
+    integration.requiredScope,
+    accountId
   );
   if (!connected) throw reconnectError(errorName);
   try {

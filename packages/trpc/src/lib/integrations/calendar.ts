@@ -114,3 +114,103 @@ export async function deleteLeadMeeting(input: {
   if (res.ok || res.status === 404 || res.status === 410) return;
   await throwCalendarError(res);
 }
+
+// ─── Project Google Calendar app (read-only dashboard) ───────────
+// The calendar list + events of the Google account bound to the project
+// (hub_project.gcalConnectedUserId + gcalAccountId), full calendar scope.
+
+const API = "https://www.googleapis.com/calendar/v3";
+
+export const gcalTokenFor = (userId: string, accountId: string) =>
+  getIntegrationAccessToken(userId, "gcal", "Google Calendar", accountId);
+
+type GoogleCalendarListEntry = {
+  id: string;
+  summary?: string;
+  summaryOverride?: string;
+  description?: string;
+  backgroundColor?: string;
+  primary?: boolean;
+  accessRole?: string;
+  timeZone?: string;
+  selected?: boolean;
+};
+
+export async function listCalendars(token: string) {
+  const data = await cal<{ items?: GoogleCalendarListEntry[] }>(
+    `${API}/users/me/calendarList?maxResults=250`,
+    token
+  );
+  return (data.items ?? []).map((c) => ({
+    id: c.id,
+    name: c.summaryOverride ?? c.summary ?? c.id,
+    description: c.description ?? null,
+    color: c.backgroundColor ?? null,
+    primary: !!c.primary,
+    accessRole: c.accessRole ?? null,
+    timeZone: c.timeZone ?? null,
+  }));
+}
+
+type GoogleEvent = {
+  id: string;
+  status?: string;
+  summary?: string;
+  location?: string;
+  htmlLink?: string;
+  hangoutLink?: string;
+  start?: { dateTime?: string; date?: string };
+  end?: { dateTime?: string; date?: string };
+  attendees?: { email?: string; displayName?: string; responseStatus?: string }[];
+  colorId?: string;
+};
+
+/** Events overlapping [from, to), recurring ones expanded, cancelled dropped. */
+export async function listEvents(token: string, calendarId: string, from: string, to: string) {
+  const items: GoogleEvent[] = [];
+  let pageToken: string | undefined;
+  // A week rarely needs more than one page; cap the walk anyway.
+  for (let page = 0; page < 5; page++) {
+    const params = new URLSearchParams({
+      timeMin: from,
+      timeMax: to,
+      singleEvents: "true",
+      orderBy: "startTime",
+      maxResults: "250",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+    const data = await cal<{ items?: GoogleEvent[]; nextPageToken?: string }>(
+      `${API}/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+      token
+    );
+    items.push(...(data.items ?? []));
+    pageToken = data.nextPageToken;
+    if (!pageToken) break;
+  }
+  return items
+    .filter((e) => e.status !== "cancelled")
+    .map((e) => ({
+      id: e.id,
+      title: e.summary ?? "(No title)",
+      location: e.location ?? null,
+      link: e.htmlLink ?? null,
+      meetLink: e.hangoutLink ?? null,
+      allDay: !e.start?.dateTime,
+      // All-day events carry dates ("2026-11-13"); timed ones full ISO.
+      start: e.start?.dateTime ?? e.start?.date ?? "",
+      end: e.end?.dateTime ?? e.end?.date ?? "",
+      attendees: (e.attendees ?? [])
+        .filter((a) => a.email)
+        .map((a) => ({ email: a.email!, name: a.displayName ?? null, response: a.responseStatus ?? null })),
+    }));
+}
+
+/** The Google account's email (userinfo), for the "Connected as" line. */
+export async function googleAccountEmail(token: string): Promise<string | null> {
+  const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { email?: string };
+  return data.email ?? null;
+}
