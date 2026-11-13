@@ -5,6 +5,7 @@ import {
   BookOpen,
   Building2,
   CalendarDays,
+  FileText,
   CreditCard,
   Gauge,
   Globe,
@@ -156,6 +157,8 @@ export const PROJECT_CORE: NavItem[] = [
   // Opens the AI Canvas editor (unchanged).
   { id: "website", label: "Website", icon: Globe, path: "website" },
   { id: "business-info", label: "Business info", icon: Building2, path: "business-info" },
+  // Appointment templates + "/" snippets with [[placeholders]].
+  { id: "templates", label: "Templates", icon: FileText, path: "templates" },
 ];
 
 /** Core link shown only once an upload project has published to Netlify. */

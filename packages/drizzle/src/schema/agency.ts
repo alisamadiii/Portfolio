@@ -219,6 +219,14 @@ export const agencyLead = pgTable(
     // New-lead and qualified uploads (Marketing > Conversions presets).
     adsUploads: jsonb("ads_uploads").$type<AgencyLeadUploads>(),
 
+    // One upcoming appointment per lead, booked on the project's connected
+    // Google Calendar (hub_project.gcal*). Rescheduling replaces the event.
+    meetingEventId: text("meeting_event_id"),
+    meetingCalendarId: text("meeting_calendar_id"),
+    meetingAt: timestamp("meeting_at"),
+    meetingEndAt: timestamp("meeting_end_at"),
+    meetingUrl: text("meeting_url"),
+
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -273,3 +281,33 @@ export const agencyRateLimit = pgTable(
   })
 );
 
+
+// Reusable text per project: "text" snippets (inserted with "/" in template-
+// aware text boxes) and "appointment" templates (title + body + length,
+// pre-filling the lead schedule form). Bodies may hold [[placeholders]]
+// (see @workspace/trpc/lib/templates-shared).
+export const AGENCY_TEMPLATE_KIND_VALUES = ["text", "appointment"] as const;
+export type AgencyTemplateKind = (typeof AGENCY_TEMPLATE_KIND_VALUES)[number];
+
+export const agencyTemplate = pgTable(
+  "agency_template",
+  {
+    id: serial("id").primaryKey(),
+    projectId: uuid("project_id").notNull(),
+    kind: text("kind").$type<AgencyTemplateKind>().notNull(),
+    name: text("name").notNull(),
+    // Appointment only: the event title and default length.
+    title: text("title"),
+    durationMinutes: integer("duration_minutes"),
+    body: text("body").notNull().default(""),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    idxProject: index("agency_template_project_idx").on(table.projectId, table.kind),
+  })
+);

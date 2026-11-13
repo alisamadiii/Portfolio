@@ -161,6 +161,7 @@ type GoogleEvent = {
   end?: { dateTime?: string; date?: string };
   attendees?: { email?: string; displayName?: string; responseStatus?: string }[];
   colorId?: string;
+  extendedProperties?: { private?: Record<string, string> };
 };
 
 /** Events overlapping [from, to), recurring ones expanded, cancelled dropped. */
@@ -200,6 +201,8 @@ export async function listEvents(token: string, calendarId: string, from: string
       attendees: (e.attendees ?? [])
         .filter((a) => a.email)
         .map((a) => ({ email: a.email!, name: a.displayName ?? null, response: a.responseStatus ?? null })),
+      // Booked from a hub lead (lead schedule): links the event back to it.
+      leadId: Number(e.extendedProperties?.private?.hubLeadId) || null,
     }));
 }
 
@@ -224,6 +227,8 @@ export type NewCalendarEvent = {
   guests: string[];
   /** Email the guests an invite (sendUpdates=all). */
   notifyGuests: boolean;
+  /** Hidden key/values on the event (e.g. the hub lead it was booked for). */
+  privateProps?: Record<string, string>;
 };
 
 /** Creates an event on one of the account's calendars. */
@@ -241,6 +246,7 @@ export async function createEvent(token: string, calendarId: string, input: NewC
         start: when(input.start),
         end: when(input.end),
         attendees: input.guests.length ? input.guests.map((email) => ({ email })) : undefined,
+        extendedProperties: input.privateProps ? { private: input.privateProps } : undefined,
       }),
     }
   );
@@ -248,4 +254,14 @@ export async function createEvent(token: string, calendarId: string, input: NewC
     throw new TRPCError({ code: "BAD_GATEWAY", message: "Google Calendar did not return an event id." });
   }
   return { id: event.id, link: event.htmlLink ?? null };
+}
+
+/** Deletes an event (emails guests when asked). Already-gone events are a success. */
+export async function deleteEvent(token: string, calendarId: string, eventId: string, notifyGuests = true) {
+  const res = await fetch(
+    `${API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?sendUpdates=${notifyGuests ? "all" : "none"}`,
+    { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (res.ok || res.status === 404 || res.status === 410) return;
+  await throwCalendarError(res);
 }

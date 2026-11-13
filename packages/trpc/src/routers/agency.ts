@@ -23,8 +23,10 @@ import { db } from "@workspace/drizzle/pool";
 import {
   AGENCY_LEAD_CHANNEL_VALUES,
   AGENCY_LEAD_STATUS_VALUES,
+  AGENCY_TEMPLATE_KIND_VALUES,
   agencyClient,
   agencyLead,
+  agencyTemplate,
   hubCollaborator,
   hubProject,
   subscriptions,
@@ -97,7 +99,13 @@ import {
   updateConversionAction,
   uploadConversion,
 } from "../lib/google-ads";
+import {
+  createEvent,
+  deleteEvent,
+  gcalTokenFor,
+} from "../lib/integrations/calendar";
 import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
+import { placeholderValues, resolveTemplate } from "../lib/templates-shared";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
 import { ensureStripeCustomer } from "./payments";
 
@@ -243,6 +251,41 @@ const hostOf = (url: string | null) => {
     return null;
   }
 };
+
+/** The project's Google Calendar token (the account bound in the Calendar app). */
+const projectCalendarToken = async (projectId: string) => {
+  const [row] = await db
+    .select({
+      userId: hubProject.gcalConnectedUserId,
+      accountId: hubProject.gcalAccountId,
+    })
+    .from(hubProject)
+    .where(eq(hubProject.id, projectId))
+    .limit(1);
+  if (!row?.userId || !row.accountId) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Connect Google Calendar first.",
+    });
+  }
+  return gcalTokenFor(row.userId, row.accountId);
+};
+
+const templateInput = z.object({
+  kind: z.enum(AGENCY_TEMPLATE_KIND_VALUES),
+  name: z.string().trim().min(1).max(80),
+  title: z.string().trim().max(200).optional(),
+  durationMinutes: z.number().int().min(15).max(480).optional(),
+  body: z.string().max(5000),
+});
+
+// Appointment-only fields are dropped on text snippets.
+const templateValues = (input: z.infer<typeof templateInput>) => ({
+  name: input.name,
+  body: input.body,
+  title: input.kind === "appointment" ? input.title || null : null,
+  durationMinutes: input.kind === "appointment" ? (input.durationMinutes ?? 30) : null,
+});
 
 const getLead = async (projectId: string, id: number) => {
   const lead = await db.query.agencyLead.findFirst({
@@ -585,6 +628,111 @@ const leadsRouter = createTRPCRouter({
         reportLeadStage(ctx.client, lead!, "qualified"),
       ]);
       return getLead(ctx.client.projectId, current.id);
+    }),
+
+  // Books an appointment for the lead on the project's connected Google
+  // Calendar. [[placeholders]] are filled here (same resolver as the hub's
+  // preview). Rescheduling replaces the lead's previous event. Scheduling a
+  // new lead marks it contacted.
+  scheduleMeeting: agencyWriteProcedure
+    .input(
+      z
+        .object({
+          id: z.number().int().positive(),
+          calendarId: z.string().min(1).max(500),
+          start: z.string().datetime({ offset: true }),
+          end: z.string().datetime({ offset: true }),
+          title: z.string().trim().min(1).max(200),
+          description: z.string().trim().max(5000).optional(),
+          location: z.string().trim().max(500).optional(),
+          notifyLead: z.boolean(),
+          timeZone: z.string().max(64).optional(),
+        })
+        .refine((v) => new Date(v.end) > new Date(v.start), {
+          message: "The meeting must end after it starts.",
+          path: ["end"],
+        })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const lead = await getLead(ctx.client.projectId, input.id);
+      const start = new Date(input.start);
+      if (start.getTime() < Date.now() - 60_000) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Pick a time in the future." });
+      }
+      const token = await projectCalendarToken(ctx.client.projectId);
+      const [project] = await db
+        .select({ websiteUrl: hubProject.websiteUrl })
+        .from(hubProject)
+        .where(eq(hubProject.id, ctx.client.projectId))
+        .limit(1);
+
+      let timeZone = input.timeZone;
+      try {
+        if (timeZone) new Intl.DateTimeFormat("en-US", { timeZone });
+      } catch {
+        timeZone = undefined;
+      }
+      const values = placeholderValues({
+        lead,
+        businessInfo: ctx.client.businessInfo,
+        websiteUrl: project?.websiteUrl,
+        myName: ctx.session.user.name,
+        meetingStart: start,
+        timeZone,
+      });
+      const fill = (text?: string) => (text ? resolveTemplate(text, values).text : undefined);
+
+      if (lead.meetingEventId && lead.meetingCalendarId) {
+        // Quiet delete: the lead gets the new invite, not a cancellation.
+        await deleteEvent(token, lead.meetingCalendarId, lead.meetingEventId, false);
+      }
+      const guests = input.notifyLead && lead.email ? [lead.email] : [];
+      const event = await createEvent(token, input.calendarId, {
+        title: fill(input.title)!,
+        description: fill(input.description),
+        location: fill(input.location),
+        start: input.start,
+        end: input.end,
+        allDay: false,
+        guests,
+        notifyGuests: guests.length > 0,
+        privateProps: { hubLeadId: String(lead.id), hubProjectId: ctx.client.projectId },
+      });
+
+      await db
+        .update(agencyLead)
+        .set({
+          meetingEventId: event.id,
+          meetingCalendarId: input.calendarId,
+          meetingAt: start,
+          meetingEndAt: new Date(input.end),
+          meetingUrl: event.link,
+          ...(lead.status === "new" && { status: "contacted" as const }),
+          ...(!lead.contactedAt && { contactedAt: new Date() }),
+        })
+        .where(eq(agencyLead.id, lead.id));
+      return getLead(ctx.client.projectId, lead.id);
+    }),
+
+  cancelMeeting: agencyWriteProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const lead = await getLead(ctx.client.projectId, input.id);
+      if (lead.meetingEventId && lead.meetingCalendarId) {
+        const token = await projectCalendarToken(ctx.client.projectId);
+        await deleteEvent(token, lead.meetingCalendarId, lead.meetingEventId, true);
+      }
+      await db
+        .update(agencyLead)
+        .set({
+          meetingEventId: null,
+          meetingCalendarId: null,
+          meetingAt: null,
+          meetingEndAt: null,
+          meetingUrl: null,
+        })
+        .where(eq(agencyLead.id, lead.id));
+      return getLead(ctx.client.projectId, lead.id);
     }),
 
   retryConversion: agencyWriteProcedure
@@ -1220,6 +1368,54 @@ export const agencyRouter = createTRPCRouter({
           .set({ origins: cleaned })
           .where(eq(hubProject.id, ctx.client.projectId));
         return cleaned;
+      }),
+  }),
+
+  // Reusable text per project: "/" snippets and appointment templates, with
+  // [[placeholders]] (lib/templates-shared).
+  templates: createTRPCRouter({
+    list: agencyProcedure.query(({ ctx }) =>
+      db
+        .select()
+        .from(agencyTemplate)
+        .where(eq(agencyTemplate.projectId, ctx.client.projectId))
+        .orderBy(agencyTemplate.kind, agencyTemplate.name)
+    ),
+    create: agencyWriteProcedure.input(templateInput).mutation(async ({ ctx, input }) => {
+      const [row] = await db
+        .insert(agencyTemplate)
+        .values({ ...templateValues(input), kind: input.kind, projectId: ctx.client.projectId, createdBy: ctx.session.user.id })
+        .returning();
+      return row!;
+    }),
+    update: agencyWriteProcedure
+      .input(templateInput.extend({ templateId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const [row] = await db
+          .update(agencyTemplate)
+          .set(templateValues(input))
+          .where(
+            and(
+              eq(agencyTemplate.id, input.templateId),
+              eq(agencyTemplate.projectId, ctx.client.projectId)
+            )
+          )
+          .returning();
+        if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Template not found." });
+        return row;
+      }),
+    remove: agencyWriteProcedure
+      .input(z.object({ templateId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        await db
+          .delete(agencyTemplate)
+          .where(
+            and(
+              eq(agencyTemplate.id, input.templateId),
+              eq(agencyTemplate.projectId, ctx.client.projectId)
+            )
+          );
+        return { ok: true };
       }),
   }),
 

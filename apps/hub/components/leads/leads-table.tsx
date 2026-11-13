@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { Inbox, Search } from "lucide-react";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -147,6 +147,20 @@ export function LeadsTable() {
       cell: (lead) => <LeadStatusBadge status={lead.status} />,
     },
     {
+      key: "meeting",
+      header: "Meeting",
+      width: "minmax(110px, 0.8fr)",
+      cell: (lead) =>
+        lead.meetingAt && new Date(lead.meetingAt) > new Date() ? (
+          <span className="flex flex-col">
+            <span className="text-ink">{format(new Date(lead.meetingAt), "EEE, MMM d")}</span>
+            <span className="text-xs text-dim">{format(new Date(lead.meetingAt), "h:mm a")}</span>
+          </span>
+        ) : (
+          <span className="text-faint">—</span>
+        ),
+    },
+    {
       key: "value",
       header: "Value",
       width: "minmax(90px, 0.6fr)",
@@ -219,7 +233,7 @@ export function LeadsTable() {
         columns={columns}
         rows={data?.rows ?? []}
         rowKey={(lead) => String(lead.id)}
-        minWidth={860}
+        minWidth={980}
         onRowClick={(lead) => router.push(`${base}/${lead.id}`)}
         empty={
           isLoading ? (

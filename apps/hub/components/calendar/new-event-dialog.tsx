@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, addHours, format, parse } from "date-fns";
 import { toast } from "sonner";
 
@@ -18,7 +18,8 @@ import {
 
 import { Button } from "@/components/ds/ui/button";
 import { DatePicker } from "@/components/ds/ui/date-picker";
-import { Field, Input, Select, Textarea } from "@/components/ds/ui/field";
+import { Field, Input, Select } from "@/components/ds/ui/field";
+import { TemplateTextarea } from "@/components/templates/template-textarea";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Calendar = RouterOutputs["gcal"]["calendars"][number];
@@ -75,6 +76,11 @@ export function NewEventDialog({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const options = writableCalendars(calendars);
+  // "/" snippets (projects without Leads have none: the query just fails).
+  const templates = useQuery(
+    trpc.agency.templates.list.queryOptions({ projectId }, { retry: false })
+  );
+  const snippets = (templates.data ?? []).filter((t) => t.kind === "text");
 
   const [title, setTitle] = useState("");
   const [calendarId, setCalendarId] = useState(
@@ -227,7 +233,13 @@ export function NewEventDialog({
             </label>
           )}
           <Field label="Description" optional>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={5000} />
+            <TemplateTextarea
+              value={description}
+              onValueChange={setDescription}
+              snippets={snippets}
+              placeholders={false}
+              maxLength={5000}
+            />
           </Field>
           {error && <p className="text-[13px] text-danger">{error}</p>}
         </form>

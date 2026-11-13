@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ExternalLink,
   MapPin,
+  UserRound,
   Users,
   Video,
   X,
@@ -51,7 +52,8 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { handleCmsError } from "@/lib/trpc-errors";
 
-import { Button, ButtonAnchor, IconButton } from "@/components/ds/ui/button";
+import { Button, ButtonAnchor, ButtonLink, IconButton } from "@/components/ds/ui/button";
+import { repoPath } from "@/lib/paths";
 
 import { darken, EVENT_COLORS, useEventColors } from "./event-colors";
 import { NewEventDialog, writableCalendars } from "./new-event-dialog";
@@ -629,8 +631,19 @@ export function CalendarWeek({
                 </span>
               </span>
             )}
-            {(selected.meetLink || selected.link) && (
+            {(selected.meetLink || selected.link || selected.leadId) && (
               <div className="flex flex-wrap gap-2">
+                {/* Booked from a lead in the hub: jump back to it. */}
+                {selected.leadId && (
+                  <ButtonLink
+                    size="sm"
+                    variant="primary"
+                    href={repoPath(projectId, `leads/${selected.leadId}`)}
+                    icon={<UserRound className="size-3.5" />}
+                  >
+                    Open lead
+                  </ButtonLink>
+                )}
                 {selected.meetLink && (
                   <ButtonAnchor
                     size="sm"

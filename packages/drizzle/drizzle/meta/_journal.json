@@ -330,6 +330,13 @@
       "when": 1794585652525,
       "tag": "0046_absent_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1794589706633,
+      "tag": "0047_redundant_talisman",
+      "breakpoints": true
     }
   ]
 }

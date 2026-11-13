@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentProps, ComponentPropsWithoutRef, ReactNode } from "react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -9,7 +9,8 @@ const control =
 export function Input({ className, ...p }: ComponentPropsWithoutRef<"input">) {
   return <input className={cn(control, "h-9", className)} {...p} />;
 }
-export function Textarea({ className, ...p }: ComponentPropsWithoutRef<"textarea">) {
+// Takes a ref (React 19 ref-as-prop): TemplateTextarea reads the caret.
+export function Textarea({ className, ...p }: ComponentProps<"textarea">) {
   return <textarea className={cn(control, "min-h-[76px] resize-y py-2.5 leading-relaxed", className)} {...p} />;
 }
 export function Select({ className, ...p }: ComponentPropsWithoutRef<"select">) {

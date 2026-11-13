@@ -10,18 +10,22 @@ import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { Textarea } from "@workspace/ui/components/textarea";
 import { cn } from "@workspace/ui/lib/utils";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { referrerHost } from "@workspace/trpc/lib/agency/lead-channel";
+import { placeholderValues, resolveTemplate } from "@workspace/trpc/lib/templates-shared";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
+import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import type { AgencyLeadStatus } from "@workspace/drizzle/schema";
 
+import { MeetingCard, ScheduleButton } from "@/components/agency/lead-meeting";
 import {
   MarkLostDialog,
   MarkWonDialog,
 } from "@/components/agency/lead-status-dialogs";
+import { TemplateTextarea } from "@/components/templates/template-textarea";
+import { useProject } from "@/hooks/use-project";
 import {
   CHANNEL_LABELS,
   ChannelBadge,
@@ -149,6 +153,12 @@ export function LeadDetail({ id }: { id: number }) {
     isLoading,
     error,
   } = useQuery(trpc.agency.leads.get.queryOptions({ projectId, id }));
+  // "/" snippets for the notes box.
+  const templates = useQuery(trpc.agency.templates.list.queryOptions({ projectId }));
+  const snippets = (templates.data ?? []).filter((t) => t.kind === "text");
+  const businessInfo = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
+  const websiteUrl = useProject()?.websiteUrl ?? null;
+  const myName = useCurrentUser().data?.user?.name ?? null;
 
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
@@ -217,6 +227,14 @@ export function LeadDetail({ id }: { id: number }) {
           ? formatMoney(lead.valueCents, lead.currency)
           : undefined,
     });
+  if (lead.meetingAt)
+    statusEvents.push({
+      at: lead.meetingAt,
+      title: new Date(lead.meetingAt) > new Date() ? "Meeting scheduled" : "Meeting",
+      extra: lead.meetingEndAt
+        ? `${format(new Date(lead.meetingAt), "p")} – ${format(new Date(lead.meetingEndAt), "p")}`
+        : undefined,
+    });
   if (lead.lostAt)
     statusEvents.push({
       at: lead.lostAt,
@@ -256,7 +274,8 @@ export function LeadDetail({ id }: { id: number }) {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {canEdit && <ScheduleButton projectId={projectId} lead={lead} onSaved={onSaved} />}
           {lead.phone && (
             <Button
               variant="outline"
@@ -412,6 +431,7 @@ export function LeadDetail({ id }: { id: number }) {
 
         {/* Right rail */}
         <aside className="bg-card ring-foreground/7 flex h-fit flex-col gap-4 rounded-[18px] p-6 shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1">
+          <MeetingCard projectId={projectId} lead={lead} canEdit={canEdit} onSaved={onSaved} />
           <div>
             <p className="text-[15px] font-semibold">Status</p>
             <div className="mt-2 grid grid-cols-3 gap-1.5">
@@ -470,12 +490,21 @@ export function LeadDetail({ id }: { id: number }) {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="lead-notes">Notes</Label>
-            <Textarea
+            <TemplateTextarea
               id="lead-notes"
               rows={4}
               value={notes}
               disabled={!canEdit}
-              onChange={(event) => setNotes(event.target.value)}
+              onValueChange={setNotes}
+              snippets={snippets}
+              placeholders={false}
+              placeholder={snippets.length ? "Type / for a snippet" : undefined}
+              resolve={(text) =>
+                resolveTemplate(
+                  text,
+                  placeholderValues({ lead, businessInfo: businessInfo.data, websiteUrl, myName })
+                ).text
+              }
             />
           </div>
 

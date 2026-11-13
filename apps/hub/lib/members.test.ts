@@ -52,12 +52,14 @@ describe("projectCoreNav", () => {
       "home",
       "website",
       "business-info",
+      "templates",
       "members",
     ]);
     expect(ids({ netlify: true, members: true })).toEqual([
       "home",
       "website",
       "business-info",
+      "templates",
       "members",
       "netlify",
     ]);

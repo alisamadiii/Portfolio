@@ -11,6 +11,11 @@ import { Field, Input, Textarea } from "@/components/ds/ui/field";
 
 const KEYS = [
   { key: "website", initial: 1 },
+  // Contact details: [[business phone/address/hours]] in templates and the
+  // default location of appointments booked from Leads.
+  { key: "businessPhone", initial: 1 },
+  { key: "businessAddress", initial: 1 },
+  { key: "businessHours", initial: 1 },
   { key: "productDescription", initial: 1 },
   { key: "features", initial: 4 },
   { key: "goal", initial: 1 },
@@ -20,6 +25,7 @@ const USED_IN = [
   "The audience prompt in step 2",
   "Your tagline options in step 4",
   "Every search ad in step 7",
+  "Templates and appointments booked from Leads",
 ];
 
 export function StepBusiness() {
@@ -50,6 +56,32 @@ export function StepBusiness() {
             <Input
               value={bi.draft.website?.[0] ?? ""}
               onChange={(e) => bi.setRow("website", 0, e.target.value)}
+            />
+          </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Phone" optional>
+              <Input
+                type="tel"
+                value={bi.draft.businessPhone?.[0] ?? ""}
+                placeholder="(555) 123-4567"
+                onChange={(e) => bi.setRow("businessPhone", 0, e.target.value)}
+              />
+            </Field>
+            <Field label="Opening hours" optional>
+              <Input
+                value={bi.draft.businessHours?.[0] ?? ""}
+                placeholder="Mon to Fri, 9am to 5pm"
+                onChange={(e) => bi.setRow("businessHours", 0, e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <Field label="Address" optional hint="Used as the location of appointments you book from Leads.">
+            <Input
+              value={bi.draft.businessAddress?.[0] ?? ""}
+              placeholder="123 Main St, Orlando, FL 32801"
+              onChange={(e) => bi.setRow("businessAddress", 0, e.target.value)}
             />
           </Field>
 
