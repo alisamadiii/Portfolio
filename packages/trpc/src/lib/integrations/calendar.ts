@@ -116,8 +116,9 @@ export async function deleteLeadMeeting(input: {
 }
 
 // ─── Project Google Calendar app (read-only dashboard) ───────────
-// The calendar list + events of the Google account bound to the project
-// (hub_project.gcalConnectedUserId + gcalAccountId), full calendar scope.
+// Calendars + events of the Google account bound to the project (hub_project
+// .gcalConnectedUserId + gcalAccountId): calendar.calendarlist.readonly for
+// the list, the verified calendar.events for every calendar's events.
 
 const API = "https://www.googleapis.com/calendar/v3";
 
@@ -132,8 +133,6 @@ type GoogleCalendarListEntry = {
   backgroundColor?: string;
   primary?: boolean;
   accessRole?: string;
-  timeZone?: string;
-  selected?: boolean;
 };
 
 export async function listCalendars(token: string) {
@@ -148,7 +147,6 @@ export async function listCalendars(token: string) {
     color: c.backgroundColor ?? null,
     primary: !!c.primary,
     accessRole: c.accessRole ?? null,
-    timeZone: c.timeZone ?? null,
   }));
 }
 
@@ -213,4 +211,41 @@ export async function googleAccountEmail(token: string): Promise<string | null> 
   if (!res.ok) return null;
   const data = (await res.json()) as { email?: string };
   return data.email ?? null;
+}
+
+export type NewCalendarEvent = {
+  title: string;
+  description?: string;
+  location?: string;
+  /** Timed: full ISO with offset. All day: "YYYY-MM-DD" (end exclusive). */
+  start: string;
+  end: string;
+  allDay: boolean;
+  guests: string[];
+  /** Email the guests an invite (sendUpdates=all). */
+  notifyGuests: boolean;
+};
+
+/** Creates an event on one of the account's calendars. */
+export async function createEvent(token: string, calendarId: string, input: NewCalendarEvent) {
+  const when = (value: string) => (input.allDay ? { date: value } : { dateTime: value });
+  const event = await cal<{ id?: string; htmlLink?: string }>(
+    `${API}/calendars/${encodeURIComponent(calendarId)}/events?sendUpdates=${input.notifyGuests ? "all" : "none"}`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        summary: input.title,
+        description: input.description || undefined,
+        location: input.location || undefined,
+        start: when(input.start),
+        end: when(input.end),
+        attendees: input.guests.length ? input.guests.map((email) => ({ email })) : undefined,
+      }),
+    }
+  );
+  if (!event.id) {
+    throw new TRPCError({ code: "BAD_GATEWAY", message: "Google Calendar did not return an event id." });
+  }
+  return { id: event.id, link: event.htmlLink ?? null };
 }

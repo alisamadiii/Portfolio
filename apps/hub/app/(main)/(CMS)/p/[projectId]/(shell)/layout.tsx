@@ -24,11 +24,13 @@ export default function ProjectShellLayout({ children }: { children: React.React
   const { installed, netlify } = useInstalledApps(projectId);
   const pathname = usePathname() ?? "";
   const wide = pathname.includes("/business-info/");
+  const bleed = pathname.endsWith("/calendar");
 
   const name = siteName(project?.websiteUrl) ?? project?.repo ?? "Site";
   return (
     <AppShell
       wide={wide}
+      bleed={bleed}
       topBar={
         <TopBar
           project={{ projectId, name, plan: mounted ? entitlement?.label : undefined }}

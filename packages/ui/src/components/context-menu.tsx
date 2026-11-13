@@ -1,25 +1,28 @@
 "use client";
 
 import * as React from "react";
+import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 
 import { cn } from "@workspace/ui/lib/utils";
 
-function ContextMenu({ children, ...props }: MenuPrimitive.Root.Props) {
+// Right-click (long-press on touch) opens it: Base UI's ContextMenu root +
+// trigger; everything inside is the regular Menu parts.
+function ContextMenu({ children, ...props }: ContextMenuPrimitive.Root.Props) {
   return (
-    <MenuPrimitive.Root data-slot="context-menu" {...props}>
+    <ContextMenuPrimitive.Root data-slot="context-menu" {...props}>
       {children}
-    </MenuPrimitive.Root>
+    </ContextMenuPrimitive.Root>
   );
 }
 
 function ContextMenuTrigger({
   className,
   ...props
-}: MenuPrimitive.Trigger.Props) {
+}: ContextMenuPrimitive.Trigger.Props) {
   return (
-    <MenuPrimitive.Trigger
+    <ContextMenuPrimitive.Trigger
       data-slot="context-menu-trigger"
       className={className}
       {...props}

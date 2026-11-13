@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { usePathname } from "next/navigation";
 
 import { Sheet, SheetContent, SheetTitle } from "@workspace/ui/components/sheet";
+import { cn } from "@workspace/ui/lib/utils";
 
 const NavDrawerContext = createContext<{ open: () => void } | null>(null);
 
@@ -21,12 +22,15 @@ export function AppShell({
   sidebar,
   children,
   wide,
+  bleed,
 }: {
   topBar: ReactNode;
   sidebar: ReactNode;
   children: ReactNode;
   /** Business info steps use the full width. */
   wide?: boolean;
+  /** Edge to edge, one viewport tall (the page scrolls inside itself): Calendar. */
+  bleed?: boolean;
 }) {
   const [drawer, setDrawer] = useState(false);
   const pathname = usePathname();
@@ -35,15 +39,24 @@ export function AppShell({
 
   return (
     <NavDrawerContext.Provider value={{ open: () => setDrawer(true) }}>
-      <div className="flex min-h-screen flex-col bg-canvas font-sans text-sm text-ink">
+      <div
+        className={cn(
+          "flex flex-col bg-canvas font-sans text-sm text-ink",
+          bleed ? "h-dvh overflow-hidden" : "min-h-screen"
+        )}
+      >
         {topBar}
-        <div className="flex flex-1">
+        <div className={cn("flex flex-1", bleed && "min-h-0")}>
           <div className="hidden w-[232px] shrink-0 md:flex">{sidebar}</div>
-          <main className="min-w-0 flex-1 px-4 pb-12 pt-6 sm:px-10 sm:pt-8">
-            <div className={wide ? "flex flex-col gap-5" : "mx-auto flex max-w-[1120px] flex-col gap-5"}>
-              {children}
-            </div>
-          </main>
+          {bleed ? (
+            <main className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</main>
+          ) : (
+            <main className="min-w-0 flex-1 px-4 pb-12 pt-6 sm:px-10 sm:pt-8">
+              <div className={wide ? "flex flex-col gap-5" : "mx-auto flex max-w-[1120px] flex-col gap-5"}>
+                {children}
+              </div>
+            </main>
+          )}
         </div>
       </div>
       <Sheet open={drawer} onOpenChange={setDrawer}>

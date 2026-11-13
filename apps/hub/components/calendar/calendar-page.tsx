@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronRight } from "lucide-react";
-import { AnimatePresence } from "motion/react";
-import { parseAsString, useQueryState } from "nuqs";
+import { CalendarDays } from "lucide-react";
+import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { toast } from "sonner";
 
 import { authClient } from "@workspace/auth/auth-client";
@@ -13,27 +12,41 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { GoogleCalendarLogo } from "@/components/ds/brand-logos";
 import { PageHeader } from "@/components/ds/layout/page-header";
-import { Badge } from "@/components/ds/ui/badge";
 import { Button } from "@/components/ds/ui/button";
-import { Card, CardHeader } from "@/components/ds/ui/card";
+import { Card } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
-import { CalendarFullscreen } from "./calendar-fullscreen";
+import { CalendarWeek } from "./calendar-week";
 
-const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar";
+// Verified calendar.events (shared with the leads scheduler) + the
+// non-sensitive calendar list.
+const CALENDAR_SCOPES = [
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+];
 
-/** Project Google Calendar app: connect Google, list calendars, open one full screen. */
+/** Padded column for the connect / loading / error states (the shell is edge to edge here). */
+function Padded({ children }: { children: ReactNode }) {
+  return (
+    <div className="min-h-0 flex-1 overflow-auto px-4 pb-12 pt-6 sm:px-10 sm:pt-8">
+      <div className="mx-auto flex max-w-[1120px] flex-col gap-6">{children}</div>
+    </div>
+  );
+}
+
+/** Project Google Calendar app: connect Google, then a week view filling the page. */
 export function CalendarPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const projectId = useRouteProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [returned, setReturned] = useQueryState("gcal", parseAsString);
-  const [openId, setOpenId] = useQueryState("calendar", parseAsString);
+  // Calendars unticked in the picker (empty = show them all), kept in the URL.
+  const [hidden, setHidden] = useQueryState("hide", parseAsArrayOf(parseAsString).withDefault([]));
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   const status = useQuery(trpc.gcal.status.queryOptions({ projectId }));
@@ -59,7 +72,7 @@ export function CalendarPage() {
   const disconnect = useMutation(
     trpc.gcal.disconnect.mutationOptions({
       onSuccess: () => {
-        void setOpenId(null);
+        void setHidden(null);
         refresh();
       },
       onError: (error) => toast.error(handleCmsError(error, "Couldn't disconnect Google Calendar.")),
@@ -80,33 +93,11 @@ export function CalendarPage() {
     url.searchParams.set("gcal", "connected");
     const { error } = await authClient.linkSocial({
       provider: "google",
-      scopes: [CALENDAR_SCOPE],
+      scopes: CALENDAR_SCOPES,
       callbackURL: url.toString(),
     });
     if (error) toast.error(error.message ?? "Couldn't start Google sign-in.");
   };
-
-  const header = (
-    <PageHeader
-      title="Google Calendar"
-      description={
-        status.data?.email
-          ? `Connected as ${status.data.email}.`
-          : "Your calendars and upcoming appointments, right in the hub."
-      }
-      actions={
-        connected && fullAccess ? (
-          <Button
-            variant="ghost"
-            onClick={() => setConfirmDisconnect(true)}
-            disabled={disconnect.isPending}
-          >
-            {disconnect.isPending ? "Disconnecting…" : "Disconnect"}
-          </Button>
-        ) : undefined
-      }
-    />
-  );
 
   const disconnectDialog = (
     <ConfirmDialog
@@ -120,18 +111,25 @@ export function CalendarPage() {
     />
   );
 
-  if (status.isPending) {
+  const header = (
+    <PageHeader
+      title="Google Calendar"
+      description="Your calendars and upcoming appointments, right in the hub."
+    />
+  );
+
+  if (status.isPending || (connected && calendars.isPending)) {
     return (
-      <div className="flex flex-col gap-6">
+      <Padded>
         {header}
-        <Skeleton className="h-[280px] rounded-card" />
-      </div>
+        <Skeleton className="h-[420px] rounded-card" />
+      </Padded>
     );
   }
 
   if (!connected) {
     return (
-      <div className="flex flex-col gap-6">
+      <Padded>
         {header}
         <Card>
           <EmptyState
@@ -155,76 +153,68 @@ export function CalendarPage() {
             }
           />
         </Card>
-      </div>
+      </Padded>
     );
   }
 
-  const open = calendars.data?.find((c) => c.id === openId) ?? null;
-
-  return (
-    <div className="flex flex-col gap-6">
-      {header}
-      {disconnectDialog}
-      <Card>
-        <CardHeader title="Calendars" divided />
-        {calendars.isPending ? (
-          <Skeleton className="m-6 h-[160px]" />
-        ) : calendars.isError ? (
+  if (calendars.isError) {
+    return (
+      <Padded>
+        {header}
+        {disconnectDialog}
+        <Card>
           <EmptyState
             icon={<CalendarDays className="size-5" />}
             title="Couldn't load your calendars"
             text={handleCmsError(calendars.error, "Google didn't answer. Try again in a moment.")}
             action={
               fullAccess && (
-                <Button variant="primary" onClick={() => void startConnect()}>
-                  Reconnect Google Calendar
-                </Button>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Button variant="primary" onClick={() => void startConnect()}>
+                    Reconnect Google Calendar
+                  </Button>
+                  <Button variant="ghost" onClick={() => setConfirmDisconnect(true)}>
+                    Disconnect
+                  </Button>
+                </div>
               )
             }
           />
-        ) : calendars.data.length === 0 ? (
-          <p className="px-6 py-8 text-center text-[13px] text-dim">No calendars in this Google account.</p>
-        ) : (
-          <ul className="flex flex-col">
-            {calendars.data.map((c) => (
-              <li key={c.id} className="border-b border-divider last:border-b-0">
-                <button
-                  type="button"
-                  onClick={() => void setOpenId(c.id)}
-                  className="flex w-full items-center gap-3 px-6 py-3.5 text-left transition-colors hover:bg-sidebar"
-                >
-                  <span
-                    className="size-3 shrink-0 rounded-full bg-faint"
-                    style={c.color ? { backgroundColor: c.color } : undefined}
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-medium text-ink">{c.name}</span>
-                    {c.description && (
-                      <span className="truncate text-[13px] text-dim">{c.description}</span>
-                    )}
-                  </span>
-                  {c.primary && <Badge tone="info">Main</Badge>}
-                  {c.accessRole === "reader" || c.accessRole === "freeBusyReader" ? (
-                    <Badge tone="neutral">View only</Badge>
-                  ) : null}
-                  <ChevronRight className="size-4 shrink-0 text-faint" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+        </Card>
+      </Padded>
+    );
+  }
 
-      <AnimatePresence>
-        {open && (
-          <CalendarFullscreen
-            key={open.id}
-            projectId={projectId}
-            calendar={open}
-            onClose={() => void setOpenId(null)}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+  const list = calendars.data ?? [];
+  return (
+    <>
+      {disconnectDialog}
+      <CalendarWeek
+        projectId={projectId}
+        calendars={list}
+        shown={list.map((c) => c.id).filter((id) => !hidden.includes(id))}
+        onShownChange={(ids) => void setHidden(list.map((c) => c.id).filter((id) => !ids.includes(id)))}
+        canCreate={fullAccess}
+        actions={
+          <>
+            {status.data?.email && (
+              <span className="hidden max-w-[220px] truncate text-[13px] text-dim lg:inline">
+                {status.data.email}
+              </span>
+            )}
+            {fullAccess && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setConfirmDisconnect(true)}
+                disabled={disconnect.isPending}
+              >
+                {disconnect.isPending ? "Disconnecting…" : "Disconnect"}
+              </Button>
+            )}
+          </>
+        }
+      />
+    </>
   );
 }
