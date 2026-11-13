@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRepo } from "@/hooks/use-repo";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -18,6 +18,8 @@ import {
 import { Button } from "@workspace/ui/components/button";
 
 import { useTRPC } from "@workspace/trpc/client";
+
+import { INTEGRATION_APPS } from "@/lib/integrations";
 
 import { roleAtLeast } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
@@ -100,6 +102,19 @@ export function SessionActions() {
   const busy = transcriptBusy(transcriptQuery.data);
 
   const [confirmPublish, setConfirmPublish] = useState(false);
+  // Upload projects deploy to Netlify: the dialog says where.
+  const netlifyTarget = useQuery(
+    trpc.netlify.target.queryOptions(
+      { projectId },
+      { enabled: confirmPublish && source === "upload" }
+    )
+  );
+  const connectNetlify = async () => {
+    const app = INTEGRATION_APPS.find((a) => a.id === "netlify");
+    const error = await app?.connect(window.location.href);
+    if (error) toast.error(error.message ?? "Couldn't connect Netlify.");
+  };
+
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   const TERMINAL_STATUSES = [
@@ -152,9 +167,31 @@ export function SessionActions() {
           <AlertDialogHeader>
             <AlertDialogTitle>Publish these changes?</AlertDialogTitle>
             <AlertDialogDescription>
-              Everything you see in the preview goes live on your website.
+              {netlifyTarget.data?.siteUrl
+                ? `Everything you see in the preview goes live on ${netlifyTarget.data.siteUrl.replace(/^https?:\/\//, "")}.`
+                : "Everything you see in the preview goes live on your website."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {netlifyTarget.data && !netlifyTarget.data.siteUrl && (
+            <p className="text-sm text-muted-foreground">
+              {netlifyTarget.data.ownedByAgency ? (
+                <>
+                  Your website will be hosted on our agency&apos;s Netlify account.
+                  Want it on your own Netlify account instead?{" "}
+                  <button
+                    type="button"
+                    className="font-medium text-foreground underline underline-offset-2"
+                    onClick={() => void connectNetlify()}
+                  >
+                    Connect Netlify
+                  </button>{" "}
+                  before publishing.
+                </>
+              ) : (
+                "Your website will be published to your own Netlify account."
+              )}
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel>Keep editing</AlertDialogCancel>
             <AlertDialogAction

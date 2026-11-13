@@ -6,6 +6,7 @@ import { hubProject } from "@workspace/drizzle/schema";
 
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
 import { latestNetlifyDeploy } from "../lib/content-pilot";
+import { getConnectedAccount } from "../lib/integrations";
 import {
   deployProjectToNetlify,
   getNetlifySite,
@@ -31,6 +32,20 @@ const projectNetlify = async (projectId: string) => {
 };
 
 export const netlifyRouter = createTRPCRouter({
+  // Where Publish will deploy, for the confirm dialog. DB only, no Netlify call.
+  target: cmsProcedure.query(async ({ ctx }) => {
+    const project = await projectNetlify(ctx.projectId);
+    const connected = !!(await getConnectedAccount(ctx.user.id, "netlify"));
+    return {
+      siteUrl: project.netlifySiteUrl,
+      // Existing site: who owns it. New site: the caller's Netlify if linked.
+      ownedByAgency: project.netlifySiteId
+        ? !project.netlifyConnectedUserId
+        : !connected,
+      connected,
+    };
+  }),
+
   overview: cmsProcedure.query(async ({ ctx }) => {
     const project = await projectNetlify(ctx.projectId);
     if (!project.netlifySiteId) return null;
