@@ -302,6 +302,27 @@
       "when": 1794578607230,
       "tag": "0042_faulty_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1794582522687,
+      "tag": "0043_curious_earthquake",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794583095350,
+      "tag": "0044_perfect_blizzard",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794583906264,
+      "tag": "0045_thankful_pandemic",
+      "breakpoints": true
     }
   ]
 }

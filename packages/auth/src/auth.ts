@@ -17,6 +17,19 @@ import MagicLink from "@workspace/email/emails/magic-link";
 import ResetPassword from "@workspace/email/emails/reset-password";
 import VerifyEmail from "@workspace/email/emails/verify-email";
 
+/** JWT payload without verification (the token came straight from the issuer). */
+const decodeJwtPayload = (
+  token: string | undefined
+): Record<string, unknown> | null => {
+  try {
+    const payload = token?.split(".")[1];
+    if (!payload) return null;
+    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  } catch {
+    return null;
+  }
+};
+
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   database: drizzleAdapter(db, {
@@ -42,9 +55,11 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "github", "netlify"],
+      trustedProviders: ["google", "github", "netlify", "resend"],
       allowDifferentEmails: true,
-      updateUserInfoOnLink: true,
+      // Linking an account (Google, GitHub, Netlify, Resend…) never touches
+      // the user row: name/image change only from Account settings.
+      updateUserInfoOnLink: false,
     },
   },
   user: {
@@ -155,16 +170,37 @@ export const auth = betterAuth({
             const profile = (await res.json()) as {
               id: string;
               email: string;
-              full_name?: string | null;
-              avatar_url?: string | null;
             };
-            return {
-              id: profile.id,
-              email: profile.email,
-              name: profile.full_name ?? profile.email,
-              image: profile.avatar_url ?? undefined,
-              emailVerified: true,
-            };
+            // Identity only: the user row is never updated from a link.
+            return { id: profile.id, email: profile.email, emailVerified: true };
+          },
+        },
+        // Resend: link-only, OAuth 2.1 + PKCE. Access tokens live 15 minutes;
+        // refresh tokens rotate on every use (Better Auth stores the new one).
+        // full_access lets the hub read domains/emails and mint API keys.
+        {
+          providerId: "resend",
+          clientId: process.env.RESEND_CLIENT_ID ?? "",
+          clientSecret: process.env.RESEND_CLIENT_SECRET ?? "",
+          authorizationUrl: "https://api.resend.com/oauth/authorize",
+          tokenUrl: "https://api.resend.com/oauth/token",
+          scopes: ["full_access"],
+          pkce: true,
+          // Always show Resend's consent screen: each project links its own team.
+          prompt: "consent",
+          authentication: "post",
+          disableSignUp: true,
+          // No userinfo endpoint: identify the grant from the access-token JWT.
+          getUserInfo: async (tokens) => {
+            const claims = decodeJwtPayload(tokens.accessToken);
+            const id = String(claims?.team_id ?? claims?.sub ?? "");
+            if (!id) return null;
+            const email =
+              typeof claims?.email === "string"
+                ? claims.email
+                : `resend-${id}@users.noreply.alisamadii.com`;
+            // Identity only: the user row is never updated from a link.
+            return { id, email, emailVerified: true };
           },
         },
       ],

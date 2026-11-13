@@ -31,6 +31,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { Button } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
+import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Field, Select } from "@/components/ds/ui/field";
 import { EmptyState, IconTile, KpiGrid } from "@/components/ds/ui/misc";
@@ -124,6 +125,7 @@ export function AnalyticsPage() {
       onError: (error) => toast.error(error.message),
     })
   );
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const disconnect = useMutation(
     trpc.analytics.disconnect.mutationOptions({
       onSuccess: () => {
@@ -204,9 +206,18 @@ export function AnalyticsPage() {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button size="sm" variant="ghost" disabled={disconnect.isPending} onClick={() => disconnect.mutate({ projectId })}>
+      <Button size="sm" variant="ghost" disabled={disconnect.isPending} onClick={() => setConfirmDisconnect(true)}>
         Disconnect
       </Button>
+      <ConfirmDialog
+        open={confirmDisconnect}
+        onOpenChange={setConfirmDisconnect}
+        title="Disconnect Google Analytics?"
+        description="This project stops showing analytics until a property is connected again. Nothing changes in Google Analytics itself."
+        confirmLabel="Disconnect"
+        danger
+        onConfirm={() => disconnect.mutate({ projectId })}
+      />
     </div>
   );
 

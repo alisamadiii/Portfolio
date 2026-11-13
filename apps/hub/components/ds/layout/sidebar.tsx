@@ -1,8 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
 import { ArrowUpRight, CircleHelp } from "lucide-react";
 
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
@@ -38,13 +38,17 @@ export function SidebarLink({
   muted?: boolean;
 }) {
   const Icon = item.icon;
+  const Logo = item.logo;
   return (
     <Link
       href={href}
       target={item.external ? "_blank" : undefined}
       rel={item.external ? "noopener noreferrer" : undefined}
       aria-current={active ? "page" : undefined}
-      className={cn(linkClass(active, muted), item.external && "justify-between")}
+      className={cn(
+        linkClass(active, muted),
+        item.external && "justify-between"
+      )}
     >
       {item.external ? (
         <>
@@ -53,12 +57,16 @@ export function SidebarLink({
         </>
       ) : (
         <>
-          {Icon && (
-            <Icon
-              className={cn("size-4", active && "text-coral")}
-              strokeWidth={active ? 2 : 1.8}
-              aria-hidden
-            />
+          {Logo ? (
+            <Logo className="size-4" />
+          ) : (
+            Icon && (
+              <Icon
+                className={cn("size-4", active && "text-coral")}
+                strokeWidth={active ? 2 : 1.8}
+                aria-hidden
+              />
+            )
           )}
           {item.label}
         </>
@@ -67,16 +75,28 @@ export function SidebarLink({
   );
 }
 
-export function SidebarSection({ label, children }: { label?: string; children: ReactNode }) {
+export function SidebarSection({
+  label,
+  children,
+}: {
+  label?: string;
+  children: ReactNode;
+}) {
   return (
     <>
-      {label && <div className="px-2.5 pb-1.5 pt-4 text-xs font-medium text-dim">{label}</div>}
+      {label && (
+        <div className="text-dim px-2.5 pt-4 pb-1.5 text-xs font-medium">
+          {label}
+        </div>
+      )}
       {children}
     </>
   );
 }
 
-export const SidebarDivider = () => <div className="mx-2.5 my-3 h-px bg-line" />;
+export const SidebarDivider = () => (
+  <div className="bg-line mx-2.5 my-3 h-px" />
+);
 
 /** Bottom "Contact support" row: opens the support request dialog (which renders the <button>). */
 function SupportLink() {
@@ -90,11 +110,17 @@ function SupportLink() {
   );
 }
 
-export function Sidebar({ label, children }: { label: string; children: ReactNode }) {
+export function Sidebar({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <nav
       aria-label={label}
-      className="flex w-full flex-col gap-0.5 self-start overflow-y-auto border-r border-line bg-sidebar px-3 py-4 md:sticky md:top-14 md:h-[calc(100dvh-3.5rem)]"
+      className="border-line bg-sidebar flex w-full flex-col gap-0.5 self-start overflow-y-auto border-r px-3 py-4 md:sticky md:top-14 md:h-[calc(100dvh-3.5rem)]"
     >
       {children}
       <div className="min-h-6 flex-1" />
@@ -108,6 +134,8 @@ export function useIsActive() {
   const pathname = usePathname() ?? "";
   return (href: string, exact = false) => {
     const path = href.split("?")[0] ?? href;
-    return exact ? pathname === path : pathname === path || pathname.startsWith(path + "/");
+    return exact
+      ? pathname === path
+      : pathname === path || pathname.startsWith(path + "/");
   };
 }

@@ -15,6 +15,7 @@ import { paymentsRouter } from "./payments";
 import { plansRouter } from "./plans";
 import { productsRouter } from "./products";
 import { projectRouter } from "./project";
+import { resendRouter } from "./resend";
 import { sourcesRouter } from "./sources";
 import { statsRouter } from "./stats";
 import { uploadsRouter } from "./uploads";
@@ -41,6 +42,7 @@ export const appRouter = createTRPCRouter({
   leads: leadsRouter,
   agency: agencyRouter,
   netlify: netlifyRouter,
+  resend: resendRouter,
 });
 
 // export type definition of API

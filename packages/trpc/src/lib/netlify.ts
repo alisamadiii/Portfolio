@@ -90,6 +90,7 @@ async function netlify<T>(
 
 export type NetlifySite = {
   id: string;
+  account_id: string;
   name: string;
   url: string;
   ssl_url: string | null;
@@ -143,6 +144,33 @@ export async function createNetlifySite(
 
 export const getNetlifySite = (token: string, siteId: string) =>
   netlify<NetlifySite>(token, `/sites/${siteId}`);
+
+/**
+ * Sets a site-scoped env var (all deploy contexts): updates it when it
+ * exists, creates it otherwise. Applies to the next deploy.
+ */
+export async function setNetlifySiteEnv(
+  token: string,
+  site: Pick<NetlifySite, "id" | "account_id">,
+  key: string,
+  value: string
+) {
+  const values = [{ value, context: "all" }];
+  const base = `/accounts/${site.account_id}/env`;
+  const query = `?site_id=${site.id}`;
+  try {
+    await netlify(token, `${base}/${key}${query}`, {
+      method: "PUT",
+      body: JSON.stringify({ key, scopes: ["builds", "functions", "runtime"], values }),
+    });
+  } catch (error) {
+    if (!(error instanceof TRPCError) || error.code !== "NOT_FOUND") throw error;
+    await netlify(token, `${base}${query}`, {
+      method: "POST",
+      body: JSON.stringify([{ key, scopes: ["builds", "functions", "runtime"], values }]),
+    });
+  }
+}
 
 export const listNetlifyDeploys = (token: string, siteId: string) =>
   netlify<NetlifyDeploy[]>(token, `/sites/${siteId}/deploys?per_page=10`);

@@ -53,6 +53,7 @@ import { PageHeader } from "@/components/ds/layout/page-header";
 import { Badge, StatusText, type BadgeTone } from "@/components/ds/ui/badge";
 import { Button, buttonClass } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
+import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Input } from "@/components/ds/ui/field";
 import { EmptyState, IconTile, KpiGrid, Progress } from "@/components/ds/ui/misc";
@@ -458,6 +459,7 @@ function BudgetRow({
   const { projectId } = useAgency();
   const invalidate = useAdsInvalidate();
   const [value, setValue] = useState<string | null>(null);
+  const [confirmSave, setConfirmSave] = useState(false);
   const daily = value ?? String(campaign.dailyBudgetCents / 100);
   const cents = Math.round(Number(daily) * 100);
   const save = useMutation(
@@ -488,10 +490,18 @@ function BudgetRow({
           <Button
             size="sm"
             disabled={value === null || !Number.isFinite(cents) || cents < 100 || save.isPending}
-            onClick={() => save.mutate({ projectId, budgetResourceName: campaign.budgetResourceName, dailyBudgetCents: cents })}
+            onClick={() => setConfirmSave(true)}
           >
             Save
           </Button>
+          <ConfirmDialog
+            open={confirmSave}
+            onOpenChange={setConfirmSave}
+            title={`Change ${campaign.name} to ${formatMoney(cents, currency)} a day?`}
+            description={`This updates the live budget in Google Ads right away (it was ${formatMoney(campaign.dailyBudgetCents, currency)} a day). Spend follows the new budget from now on.`}
+            confirmLabel="Update budget"
+            onConfirm={() => save.mutate({ projectId, budgetResourceName: campaign.budgetResourceName, dailyBudgetCents: cents })}
+          />
         </span>
       ) : (
         <span className="text-sm tabular-nums">{formatMoney(campaign.dailyBudgetCents, currency)} / day</span>
@@ -507,6 +517,8 @@ function SearchTermsTab({ range }: { range: { from: string; to: string } }) {
   const { projectId } = useAgency();
   const invalidate = useAdsInvalidate();
   const [search, setSearch] = useState("");
+  const [excluding, setExcluding] = useState<{ campaignId: string; campaignName: string; term: string; matchType: "EXACT" | "PHRASE" } | null>(null);
+  const [applying, setApplying] = useState<(typeof STARTER_NEGATIVE_LISTS)[number] | null>(null);
   const terms = useQuery(
     trpc.agency.ads.searchTerms.list.queryOptions({ projectId, ...range }, { placeholderData: keepPreviousData })
   );
@@ -561,10 +573,10 @@ function SearchTermsTab({ range }: { range: { from: string; to: string } }) {
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button size="sm" trailingIcon={<ChevronDown className="size-3" />}>Exclude</Button>} />
             <DropdownMenuContent align="end" className="min-w-40">
-              <DropdownMenuItem onClick={() => exclude.mutate({ projectId, campaignId: r.campaignId, term: r.term.slice(0, 80), matchType: "EXACT" })}>
+              <DropdownMenuItem onClick={() => setExcluding({ campaignId: r.campaignId, campaignName: r.campaignName, term: r.term.slice(0, 80), matchType: "EXACT" })}>
                 Exact match
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exclude.mutate({ projectId, campaignId: r.campaignId, term: r.term.slice(0, 80), matchType: "PHRASE" })}>
+              <DropdownMenuItem onClick={() => setExcluding({ campaignId: r.campaignId, campaignName: r.campaignName, term: r.term.slice(0, 80), matchType: "PHRASE" })}>
                 Phrase match
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -579,6 +591,22 @@ function SearchTermsTab({ range }: { range: { from: string; to: string } }) {
 
   return (
     <>
+      <ConfirmDialog
+        open={!!excluding}
+        onOpenChange={(open) => !open && setExcluding(null)}
+        title={`Exclude "${excluding?.term}"?`}
+        description={`Adds it as a ${excluding?.matchType === "PHRASE" ? "phrase" : "exact"} match negative keyword on ${excluding?.campaignName} in Google Ads. Ads stop showing for ${excluding?.matchType === "PHRASE" ? "searches containing it" : "that exact search"}.`}
+        confirmLabel="Exclude"
+        onConfirm={() => excluding && exclude.mutate({ projectId, campaignId: excluding.campaignId, term: excluding.term, matchType: excluding.matchType })}
+      />
+      <ConfirmDialog
+        open={!!applying}
+        onOpenChange={(open) => !open && setApplying(null)}
+        title={`Apply "${applying?.label}"?`}
+        description={`Adds ${applying?.words.length} negative keywords to Google Ads and attaches them to every campaign. Ads stop showing for those searches.`}
+        confirmLabel="Apply list"
+        onConfirm={() => applying && applyList.mutate({ projectId, listKey: applying.key })}
+      />
       <Card>
         <CardHeader title="Starter negative keyword lists" divided />
         <p className="px-6 pt-4 text-[13px] text-dim">
@@ -599,7 +627,7 @@ function SearchTermsTab({ range }: { range: { from: string; to: string } }) {
                   className="self-start"
                   icon={<ShieldCheck className="size-3.5" />}
                   disabled={applyList.isPending}
-                  onClick={() => applyList.mutate({ projectId, listKey: l.key })}
+                  onClick={() => setApplying(l)}
                 >
                   Apply list
                 </Button>
@@ -661,6 +689,7 @@ function ConversionsTab({ range }: { range: { from: string; to: string } }) {
   const { projectId } = useAgency();
   const invalidate = useAdsInvalidate();
   const list = useQuery(trpc.agency.ads.conversions.list.queryOptions({ projectId, ...range }));
+  const [applyingPreset, setApplyingPreset] = useState<(typeof CONVERSION_PRESETS)[number] | null>(null);
   const apply = useMutation(
     trpc.agency.ads.conversions.applyPreset.mutationOptions({
       onSuccess: (r) => {
@@ -731,6 +760,14 @@ function ConversionsTab({ range }: { range: { from: string; to: string } }) {
         </div>
       </Card>
 
+      <ConfirmDialog
+        open={!!applyingPreset}
+        onOpenChange={(open) => !open && setApplyingPreset(null)}
+        title={`${anyWired ? "Re-apply" : "Set up"} ${applyingPreset?.name}?`}
+        description="This creates or reuses conversion actions in the Google Ads account and wires them to this project's leads. Existing actions with the same name are reused, not duplicated."
+        confirmLabel={anyWired ? "Re-apply" : "Set up tracking"}
+        onConfirm={() => applyingPreset && apply.mutate({ projectId, presetId: applyingPreset.id })}
+      />
       {data.canManage && (
         <Card className="flex flex-col gap-3 p-6">
           {CONVERSION_PRESETS.map((preset) => (
@@ -742,7 +779,7 @@ function ConversionsTab({ range }: { range: { from: string; to: string } }) {
                 <span className="text-[15px] font-semibold">{preset.name}</span>
                 <span className="text-[13px] text-dim">{preset.description}</span>
               </div>
-              <Button variant={anyWired ? "outline" : "primary"} disabled={apply.isPending} onClick={() => apply.mutate({ projectId, presetId: preset.id })}>
+              <Button variant={anyWired ? "outline" : "primary"} disabled={apply.isPending} onClick={() => setApplyingPreset(preset)}>
                 {anyWired ? "Re-apply" : "Set up tracking"}
               </Button>
             </div>

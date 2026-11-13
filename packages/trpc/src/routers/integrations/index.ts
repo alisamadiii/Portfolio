@@ -69,7 +69,7 @@ export const integrationsRouter = createTRPCRouter({
   disconnect: authenticatedProcedure
     .input(
       z.object({
-        id: z.enum(["google-analytics", "google-calendar", "netlify"]),
+        id: z.enum(["google-analytics", "google-calendar", "netlify", "resend"]),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -119,6 +119,20 @@ export const integrationsRouter = createTRPCRouter({
             body: new URLSearchParams({ token }),
           }).catch(() => {});
         }
+      }
+
+      // Resend: revoking the refresh token ends the whole grant.
+      if (integration.providerId === "resend" && target.refreshToken) {
+        await fetch("https://api.resend.com/oauth/revoke", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            client_id: process.env.RESEND_CLIENT_ID ?? "",
+            client_secret: process.env.RESEND_CLIENT_SECRET ?? "",
+            token: target.refreshToken,
+            token_type_hint: "refresh_token",
+          }),
+        }).catch(() => {});
       }
 
       await db.delete(account).where(eq(account.id, target.id));

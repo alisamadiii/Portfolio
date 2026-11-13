@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { ExternalLink, RefreshCw, Rocket } from "lucide-react";
@@ -13,6 +14,7 @@ import { PageHeader } from "@/components/ds/layout/page-header";
 import { Badge, type BadgeTone } from "@/components/ds/ui/badge";
 import { Button, ButtonAnchor } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
+import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, InfoStrip } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
@@ -125,6 +127,7 @@ export function NetlifyPage() {
 
   const data = overview.data;
   const running = jobRunning(data?.job ?? null);
+  const [confirmRedeploy, setConfirmRedeploy] = useState(false);
 
   const header = (
     <PageHeader
@@ -145,13 +148,21 @@ export function NetlifyPage() {
             )}
             {canDeploy && (
               <Button
-                onClick={() => redeploy.mutate({ projectId })}
+                onClick={() => setConfirmRedeploy(true)}
                 disabled={running || redeploy.isPending}
                 icon={<RefreshCw className="size-4" />}
               >
                 Redeploy
               </Button>
             )}
+            <ConfirmDialog
+              open={confirmRedeploy}
+              onOpenChange={setConfirmRedeploy}
+              title="Redeploy the live site?"
+              description="The current published version is rebuilt and replaces what's live on Netlify. It takes a minute or two."
+              confirmLabel="Redeploy"
+              onConfirm={() => redeploy.mutate({ projectId })}
+            />
           </>
         )
       }

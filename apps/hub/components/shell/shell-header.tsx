@@ -22,7 +22,6 @@ import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { SessionActions } from "@/components/canvas/session-actions";
 import { ArrowLeft, Info, Settings } from "@/components/icon";
 import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
-import { InviteButton } from "@/components/shell/invite-button";
 import { User } from "@/components/user";
 
 /**
@@ -112,7 +111,6 @@ export function ShellHeader({
           </Button>
         )}
         <User align="end" />
-        <InviteButton projectId={projectId} />
         <SessionActions />
       </div>
     </header>

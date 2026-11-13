@@ -1,0 +1,1 @@
+ALTER TABLE "hub_project" ADD COLUMN "resend_connected_user_id" text;

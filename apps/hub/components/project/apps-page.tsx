@@ -24,6 +24,9 @@ import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 
 type Filter = "all" | "installed" | "included" | "locked";
 
+/** 0.8–2s "Adding…" beat, so an instant install still reads as work done. */
+const fakeAddDelay = () => 800 + Math.random() * 1200;
+
 /** "Website plan" stays; "Free" → "Free plan". */
 const planLabel = (label?: string) =>
   !label ? "plan" : /plan$/i.test(label) ? label : `${label} plan`;
@@ -35,7 +38,19 @@ export function AppsPage() {
   const { installed, install, uninstall, isPending } = useInstalledApps(projectId);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  // Adding is instant (optimistic), so it feels like nothing happened: hold a
+  // short "Adding…" beat (0.8–2s) before the install lands.
+  const [adding, setAdding] = useState<string[]>([]);
   const base = repoPath(projectId);
+
+  const add = (app: AppDef) => {
+    if (adding.includes(app.id)) return;
+    setAdding((ids) => [...ids, app.id]);
+    window.setTimeout(() => {
+      install(app.id);
+      setAdding((ids) => ids.filter((id) => id !== app.id));
+    }, fakeAddDelay());
+  };
 
   const states = useMemo(
     () => APPS.map((app) => ({ app, state: appState(app, installed, can) })),
@@ -80,8 +95,8 @@ export function AppsPage() {
           app={app}
           state={state}
           href={`${base}/${app.path}`}
-          onAdd={() => install(app.id)}
-          adding={isPending}
+          onAdd={() => add(app)}
+          adding={adding.includes(app.id) || isPending}
           lockedAction={lockedAction(app)}
           menu={
             <DropdownMenu>

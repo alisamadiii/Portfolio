@@ -24,6 +24,7 @@ import { useAgency } from "@/components/agency/use-agency";
 import { SideNote } from "@/components/ds/business-info/side-cards";
 import { Button, IconButton } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
+import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { Field, Input } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 
@@ -216,6 +217,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
       onError: (error) => toast.error(error.message),
     })
   );
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const remove = useMutation(
     trpc.agency.campaigns.remove.mutationOptions({
       onSuccess: () => {
@@ -370,13 +372,19 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
               size="sm"
               className="text-danger hover:text-danger"
               disabled={remove.isPending}
-              onClick={() => {
-                if (confirm(`Delete "${campaign.name}" and its keywords?`))
-                  remove.mutate({ projectId, id: campaign.id });
-              }}
+              onClick={() => setConfirmRemove(true)}
             >
               Delete group
             </Button>
+            <ConfirmDialog
+              open={confirmRemove}
+              onOpenChange={setConfirmRemove}
+              title={`Delete "${campaign.name}"?`}
+              description="The group and all its keywords are deleted. This can't be undone."
+              confirmLabel="Delete group"
+              danger
+              onConfirm={() => remove.mutate({ projectId, id: campaign.id })}
+            />
           </div>
         </Card>
       )}

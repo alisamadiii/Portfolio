@@ -9,7 +9,8 @@ export function IconTile({
   size = 40,
 }: {
   children: ReactNode;
-  tone?: "coral" | "neutral";
+  /** brand = white tile with a line border, for full-color third-party logos. */
+  tone?: "coral" | "neutral" | "brand";
   size?: 32 | 36 | 40 | 48 | 56;
 }) {
   return (
@@ -17,7 +18,9 @@ export function IconTile({
       style={{ width: size, height: size }}
       className={cn(
         "flex shrink-0 items-center justify-center rounded-[9px]",
-        tone === "coral" ? "bg-coral-soft text-coral-deep" : "bg-tile text-ink-3"
+        tone === "coral" && "bg-coral-soft text-coral-deep",
+        tone === "neutral" && "bg-tile text-ink-3",
+        tone === "brand" && "border border-line bg-surface text-ink"
       )}
     >
       {children}

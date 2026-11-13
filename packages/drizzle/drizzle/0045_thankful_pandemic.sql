@@ -1,0 +1,1 @@
+ALTER TABLE "hub_collaborator" ALTER COLUMN "role" SET DEFAULT 'view-only';

@@ -236,11 +236,19 @@ export function HomePage() {
             {recommended.map((app) => {
               const state = appState(app, installed, can);
               const Icon = app.icon;
+              const Logo = app.logo;
               return (
                 <Card key={app.id} className="flex flex-col gap-3 p-[18px]">
                   <div className="flex items-center gap-3">
-                    <IconTile size={36} tone={state === "locked" ? "neutral" : "coral"}>
-                      <Icon className="size-[18px]" strokeWidth={1.8} />
+                    <IconTile
+                      size={36}
+                      tone={Logo ? "brand" : state === "locked" ? "neutral" : "coral"}
+                    >
+                      {Logo ? (
+                        <Logo className="size-[18px]" />
+                      ) : (
+                        <Icon className="size-[18px]" strokeWidth={1.8} />
+                      )}
                     </IconTile>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold">{app.name}</span>

@@ -1,14 +1,14 @@
 import { randomBytes } from "crypto";
 import { headers } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { auth } from "@workspace/auth/auth";
 import { email as emailService } from "@workspace/email";
 import CollaboratorInviteEmail from "@workspace/email/emails/collaborator-invite";
 import CollaboratorAddedEmail from "@workspace/email/emails/collaborator-added";
-import { COLLABORATOR_ROLE_VALUES } from "@workspace/drizzle/schema";
+import { agencyClient, COLLABORATOR_ROLE_VALUES } from "@workspace/drizzle/schema";
 
 import {
   authenticatedProcedure,
@@ -20,12 +20,20 @@ import {
   collaboratorInviteTable,
   collaboratorTable,
   db,
+  userTable,
 } from "@workspace/trpc/lib/cms/db";
 import {
   bindCollaboratorInvitesToUser,
   findVerifiedUserByEmail,
+  hashInviteToken,
   normalizeEmail,
 } from "@workspace/trpc/lib/cms/collaborator-access";
+import {
+  INVITE_BATCH_MAX,
+  INVITES_PER_HOUR,
+  memberStatus,
+  type MemberStatus,
+} from "@workspace/trpc/lib/cms/members-shared";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 
 // The invite acceptance page lives in the hub app; emails link back to it and
@@ -60,7 +68,7 @@ const maskEmail = (address: string) => {
 // whose backing collaborator row no longer exists.
 const loadInvite = async (token: string): Promise<InviteRow | null> => {
   const invite = await db.query.hubCollaboratorInvite.findFirst({
-    where: eq(collaboratorInviteTable.token, token),
+    where: eq(collaboratorInviteTable.token, hashInviteToken(token)),
   });
   if (!invite) return null;
 
@@ -116,14 +124,40 @@ const claimInviteForUser = async (
   return true;
 };
 
-const generateInviteToken = () => {
-  const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const bytes = randomBytes(32);
-  let token = "";
-  for (let i = 0; i < 32; i += 1) {
-    token += alphabet[bytes[i] % alphabet.length];
+const generateInviteToken = () => randomBytes(32).toString("base64url");
+
+// Caps invite emails per project (DB-backed, so it holds across instances):
+// every invite email creates/replaces an invite row stamped createdAt.
+const assertInviteQuota = async (projectId: string, sending: number) => {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(collaboratorInviteTable)
+    .where(
+      and(
+        eq(collaboratorInviteTable.projectId, projectId),
+        gt(collaboratorInviteTable.createdAt, new Date(Date.now() - 60 * 60 * 1000))
+      )
+    );
+  if ((row?.count ?? 0) + sending > INVITES_PER_HOUR) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Too many invites sent for this project. Try again in an hour.",
+    });
   }
-  return token;
+};
+
+// Collaborator scoped to the caller's project: a foreign id is NOT_FOUND.
+const findProjectCollaborator = async (projectId: string, collaboratorId: number) => {
+  const collaborator = await db.query.hubCollaborator.findFirst({
+    where: and(
+      eq(collaboratorTable.id, collaboratorId),
+      eq(collaboratorTable.projectId, projectId)
+    ),
+  });
+  if (!collaborator) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Member not found." });
+  }
+  return collaborator;
 };
 
 // Creates (or replaces) a pending invite for an email and returns the hub link.
@@ -155,7 +189,7 @@ const createInviteUrl = async ({
 
   await db
     .insert(collaboratorInviteTable)
-    .values({ token, email, projectId, owner, repo, expiresAt });
+    .values({ token: hashInviteToken(token), email, projectId, owner, repo, expiresAt });
 
   const inviteUrl = new URL("/sign-in/collaborator", getHubBaseUrl());
   inviteUrl.searchParams.set("token", token);
@@ -166,15 +200,79 @@ const tokenInput = z.object({ token: z.string().min(1) });
 
 export const collaboratorsRouter = createTRPCRouter({
   /**
-   * Fetches collaborators for a repository.
-   * Accessible to admins and full-access collaborators.
+   * Everyone with access to the project for the Members page: owner(s), the
+   * agency admins, then collaborators with their invite status.
    */
-  list: collaboratorManageProcedure.query(async ({ ctx }) => {
+  members: collaboratorManageProcedure.query(async ({ ctx }) => {
     try {
-      // TODO: support for branches and account collaborators
-      return db.query.hubCollaborator.findMany({
-        where: eq(collaboratorTable.projectId, ctx.repoAccess.projectId),
+      const { repoAccess, isActorAdmin, isActorOwner } = ctx;
+      const projectId = repoAccess.projectId;
+
+      const agencyOwner = await db.query.agencyClient.findFirst({
+        where: eq(agencyClient.projectId, projectId),
+        columns: { userId: true },
       });
+      const ownerIds = [
+        ...new Set(
+          [repoAccess.githubConnectedUserId, agencyOwner?.userId].filter(
+            (id): id is string => Boolean(id)
+          )
+        ),
+      ];
+
+      const userColumns = {
+        id: userTable.id,
+        name: userTable.name,
+        email: userTable.email,
+        image: userTable.image,
+      };
+      const [owners, admins, collaborators, invites] = await Promise.all([
+        ownerIds.length
+          ? db.select(userColumns).from(userTable).where(inArray(userTable.id, ownerIds))
+          : [],
+        db
+          .select(userColumns)
+          .from(userTable)
+          .where(eq(userTable.role, "admin")),
+        db
+          .select({
+            id: collaboratorTable.id,
+            email: collaboratorTable.email,
+            role: collaboratorTable.role,
+            userId: collaboratorTable.userId,
+            name: userTable.name,
+            image: userTable.image,
+          })
+          .from(collaboratorTable)
+          .leftJoin(userTable, eq(userTable.id, collaboratorTable.userId))
+          .where(eq(collaboratorTable.projectId, projectId)),
+        db
+          .select({
+            email: collaboratorInviteTable.email,
+            expiresAt: collaboratorInviteTable.expiresAt,
+          })
+          .from(collaboratorInviteTable)
+          .where(eq(collaboratorInviteTable.projectId, projectId)),
+      ]);
+
+      const inviteExpiry = new Map(
+        invites.map((i) => [normalizeEmail(i.email), i.expiresAt])
+      );
+      const ownerSet = new Set(ownerIds);
+
+      return {
+        canManageFullAccess: isActorAdmin || isActorOwner,
+        owners,
+        // An admin who also owns the project shows once, as owner.
+        admins: admins.filter((a) => !ownerSet.has(a.id)),
+        collaborators: collaborators.map((c) => {
+          const expiresAt = c.userId
+            ? null
+            : (inviteExpiry.get(normalizeEmail(c.email)) ?? null);
+          const status: MemberStatus = memberStatus(c.userId, expiresAt);
+          return { ...c, status, expiresAt };
+        }),
+      };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
       throw toTRPCError(error);
@@ -242,7 +340,7 @@ export const collaboratorsRouter = createTRPCRouter({
   add: collaboratorManageProcedure
     .input(
       z.object({
-        emails: z.array(z.string().email()).min(1),
+        emails: z.array(z.string().email()).min(1).max(INVITE_BATCH_MAX),
         role: z.enum(COLLABORATOR_ROLE_VALUES).default("content-editor"),
       })
     )
@@ -265,9 +363,10 @@ export const collaboratorsRouter = createTRPCRouter({
         const emails = Array.from(
           new Set(input.emails.map((email) => normalizeEmail(email)))
         );
+        await assertInviteQuota(repoAccess.projectId, emails.length);
 
         const baseUrl = getHubBaseUrl();
-        const repoUrl = new URL(`/${repo}`, baseUrl).toString();
+        const repoUrl = new URL(`/p/${repoAccess.projectId}`, baseUrl).toString();
         const created: (typeof collaboratorTable.$inferSelect)[] = [];
         const errors: string[] = [];
         let immediateAccessCount = 0;
@@ -396,15 +495,10 @@ export const collaboratorsRouter = createTRPCRouter({
         const owner = repoAccess.ownerLogin;
         const repo = repoAccess.repoName;
 
-        const collaborator = await db.query.hubCollaborator.findFirst({
-          where: eq(collaboratorTable.id, input.collaboratorId),
-        });
-        if (!collaborator) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Collaborator not found",
-          });
-        }
+        const collaborator = await findProjectCollaborator(
+          repoAccess.projectId,
+          input.collaboratorId
+        );
 
         if (!canManageFullAccess && collaborator.role === "full-access") {
           throw new TRPCError({
@@ -456,28 +550,30 @@ export const collaboratorsRouter = createTRPCRouter({
     .input(z.object({ collaboratorId: z.number().int() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const { repoAccess } = ctx;
+        const { repoAccess, isActorAdmin, isActorOwner } = ctx;
         // Display strings only — scoping is by repoAccess.projectId.
         const owner = repoAccess.ownerLogin;
         const repo = repoAccess.repoName;
         const user = ctx.session.user;
 
-        const collaborator = await db.query.hubCollaborator.findFirst({
-          where: eq(collaboratorTable.id, input.collaboratorId),
-        });
-        if (!collaborator) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Collaborator not found",
-          });
-        }
-
-        if (collaborator.projectId !== repoAccess.projectId) {
+        const collaborator = await findProjectCollaborator(
+          repoAccess.projectId,
+          input.collaboratorId
+        );
+        if (collaborator.userId) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Collaborator does not belong to this repository.",
+            message: `${collaborator.email} already joined.`,
           });
         }
+        if (!(isActorAdmin || isActorOwner) && collaborator.role === "full-access") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Only admins or the project owner can manage full-access collaborators.",
+          });
+        }
+        await assertInviteQuota(repoAccess.projectId, 1);
 
         const baseUrl = getHubBaseUrl();
         const inviteUrl = await createInviteUrl({
@@ -529,18 +625,10 @@ export const collaboratorsRouter = createTRPCRouter({
         const { repoAccess, isActorAdmin, isActorOwner } = ctx;
         const canManageFullAccess = isActorAdmin || isActorOwner;
 
-        const collaborator = await db.query.hubCollaborator.findFirst({
-          where: and(
-            eq(collaboratorTable.id, input.collaboratorId),
-            eq(collaboratorTable.projectId, repoAccess.projectId)
-          ),
-        });
-        if (!collaborator) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Collaborator not found",
-          });
-        }
+        const collaborator = await findProjectCollaborator(
+          repoAccess.projectId,
+          input.collaboratorId
+        );
 
         if (
           !canManageFullAccess &&

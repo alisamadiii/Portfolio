@@ -1,6 +1,7 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { Check, Lock } from "lucide-react";
+import Link from "next/link";
+import { Check, Loader2, Lock } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import type { AppDef, AppState } from "@/lib/apps";
 
@@ -33,20 +34,46 @@ export function AppCard({
   menu?: ReactNode;
 }) {
   const Icon = app.icon;
+  const Logo = app.logo;
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-[18px] hover:border-line-hover">
+    <div className="rounded-card border-line bg-surface hover:border-line-hover flex flex-col gap-3 border p-[18px]">
       <div className="flex items-center justify-between">
-        <IconTile tone={state === "locked" ? "neutral" : "coral"}>
-          <Icon className="size-5" strokeWidth={1.8} />
+        <IconTile tone={Logo ? "brand" : state === "locked" ? "neutral" : "coral"}>
+          {Logo ? (
+            <Logo className="size-5" />
+          ) : (
+            <Icon className="size-5" strokeWidth={1.8} />
+          )}
         </IconTile>
-        {state === "installed" && (
-          <Badge tone="success" icon={<Check className="size-3" strokeWidth={2.6} />}>
-            Installed
-          </Badge>
-        )}
-        {state === "included" && <span className="text-xs text-dim">Included</span>}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {state === "installed" && (
+            <motion.span
+              key="installed"
+              initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              transition={{ type: "spring", duration: 0.4, bounce: 0 }}
+            >
+              <Badge
+                tone="success"
+                icon={<Check className="size-3" strokeWidth={2.6} />}
+              >
+                Installed
+              </Badge>
+            </motion.span>
+          )}
+          {state === "included" && (
+            <motion.span
+              key="included"
+              exit={{ opacity: 0, filter: "blur(4px)" }}
+              transition={{ duration: 0.15 }}
+              className="text-dim text-xs"
+            >
+              {adding ? "Adding…" : "Included"}
+            </motion.span>
+          )}
+        </AnimatePresence>
         {state === "locked" && (
-          <span className="inline-flex items-center gap-1 text-xs text-dim">
+          <span className="text-dim inline-flex items-center gap-1 text-xs">
             <Lock className="size-3" />
             Not in your plan
           </span>
@@ -54,23 +81,59 @@ export function AppCard({
       </div>
       <div className="flex flex-col gap-1">
         <span className="text-[15px] font-semibold">{app.name}</span>
-        <p className="text-[13px] leading-normal text-dim">{app.description}</p>
+        <p className="text-dim text-[13px] leading-normal">{app.description}</p>
       </div>
       <div className="mt-auto flex gap-2">
-        {state === "installed" && (
-          <>
-            <Link
-              href={href}
-              className="flex h-8 flex-1 items-center justify-center rounded-control bg-subtle text-[13px] font-medium text-ink hover:bg-hover"
+        <AnimatePresence initial={false}>
+          {state === "installed" && (
+            <motion.div
+              key="installed"
+              className="flex flex-1 gap-2"
+              initial={{ opacity: 0, filter: "blur(4px)" }}
+              animate={{ opacity: 1, filter: "blur(0px)" }}
+              transition={{ type: "spring", duration: 0.35, bounce: 0 }}
             >
-              Open
-            </Link>
-            {menu}
-          </>
-        )}
+              <Link
+                href={href}
+                className="rounded-control bg-subtle text-ink hover:bg-hover flex h-8 flex-1 items-center justify-center text-[13px] font-medium"
+              >
+                Open
+              </Link>
+              {menu}
+            </motion.div>
+          )}
+        </AnimatePresence>
         {state === "included" && (
-          <Button variant="primary" size="sm" className="flex-1" onClick={onAdd} disabled={adding}>
-            Add to site
+          <Button
+            variant="primary"
+            size="sm"
+            className="relative flex-1 overflow-hidden disabled:opacity-100"
+            onClick={onAdd}
+            disabled={adding}
+            aria-busy={adding}
+          >
+            {adding && (
+              <motion.span
+                aria-hidden
+                className="bg-ink/10 absolute inset-y-0 left-0"
+                initial={{ width: "0%" }}
+                animate={{ width: "90%" }}
+                transition={{ duration: 2, ease: "easeOut" }}
+              />
+            )}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={adding ? "adding" : "add"}
+                className="relative inline-flex items-center gap-1.5"
+                initial={{ opacity: 0, y: 4, filter: "blur(2px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -4, filter: "blur(2px)" }}
+                transition={{ duration: 0.15 }}
+              >
+                {adding && <Loader2 className="size-3.5 animate-spin" />}
+                {adding ? "Adding…" : "Add to site"}
+              </motion.span>
+            </AnimatePresence>
           </Button>
         )}
         {state === "locked" && lockedAction}

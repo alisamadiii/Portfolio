@@ -1,0 +1,2 @@
+ALTER TABLE "hub_project" ADD COLUMN "resend_account_id" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "uq_hub_project_resend_account" ON "hub_project" USING btree ("resend_account_id") WHERE "hub_project"."resend_account_id" is not null;

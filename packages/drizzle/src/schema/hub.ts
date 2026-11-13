@@ -40,7 +40,7 @@ export const hubCollaborator = pgTable(
     invitedBy: text("invited_by").references(() => user.id),
     // Plain text (not pgEnum): drizzle-kit push mishandles adding enum-typed
     // columns to existing tables (see mediaProvider on hubProject).
-    role: text("role").$type<CollaboratorRole>().notNull().default("full-access"),
+    role: text("role").$type<CollaboratorRole>().notNull().default("view-only"),
   },
   (table) => ({
     idxHubCollaboratorOwnerRepoEmail: index(
@@ -179,6 +179,12 @@ export const hubProject = pgTable(
     netlifySiteId: text("netlify_site_id"),
     netlifySiteUrl: text("netlify_site_url"),
     netlifyConnectedUserId: text("netlify_connected_user_id"),
+    // The project's own Resend team (one team per project, never shared): the
+    // Better Auth user.id who linked it + the Resend team id, which is that
+    // user's account.account_id row for provider "resend". Set from the
+    // project's Resend page right after the OAuth consent.
+    resendConnectedUserId: text("resend_connected_user_id"),
+    resendAccountId: text("resend_account_id"),
     // Hidden row: an upload reserved but not yet finalized (legacy: old
     // delete tombstones). Every project listing filters hidden=false.
     hidden: boolean("hidden").notNull().default(false),
@@ -189,6 +195,10 @@ export const hubProject = pgTable(
     uqHubProjectOwnerRepoCi: uniqueIndex("uq_hub_project_owner_repo_ci")
       .on(sql`lower(${table.owner})`, sql`lower(${table.repo})`)
       .where(sql`${table.source} = 'upload'`),
+    // A Resend team belongs to exactly one project.
+    uqHubProjectResendAccount: uniqueIndex("uq_hub_project_resend_account")
+      .on(table.resendAccountId)
+      .where(sql`${table.resendAccountId} is not null`),
   })
 );
 
