@@ -8,6 +8,7 @@ import {
   Globe,
   Home,
   Inbox,
+  Rocket,
   LayoutGrid,
   Link2,
   Mail,
@@ -116,6 +117,9 @@ export const PROJECT_CORE: NavItem[] = [
   { id: "website", label: "Website", icon: Globe, path: "website" },
   { id: "business-info", label: "Business info", icon: Building2, path: "business-info" },
 ];
+
+/** Core link shown only once an upload project has published to Netlify. */
+export const NETLIFY_NAV: NavItem = { id: "netlify", label: "Netlify", icon: Rocket, path: "netlify" };
 
 /** Project sidebar, bottom group. Full-access collaborators only. */
 export const PROJECT_SETTINGS: NavItem[] = [

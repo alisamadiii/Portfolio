@@ -69,7 +69,7 @@ export const integrationsRouter = createTRPCRouter({
   disconnect: authenticatedProcedure
     .input(
       z.object({
-        id: z.enum(["google-analytics", "google-calendar"]),
+        id: z.enum(["google-analytics", "google-calendar", "netlify"]),
       })
     )
     .mutation(async ({ ctx, input }) => {

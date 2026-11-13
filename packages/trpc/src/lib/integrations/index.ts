@@ -21,7 +21,7 @@ export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 // Event CRUD on the user's calendars (we only touch `primary`) — narrower
 // than the full calendar scope, no calendar-list access needed.
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
-export type IntegrationId = "google-analytics" | "google-calendar";
+export type IntegrationId = "google-analytics" | "google-calendar" | "netlify";
 
 type IntegrationProvider = {
   id: IntegrationId;
@@ -34,6 +34,8 @@ type IntegrationProvider = {
 export const INTEGRATIONS: IntegrationProvider[] = [
   { id: "google-analytics", providerId: "google", requiredScope: GA_SCOPE },
   { id: "google-calendar", providerId: "google", requiredScope: CALENDAR_SCOPE },
+  // Deploys upload projects to the user's own Netlify account (lib/netlify).
+  { id: "netlify", providerId: "netlify" },
 ];
 
 /** The integration's token is missing/expired/unscoped — the UI must prompt a reconnect. */

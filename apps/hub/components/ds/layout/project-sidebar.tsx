@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 
-import { APPS, PROJECT_CORE, PROJECT_SETTINGS, type AppId } from "@/lib/apps";
+import { APPS, NETLIFY_NAV, PROJECT_CORE, PROJECT_SETTINGS, type AppId } from "@/lib/apps";
 
 import { Sidebar, SidebarDivider, SidebarLink, SidebarSection, useIsActive } from "./sidebar";
 
@@ -10,17 +10,19 @@ import { Sidebar, SidebarDivider, SidebarLink, SidebarSection, useIsActive } fro
 export function ProjectSidebar({
   base,
   installed,
+  netlify = false,
   showSettings = true,
 }: {
   base: string;
   installed: readonly AppId[];
+  netlify?: boolean;
   showSettings?: boolean;
 }) {
   const isActive = useIsActive();
   const url = (p: string) => (p ? `${base}/${p}` : base);
   return (
     <Sidebar label="Project">
-      {PROJECT_CORE.map((i) => (
+      {(netlify ? [...PROJECT_CORE, NETLIFY_NAV] : PROJECT_CORE).map((i) => (
         <SidebarLink key={i.id} item={i} href={url(i.path)} active={isActive(url(i.path), i.path === "")} />
       ))}
       <SidebarSection label="Apps">

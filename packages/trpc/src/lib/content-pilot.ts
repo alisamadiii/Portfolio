@@ -233,3 +233,49 @@ export async function cancelPreviewMessage(sessionId: string): Promise<void> {
   });
   if (!res.ok && res.status !== 404) await pilotError(res);
 }
+
+// ---------------------------------------------------------------------------
+// Netlify deploys (upload projects)
+// ---------------------------------------------------------------------------
+
+export type NetlifyDeployJob = {
+  id: number;
+  projectId: string;
+  sha: string;
+  siteId: string;
+  status: "queued" | "building" | "uploading" | "ready" | "error" | "skipped";
+  error: string | null;
+  netlifyDeployId: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+};
+
+/**
+ * Queues a build + zip deploy of the workspace's default branch to a Netlify
+ * site. Returns at once (202); the pilot builds in the background. The token
+ * is only held in the pilot's memory for the running job, never stored.
+ */
+export async function deployToNetlify(params: {
+  projectId: string;
+  siteId: string;
+  token: string;
+}): Promise<NetlifyDeployJob> {
+  const res = await pilotFetch(`/api/v1/deploys`, {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) await pilotError(res);
+  const data = (await res.json()) as { deploy: NetlifyDeployJob };
+  return data.deploy;
+}
+
+/** The project's latest build + deploy job, or null when it never deployed. */
+export async function latestNetlifyDeploy(
+  projectId: string
+): Promise<NetlifyDeployJob | null> {
+  const res = await pilotFetch(`/api/v1/deploys/${projectId}`);
+  if (res.status === 404) return null;
+  if (!res.ok) await pilotError(res);
+  const data = (await res.json()) as { deploy: NetlifyDeployJob | null };
+  return data.deploy;
+}

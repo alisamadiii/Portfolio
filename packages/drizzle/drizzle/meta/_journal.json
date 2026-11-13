@@ -295,6 +295,13 @@
       "when": 1794515003146,
       "tag": "0041_aberrant_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794578607230,
+      "tag": "0042_faulty_scream",
+      "breakpoints": true
     }
   ]
 }

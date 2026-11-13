@@ -43,6 +43,7 @@ export const reposRouter = createTRPCRouter({
             updatedAt: hubProject.githubUpdatedAt,
             websiteUrl: hubProject.websiteUrl,
             apps: hubProject.apps,
+            netlifySiteId: hubProject.netlifySiteId,
             githubConnectedUserId: hubProject.githubConnectedUserId,
           })
           .from(hubProject)
@@ -60,6 +61,8 @@ export const reposRouter = createTRPCRouter({
           updatedAt: row.updatedAt.toISOString(),
           websiteUrl: row.websiteUrl ?? null,
           apps: (row.apps ?? []) as AppId[],
+          // Upload project published to Netlify: shows the Netlify page.
+          netlify: !!row.netlifySiteId,
           // The caller's role on this project, for the shell's nav gating
           // (settings group only for full access). The importer and admins own
           // the project; otherwise the collaborator invite's role, else

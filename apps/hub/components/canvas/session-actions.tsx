@@ -56,11 +56,23 @@ export function SessionActions() {
       onSuccess: (result) => {
         noteSessionEnded(result.merged ? "published" : "closed");
         invalidateSession();
+        if (source === "upload") {
+          // The first deploy creates the Netlify site: refresh the sidebar.
+          void queryClient.invalidateQueries({
+            queryKey: trpc.cms.repos.listMine.queryKey(),
+          });
+          if (result.netlify) {
+            toast.success("Published. Deploying to Netlify…");
+          } else {
+            toast.success("Published.", {
+              description: "Connect Netlify in Integrations to put the site online.",
+            });
+          }
+          return;
+        }
         toast.success(
           result.merged
-            ? source === "upload"
-              ? "Published."
-              : "Published! Changes pushed to GitHub."
+            ? "Published! Changes pushed to GitHub."
             : "Nothing to publish. Session closed."
         );
       },

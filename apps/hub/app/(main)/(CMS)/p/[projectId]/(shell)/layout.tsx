@@ -21,7 +21,7 @@ export default function ProjectShellLayout({ children }: { children: React.React
   // the server, so the label waits for mount to avoid a hydration mismatch.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const { installed } = useInstalledApps(projectId);
+  const { installed, netlify } = useInstalledApps(projectId);
   const pathname = usePathname() ?? "";
   const wide = pathname.includes("/business-info/");
 
@@ -39,6 +39,7 @@ export default function ProjectShellLayout({ children }: { children: React.React
         <ProjectSidebar
           base={repoPath(projectId)}
           installed={installed}
+          netlify={netlify}
           showSettings={project?.role == null || project.role === "full-access"}
         />
       }

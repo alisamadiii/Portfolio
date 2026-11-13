@@ -71,7 +71,7 @@ export const IntegrationCard = ({
   const disconnect = () => {
     setBusy(true);
     disconnectMutation.mutate({
-      id: app.id as "google-analytics" | "google-calendar",
+      id: app.id as "google-analytics" | "google-calendar" | "netlify",
     });
   };
 

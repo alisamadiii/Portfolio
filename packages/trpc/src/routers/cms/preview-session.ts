@@ -11,6 +11,7 @@ import { installationCommitAuthor } from "@workspace/trpc/lib/github-app";
 import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 import { getBranchHeadSha } from "@workspace/trpc/lib/cms/github-cache-file";
 import { createOctokitInstance } from "@workspace/trpc/lib/cms/octokit";
+import { deployProjectToNetlify } from "@workspace/trpc/lib/netlify";
 import {
   cancelPreviewMessage,
   closePreviewSession,
@@ -428,6 +429,9 @@ export const previewSessionRouter = createTRPCRouter({
       const { sha, changed } = await publishPreviewSession(session.id);
 
       await closePreviewSession(session.id, "published");
+      // Upload projects only: whether the build + Netlify deploy was queued
+      // (false = no Netlify token anywhere, the site stays preview-only).
+      let netlify: boolean | null = null;
       if (ctx.source === "upload") {
         // Local-only publish: no GitHub refs to clean up. Bump the activity
         // timestamp so the gallery sorts the freshly published site up.
@@ -435,10 +439,18 @@ export const previewSessionRouter = createTRPCRouter({
           .update(hubProject)
           .set({ githubUpdatedAt: new Date() })
           .where(eq(hubProject.id, ctx.projectId));
+        // The squash already landed, so a Netlify failure must not fail the
+        // publish: the Netlify page shows the error and can redeploy.
+        netlify = await deployProjectToNetlify(ctx.projectId, ctx.user.id).catch(
+          (error) => {
+            console.error("[publish] netlify deploy failed", error);
+            return false;
+          }
+        );
       } else {
         const token = requireGithubToken(ctx);
         await deleteBranchRef(token, ctx.owner, ctx.repo, session.branch);
       }
-      return { merged: changed, sha };
+      return { merged: changed, sha, netlify };
     }),
 });

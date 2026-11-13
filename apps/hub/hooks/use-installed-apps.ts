@@ -61,6 +61,8 @@ export function useInstalledApps(projectId: string) {
 
   return {
     installed,
+    /** Published to Netlify (upload projects): the sidebar shows the Netlify page. */
+    netlify: !!row?.netlify,
     isLoaded: !!projects.data,
     isInstalled: (id: AppId) => installed.includes(id),
     install: (id: AppId) => setApps.mutate({ projectId, apps: [...installed, id] }),

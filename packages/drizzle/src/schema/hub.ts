@@ -171,6 +171,14 @@ export const hubProject = pgTable(
     // token backstops reads/commits when there's no interactive caller. Set at
     // import.
     githubConnectedUserId: text("github_connected_user_id"),
+    // Netlify hosting for upload projects. Publish builds the site in
+    // content-pilot and zip-deploys it to this Netlify site, created on the
+    // first publish. netlifyConnectedUserId is the Better Auth user.id whose
+    // Netlify OAuth token (account table) owns the site; null = the agency's
+    // personal access token (NETLIFY_AGENCY_TOKEN).
+    netlifySiteId: text("netlify_site_id"),
+    netlifySiteUrl: text("netlify_site_url"),
+    netlifyConnectedUserId: text("netlify_connected_user_id"),
     // Hidden row: an upload reserved but not yet finalized (legacy: old
     // delete tombstones). Every project listing filters hidden=false.
     hidden: boolean("hidden").notNull().default(false),

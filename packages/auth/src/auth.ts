@@ -2,7 +2,12 @@ import { expo } from "@better-auth/expo";
 import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, emailOTP, magicLink } from "better-auth/plugins";
+import {
+  admin,
+  emailOTP,
+  genericOAuth,
+  magicLink,
+} from "better-auth/plugins";
 
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { db } from "@workspace/drizzle/index";
@@ -37,7 +42,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "github"],
+      trustedProviders: ["google", "github", "netlify"],
       allowDifferentEmails: true,
       updateUserInfoOnLink: true,
     },
@@ -129,6 +134,40 @@ export const auth = betterAuth({
           // Send the OTP for password reset
         }
       },
+    }),
+    // Netlify: link-only (hub Integrations), never a sign-in method. The
+    // token deploys the user's upload projects to their own Netlify account.
+    // Netlify tokens don't expire, so there is no refresh token.
+    genericOAuth({
+      config: [
+        {
+          providerId: "netlify",
+          clientId: process.env.NETLIFY_CLIENT_ID ?? "",
+          clientSecret: process.env.NETLIFY_CLIENT_SECRET ?? "",
+          authorizationUrl: "https://app.netlify.com/authorize",
+          tokenUrl: "https://api.netlify.com/oauth/token",
+          disableSignUp: true,
+          getUserInfo: async (tokens) => {
+            const res = await fetch("https://api.netlify.com/api/v1/user", {
+              headers: { Authorization: `Bearer ${tokens.accessToken}` },
+            });
+            if (!res.ok) return null;
+            const profile = (await res.json()) as {
+              id: string;
+              email: string;
+              full_name?: string | null;
+              avatar_url?: string | null;
+            };
+            return {
+              id: profile.id,
+              email: profile.email,
+              name: profile.full_name ?? profile.email,
+              image: profile.avatar_url ?? undefined,
+              emailVerified: true,
+            };
+          },
+        },
+      ],
     }),
     nextCookies(),
   ],
