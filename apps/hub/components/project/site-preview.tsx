@@ -32,7 +32,7 @@ export function useFramePolicy(projectId: string, websiteUrl: string | null | un
       {
         origin:
           typeof window === "undefined"
-            ? "https://hub.alisamadii.com"
+            ? "https://app.alisamadii.com"
             : window.location.origin,
       },
       { enabled: !!websiteUrl, staleTime: 30 * 60 * 1000 }

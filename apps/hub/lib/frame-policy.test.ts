@@ -5,7 +5,7 @@ import { framePolicyFromHeaders } from "@workspace/trpc/lib/frame-policy";
 // Gallery thumbnails iframe each project's site; sites whose security headers
 // refuse framing get a placeholder card instead of a blank frame.
 
-const HUB = "https://hub.alisamadii.com";
+const HUB = "https://app.alisamadii.com";
 const headers = (values: Record<string, string>) =>
   new Headers(values) as unknown as { get(name: string): string | null };
 
@@ -32,7 +32,7 @@ describe("framePolicyFromHeaders", () => {
     expect(
       framePolicyFromHeaders(
         headers({
-          "content-security-policy": "default-src 'self'; frame-ancestors 'self' https://hub.alisamadii.com",
+          "content-security-policy": "default-src 'self'; frame-ancestors 'self' https://app.alisamadii.com",
           "x-frame-options": "SAMEORIGIN",
         }),
         HUB
@@ -51,7 +51,7 @@ describe("framePolicyFromHeaders", () => {
   it("treats a localhost hub as a different origin", () => {
     expect(
       framePolicyFromHeaders(
-        headers({ "content-security-policy": "frame-ancestors 'self' https://hub.alisamadii.com" }),
+        headers({ "content-security-policy": "frame-ancestors 'self' https://app.alisamadii.com" }),
         "http://localhost:3001"
       )
     ).toBe("blocked");

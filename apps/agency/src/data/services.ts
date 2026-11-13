@@ -500,7 +500,7 @@ export const services: Service[] = [
     heroSub:
       "Client Hub gives you one dashboard to edit your content, monitor your site, and see every email it sends — while managed hosting keeps everything fast, secure, and backed up.",
     intro:
-      "Ali Samadi Agency sets every client up to edit their own website through Client Hub, our client dashboard at hub.alisamadii.com. It's more than a CMS: from one place you change text, swap images, and add pages, watch your site's uptime and response time, and browse a log of every email your website sends — receipts, notifications, contact-form messages. Every content save goes live automatically in about a minute, with no developer round-trips and no hourly fees for a typo fix. Your images upload straight into the chat and land in your site's own files, your code sits in a repository you're invited to, and more features — like email marketing — are on the way. Prefer hands-off? Managed hosting keeps the site fast, secure, and backed up while you run your business.",
+      "Ali Samadi Agency sets every client up to edit their own website through Client Hub, our client dashboard at app.alisamadii.com. It's more than a CMS: from one place you change text, swap images, and add pages, watch your site's uptime and response time, and browse a log of every email your website sends — receipts, notifications, contact-form messages. Every content save goes live automatically in about a minute, with no developer round-trips and no hourly fees for a typo fix. Your images upload straight into the chat and land in your site's own files, your code sits in a repository you're invited to, and more features — like email marketing — are on the way. Prefer hands-off? Managed hosting keeps the site fast, secure, and backed up while you run your business.",
     benefits: [
       {
         title: "Change anything, anytime",
@@ -530,7 +530,7 @@ export const services: Service[] = [
       },
       {
         title: "Get invited",
-        text: "We send an invite to your purchase email. Sign in at hub.alisamadii.com and your website project is waiting for you.",
+        text: "We send an invite to your purchase email. Sign in at app.alisamadii.com and your website project is waiting for you.",
       },
       {
         title: "Edit your content",
@@ -543,7 +543,7 @@ export const services: Service[] = [
     ],
     showcase: {
       heading: "A tour of your dashboard",
-      sub: "This is Client Hub — what you actually see when you sign in at hub.alisamadii.com.",
+      sub: "This is Client Hub — what you actually see when you sign in at app.alisamadii.com.",
       items: [
         {
           title: "Home — your whole website at a glance",

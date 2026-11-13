@@ -5,7 +5,7 @@ const hubUrl =
   // eslint-disable-next-line no-undef
   process.env.NODE_ENV === "development"
     ? "http://localhost:3007"
-    : "https://hub.alisamadii.com";
+    : "https://app.alisamadii.com";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

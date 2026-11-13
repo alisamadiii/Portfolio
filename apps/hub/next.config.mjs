@@ -1,6 +1,6 @@
 import path from "path";
 
-const HUB = "https://hub.alisamadii.com";
+const HUB = "https://app.alisamadii.com";
 const PORTAL_HOST = [{ type: "host", value: "portal.alisamadii.com" }];
 
 /** @type {import('next').NextConfig} */

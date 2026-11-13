@@ -33,7 +33,7 @@ JACKSONVILLE LEAD GENERATION AGENCY
 We run the Google Ads that bring in local customers and build the website that turns them into booked jobs. Every lead tracked, one monthly price.
 
 [Start a Project ↗](#contact)
-[Already a customer? Open your app →](https://hub.alisamadii.com)
+[Already a customer? Open your app →](https://app.alisamadii.com)
 ![Ali Samadi Agency: Google Ads, websites that convert, and email newsletters for local businesses.](/home/hero-product.png)
 
 [button: Watch how we build [0:30]]  (opens /hero-video.mp4)

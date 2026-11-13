@@ -25,7 +25,7 @@ export const HTTP_TARGETS: HttpTarget[] = [
   },
   {
     name: "Hub",
-    url: "https://hub.alisamadii.com",
+    url: "https://app.alisamadii.com",
     coolify: { type: "applications", uuid: "i7xogvxrr78uwpsinysnmkag" },
   },
   {

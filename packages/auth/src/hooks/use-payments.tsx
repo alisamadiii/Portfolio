@@ -29,7 +29,7 @@ export const useCheckout = () => {
           const hub =
             process.env.NODE_ENV === "development"
               ? "http://localhost:3007"
-              : "https://hub.alisamadii.com";
+              : "https://app.alisamadii.com";
           window.location.href = `${hub}/sign-up?redirectUrl=${encodeURIComponent(window.location.href)}`;
           return;
         }

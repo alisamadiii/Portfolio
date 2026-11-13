@@ -83,7 +83,7 @@ export default function CollaboratorAddedEmail({
 CollaboratorAddedEmail.PreviewProps = {
   email: "jane@example.com",
   repoName: "acme/website",
-  repoUrl: "https://hub.alisamadii.com/website",
+  repoUrl: "https://app.alisamadii.com/website",
   invitedByName: "Ali Samadii",
-  invitedByUrl: "https://hub.alisamadii.com",
+  invitedByUrl: "https://app.alisamadii.com",
 } satisfies CollaboratorAddedProps;

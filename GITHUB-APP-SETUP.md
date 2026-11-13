@@ -8,13 +8,13 @@ Copy-paste values for github.com/settings/apps → New GitHub App. Create two ap
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | GitHub App name                                        | `Ali Samadi App`                                                                                                                               |
 | Description                                            | `Connects your website's repository to the Ali Samadii hub: live previews, AI edits, and publishing. Only accesses the repositories you pick.` |
-| Homepage URL                                           | `https://hub.alisamadii.com`                                                                                                                   |
+| Homepage URL                                           | `https://app.alisamadii.com`                                                                                                                   |
 | Redirect URI                                           | leave empty (we never use the OAuth flow)                                                                                                      |
 | Allow wildcard matching                                | unchecked                                                                                                                                      |
 | Expire user authorization tokens                       | leave as is (unused, no OAuth)                                                                                                                 |
 | Request user authorization (OAuth) during installation | **UNCHECKED**                                                                                                                                  |
 | Enable Device Flow                                     | unchecked                                                                                                                                      |
-| Setup URL (optional)                                   | `https://hub.alisamadii.com/integrations/github/setup`                                                                                         |
+| Setup URL (optional)                                   | `https://app.alisamadii.com/integrations/github/setup`                                                                                         |
 | Redirect on update                                     | **CHECKED** (repo add/remove also round-trips through the hub)                                                                                 |
 | Webhook: Active                                        | **CHECKED**                                                                                                                                    |
 | Webhook URL                                            | `https://api.alisamadii.com/api/webhook/github-app`                                                                                            |

@@ -27,7 +27,7 @@ import {
 } from "./utils/element-info";
 import { KEYFRAMES } from "./utils/styles";
 
-const DEFAULT_REQUEST_URL = "https://hub.alisamadii.com/requests";
+const DEFAULT_REQUEST_URL = "https://app.alisamadii.com/requests";
 
 export function DevTools({
   storageKey = "devtools-enabled",

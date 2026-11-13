@@ -15,7 +15,7 @@ import {
 
 import { user } from "./auth";
 
-// Client Hub (hub.alisamadii.com) — GitHub-backed content management
+// Client Hub (app.alisamadii.com) — GitHub-backed content management
 
 // Framer-style collaborator roles: view-only < content-editor < full-access.
 export const COLLABORATOR_ROLE_VALUES = [

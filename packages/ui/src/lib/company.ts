@@ -66,7 +66,7 @@ export const urls: Record<Lowercase<ProjectType>, string> = {
   cms:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3007"
-      : "https://hub.alisamadii.com",
+      : "https://app.alisamadii.com",
   saaskit:
     process.env.NODE_ENV === "development"
       ? "http://localhost:5173"

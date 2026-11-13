@@ -90,7 +90,7 @@ export default function CollaboratorInviteEmail({
 CollaboratorInviteEmail.PreviewProps = {
   email: "jane@example.com",
   repoName: "acme/website",
-  inviteUrl: "https://hub.alisamadii.com/sign-in/collaborator?token=abc123",
+  inviteUrl: "https://app.alisamadii.com/sign-in/collaborator?token=abc123",
   invitedByName: "Ali Samadii",
-  invitedByUrl: "https://hub.alisamadii.com",
+  invitedByUrl: "https://app.alisamadii.com",
 } satisfies CollaboratorInviteProps;

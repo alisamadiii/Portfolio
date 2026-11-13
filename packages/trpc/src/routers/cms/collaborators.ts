@@ -33,7 +33,7 @@ import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 // it resolves the hub's public URL itself (mirrors apps/hub/lib/base-url.ts).
 const getHubBaseUrl = () =>
   process.env.NODE_ENV === "production"
-    ? "https://hub.alisamadii.com"
+    ? "https://app.alisamadii.com"
     : "http://localhost:3007";
 
 const EMAIL_FROM = "Ali Samadi CMS <no-reply@alisamadii.com>";

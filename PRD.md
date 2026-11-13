@@ -43,7 +43,7 @@ The monorepo powers three distinct revenue surfaces and one internal surface, al
 1. Visitor lands on the agency marketing site (hero, services, process, testimonials)
 2. Signs up / logs in
 3. Checks out via Stripe (agency plans) — Polar covers Motion/SaaS-template purchases
-4. Lands in the Client Hub (`apps/hub`, hub.alisamadii.com) — the single client-facing app
+4. Lands in the Client Hub (`apps/hub`, app.alisamadii.com) — the single client-facing app
 5. Manages everything from the hub: website CMS, AI requests, billing, emails, account, guide
 
 **Client Hub sections** (`apps/hub`, formerly separate portal + cms apps — merged 2026-08):
