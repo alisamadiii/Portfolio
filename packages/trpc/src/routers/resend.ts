@@ -17,6 +17,7 @@ import {
   deleteResendApiKey,
   forgetResendToken,
   getResendDomain,
+  getResendEmail,
   listResendDomains,
   listResendApiKeys,
   listResendEmails,
@@ -170,6 +171,31 @@ export const resendRouter = createTRPCRouter({
           priority: r.priority ?? null,
           status: r.status,
         })),
+      };
+    }),
+
+  // One sent email with its content, for the email detail page.
+  email: cmsProcedure
+    .input(z.object({ emailId: z.string().min(1).max(100) }))
+    .query(async ({ ctx, input }) => {
+      const token = await projectToken(ctx.projectId);
+      const e = await getResendEmail(token, input.emailId);
+      const list = (v: string[] | string | null | undefined) =>
+        Array.isArray(v) ? v : v ? [v] : [];
+      return {
+        id: e.id,
+        from: e.from,
+        to: list(e.to),
+        cc: list(e.cc),
+        bcc: list(e.bcc),
+        replyTo: list(e.reply_to),
+        subject: e.subject,
+        status: e.last_event,
+        createdAt: e.created_at,
+        scheduledAt: e.scheduled_at ?? null,
+        html: e.html ?? null,
+        text: e.text ?? null,
+        tags: e.tags ?? [],
       };
     }),
 

@@ -146,6 +146,20 @@ export const getResendDomain = (token: string, domainId: string) =>
 export const listResendEmails = async (token: string) =>
   (await resend<{ data: ResendEmail[] }>(token, "/emails?limit=20")).data ?? [];
 
+export type ResendEmailDetail = ResendEmail & {
+  from: string;
+  html: string | null;
+  text: string | null;
+  cc: string[] | null;
+  bcc: string[] | null;
+  reply_to: string[] | null;
+  scheduled_at: string | null;
+  tags?: { name: string; value: string }[] | null;
+};
+
+export const getResendEmail = (token: string, emailId: string) =>
+  resend<ResendEmailDetail>(token, `/emails/${encodeURIComponent(emailId)}`);
+
 export type ResendApiKey = {
   id: string;
   name: string;

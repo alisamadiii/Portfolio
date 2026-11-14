@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { Check, Copy, KeyRound, Send, Trash2 } from "lucide-react";
+import { Check, Copy, ExternalLink, KeyRound, Send, Trash2 } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { Badge, type BadgeTone } from "@/components/ds/ui/badge";
-import { Button } from "@/components/ds/ui/button";
+import { Button, ButtonAnchor } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
@@ -23,6 +24,7 @@ import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { connectErrorURL } from "@/lib/connect-errors";
+import { repoPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Overview = RouterOutputs["resend"]["overview"];
@@ -41,7 +43,7 @@ const domainBadge = (status: string): { tone: BadgeTone; label: string } => {
   return { tone: "info", label: "Pending" };
 };
 
-const emailBadge = (status: string | null): { tone: BadgeTone; label: string } => {
+export const emailBadge = (status: string | null): { tone: BadgeTone; label: string } => {
   if (!status) return { tone: "neutral", label: "—" };
   if (status === "delivered" || status === "opened" || status === "clicked")
     return { tone: "success", label: status[0].toUpperCase() + status.slice(1) };
@@ -90,6 +92,7 @@ export function ResendPage() {
   const fullAccess = project?.role === "full-access";
   const [returned, setReturned] = useQueryState("resend", parseAsString);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+  const router = useRouter();
 
   const statusKey = trpc.resend.status.queryKey({ projectId });
   const status = useQuery(trpc.resend.status.queryOptions({ projectId }));
@@ -146,14 +149,26 @@ export function ResendPage() {
       title="Resend"
       description="The email account your website sends from: domains, recent emails and API keys."
       actions={
-        connected && fullAccess ? (
-          <Button
-            variant="ghost"
-            onClick={() => setConfirmDisconnect(true)}
-            disabled={disconnect.isPending}
-          >
-            {disconnect.isPending ? "Disconnecting…" : "Disconnect"}
-          </Button>
+        connected ? (
+          <div className="flex gap-2">
+            <ButtonAnchor
+              href="https://resend.com/emails"
+              target="_blank"
+              rel="noreferrer"
+              icon={<ExternalLink className="size-4" />}
+            >
+              Open Resend
+            </ButtonAnchor>
+            {fullAccess && (
+              <Button
+                variant="ghost"
+                onClick={() => setConfirmDisconnect(true)}
+                disabled={disconnect.isPending}
+              >
+                {disconnect.isPending ? "Disconnecting…" : "Disconnect"}
+              </Button>
+            )}
+          </div>
         ) : undefined
       }
     />
@@ -256,6 +271,7 @@ export function ResendPage() {
             columns={emailColumns}
             rows={overview.data.emails}
             rowKey={(e) => e.id}
+            onRowClick={(e) => router.push(repoPath(projectId, "resend", e.id))}
             empty={<p className="px-6 py-8 text-center text-[13px] text-dim">No emails sent yet.</p>}
           />
         )}
