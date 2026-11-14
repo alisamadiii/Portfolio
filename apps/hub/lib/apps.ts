@@ -18,6 +18,7 @@ import {
   Link2,
   Mail,
   Megaphone,
+  MonitorSmartphone,
   Plug,
   User,
   Users,
@@ -207,14 +208,17 @@ export const PROJECT_SETTINGS: NavItem[] = [
   { id: "billing", label: "Billing", icon: CreditCard, path: "billing" },
 ];
 
-/** Account-level sidebar (no project selected). */
-export const ACCOUNT_NAV: NavItem[] = [
+/** Account-level sidebar (no project selected). Client websites: admins only. */
+export const accountNav = ({ isAdmin }: { isAdmin: boolean }): NavItem[] => [
   { id: "sites", label: "Sites", icon: LayoutGrid, path: "/" },
   { id: "account", label: "Account", icon: User, path: "/account" },
   { id: "integrations", label: "Integrations", icon: Plug, path: "/integrations" },
   { id: "billing", label: "Billing", icon: CreditCard, path: "/billing" },
   { id: "partner", label: "Partner Program", icon: Handshake, path: "/partner" },
   { id: "guide", label: "Guide", icon: BookOpen, path: "/guide" },
+  ...(isAdmin
+    ? [{ id: "client-websites", label: "Client websites", icon: MonitorSmartphone, path: "/client-websites" }]
+    : []),
 ];
 
 export const ACCOUNT_PRODUCTS: NavItem[] = [

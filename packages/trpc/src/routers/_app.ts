@@ -4,6 +4,7 @@ import { createTRPCRouter } from "../init";
 import { agencyRouter } from "./agency";
 import { analyticsRouter } from "./integrations/analytics";
 import { authRouter } from "./auth";
+import { clientWebsitesRouter } from "./client-websites";
 import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { deployRouter } from "./deploy";
@@ -50,6 +51,7 @@ export const appRouter = createTRPCRouter({
   resend: resendRouter,
   neon: neonRouter,
   wix: wixRouter,
+  clientWebsites: clientWebsitesRouter,
   gcal: gcalRouter,
 });
 

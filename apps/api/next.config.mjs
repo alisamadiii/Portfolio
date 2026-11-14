@@ -7,6 +7,9 @@ const nextConfig = {
   // workspace deps land in the bundle.
   output: "standalone",
   outputFileTracingRoot: path.join(import.meta.dirname, "../../"),
+  // Client website previews (app/client-websites) need "/<slug>/" kept: relative
+  // links in the designs resolve against it. The route redirects itself.
+  skipTrailingSlashRedirect: true,
   // Shared tRPC routers use the "use cache" directive.
   cacheComponents: true,
   transpilePackages: [

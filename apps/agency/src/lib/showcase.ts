@@ -1,7 +1,7 @@
 import { AwsClient } from "aws4fetch";
 
 // /showcase data: pre-built client sites from the client-websites R2 bucket
-// (contract in apps/client-websites/README.md). Every folder is listed; the
+// (contract in context/client-websites.md). Every folder is listed; the
 // video and poster are optional. The site's HTML is never read or served here,
 // only preview.mp4, preview.jpg, presentation.html (speaker notes stripped)
 // and a whitelisted subset of _meta.json.

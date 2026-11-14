@@ -13,8 +13,9 @@ import { signImportToken } from "./edit-token";
 import { uploadSlug } from "./upload-slug";
 
 // ─── Upload (no-GitHub) projects ────────────────────────────────
-// Shared by deploy.importUpload/finalizeUpload (browser zip upload) and the
-// agency starter project (server-side zip of a placeholder index.html).
+// Shared by deploy.importUpload/finalizeUpload (browser zip upload), the
+// agency starter project (server-side zip of a placeholder index.html) and
+// client website Import (server-side zip of an R2 design folder).
 
 const importSecret = () => {
   const secret = process.env.EDIT_TOKEN_SECRET;
@@ -125,6 +126,23 @@ export async function createStarterProject(input: {
   name: string;
   projectId?: string;
 }) {
+  return createUploadProjectFromFiles({
+    ...input,
+    files: { "index.html": strToU8(starterHtml(input.name)) },
+  });
+}
+
+/**
+ * Server-side upload project from files already in hand (path -> bytes):
+ * reserve the row, zip, push to content-pilot, finalize. A failed push drops
+ * the reserved row. Used by the starter project and client website Import.
+ */
+export async function createUploadProjectFromFiles(input: {
+  userId: string;
+  name: string;
+  files: Record<string, Uint8Array>;
+  projectId?: string;
+}) {
   const pilotUrl = (process.env.CONTENT_PILOT_URL ?? "").replace(/\/$/, "");
   if (!pilotUrl) {
     throw new TRPCError({
@@ -134,7 +152,7 @@ export async function createStarterProject(input: {
   }
   const reserved = await reserveUploadProject(input.userId, input.name, input.projectId);
   try {
-    const zip = zipSync({ "index.html": strToU8(starterHtml(input.name)) });
+    const zip = zipSync(input.files);
     const res = await fetch(
       `${pilotUrl}/api/v1/imports?projectId=${reserved.projectId}&name=${encodeURIComponent(reserved.name)}`,
       {
@@ -149,7 +167,7 @@ export async function createStarterProject(input: {
     if (!res.ok) {
       throw new TRPCError({
         code: "BAD_GATEWAY",
-        message: `Starter site upload failed (${res.status}).`,
+        message: `Site upload failed (${res.status}).`,
       });
     }
     await finalizeUploadProject(reserved.projectId);
