@@ -37,6 +37,7 @@ import { Field, Select } from "@/components/ds/ui/field";
 import { EmptyState, IconTile, KpiGrid } from "@/components/ds/ui/misc";
 import { UnderlineTabs } from "@/components/ds/ui/tabs";
 import { useRouteProjectId } from "@/hooks/use-repo";
+import { connectErrorURL } from "@/lib/connect-errors";
 
 const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 
@@ -148,6 +149,7 @@ export function AnalyticsPage() {
       provider: "google",
       scopes: [GA_SCOPE],
       callbackURL: window.location.href,
+      errorCallbackURL: connectErrorURL("Google Analytics"),
     });
     if (error) toast.error(error.message ?? "Could not start Google sign-in");
   };

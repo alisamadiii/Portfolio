@@ -18,6 +18,7 @@ import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
+import { connectErrorURL } from "@/lib/connect-errors";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 import { CalendarWeek } from "./calendar-week";
@@ -95,6 +96,7 @@ export function CalendarPage() {
       provider: "google",
       scopes: CALENDAR_SCOPES,
       callbackURL: url.toString(),
+      errorCallbackURL: connectErrorURL("Google Calendar"),
     });
     if (error) toast.error(error.message ?? "Couldn't start Google sign-in.");
   };

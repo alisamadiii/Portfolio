@@ -175,9 +175,16 @@ export const auth = betterAuth({
             const profile = (await res.json()) as {
               id: string;
               email: string;
+              full_name?: string | null;
             };
-            // Identity only: the user row is never updated from a link.
-            return { id: profile.id, email: profile.email, emailVerified: true };
+            // Identity only: the user row is never updated from a link. Better
+            // Auth still requires a name, so fall back to the email.
+            return {
+              id: profile.id,
+              email: profile.email,
+              name: profile.full_name || profile.email,
+              emailVerified: true,
+            };
           },
         },
         // Resend: link-only, OAuth 2.1 + PKCE. Access tokens live 15 minutes;
@@ -204,8 +211,11 @@ export const auth = betterAuth({
               typeof claims?.email === "string"
                 ? claims.email
                 : `resend-${id}@users.noreply.alisamadii.com`;
-            // Identity only: the user row is never updated from a link.
-            return { id, email, emailVerified: true };
+            // Identity only: the user row is never updated from a link. Better
+            // Auth still requires a name.
+            const name =
+              typeof claims?.team_name === "string" ? claims.team_name : "Resend";
+            return { id, email, name, emailVerified: true };
           },
         },
         // Neon: link-only, OAuth + PKCE (partner client from Neon). offline +
@@ -234,12 +244,20 @@ export const auth = betterAuth({
               headers: { Authorization: `Bearer ${tokens.accessToken}` },
             });
             if (!res.ok) return null;
-            const profile = (await res.json()) as { id?: string; email?: string };
+            const profile = (await res.json()) as {
+              id?: string;
+              email?: string;
+              name?: string;
+              last_name?: string;
+            };
             if (!profile.id) return null;
-            // Identity only: the user row is never updated from a link.
+            const email = profile.email || `neon-${profile.id}@users.noreply.alisamadii.com`;
+            // Identity only: the user row is never updated from a link. Better
+            // Auth still requires a name.
             return {
               id: profile.id,
-              email: profile.email || `neon-${profile.id}@users.noreply.alisamadii.com`,
+              email,
+              name: [profile.name, profile.last_name].filter(Boolean).join(" ") || email,
               emailVerified: true,
             };
           },

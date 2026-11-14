@@ -12,6 +12,8 @@ export async function connectGoogleCalendar(callbackURL: string) {
     provider: "google",
     scopes: [CALENDAR_SCOPE],
     callbackURL,
+    // A failed link returns here (with ?error=…) instead of the api's 404.
+    errorCallbackURL: callbackURL,
   });
   return result.error ? { message: result.error.message } : null;
 }

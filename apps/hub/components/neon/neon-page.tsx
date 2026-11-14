@@ -31,6 +31,7 @@ import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
+import { connectErrorURL } from "@/lib/connect-errors";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Overview = RouterOutputs["neon"]["overview"];
@@ -108,6 +109,7 @@ export function NeonPage() {
     const { error } = await authClient.oauth2.link({
       providerId: "neon",
       callbackURL: url.toString(),
+      errorCallbackURL: connectErrorURL("Neon"),
     });
     if (error) toast.error(error.message ?? "Couldn't start Neon sign-in.");
   };

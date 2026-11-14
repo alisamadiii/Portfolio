@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ImpersonationBanner } from "@workspace/auth/components/impersonation-banner";
 
 import { SubscriptionGateProvider } from "@/components/subscription/subscription-gate";
+import { ConnectErrorToast } from "@/components/connect-error-toast";
 import { SessionSeed } from "@/components/query-seeds";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
@@ -35,6 +36,7 @@ export default async function Layout({
     <SessionSeed current={current}>
       <SubscriptionGateProvider>
         <ImpersonationBanner />
+        <ConnectErrorToast />
         {children}
       </SubscriptionGateProvider>
     </SessionSeed>

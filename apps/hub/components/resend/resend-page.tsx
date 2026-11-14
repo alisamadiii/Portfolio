@@ -22,6 +22,7 @@ import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
+import { connectErrorURL } from "@/lib/connect-errors";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Overview = RouterOutputs["resend"]["overview"];
@@ -135,6 +136,7 @@ export function ResendPage() {
     const { error } = await authClient.oauth2.link({
       providerId: "resend",
       callbackURL: url.toString(),
+      errorCallbackURL: connectErrorURL("Resend"),
     });
     if (error) toast.error(error.message ?? "Couldn't start Resend sign-in.");
   };

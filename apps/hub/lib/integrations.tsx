@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { authClient } from "@workspace/auth/auth-client";
 
 import { GoogleAnalyticsLogo, NetlifyLogo } from "@/components/ds/brand-logos";
+import { connectErrorURL } from "@/lib/connect-errors";
 
 // ─── Integrations registry (client side) ─────────────────────────
 // One entry per installable app on the /integrations page. Adding an app =
@@ -44,6 +45,7 @@ export const INTEGRATION_APPS: IntegrationApp[] = [
           provider: "google",
           scopes: [GA_SCOPE],
           callbackURL,
+          errorCallbackURL: connectErrorURL("Google Analytics", callbackURL),
         })
       ),
     unlinkWarning:
@@ -57,7 +59,11 @@ export const INTEGRATION_APPS: IntegrationApp[] = [
     logo: <NetlifyLogo className="size-6" />,
     connect: async (callbackURL) =>
       toError(
-        await authClient.oauth2.link({ providerId: "netlify", callbackURL })
+        await authClient.oauth2.link({
+          providerId: "netlify",
+          callbackURL,
+          errorCallbackURL: connectErrorURL("Netlify", callbackURL),
+        })
       ),
   },
 ];
