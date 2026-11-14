@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
@@ -8,6 +9,8 @@ import {
   hubProject,
   user as userTable,
 } from "@workspace/drizzle/schema";
+import AgencyLeadEmail from "@workspace/email/emails/agency-lead";
+import { renderEmailParts } from "@workspace/email/utils";
 import { IP_LIMIT } from "@workspace/trpc/lib/agency/lead-capture";
 
 // ─── Shared plumbing for the public agency endpoints ─────────────
@@ -188,53 +191,13 @@ export const attributionSchema = z.object({
 
 // ─── Notification email ─────────────────────────────────────────
 
-export const escapeHtml = (value: string) =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-
-const row = (label: string, value: string) => `
-  <tr>
-    <td style="padding:10px 16px;font:600 11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.08em;text-transform:uppercase;color:#a49d94;white-space:nowrap;vertical-align:top;border-bottom:1px solid #f1efec;">${escapeHtml(label)}</td>
-    <td style="padding:10px 16px;font:400 14px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2b2926;border-bottom:1px solid #f1efec;white-space:pre-wrap;">${escapeHtml(value)}</td>
-  </tr>`;
-
-export const leadEmailHtml = (
+/** html + text for a new-lead notification (packages/email agency-lead). */
+export const leadEmail = (
   lines: [string, string][],
   leadUrl: string,
   siteName: string,
   opts?: { tag?: string; title?: string }
-) => `<!doctype html>
-<html>
-  <body style="margin:0;padding:0;background:#f6f4f1;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4f1;padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #eceae6;">
-            <tr>
-              <td style="padding:28px 32px 0;">
-                <div style="font:600 11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.12em;text-transform:uppercase;color:#fc8464;">&#9642; ${escapeHtml(opts?.tag ?? "New lead")}</div>
-                <div style="margin-top:10px;font:600 22px/1.25 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;letter-spacing:-0.02em;color:#2b2926;">${escapeHtml(opts?.title ?? `Someone contacted ${siteName}`)}</div>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:20px 16px 0;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f1efec;border-radius:12px;border-collapse:separate;overflow:hidden;">
-                  ${lines.map(([label, value]) => row(label, value)).join("")}
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:24px 32px 28px;">
-                <a href="${leadUrl}" style="display:inline-block;background:#2b2926;color:#faf6f2;font:500 14px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:13px 26px;border-radius:999px;text-decoration:none;">Open in Hub</a>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+) =>
+  renderEmailParts(
+    createElement(AgencyLeadEmail, { lines, leadUrl, siteName, ...opts })
+  );

@@ -25,7 +25,7 @@ import {
   hostOf,
   isAllowedOrigin,
   isRateLimited,
-  leadEmailHtml,
+  leadEmail,
   parseProjectIdParam,
 } from "@/lib/agency-public";
 
@@ -243,14 +243,7 @@ export async function POST(
         to: client.notifyEmail ?? client.ownerEmail,
         ...(email ? { replyTo: email } : {}),
         subject: `New lead from ${name ?? email ?? phone ?? siteName}`,
-        html: leadEmailHtml(lines, `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`, siteName),
-        text: [
-          `New lead on ${siteName}`,
-          "",
-          ...lines.map(([label, value]) => `${label}: ${value}`),
-          "",
-          `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`,
-        ].join("\n"),
+        ...(await leadEmail(lines, `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`, siteName)),
       });
     } catch (error) {
       // The lead is saved; a failed notification must not fail the visitor's submit.

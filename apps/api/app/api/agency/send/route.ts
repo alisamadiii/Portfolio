@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { createElement } from "react";
 import { z } from "zod";
 
+import AgencyFormEmail from "@workspace/email/emails/agency-form";
 import { sendEmail, UseSendError } from "@workspace/email/usesend";
+import { renderEmailParts } from "@workspace/email/utils";
 import {
   isEmail,
   MAX_FIELDS,
@@ -58,14 +61,6 @@ const bodySchema = z.object({
 });
 type Body = z.infer<typeof bodySchema>;
 
-const escapeHtml = (value: string) =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-
 // "google_maps" -> "Google maps", "bestTime" -> "Best time"
 const label = (key: string) => {
   const words = key
@@ -76,24 +71,16 @@ const label = (key: string) => {
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-const link = (href: string, text: string) =>
-  `<a href="${escapeHtml(href)}" style="color:#fc8464;text-decoration:none;">${escapeHtml(text)}</a>`;
-
-const valueHtml = (key: string, value: string) => {
+// Emails, phone numbers and URLs become links in the email.
+const hrefFor = (key: string, value: string) => {
   // cast keeps isEmail's type guard from narrowing value to never below
-  if (isEmail(value as string | undefined)) return link(`mailto:${value}`, value);
+  if (isEmail(value as string | undefined)) return `mailto:${value}`;
   if (/phone|tel/i.test(key) && /^[\d\s()+.-]{7,}$/.test(value)) {
-    return link(`tel:${value.replace(/[^\d+]/g, "")}`, value);
+    return `tel:${value.replace(/[^\d+]/g, "")}`;
   }
-  if (/^https?:\/\/\S+$/i.test(value)) return link(value, value);
-  return escapeHtml(value).replaceAll("\n", "<br>");
+  if (/^https?:\/\/\S+$/i.test(value)) return value;
+  return undefined;
 };
-
-const row = (name: string, value: string) => `
-  <tr>
-    <td style="padding:10px 16px;font:600 11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.08em;text-transform:uppercase;color:#a49d94;white-space:nowrap;vertical-align:top;border-bottom:1px solid #f1efec;">${escapeHtml(name)}</td>
-    <td style="padding:10px 16px;font:400 14px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#2b2926;border-bottom:1px solid #f1efec;">${value}</td>
-  </tr>`;
 
 const entries = (fields: Body["fields"]) =>
   Object.entries(fields)
@@ -103,63 +90,24 @@ const entries = (fields: Body["fields"]) =>
 const who = (fields: Body["fields"]) =>
   fields.name?.trim() || fields.business?.trim() || fields.email?.trim() || "someone";
 
-const emailHtml = (data: Body, page: string | null) => {
-  const rows = [
-    ...entries(data.fields).map(([key, value]) => row(label(key), valueHtml(key, value))),
-    page ? row("Page", link(page, page)) : "",
-  ].join("");
+const renderFormEmail = (data: Body, page: string | null) => {
   const replyTo = data.fields.email?.trim();
-
-  return `<!doctype html>
-<html>
-  <body style="margin:0;padding:0;background:#f6f4f1;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4f1;padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #eceae6;">
-            <tr>
-              <td style="padding:28px 32px 0;">
-                <div style="font:600 11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.12em;text-transform:uppercase;color:#fc8464;">
-                  &#9642; ${escapeHtml(data.form)}
-                </div>
-                <div style="margin-top:10px;font:600 22px/1.25 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;letter-spacing:-0.02em;color:#2b2926;">
-                  New message from ${escapeHtml(who(data.fields))}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:20px 16px ${isEmail(replyTo) ? "0" : "28px"};">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f1efec;border-radius:12px;border-collapse:separate;overflow:hidden;">
-                  ${rows}
-                </table>
-              </td>
-            </tr>
-            ${
-              isEmail(replyTo)
-                ? `<tr>
-              <td style="padding:24px 32px 28px;">
-                <a href="mailto:${escapeHtml(replyTo)}" style="display:inline-block;background:#2b2926;color:#faf6f2;font:500 14px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:13px 26px;border-radius:999px;text-decoration:none;">Reply to ${escapeHtml(who(data.fields))}</a>
-              </td>
-            </tr>`
-                : ""
-            }
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
+  return renderEmailParts(
+    createElement(AgencyFormEmail, {
+      form: data.form,
+      who: who(data.fields),
+      rows: [
+        ...entries(data.fields).map(([key, value]) => ({
+          label: label(key),
+          value,
+          href: hrefFor(key, value),
+        })),
+        ...(page ? [{ label: "Page", value: page, href: page }] : []),
+      ],
+      replyTo: isEmail(replyTo) ? replyTo : undefined,
+    })
+  );
 };
-
-const emailText = (data: Body, page: string | null) =>
-  [
-    data.form,
-    "",
-    ...entries(data.fields).map(([key, value]) => `${label(key)}: ${value}`),
-    page ? `Page: ${page}` : "",
-  ]
-    .filter((line, i) => line || i === 1)
-    .join("\n");
 
 export async function POST(req: Request) {
   const headers = corsHeaders(req);
@@ -204,8 +152,7 @@ export async function POST(req: Request) {
       to: TO,
       ...(isEmail(replyTo) ? { replyTo } : {}),
       subject: `${data.form}: ${who(data.fields)}`,
-      html: emailHtml(data, page),
-      text: emailText(data, page),
+      ...(await renderFormEmail(data, page)),
     });
   } catch (error) {
     if (error instanceof UseSendError && error.status === 429) {

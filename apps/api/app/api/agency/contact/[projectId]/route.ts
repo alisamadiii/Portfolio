@@ -18,7 +18,7 @@ import {
   hostOf,
   isAllowedOrigin,
   isRateLimited,
-  leadEmailHtml,
+  leadEmail,
   parseProjectIdParam,
 } from "@/lib/agency-public";
 
@@ -157,6 +157,10 @@ export async function POST(
   if (data.pageUrl) lines.push(["Page", stripUrl(data.pageUrl) ?? data.pageUrl]);
 
   try {
+    const body = await leadEmail(lines, `${urls.cms}/p/${projectId}`, siteName, {
+      tag: "Contact form",
+      title,
+    });
     await usesendFetch("/api/v1/emails", {
       method: "POST",
       apiKey: client.usesendApiKey,
@@ -165,15 +169,7 @@ export async function POST(
         to: recipient,
         ...(replyTo ? { replyTo } : {}),
         subject: `${data.formName ? `${data.formName}: ` : ""}${title}`,
-        html: leadEmailHtml(lines, `${urls.cms}/p/${projectId}`, siteName, {
-          tag: "Contact form",
-          title,
-        }),
-        text: [
-          `${title} (${siteName})`,
-          "",
-          ...lines.map(([label, value]) => `${label}: ${value}`),
-        ].join("\n"),
+        ...body,
       },
     });
   } catch (error) {

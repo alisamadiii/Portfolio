@@ -7,5 +7,18 @@ export const renderEmail = async (component: ReactElement) => {
 
 export const renderText = async (component: ReactElement) => {
   const rendered = await render(component);
-  return toPlainText(rendered);
+  // table.details = label/value rows: keep them side by side in plain text.
+  return toPlainText(rendered, {
+    selectors: [{ selector: "table.details", format: "dataTable" }],
+  });
 };
+
+/**
+ * HTML + plain-text bodies for sendEmail, from one React Email template.
+ * Not prettified: pretty() indents the markup, and white-space: pre-wrap
+ * cells (multi-line messages) would show that indentation.
+ */
+export const renderEmailParts = async (component: ReactElement) => ({
+  html: await render(component),
+  text: await renderText(component),
+});

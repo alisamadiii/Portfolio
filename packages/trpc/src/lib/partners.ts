@@ -1,10 +1,15 @@
 import "server-only";
 
+import { createElement } from "react";
 import { and, eq, ne, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/index";
 import { partner, partnerReferral } from "@workspace/drizzle/schema";
+import PartnerApplicationTemplate from "@workspace/email/emails/partner-application";
+import PartnerApprovedTemplate from "@workspace/email/emails/partner-approved";
+import PartnerRejectedTemplate from "@workspace/email/emails/partner-rejected";
 import { sendEmail } from "@workspace/email/usesend";
+import { renderEmailParts } from "@workspace/email/utils";
 
 import { normalizePartnerCode } from "./partners-shared";
 
@@ -123,40 +128,8 @@ export const referralLine = (
 
 // ─── Emails ──────────────────────────────────────────────────────
 
-export const escapeHtml = (value: string) =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-
-const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
-
-const layout = (title: string, body: string) => `<!doctype html>
-<html>
-  <body style="margin:0;padding:0;background:#f7f6f4;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f4;padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:10px;border:1px solid #e7e3de;">
-            <tr>
-              <td style="padding:28px 32px 8px;font:600 20px/1.3 ${FONT};color:#221f1c;">${title}</td>
-            </tr>
-            <tr>
-              <td style="padding:0 32px 28px;font:400 15px/1.6 ${FONT};color:#221f1c;">${body}</td>
-            </tr>
-          </table>
-          <div style="margin-top:16px;font:400 12px/1.5 ${FONT};color:#6b6560;">
-            Ali Samadii LLC &middot; 566 Kit St, Jacksonville, FL &middot; (971) 382-8969
-          </div>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-
-const p = (text: string) => `<p style="margin:12px 0 0;">${text}</p>`;
+// Templates live in packages/email (partner-application, partner-approved,
+// partner-rejected) so they show up in the React Email preview.
 
 export type PartnerApplicationEmail = {
   fullName: string;
@@ -168,117 +141,50 @@ export type PartnerApplicationEmail = {
   whyJoin: string | null;
 };
 
-export function sendPartnerApplicationAlert(
+export async function sendPartnerApplicationAlert(
   a: PartnerApplicationEmail,
   adminUrl: string
 ) {
-  const rows: [string, string][] = [
-    ["Name", a.fullName],
-    ["Email", a.email],
-    ["Phone", a.phone ?? "Not provided"],
-    ["Occupation", a.occupation ?? "Not provided"],
-    ["City", a.city ?? "Not provided"],
-    ["Knows owners through", a.knowOwners ?? "Not provided"],
-    ["Why join", a.whyJoin ?? "Not provided"],
-  ];
-  const table = rows
-    .map(
-      ([k, v]) =>
-        `<tr><td style="padding:8px 12px 8px 0;color:#6b6560;vertical-align:top;white-space:nowrap;">${k}</td><td style="padding:8px 0;white-space:pre-wrap;">${escapeHtml(v)}</td></tr>`
-    )
-    .join("");
   return sendEmail({
     from: FROM,
     to: PARTNER_ADMIN_EMAIL,
     replyTo: a.email,
     subject: `New partner application: ${a.fullName}`,
-    html: layout(
-      `${escapeHtml(a.fullName)} applied to the Partner Program`,
-      `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;font:400 14px/1.5 ${FONT};">${table}</table>` +
-        p(
-          `<a href="${escapeHtml(adminUrl)}" style="color:#c2502f;">Review in admin</a>`
-        )
-    ),
-    text: [
-      "New partner application",
-      "",
-      ...rows.map(([k, v]) => `${k}: ${v}`),
-      "",
-      `Review: ${adminUrl}`,
-    ].join("\n"),
+    ...(await renderEmailParts(
+      createElement(PartnerApplicationTemplate, { ...a, adminUrl })
+    )),
   });
 }
 
-export function sendPartnerApproved(a: {
+export async function sendPartnerApproved(a: {
   fullName: string;
   email: string;
   code: string;
   pdfUrl: string;
 }) {
-  const first = a.fullName.trim().split(/\s+/)[0] ?? a.fullName;
-  const site = `https://www.alisamadii.com/?ref=${encodeURIComponent(a.code)}`;
   return sendEmail({
     from: FROM,
     to: a.email,
     replyTo: REPLY_TO,
     subject: "You're approved: your partner referral code",
-    html: layout(
-      `Welcome to the Partner Program, ${escapeHtml(first)}`,
-      p("Your application is approved. Here is your referral code:") +
-        `<div style="margin:16px 0;padding:14px 18px;border:1px solid #e7e3de;border-left:3px solid #fc8464;border-radius:6px;font:700 22px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:0.06em;">${escapeHtml(a.code)}</div>` +
-        p(
-          "Give it to any business that needs a website. They can enter it on our quote form, mention it when we talk, or use your link:"
-        ) +
-        p(`<a href="${site}" style="color:#c2502f;">${escapeHtml(site)}</a>`) +
-        p(
-          "When a business you referred pays for its website, you earn 40% of that first payment. We'll email you when that happens and when your payout is sent."
-        ) +
-        p(
-          `Your signed agreement: <a href="${escapeHtml(a.pdfUrl)}" style="color:#c2502f;">download PDF</a>.`
-        ) +
-        p("Questions? Just reply to this email.") +
-        p("Ali Samadi")
-    ),
-    text: [
-      `Welcome to the Partner Program, ${first}.`,
-      "",
-      `Your referral code: ${a.code}`,
-      "",
-      "Give it to any business that needs a website. They can enter it on our quote form, mention it when we talk, or use your link:",
-      site,
-      "",
-      "When a business you referred pays for its website, you earn 40% of that first payment.",
-      "",
-      `Your signed agreement: ${a.pdfUrl}`,
-      "",
-      "Ali Samadi",
-    ].join("\n"),
+    ...(await renderEmailParts(
+      createElement(PartnerApprovedTemplate, {
+        fullName: a.fullName,
+        code: a.code,
+        pdfUrl: a.pdfUrl,
+      })
+    )),
   });
 }
 
-export function sendPartnerRejected(a: { fullName: string; email: string }) {
-  const first = a.fullName.trim().split(/\s+/)[0] ?? a.fullName;
+export async function sendPartnerRejected(a: { fullName: string; email: string }) {
   return sendEmail({
     from: FROM,
     to: a.email,
     replyTo: REPLY_TO,
     subject: "Your Partner Program application",
-    html: layout(
-      `Thanks for applying, ${escapeHtml(first)}`,
-      p(
-        "We read your application carefully, and we can't approve it right now. This isn't a judgment of you: we keep the program small so we can give every partner and client real attention."
-      ) +
-        p("If anything changes on our side, we'll reach out. Thanks again for your interest.") +
-        p("Ali Samadi")
-    ),
-    text: [
-      `Thanks for applying, ${first}.`,
-      "",
-      "We read your application carefully, and we can't approve it right now. We keep the program small so we can give every partner and client real attention.",
-      "",
-      "If anything changes on our side, we'll reach out.",
-      "",
-      "Ali Samadi",
-    ].join("\n"),
+    ...(await renderEmailParts(
+      createElement(PartnerRejectedTemplate, { fullName: a.fullName })
+    )),
   });
 }

@@ -184,3 +184,39 @@ export const textLink: React.CSSProperties = {
   color: "#c2451f",
   textDecoration: "none",
 };
+
+// ── Label / value list (notification emails) ───────────────────────
+
+export type DetailRow = {
+  label: string;
+  value: string;
+  /** mailto:, tel: or https: link for the value. */
+  href?: string;
+};
+
+/** Stacked LABEL / value pairs, same look as the contact form email. */
+export function Details({ rows }: { rows: DetailRow[] }) {
+  return (
+    <>
+      {rows.map((row, i) => (
+        <Section key={`${row.label}-${i}`}>
+          <Text style={i === 0 ? { ...label, margin: "0 0 4px" } : label}>{row.label}</Text>
+          {row.href ? (
+            <Link href={row.href} style={{ ...value, ...textLink }}>
+              {row.value}
+            </Link>
+          ) : (
+            <Text style={{ ...value, whiteSpace: "pre-wrap" }}>{row.value}</Text>
+          )}
+        </Section>
+      ))}
+    </>
+  );
+}
+
+export const messageBox: React.CSSProperties = {
+  backgroundColor: "#fafafa",
+  border: "1px solid #eaeaea",
+  borderRadius: "12px",
+  padding: "16px",
+};
