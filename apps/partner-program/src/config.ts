@@ -7,15 +7,13 @@ export const program = {
   company: 'Ali Samadii LLC',
   payoutRate: 0.4,
 
-  // Placeholders: fill these in.
-  payoutDays: '[X days]',
-  paymentMethod: '[payment method]',
-  paymentMethodExamples: '[payment method, e.g. PayPal, Zelle or bank transfer]',
-  approvalDays: '[X]',
-  refundPolicy: '[Your policy, e.g. no payout until the refund window closes.]',
-  taxNote: '[We may ask for tax information, such as a W-9, before paying you.]',
-  governingLaw: '[Governing law, e.g. State of Florida.]',
-  agreementVersion: '2026-11',
+  // Program terms (the agreement PDF mirrors these: packages/ui/src/pdfs/partner-agreement.tsx).
+  payoutDays: '14 days',
+  paymentMethod: 'Zelle or Cash App',
+  approvalDays: '2',
+  refundPolicy: "If the client gets a refund before your payout is sent, no payout is owed. Once a payout is sent, it's yours to keep.",
+  governingLaw: 'This agreement is governed by the laws of the State of Florida.',
+  agreementVersion: '2026-11.1',
 
   // Product facts used in examples.
   mainPlanPrice: 699,

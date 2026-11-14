@@ -23,11 +23,10 @@ export const PARTNER_PROGRAM = {
   company: "Ali Samadii LLC",
   payoutRate: 0.4,
   mainPlanPrice: 699,
-  payoutDays: "[X days]",
-  paymentMethod: "[payment method]",
-  refundPolicy: "[Your policy, e.g. no payout until the refund window closes.]",
-  taxNote: "[We may ask for tax information, such as a W-9, before paying you.]",
-  governingLaw: "[Governing law, e.g. State of Florida.]",
+  payoutDays: "14 days",
+  paymentMethod: "Zelle or Cash App",
+  refundPolicy: "If the client gets a refund before your payout is sent, no payout is owed. Once a payout is sent, it's yours to keep.",
+  governingLaw: "This agreement is governed by the laws of the State of Florida.",
 } as const;
 
 export interface PartnerAgreementData {
@@ -82,7 +81,7 @@ const SECTIONS: { title: string; body: string }[] = [
   },
   {
     title: "9. Taxes",
-    body: `You're responsible for any taxes on your payouts. ${p.taxNote}`,
+    body: "You're responsible for any taxes on your payouts.",
   },
   {
     title: "10. Ending the partnership",

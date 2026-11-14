@@ -32,7 +32,7 @@ export function AgreementText() {
       <h4>8. Honest promotion</h4>
       <p>Describe our services accurately. Don't promise results or prices we haven't confirmed, and don't send spam or contact businesses that ask you not to.</p>
       <h4>9. Taxes</h4>
-      <p>You're responsible for any taxes on your payouts. <Ph>{program.taxNote}</Ph></p>
+      <p>You're responsible for any taxes on your payouts.</p>
       <h4>10. Ending the partnership</h4>
       <p>Either of us can end this agreement at any time by email. Payouts for businesses that paid before the end date will still be sent.</p>
       <h4>11. Changes</h4>

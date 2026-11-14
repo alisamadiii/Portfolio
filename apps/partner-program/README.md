@@ -16,15 +16,9 @@ npm run build    # production build in dist/
 npm run preview  # serve the build locally
 ```
 
-## Before going live: fill these in
+## Program terms
 
-Open **`src/config.ts`**. Anything in `[square brackets]` shows up highlighted on the page until you replace it:
-
-- `payoutDays`, `paymentMethod`, `paymentMethodExamples`
-- `approvalDays`
-- `refundPolicy`
-- `taxNote`, `governingLaw`
-- `agreementVersion` (bump it whenever the agreement text changes)
+All in **`src/config.ts`**: payout timing (`payoutDays`), `paymentMethod`, `approvalDays`, `refundPolicy`, `governingLaw`. A value in `[square brackets]` shows up highlighted on the page as an unfilled placeholder. Bump `agreementVersion` whenever the agreement text changes.
 
 The agreement text itself is in **`src/apply/AgreementText.tsx`**. It's a draft: have a lawyer review it, and keep `packages/ui/src/pdfs/partner-agreement.tsx` (the signed PDF) in sync.
 

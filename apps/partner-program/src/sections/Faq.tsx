@@ -7,7 +7,7 @@ import { money, payoutFor } from '../lib/money';
 const FAQS: { q: string; a: ReactNode }[] = [
   {
     q: 'When do I get paid?',
-    a: <>After the client pays for their website. We send your payout within <Ph>{program.payoutDays}</Ph> via <Ph>{program.paymentMethodExamples}</Ph>.</>,
+    a: <>After the client pays for their website. We send your payout within <Ph>{program.payoutDays}</Ph> via <Ph>{program.paymentMethod}</Ph>.</>,
   },
   {
     q: 'How much will I earn?',
