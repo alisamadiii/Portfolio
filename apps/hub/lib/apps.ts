@@ -12,6 +12,7 @@ import {
   Globe,
   Handshake,
   Home,
+  Images,
   Inbox,
   Send,
   LayoutGrid,
@@ -170,6 +171,8 @@ export type NavItem = {
   logo?: ComponentType<{ className?: string }>;
   path: string;
   external?: boolean;
+  /** Admin-only page: the sidebar shows a lock on it. */
+  adminOnly?: boolean;
 };
 
 /** Project sidebar, top group. Always shown for every client. */
@@ -217,7 +220,10 @@ export const accountNav = ({ isAdmin }: { isAdmin: boolean }): NavItem[] => [
   { id: "partner", label: "Partner Program", icon: Handshake, path: "/partner" },
   { id: "guide", label: "Guide", icon: BookOpen, path: "/guide" },
   ...(isAdmin
-    ? [{ id: "client-websites", label: "Client websites", icon: MonitorSmartphone, path: "/client-websites" }]
+    ? [
+        { id: "client-websites", label: "Client websites", icon: MonitorSmartphone, path: "/client-websites", adminOnly: true },
+        { id: "inspirations", label: "Inspirations", icon: Images, path: "/inspirations", adminOnly: true },
+      ]
     : []),
 ];
 

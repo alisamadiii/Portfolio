@@ -10,6 +10,7 @@ import { contactRouter } from "./contact";
 import { deployRouter } from "./deploy";
 import { emailsRouter } from "./emails";
 import { gcalRouter } from "./gcal";
+import { inspirationRouter } from "./inspiration";
 import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
 import { netlifyRouter } from "./netlify";
@@ -52,6 +53,7 @@ export const appRouter = createTRPCRouter({
   neon: neonRouter,
   wix: wixRouter,
   clientWebsites: clientWebsitesRouter,
+  inspiration: inspirationRouter,
   gcal: gcalRouter,
 });
 

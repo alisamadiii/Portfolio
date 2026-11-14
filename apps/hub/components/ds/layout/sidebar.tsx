@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, CircleHelp } from "lucide-react";
+import { ArrowUpRight, CircleHelp, Lock } from "lucide-react";
 
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { cn } from "@workspace/ui/lib/utils";
@@ -69,6 +69,11 @@ export function SidebarLink({
             )
           )}
           {item.label}
+          {item.adminOnly && (
+            <Lock className="ml-auto size-3.5 text-faint" aria-label="Admins only">
+              <title>Admins only</title>
+            </Lock>
+          )}
         </>
       )}
     </Link>

@@ -233,6 +233,54 @@ export async function listObjects(input: { prefix?: string; cursor?: string }) {
   return { objects, nextCursor };
 }
 
+/** Every object under a prefix (all pages of listObjects). */
+export async function listAllObjects(prefix: string) {
+  const all: Awaited<ReturnType<typeof listObjects>>["objects"] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await listObjects({ prefix, cursor });
+    all.push(...page.objects);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor);
+  return all;
+}
+
+/** Server-side upload to the public bucket. Returns the object's public URL. */
+export async function putObject(
+  key: string,
+  body: Uint8Array | string,
+  contentType: string
+) {
+  const { client, base, bucket, publicBaseUrl } = r2();
+  const clean = cleanPath(key);
+  const res = await client.fetch(`${base}/${bucket}/${encodeURI(clean)}`, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: body as BodyInit,
+  });
+  if (!res.ok) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Storage upload failed (${res.status})`,
+    });
+  }
+  return `${publicBaseUrl}/${clean}`;
+}
+
+/** A small text object from the public bucket, or null when it doesn't exist. */
+export async function getObjectText(key: string) {
+  const { client, base, bucket } = r2();
+  const res = await client.fetch(`${base}/${bucket}/${encodeURI(cleanPath(key))}`);
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Storage read failed (${res.status})`,
+    });
+  }
+  return res.text();
+}
+
 // ─── Private bucket ──────────────────────────────────────────────
 // Same R2 credentials, separate bucket with NO public domain (signed partner
 // agreements and other personal files). Objects are only reachable through

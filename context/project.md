@@ -18,7 +18,7 @@ apps/
   admin/       — internal admin panel
   agency/      — Ali's agency website
   docs/        — documentation site
-  hub/         — Client Hub (app.alisamadii.com): CMS + billing + account + auth UI (absorbed the old portal app, 2026-08); admin-only /client-websites (absorbed apps/client-websites, see context/client-websites.md)
+  hub/         — Client Hub (app.alisamadii.com): CMS + billing + account + auth UI (absorbed the old portal app, 2026-08); admin-only /client-websites (absorbed apps/client-websites, see context/client-websites.md) and /inspirations (absorbed apps/inspiration; images + prompts in the media bucket under inspiration/)
   motion/      — motion/animation showcase
   portfolio/   — Ali's personal portfolio
   template/    — reusable client template (for new client deployments)
