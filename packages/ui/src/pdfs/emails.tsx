@@ -222,7 +222,7 @@ export function EmailLogsDocument({ data }: { data: EmailLogsData }) {
           }}
         >
           <Caption style={{ marginBottom: 0 }}>
-            AliSamadii.LLC — agency.alisamadii.com
+            AliSamadii.LLC — www.alisamadii.com
           </Caption>
           <Text
             style={{ fontSize: 8, color: colors.mutedForeground }}

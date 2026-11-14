@@ -8,6 +8,7 @@ import {
   stripUrl,
 } from "@workspace/trpc/lib/agency/lead-capture";
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
+import { attachFormReferral, referralLine } from "@workspace/trpc/lib/partners";
 
 // ─── Agency site form relay ─────────────────────────────────────
 // Every form on alisamadii.com (quote, showcase request, free preview, ...)
@@ -177,6 +178,22 @@ export async function POST(req: Request) {
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }
     );
+  }
+
+  // Partner referral code (typed, or carried from ?ref=): attach the lead to
+  // the partner. Never blocks the send; the email says who referred.
+  const code = data.fields.referralCode?.trim();
+  delete data.fields.referralCode;
+  if (code) {
+    const found = await attachFormReferral({
+      code,
+      businessName: data.fields.business,
+      contactName: data.fields.name,
+      email: data.fields.email,
+      phone: data.fields.phone,
+      notes: [`${data.form} form`, data.fields.message].filter(Boolean).join("\n\n"),
+    });
+    data.fields.referral = referralLine(code, found) ?? code;
   }
 
   const page = stripUrl(data.pageUrl);

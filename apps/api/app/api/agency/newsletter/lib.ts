@@ -6,7 +6,7 @@ import { UseSendError, usesendFetch } from "@workspace/email/usesend";
 // The agency newsletter's contacts live in the useSend contact book below.
 // Signup was removed; only the unsubscribe link in sent broadcasts remains.
 
-export const AGENCY_SITE = "https://agency.alisamadii.com";
+export const AGENCY_SITE = "https://www.alisamadii.com";
 
 const contactBook = () => {
   const id = process.env.USESEND_CONTACT_BOOK_ID;

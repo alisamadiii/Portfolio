@@ -12,6 +12,7 @@ import { gcalRouter } from "./gcal";
 import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
 import { netlifyRouter } from "./netlify";
+import { partnersRouter } from "./partners";
 import { paymentsRouter } from "./payments";
 import { plansRouter } from "./plans";
 import { productsRouter } from "./products";
@@ -30,6 +31,7 @@ export const appRouter = createTRPCRouter({
   users: usersRouter,
   products: productsRouter,
   payments: paymentsRouter,
+  partners: partnersRouter,
   plans: plansRouter,
   sources: sourcesRouter,
   stats: statsRouter,

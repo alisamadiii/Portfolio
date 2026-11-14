@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "uq_partner_code_lower" ON "partner" USING btree (lower("code"));

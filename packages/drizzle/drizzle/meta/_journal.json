@@ -351,6 +351,55 @@
       "when": 1794654097201,
       "tag": "0049_aspiring_george_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794667926324,
+      "tag": "0050_deep_shiva",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1794668504556,
+      "tag": "0051_white_jocasta",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1794668796280,
+      "tag": "0052_tricky_justice",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794669056825,
+      "tag": "0053_tearful_mattie_franklin",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1794669437296,
+      "tag": "0054_easy_bruce_banner",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1794669437896,
+      "tag": "0055_eager_jasper_sitwell",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1794673570522,
+      "tag": "0056_bitter_purple_man",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { urls } from "@workspace/ui/lib/company";
 
 // Client-facing docs on the agency site. Env-aware via urls.agency so links
-// hit localhost:3004 in dev and agency.alisamadii.com in prod.
+// hit localhost:3004 in dev and www.alisamadii.com in prod.
 export const docsUrl = (path: string) => `${urls.agency}/docs/${path}`;
 
 export const DOCS_RESOURCES = [

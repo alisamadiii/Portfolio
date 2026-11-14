@@ -10,6 +10,7 @@ import {
   Database,
   Gauge,
   Globe,
+  Handshake,
   Home,
   Inbox,
   Send,
@@ -212,6 +213,7 @@ export const ACCOUNT_NAV: NavItem[] = [
   { id: "account", label: "Account", icon: User, path: "/account" },
   { id: "integrations", label: "Integrations", icon: Plug, path: "/integrations" },
   { id: "billing", label: "Billing", icon: CreditCard, path: "/billing" },
+  { id: "partner", label: "Partner Program", icon: Handshake, path: "/partner" },
   { id: "guide", label: "Guide", icon: BookOpen, path: "/guide" },
 ];
 

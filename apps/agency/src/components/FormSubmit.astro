@@ -1,17 +1,111 @@
 ---
 // Sends every <form data-form="Name"> on the page to the api's /api/agency/send,
 // which emails it to Ali. Inline on purpose: the site loads no external
-// scripts. Included once per document (Layout + the two standalone pages).
+// scripts. Included once per document (Layout + the standalone pages).
 //   data-form="Quote"            form name, shown as the email's heading
 //   data-success="Thanks!"       message shown after a successful send
 //   [data-form-message]          where success / error text goes
 //   input[name=_hp]              honeypot, hidden from people
-const endpoint = `${
-  import.meta.env.DEV ? "http://localhost:3000" : "https://api.alisamadii.com"
-}/api/agency/send`;
+//   input[name=referralCode]     partner code; prefilled from a verified
+//                                ?ref=CODE, kept for the visit, sent with forms
+// ?ref=CODE is checked by the api, which (if it's an approved partner) sets a
+// 30-day partner_ref cookie on .alisamadii.com for Client Hub sign-ups.
+const api = import.meta.env.DEV ? "http://localhost:3000" : "https://api.alisamadii.com";
+const endpoint = `${api}/api/agency/send`;
+const refEndpoint = `${api}/api/partners/ref`;
 ---
 
-<script is:inline data-astro-rerun define:vars={{ endpoint }}>
+<script is:inline data-astro-rerun define:vars={{ endpoint, refEndpoint }}>
+  // Verified partner links (?ref=CODE): remembered for 30 days, like the
+  // api's HttpOnly partner_ref cookie, which JS can't read.
+  const REF_KEY = "partner_ref";
+  const REF_DAYS = 30;
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(REF_KEY) || "null");
+    if (!saved?.code || !(saved.expires > Date.now())) {
+      localStorage.removeItem(REF_KEY);
+      saved = null;
+    }
+  } catch {}
+  let ref = saved?.code || "";
+
+  const prefill = () => {
+    document.querySelectorAll('input[name="referralCode"]').forEach((input) => {
+      if (!input.value) input.value = ref;
+    });
+  };
+
+  // Small badge beside the wordmark in the header: "● Referred by Ali".
+  const renderBadge = () => {
+    document.querySelectorAll("[data-ref-badge]").forEach((slot) => {
+      if (!saved) return void (slot.hidden = true);
+      slot.hidden = false;
+      slot.title = "Referral code " + saved.code + " applied";
+      slot.style.cssText =
+        "display:inline-flex;align-items:center;gap:6px;margin-left:4px;padding:3px 9px;border-radius:9999px;" +
+        "border:1px solid color-mix(in srgb,currentColor 16%,transparent);" +
+        "background:color-mix(in srgb,currentColor 5%,transparent);white-space:nowrap;" +
+        'font:500 10.5px/1.2 "Geist Mono Variable","Geist Mono",ui-monospace,monospace;' +
+        "letter-spacing:.08em;text-transform:uppercase";
+      slot.innerHTML = "";
+      const dot = document.createElement("span");
+      dot.setAttribute("aria-hidden", "true");
+      dot.style.cssText = "flex:none;width:6px;height:6px;border-radius:9999px;background:#2f9e5f";
+      const text = document.createElement("span");
+      text.textContent = saved.name ? "Referred by " + saved.name : "Referral " + saved.code;
+      slot.append(dot, text);
+      slot.classList.add("ref-badge");
+      if (slot.parentElement) slot.parentElement.style.position = "relative";
+    });
+    // Phones: the header has no spare width, so the badge sits under the logo.
+    if (!document.getElementById("ref-badge-css")) {
+      const css = document.createElement("style");
+      css.id = "ref-badge-css";
+      css.textContent =
+        "@media (max-width:640px){.ref-badge{position:absolute;left:0;top:100%;" +
+        "margin:1px 0 0!important;padding:1px 6px!important;font-size:9px!important;gap:5px!important}}";
+      document.head.append(css);
+    }
+  };
+
+  if (ref) {
+    prefill();
+    renderBadge();
+  }
+
+  const params = new URLSearchParams(location.search);
+  // Codes are case-insensitive: the api matches them lowercased.
+  const fromUrl = params.get("ref")?.trim().toLowerCase().slice(0, 60);
+  if (fromUrl) {
+    // Clean the address bar so a shared or bookmarked page doesn't re-send it.
+    params.delete("ref");
+    const query = params.toString();
+    history.replaceState(history.state, "", location.pathname + (query ? "?" + query : "") + location.hash);
+    fetch(refEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ code: fromUrl }),
+    })
+      .then((res) => res.json())
+      .then((body) => {
+        if (!body?.valid || !body.code) return; // unknown code: change nothing
+        saved = {
+          code: body.code,
+          name: body.partnerName || "",
+          expires: Date.now() + REF_DAYS * 24 * 60 * 60 * 1000,
+        };
+        ref = saved.code;
+        try {
+          localStorage.setItem(REF_KEY, JSON.stringify(saved));
+        } catch {}
+        prefill();
+        renderBadge();
+      })
+      .catch(() => {});
+  }
+
   document.querySelectorAll("form[data-form]").forEach((form) => {
     if (form.dataset.bound) return;
     form.dataset.bound = "1";
@@ -33,6 +127,7 @@ const endpoint = `${
         else if (fields[name]) fields[name] += ", " + value; // checkboxes
         else fields[name] = value;
       });
+      if (ref && !fields.referralCode) fields.referralCode = ref;
 
       if (button) button.disabled = true;
       show("Sending...", true);

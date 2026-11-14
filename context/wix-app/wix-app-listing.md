@@ -79,10 +79,10 @@ Upload in this order:
 |---|---|
 | Company name | Ali Samadii LLC |
 | Logo | `app-icon-1000.png` |
-| Website | https://agency.alisamadii.com |
+| Website | https://www.alisamadii.com |
 | Address | _your business address_ |
-| Privacy policy | https://agency.alisamadii.com/privacy |
-| Terms of use | https://agency.alisamadii.com/terms |
+| Privacy policy | https://www.alisamadii.com/privacy |
+| Terms of use | https://www.alisamadii.com/terms |
 
 **Company description**
 ```

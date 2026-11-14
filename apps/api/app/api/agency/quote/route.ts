@@ -142,7 +142,7 @@ const quoteEmailHtml = (data: z.infer<typeof bodySchema>) => {
             <tr>
               <td style="padding:0 32px 26px;">
                 <div style="border-top:1px solid #f1efec;padding-top:16px;font:400 12px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#a49d94;">
-                  Sent from the Get a Quote form &middot; agency.alisamadii.com
+                  Sent from the Get a Quote form &middot; www.alisamadii.com
                 </div>
               </td>
             </tr>

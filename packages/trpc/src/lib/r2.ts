@@ -232,3 +232,83 @@ export async function listObjects(input: { prefix?: string; cursor?: string }) {
 
   return { objects, nextCursor };
 }
+
+// ─── Private bucket ──────────────────────────────────────────────
+// Same R2 credentials, separate bucket with NO public domain (signed partner
+// agreements and other personal files). Objects are only reachable through
+// short-lived presigned GETs.
+
+function privateR2() {
+  const { R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_PRIVATE_BUCKET } =
+    process.env;
+  if (!R2_ENDPOINT || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_PRIVATE_BUCKET) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message:
+        "Private R2 storage is not configured (R2_ENDPOINT / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_PRIVATE_BUCKET).",
+    });
+  }
+  return {
+    client: new AwsClient({
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+      service: "s3",
+      region: "auto",
+    }),
+    url: `${R2_ENDPOINT.replace(/\/+$/, "")}/${R2_PRIVATE_BUCKET}`,
+  };
+}
+
+export async function putPrivateObject(
+  key: string,
+  body: Uint8Array,
+  contentType: string
+) {
+  const { client, url } = privateR2();
+  const res = await client.fetch(`${url}/${encodeURI(cleanPath(key))}`, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: body as BodyInit,
+  });
+  if (!res.ok) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Storage upload failed (${res.status})`,
+    });
+  }
+}
+
+/** Presigned GET, `expiresIn` seconds. `filename` forces a download. */
+export async function presignPrivateGet(
+  key: string,
+  opts: { expiresIn?: number; filename?: string } = {}
+) {
+  const { client, url } = privateR2();
+  const params = new URLSearchParams({
+    "X-Amz-Expires": String(opts.expiresIn ?? 300),
+  });
+  if (opts.filename) {
+    params.set(
+      "response-content-disposition",
+      `attachment; filename="${opts.filename.replace(/"/g, "")}"`
+    );
+  }
+  const signed = await client.sign(
+    new Request(`${url}/${encodeURI(cleanPath(key))}?${params.toString()}`),
+    { aws: { signQuery: true } }
+  );
+  return signed.url;
+}
+
+export async function deletePrivateObject(key: string) {
+  const { client, url } = privateR2();
+  const res = await client.fetch(`${url}/${encodeURI(cleanPath(key))}`, {
+    method: "DELETE",
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Storage delete failed (${res.status})`,
+    });
+  }
+}

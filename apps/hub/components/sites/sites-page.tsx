@@ -3,22 +3,26 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUpRight,
   GitBranch,
+  Handshake,
   LayoutGrid,
   Link2,
   MoreHorizontal,
   Plus,
   Search,
   Sparkles,
+  UserMinus,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { useTRPC } from "@workspace/trpc/client";
@@ -29,12 +33,15 @@ import { DeployButton } from "@/components/deploy/deploy-dialog";
 import { Badge, StatusText } from "@/components/ds/ui/badge";
 import { Button, ButtonLink, IconButton } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
+import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, LetterTile } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { hostOf } from "@/components/project/site-preview";
+import { ReferralDialog } from "@/components/sites/referral-dialog";
 import { usePlans } from "@/hooks/use-plans";
+import { handleCmsError } from "@/lib/trpc-errors";
 import { repoPath } from "@/lib/paths";
 
 type Filter = "all" | "paid" | "free";
@@ -61,6 +68,27 @@ export function SitesPage() {
   const plans = usePlans();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
+  const [referralFor, setReferralFor] = useState<Row | null>(null);
+  const [removeFor, setRemoveFor] = useState<Row | null>(null);
+
+  // Admin only: which partner referred each project (badge + menu).
+  const referrals = useQuery(
+    trpc.partners.projectReferrals.queryOptions(undefined, { enabled: plans.isAdmin })
+  );
+  const referralOf = useMemo(
+    () => new Map((referrals.data ?? []).map((r) => [r.projectId, r])),
+    [referrals.data]
+  );
+  const removeReferral = useMutation(
+    trpc.partners.removeProjectReferral.mutationOptions({
+      onSuccess: () => {
+        toast.success("Referral removed.");
+        void queryClient.invalidateQueries({ queryKey: trpc.partners.projectReferrals.queryKey() });
+      },
+      onError: (e) => toast.error(handleCmsError(e, "Couldn't remove the referral.")),
+    })
+  );
 
   const projects = useQuery(
     trpc.cms.repos.listMine.queryOptions(undefined, { enabled: !!user, staleTime: 5 * 60 * 1000 })
@@ -108,7 +136,7 @@ export function SitesPage() {
       header: "Site",
       width: "minmax(240px, 2fr)",
       cell: (r) => (
-        <span className="flex items-center gap-3">
+        <span className={`flex items-center gap-3 ${referralOf.has(r.projectId) ? "py-3" : ""}`}>
           <LetterTile name={r.name} />
           <span className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-medium text-ink">{r.name}</span>
@@ -116,6 +144,11 @@ export function SitesPage() {
               {r.repo}
               {r.isPrivate && " · private"}
             </span>
+            {referralOf.has(r.projectId) && (
+              <span className="mt-2 flex">
+                <Badge tone="info">Referred by {referralOf.get(r.projectId)!.partnerName}</Badge>
+              </span>
+            )}
           </span>
         </span>
       ),
@@ -193,6 +226,21 @@ export function SitesPage() {
                 <Link2 className="size-4" />
                 Domain settings
               </DropdownMenuItem>
+              {plans.isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setTimeout(() => setReferralFor(r), 100)}>
+                    <Handshake className="size-4" />
+                    {referralOf.has(r.projectId) ? "Change referral…" : "Set referral…"}
+                  </DropdownMenuItem>
+                  {referralOf.has(r.projectId) && (
+                    <DropdownMenuItem onClick={() => setTimeout(() => setRemoveFor(r), 100)}>
+                      <UserMinus className="size-4" />
+                      Remove referral
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </span>
@@ -289,6 +337,28 @@ export function SitesPage() {
           {projects.data ? `Showing ${visible.length} of ${rows.length} sites` : "—"}
         </div>
       </Card>
+
+      {plans.isAdmin && (
+        <>
+          <ReferralDialog
+            key={referralFor?.projectId ?? "none"}
+            project={referralFor}
+            current={referralFor ? (referralOf.get(referralFor.projectId) ?? null) : null}
+            onOpenChange={(open) => !open && setReferralFor(null)}
+          />
+          <ConfirmDialog
+            open={!!removeFor}
+            onOpenChange={(open) => !open && setRemoveFor(null)}
+            title={`Remove the referral on ${removeFor?.name ?? ""}?`}
+            description={`${
+              removeFor ? (referralOf.get(removeFor.projectId)?.partnerName ?? "The partner") : ""
+            } will no longer see this project. Referrals with payments recorded can't be removed.`}
+            confirmLabel="Remove"
+            danger
+            onConfirm={() => removeFor && removeReferral.mutate({ projectId: removeFor.projectId })}
+          />
+        </>
+      )}
     </>
   );
 }

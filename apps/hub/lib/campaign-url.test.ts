@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildCampaignUrl } from "./campaign-url";
 
 const base = {
-  url: "https://agency.alisamadii.com/",
+  url: "https://www.alisamadii.com/",
   source: "instagram",
   medium: "social",
 };
@@ -13,7 +13,7 @@ describe("buildCampaignUrl", () => {
     expect(
       buildCampaignUrl({ ...base, campaign: "ig-profile", id: "24380419404" })
     ).toBe(
-      "https://agency.alisamadii.com/?utm_source=instagram&utm_medium=social&utm_campaign=ig-profile&utm_id=24380419404"
+      "https://www.alisamadii.com/?utm_source=instagram&utm_medium=social&utm_campaign=ig-profile&utm_id=24380419404"
     );
   });
 
@@ -35,7 +35,7 @@ describe("buildCampaignUrl", () => {
 
   it("leaves optional params out when empty", () => {
     expect(buildCampaignUrl(base)).toBe(
-      "https://agency.alisamadii.com/?utm_source=instagram&utm_medium=social"
+      "https://www.alisamadii.com/?utm_source=instagram&utm_medium=social"
     );
   });
 

@@ -12,6 +12,7 @@
         "VERCEL_PROJECT_PRODUCTION_URL",
         "NEXT_PUBLIC_API_URL",
         "VITE_API_URL",
+        "VITE_API_BASE",
         "GITHUB_WEBHOOK_URL_BASE",
         "DATABASE_URL",
         "BETTER_AUTH_SECRET",

@@ -44,7 +44,7 @@ const text = `
   <text x="64" y="424" font-family="Helvetica Neue, Arial, sans-serif"
     font-size="60" font-weight="650" fill="${ACCENT}">managed for you</text>
   <text x="64" y="${H - 64}" font-family="Helvetica Neue, Arial, sans-serif"
-    font-size="26" fill="${WARMGRAY}">Ali Samadi Agency — agency.alisamadii.com</text>
+    font-size="26" fill="${WARMGRAY}">Ali Samadi Agency — www.alisamadii.com</text>
 </svg>`;
 
 await mkdir(resolve(appRoot, "public/og"), { recursive: true });

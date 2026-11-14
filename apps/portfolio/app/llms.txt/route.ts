@@ -31,7 +31,7 @@ export async function GET() {
   lines.push("");
   lines.push("## Other Sites");
   lines.push("- [Motion — Component & Animation Library](https://motion.alisamadii.com)");
-  lines.push("- [Ali Samadi Agency](https://agency.alisamadii.com)");
+  lines.push("- [Ali Samadi Agency](https://www.alisamadii.com)");
 
   return new Response(lines.join("\n"), {
     headers: {

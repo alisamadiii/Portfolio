@@ -26,7 +26,7 @@ export const company = {
   websites: [
     { label: "Docs", href: "https://docs.alisamadii.com" },
     { label: "Motion", href: "https://motion.alisamadii.com" },
-    { label: "Agency", href: "https://agency.alisamadii.com" },
+    { label: "Agency", href: "https://www.alisamadii.com" },
   ],
   clients: [
     { label: "Crosspost", href: "/client/crosspost" },
@@ -58,7 +58,7 @@ export const urls: Record<Lowercase<ProjectType>, string> = {
   agency:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3004"
-      : "https://agency.alisamadii.com",
+      : "https://www.alisamadii.com",
   template:
     process.env.NODE_ENV === "development"
       ? "http://localhost:3005"
@@ -78,7 +78,12 @@ export const urls: Record<Lowercase<ProjectType>, string> = {
 };
 
 const ALLOWED_REDIRECT_ORIGINS = new Set(
-  [...Object.values(urls), "https://www.alisamadii.com"].map(
+  [
+    ...Object.values(urls),
+    "https://www.alisamadii.com",
+    // Partner Program site (sign in to apply, then come back).
+    "https://partners.alisamadii.com",
+  ].map(
     (url) => new URL(url).origin
   )
 );

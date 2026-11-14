@@ -9,9 +9,12 @@ import {
   magicLink,
 } from "better-auth/plugins";
 
+import { and, eq, sql } from "drizzle-orm";
+
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
+import { parseRefCookie } from "@workspace/trpc/lib/partners-shared";
 import { db } from "@workspace/drizzle/index";
-import { account, session, user, verification } from "@workspace/drizzle/schema";
+import { account, partner, session, user, verification } from "@workspace/drizzle/schema";
 import { email as emailService } from "@workspace/email";
 import MagicLink from "@workspace/email/emails/magic-link";
 import ResetPassword from "@workspace/email/emails/reset-password";
@@ -30,6 +33,40 @@ const decodeJwtPayload = (
   }
 };
 
+type Referral = { code: string; partnerId: string; at: string };
+
+/**
+ * The partner code from the 30-day `partner_ref` cookie (set by the api's
+ * /api/partners/ref after a ?ref= visit), re-checked against approved
+ * partners. Never throws: a referral must not block auth.
+ */
+const referralFromRequest = async (
+  ctx: { headers?: Headers; request?: Request } | null | undefined
+): Promise<Referral | null> => {
+  try {
+    const code = parseRefCookie(
+      (ctx?.headers ?? ctx?.request?.headers)?.get("cookie")
+    );
+    if (!code) return null;
+    const [row] = await db
+      .select({ id: partner.id, code: partner.code })
+      .from(partner)
+      .where(
+        and(
+          sql`lower(${partner.code}) = ${code.toLowerCase()}`,
+          eq(partner.status, "approved")
+        )
+      )
+      .limit(1);
+    return row?.code
+      ? { code: row.code, partnerId: row.id, at: new Date().toISOString() }
+      : null;
+  } catch (err) {
+    console.error("[auth] partner referral lookup failed", err);
+    return null;
+  }
+};
+
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   database: drizzleAdapter(db, {
@@ -42,6 +79,47 @@ export const auth = betterAuth({
     },
   }),
   trustedOrigins: ALLOWED_ORIGINS,
+  // Partner referrals (data only): the first valid partner_ref cookie seen at
+  // sign-up or sign-in is kept in user.metadata.referral, never overwritten.
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (newUser, ctx) => {
+          const metadata =
+            newUser.metadata && typeof newUser.metadata === "object"
+              ? { ...(newUser.metadata as Record<string, unknown>) }
+              : {};
+          // metadata is a client input: a referral only ever comes from the cookie.
+          delete metadata.referral;
+          const referral = await referralFromRequest(ctx);
+          if (referral) metadata.referral = referral;
+          return { data: { ...newUser, metadata } };
+        },
+      },
+    },
+    session: {
+      create: {
+        after: async (newSession, ctx) => {
+          const referral = await referralFromRequest(ctx);
+          if (!referral) return;
+          await db
+            .update(user)
+            .set({
+              metadata: sql`coalesce(${user.metadata}, '{}'::jsonb) || jsonb_build_object('referral', ${JSON.stringify(referral)}::jsonb)`,
+            })
+            .where(
+              and(
+                eq(user.id, newSession.userId),
+                sql`${user.metadata} -> 'referral' is null`
+              )
+            )
+            .catch((err) =>
+              console.error("[auth] partner referral stamp failed", err)
+            );
+        },
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url, token }) => {

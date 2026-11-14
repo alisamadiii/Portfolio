@@ -190,6 +190,23 @@ const labelClass =
           class={`${inputClass} resize-none`}></textarea>
       </div>
 
+      <div>
+        <span class={labelClass}>
+          Referral code <span class="text-muted normal-case">(optional)</span>
+        </span>
+        <input
+          name="referralCode"
+          type="text"
+          maxlength="40"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          aria-label="Referral code (optional)"
+          placeholder="If a partner sent you"
+          class={inputClass}
+        />
+      </div>
+
       {/* Honeypot: hidden from people, bots fill it in (the send endpoint drops those). */}
       <input
         type="text"

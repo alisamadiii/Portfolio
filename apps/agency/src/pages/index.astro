@@ -9,6 +9,7 @@
 // NEWSLETTER cards, the priced Offer schema and the "From $" lines. Project
 // cards come from src/data/projects.ts, reviews from the Elfsight widget.
 import Analytics from "../components/Analytics.astro";
+import FormSubmit from "../components/FormSubmit.astro";
 import GoogleReviews from "../components/GoogleReviews.astro";
 import { CARE, NEWSLETTER, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
 import { PROJECTS } from "../data/projects";
@@ -370,7 +371,7 @@ const jsonLd = {
 <div class="wrap" style="position: relative; height: 96px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
 <p class="mono hide-sm" style="margin: 0; font-size: 13px; color: #3d3833">WORKING WORLDWIDE</p>
 <div aria-hidden="true" class="dots" style="position: absolute; left: 50%; top: 0; width: min(720px, 70%); height: 200px; transform: translateX(-50%)"></div>
-<a href="/" class="tlink" style="position: relative; margin: 0 auto; display: flex; align-items: center; gap: 10px; color: #221f1c"><img src="/images/agency/logo.png" alt="Ali Samadi Agency logo" style="width: 32px; height: 32px" width="400" height="400" loading="lazy" decoding="async"><span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">alisamadii</span></a>
+<a href="/" class="tlink" style="position: relative; margin: 0 auto; display: flex; align-items: center; gap: 10px; color: #221f1c"><img src="/images/agency/logo.png" alt="Ali Samadi Agency logo" style="width: 32px; height: 32px" width="400" height="400" loading="lazy" decoding="async"><span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">alisamadii</span><span data-ref-badge hidden></span></a>
 <p class="mono hide-sm" style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3d3833"><span class="blink" style="width: 8px; height: 8px; border-radius: 9999px; background: #2f8a4a; box-shadow: 0 0 0 4px rgba(47,138,74,0.15)"></span>TAKING NEW PROJECTS</p>
 </div>
 
@@ -714,6 +715,7 @@ const jsonLd = {
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wmenu) wmenu.open = false; });
       document.addEventListener('click', (e) => { if (wmenu?.open && !wmenu.contains(e.target as Node)) wmenu.open = false; });
     </script>
+    <FormSubmit />
   </body>
 </html>
 

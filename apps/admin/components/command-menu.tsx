@@ -10,6 +10,7 @@ import {
   Code2,
   Copy,
   Gauge,
+  Handshake,
   ImageIcon,
   Package,
   PanelLeft,
@@ -46,6 +47,7 @@ const pages = [
   { label: "Overview", href: "/", icon: Gauge },
   { label: "Users", href: "/users", icon: Users },
   { label: "Products", href: "/products", icon: Package },
+  { label: "Partners", href: "/partners", icon: Handshake },
   { label: "Media", href: "/media", icon: ImageIcon },
   { label: "Code", href: "/code", icon: Code2 },
 ];
