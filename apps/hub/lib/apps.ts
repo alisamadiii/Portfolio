@@ -12,7 +12,6 @@ import {
   Globe,
   Home,
   Inbox,
-  Rocket,
   Send,
   LayoutGrid,
   Link2,
@@ -32,6 +31,7 @@ import {
   GoogleAnalyticsLogo,
   GoogleCalendarLogo,
   NeonLogo,
+  NetlifyLogo,
   ResendLogo,
   WixLogo,
 } from "@/components/ds/brand-logos";
@@ -181,7 +181,7 @@ export const PROJECT_CORE: NavItem[] = [
 ];
 
 /** Core link shown only once an upload project has published to Netlify. */
-export const NETLIFY_NAV: NavItem = { id: "netlify", label: "Netlify", icon: Rocket, path: "netlify" };
+export const NETLIFY_NAV: NavItem = { id: "netlify", label: "Netlify", logo: NetlifyLogo, path: "netlify" };
 
 /** Who has access to the project. Full-access only (the server 403s anyone else). */
 export const MEMBERS_NAV: NavItem = { id: "members", label: "Members", icon: Users, path: "members" };

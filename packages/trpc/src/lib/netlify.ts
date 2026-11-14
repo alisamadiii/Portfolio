@@ -78,14 +78,17 @@ async function netlify<T>(
           ? "PRECONDITION_FAILED"
           : res.status === 404
             ? "NOT_FOUND"
-            : "INTERNAL_SERVER_ERROR",
+            : res.status === 422
+              ? "BAD_REQUEST"
+              : "INTERNAL_SERVER_ERROR",
       message:
         res.status === 401
           ? "Netlify needs to be reconnected."
           : `Netlify: ${body?.message ?? res.status}`,
     });
   }
-  return (await res.json()) as T;
+  // 204 (updates, deletes) has no body.
+  return (await res.json().catch(() => undefined)) as T;
 }
 
 export type NetlifySite = {
@@ -99,6 +102,11 @@ export type NetlifySite = {
   ssl: boolean | null;
   created_at: string;
   published_deploy: { id: string; published_at: string | null } | null;
+  account_slug?: string;
+  domain_aliases?: string[] | null;
+  force_ssl?: boolean | null;
+  managed_dns?: boolean | null;
+  processing_settings?: { html?: { pretty_urls?: boolean } } | null;
 };
 
 export type NetlifyDeploy = {
@@ -223,3 +231,115 @@ export async function deployProjectToNetlify(
   await deployToNetlify({ projectId, siteId, token });
   return true;
 }
+
+// ─── Team plan & usage ───────────────────────────────────────────
+
+type Capability = { included?: number | null; used?: number | null };
+
+// Credit-based plans report credits in capabilities.credits (not in the
+// OpenAPI spec, but returned by GET /accounts/{id}).
+export type NetlifyAccount = {
+  id: string;
+  name: string;
+  slug: string;
+  type_name?: string | null;
+  billing_period?: string | null;
+  next_usage_period_start?: string | null;
+  next_billing_period_start?: string | null;
+  auto_topup_enabled?: boolean | null;
+  usages_exceeded?: boolean | null;
+  capabilities?: {
+    sites?: Capability;
+    collaborators?: Capability;
+    credits?: Capability;
+  } | null;
+};
+
+export const getNetlifyAccount = (token: string, accountId: string) =>
+  netlify<NetlifyAccount>(token, `/accounts/${accountId}`);
+
+type BuildStatus = {
+  minutes?: {
+    current?: number | null;
+    included_minutes?: string | number | null;
+    period_end_date?: string | null;
+  } | null;
+};
+
+/** Build minutes this period (no /accounts prefix; object, or array in the spec). */
+export const getNetlifyBuildMinutes = async (token: string, accountId: string) => {
+  const res = await netlify<BuildStatus | BuildStatus[]>(token, `/${accountId}/builds/status`);
+  return (Array.isArray(res) ? res[0] : res)?.minutes ?? null;
+};
+
+// ─── Domains & HTTPS ─────────────────────────────────────────────
+
+export const updateNetlifySite = (
+  token: string,
+  siteId: string,
+  patch: Partial<
+    Pick<NetlifySite, "custom_domain" | "domain_aliases" | "force_ssl" | "processing_settings">
+  >
+) =>
+  netlify<NetlifySite>(token, `/sites/${siteId}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+
+export type NetlifyCertificate = {
+  state?: string | null;
+  domains?: string[] | null;
+  expires_at?: string | null;
+};
+
+/** The site's certificate, or null when it has none. */
+export const getNetlifySsl = (token: string, siteId: string) =>
+  netlify<NetlifyCertificate>(token, `/sites/${siteId}/ssl`).catch((error) => {
+    if (error instanceof TRPCError && error.code === "NOT_FOUND") return null;
+    throw error;
+  });
+
+/** Starts a Let's Encrypt certificate; Netlify answers 422 while DNS is wrong. */
+export async function provisionNetlifySsl(token: string, siteId: string) {
+  try {
+    await netlify(token, `/sites/${siteId}/ssl`, { method: "POST" });
+  } catch (error) {
+    if (!(error instanceof TRPCError) || error.code !== "BAD_REQUEST") throw error;
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: /custom domain/i.test(error.message) && /no /i.test(error.message)
+        ? "Add a custom domain first."
+        : "Your domain isn't pointing to Netlify yet. Set the DNS records below, wait a few minutes, then try again.",
+    });
+  }
+}
+
+export type NetlifyDnsZone = { name: string; dns_servers?: string[] | null; errors?: string[] | null };
+
+export const getNetlifySiteDns = (token: string, siteId: string) =>
+  netlify<NetlifyDnsZone[]>(token, `/sites/${siteId}/dns`).catch(() => [] as NetlifyDnsZone[]);
+
+// ─── Snippet injection ───────────────────────────────────────────
+
+export type NetlifySnippet = {
+  id: number;
+  title: string;
+  general: string;
+  general_position: "head" | "footer";
+};
+
+export const listNetlifySnippets = async (token: string, siteId: string) =>
+  (await netlify<NetlifySnippet[]>(token, `/sites/${siteId}/snippets`)) ?? [];
+
+export const createNetlifySnippet = (
+  token: string,
+  siteId: string,
+  snippet: { title: string; general: string; general_position: "head" | "footer" }
+) =>
+  netlify<NetlifySnippet>(token, `/sites/${siteId}/snippets`, {
+    method: "POST",
+    body: JSON.stringify(snippet),
+  });
+
+export const deleteNetlifySnippet = (token: string, siteId: string, id: number) =>
+  netlify(token, `/sites/${siteId}/snippets/${id}`, { method: "DELETE" });

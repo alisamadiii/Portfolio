@@ -17,9 +17,14 @@ import { Card, CardHeader } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, InfoStrip } from "@/components/ds/ui/misc";
+import { UnderlineTabs } from "@/components/ds/ui/tabs";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
+
+import { NetlifyDomains } from "./netlify-domains";
+import { NetlifyPlan } from "./netlify-plan";
+import { NetlifySettings } from "./netlify-settings";
 
 type Overview = NonNullable<RouterOutputs["netlify"]["overview"]>;
 type Deploy = Overview["deploys"][number];
@@ -37,6 +42,12 @@ const deployBadge = (state: string): { tone: BadgeTone; label: string } => {
   if (state === "rejected" || state === "skipped") return { tone: "neutral", label: "Skipped" };
   return { tone: "info", label: "Deploying" };
 };
+
+const TABS = [
+  { id: "overview", label: "Overview" },
+  { id: "domains", label: "Domains" },
+  { id: "settings", label: "Settings" },
+];
 
 const jobRunning = (job: Job | null) =>
   !!job && ["queued", "building", "uploading"].includes(job.status);
@@ -128,6 +139,7 @@ export function NetlifyPage() {
   const data = overview.data;
   const running = jobRunning(data?.job ?? null);
   const [confirmRedeploy, setConfirmRedeploy] = useState(false);
+  const [tab, setTab] = useState("overview");
 
   const header = (
     <PageHeader
@@ -233,28 +245,37 @@ export function NetlifyPage() {
         ]}
       />
 
-      {job && (running || job.status === "error") && (
-        <Card className="flex flex-col gap-1.5 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Badge tone={job.status === "error" ? "coral" : "info"} dot>
-              {JOB_LABEL[job.status]}
-            </Badge>
-            <span className="text-[13px] text-dim">{ago(job.createdAt)}</span>
-          </div>
-          {job.error && <p className="text-[13px] leading-normal text-ink-3">{job.error}</p>}
-        </Card>
-      )}
+      <UnderlineTabs label="Netlify sections" items={TABS} value={tab} onChange={setTab} />
 
-      <Card>
-        <CardHeader title="Recent deploys" divided />
-        <DataTable
-          columns={columns}
-          rows={data.deploys}
-          rowKey={(d) => d.id}
-          minWidth={520}
-          empty={<p className="px-6 py-8 text-center text-[13px] text-dim">No deploys yet.</p>}
-        />
-      </Card>
+      {tab === "overview" && (
+        <>
+          {job && (running || job.status === "error") && (
+            <Card className="flex flex-col gap-1.5 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <Badge tone={job.status === "error" ? "coral" : "info"} dot>
+                  {JOB_LABEL[job.status]}
+                </Badge>
+                <span className="text-[13px] text-dim">{ago(job.createdAt)}</span>
+              </div>
+              {job.error && <p className="text-[13px] leading-normal text-ink-3">{job.error}</p>}
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader title="Recent deploys" divided />
+            <DataTable
+              columns={columns}
+              rows={data.deploys}
+              rowKey={(d) => d.id}
+              minWidth={520}
+              empty={<p className="px-6 py-8 text-center text-[13px] text-dim">No deploys yet.</p>}
+            />
+          </Card>
+          <NetlifyPlan />
+        </>
+      )}
+      {tab === "domains" && <NetlifyDomains canEdit={canDeploy} />}
+      {tab === "settings" && <NetlifySettings canEdit={canDeploy} />}
     </div>
   );
 }
