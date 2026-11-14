@@ -13,12 +13,12 @@ import {
   stepFor,
 } from "@/components/agency/business-info-config";
 import { stepStatuses } from "@/components/agency/business-info/status";
-import { useAgency } from "@/components/agency/use-agency";
 import { StepFooter } from "@/components/ds/business-info/form-parts";
 import { StepPills } from "@/components/ds/business-info/step-pills";
 import { WithSide } from "@/components/ds/layout/app-shell";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { ButtonLink } from "@/components/ds/ui/button";
+import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 
 function savedLabel(savedAt: Date): string {
@@ -54,9 +54,9 @@ export function StepShell({
 }) {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
-  const { projectId: agencyProjectId, role } = useAgency();
-  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId: agencyProjectId }));
-  const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId: agencyProjectId }));
+  const role = useProject()?.role ?? null;
+  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId: projectId }));
+  const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId: projectId }));
   const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? []);
   const done = BUSINESS_STEPS.filter((s) => statuses.get(s.step)?.state === "done").map((s) => s.step);
 

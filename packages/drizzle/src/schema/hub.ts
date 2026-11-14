@@ -190,6 +190,19 @@ export const hubProject = pgTable(
     // can link several. The dashboard reads calendars with that token.
     gcalConnectedUserId: text("gcal_connected_user_id"),
     gcalAccountId: text("gcal_account_id"),
+    // The project's Neon app: the Better Auth user.id who linked Neon + their
+    // Neon user id (account.account_id for provider "neon"), and the Neon
+    // project bound to this hub project (+ its org, for org-owned projects).
+    neonConnectedUserId: text("neon_connected_user_id"),
+    neonAccountId: text("neon_account_id"),
+    neonProjectId: text("neon_project_id"),
+    neonOrgId: text("neon_org_id"),
+    // The project's Wix app: the Wix app instance installed on the client's
+    // Wix site (the credential for client-credentials tokens), that site's id,
+    // and the Better Auth user.id who installed it from the hub.
+    wixInstanceId: text("wix_instance_id"),
+    wixSiteId: text("wix_site_id"),
+    wixConnectedUserId: text("wix_connected_user_id"),
     // Hidden row: an upload reserved but not yet finalized (legacy: old
     // delete tombstones). Every project listing filters hidden=false.
     hidden: boolean("hidden").notNull().default(false),
@@ -204,6 +217,14 @@ export const hubProject = pgTable(
     uqHubProjectResendAccount: uniqueIndex("uq_hub_project_resend_account")
       .on(table.resendAccountId)
       .where(sql`${table.resendAccountId} is not null`),
+    // A Neon project belongs to exactly one hub project.
+    uqHubProjectNeonProject: uniqueIndex("uq_hub_project_neon_project")
+      .on(table.neonProjectId)
+      .where(sql`${table.neonProjectId} is not null`),
+    // A Wix site (app instance) belongs to exactly one hub project.
+    uqHubProjectWixInstance: uniqueIndex("uq_hub_project_wix_instance")
+      .on(table.wixInstanceId)
+      .where(sql`${table.wixInstanceId} is not null`),
   })
 );
 

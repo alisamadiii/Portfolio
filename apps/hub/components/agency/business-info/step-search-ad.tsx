@@ -15,7 +15,8 @@ import type { AdCampaign } from "@workspace/drizzle/schema";
 import { sectionUrl, stepFor } from "@/components/agency/business-info-config";
 import { AiHelper } from "@/components/agency/business-info/ai-helper";
 import { StepShell } from "@/components/agency/business-info/step-shell";
-import { useAgency } from "@/components/agency/use-agency";
+import { useProject } from "@/hooks/use-project";
+import { useRouteProjectId } from "@/hooks/use-repo";
 import { Button, IconButton } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ds/ui/field";
@@ -117,7 +118,8 @@ export function StepSearchAd() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { projectId, websiteUrl } = useAgency();
+  const projectId = useRouteProjectId();
+  const websiteUrl = useProject()?.websiteUrl ?? null;
 
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const campaigns = useQuery(

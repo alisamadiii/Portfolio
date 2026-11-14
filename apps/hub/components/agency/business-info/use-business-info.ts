@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useAgency } from "@/components/agency/use-agency";
+import { useRouteProjectId } from "@/hooks/use-repo";
 
 export type Draft = Record<string, string[]>;
 
@@ -21,7 +21,7 @@ export function useBusinessInfo(keys: { key: string; initial: number }[]) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { projectId } = useAgency();
+  const projectId = useRouteProjectId();
 
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const [draft, setDraft] = useState<Draft>({});

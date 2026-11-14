@@ -53,9 +53,14 @@ export const auth = betterAuth({
     },
   },
   account: {
+    // OAuth tokens (access, refresh, id) are encrypted at rest with the auth
+    // secret. Reads go through Better Auth (getAccessToken) or
+    // readAccountToken (@workspace/auth/tokens); old plaintext rows still read fine
+    // until packages/auth/scripts/encrypt-oauth-tokens.mts encrypts them.
+    encryptOAuthTokens: true,
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "github", "netlify", "resend"],
+      trustedProviders: ["google", "github", "netlify", "resend", "neon"],
       allowDifferentEmails: true,
       // Linking an account (Google, GitHub, Netlify, Resend…) never touches
       // the user row: name/image change only from Account settings.
@@ -201,6 +206,42 @@ export const auth = betterAuth({
                 : `resend-${id}@users.noreply.alisamadii.com`;
             // Identity only: the user row is never updated from a link.
             return { id, email, emailVerified: true };
+          },
+        },
+        // Neon: link-only, OAuth + PKCE (partner client from Neon). offline +
+        // offline_access return a refresh token. The hub lists/creates the
+        // client's Neon projects and reads branches + connection strings.
+        {
+          providerId: "neon",
+          clientId: process.env.NEON_CLIENT_ID ?? "",
+          clientSecret: process.env.NEON_CLIENT_SECRET ?? "",
+          authorizationUrl: "https://oauth2.neon.tech/oauth2/auth",
+          tokenUrl: "https://oauth2.neon.tech/oauth2/token",
+          scopes: [
+            "openid",
+            "offline",
+            "offline_access",
+            "urn:neoncloud:projects:create",
+            "urn:neoncloud:projects:read",
+            "urn:neoncloud:orgs:read",
+          ],
+          pkce: true,
+          prompt: "consent",
+          authentication: "post",
+          disableSignUp: true,
+          getUserInfo: async (tokens) => {
+            const res = await fetch("https://console.neon.tech/api/v2/users/me", {
+              headers: { Authorization: `Bearer ${tokens.accessToken}` },
+            });
+            if (!res.ok) return null;
+            const profile = (await res.json()) as { id?: string; email?: string };
+            if (!profile.id) return null;
+            // Identity only: the user row is never updated from a link.
+            return {
+              id: profile.id,
+              email: profile.email || `neon-${profile.id}@users.noreply.alisamadii.com`,
+              emailVerified: true,
+            };
           },
         },
       ],

@@ -7,6 +7,7 @@ import {
   CalendarDays,
   FileText,
   CreditCard,
+  Database,
   Gauge,
   Globe,
   Home,
@@ -30,7 +31,9 @@ import {
   GoogleAdsLogo,
   GoogleAnalyticsLogo,
   GoogleCalendarLogo,
+  NeonLogo,
   ResendLogo,
+  WixLogo,
 } from "@/components/ds/brand-logos";
 
 export type { AppId };
@@ -112,6 +115,22 @@ export const APPS: AppDef[] = [
     icon: CalendarDays,
     logo: GoogleCalendarLogo,
     path: "calendar",
+  },
+  {
+    id: "neon",
+    name: "Neon",
+    description: "Your Postgres database on Neon: projects, branches and connection strings.",
+    icon: Database,
+    logo: NeonLogo,
+    path: "neon",
+  },
+  {
+    id: "wix",
+    name: "Wix",
+    description: "Manage your Wix site's blog, form leads, contacts, orders and bookings.",
+    icon: Globe,
+    logo: WixLogo,
+    path: "wix",
   },
 ];
 

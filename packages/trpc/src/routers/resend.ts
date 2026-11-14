@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, ne } from "drizzle-orm";
 import z from "zod";
 
+import { readAccountToken } from "@workspace/auth/tokens";
 import { db } from "@workspace/drizzle/index";
 import { account, hubProject } from "@workspace/drizzle/schema";
 
@@ -118,7 +119,8 @@ export const resendRouter = createTRPCRouter({
         .from(account)
         .where(where)
         .limit(1);
-      if (linked?.refreshToken) await revokeResendGrant(linked.refreshToken);
+      const refreshToken = await readAccountToken(linked?.refreshToken);
+      if (refreshToken) await revokeResendGrant(refreshToken);
       await db.delete(account).where(where);
       forgetResendToken(row.resendConnectedUserId, row.resendAccountId);
     }

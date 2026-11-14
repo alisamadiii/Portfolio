@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   index,
   integer,
@@ -26,7 +27,7 @@ export const AGENCY_LEAD_STATUS_VALUES = [
   "spam",
 ] as const;
 export type AgencyLeadStatus = (typeof AGENCY_LEAD_STATUS_VALUES)[number];
-export type AgencyLeadSource = "form" | "booking" | "manual";
+export type AgencyLeadSource = "form" | "booking" | "manual" | "wix";
 
 // Where the lead came from, computed at capture (lib/agency/lead-channel.ts).
 export const AGENCY_LEAD_CHANNEL_VALUES = [
@@ -226,6 +227,9 @@ export const agencyLead = pgTable(
     meetingAt: timestamp("meeting_at"),
     meetingEndAt: timestamp("meeting_end_at"),
     meetingUrl: text("meeting_url"),
+    // Id of the lead in the system it was imported from (e.g. "wix:<submission
+    // id>"), so re-importing never duplicates.
+    externalId: text("external_id"),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
@@ -243,6 +247,9 @@ export const agencyLead = pgTable(
       table.channel,
       table.createdAt.desc()
     ),
+    uqProjectExternal: uniqueIndex("uq_agency_lead_project_external")
+      .on(table.projectId, table.externalId)
+      .where(sql`${table.externalId} is not null`),
   })
 );
 

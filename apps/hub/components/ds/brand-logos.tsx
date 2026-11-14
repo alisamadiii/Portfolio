@@ -47,6 +47,30 @@ export function ResendLogo({ className }: LogoProps) {
   );
 }
 
+export function NeonLogo({ className }: LogoProps) {
+  return (
+    <svg className={className} viewBox="0 0 36 36" aria-hidden>
+      <path
+        fill="#00E599"
+        fillRule="evenodd"
+        d="M0 6.207A6.207 6.207 0 0 1 6.207 0h23.586A6.207 6.207 0 0 1 36 6.207v20.06c0 3.546-4.488 5.085-6.664 2.286l-6.805-8.754v10.615A5.586 5.586 0 0 1 16.945 36H6.207A6.207 6.207 0 0 1 0 29.793V6.207Zm6.207-1.241c-.686 0-1.241.555-1.241 1.24v23.587c0 .686.555 1.242 1.241 1.242h10.862c.343 0 .5-.278.5-.621V16.18c0-3.547 4.488-5.086 6.665-2.286l6.805 8.753V6.207c0-.686.064-1.241-.621-1.241H6.207Z"
+      />
+    </svg>
+  );
+}
+
+// Same mark as the agency landing page's platform cards (simple-icons Wix, #0C6EFC).
+export function WixLogo({ className }: LogoProps) {
+  return (
+    <svg className={className} viewBox="0 7 24 10" aria-hidden>
+      <path
+        fill="#0C6EFC"
+        d="m0 7.354 2.113 9.292h.801a1.54 1.54 0 0 0 1.506-1.218l1.351-6.34a.171.171 0 0 1 .167-.137c.08 0 .15.058.167.137l1.352 6.34a1.54 1.54 0 0 0 1.506 1.218h.805l2.113-9.292h-.565c-.62 0-1.159.43-1.296 1.035l-1.26 5.545-1.106-5.176a1.76 1.76 0 0 0-2.19-1.324c-.639.176-1.113.716-1.251 1.365l-1.094 5.127-1.26-5.537A1.33 1.33 0 0 0 .563 7.354H0zm13.992 0a.951.951 0 0 0-.951.95v8.342h.635a.952.952 0 0 0 .951-.95V7.353h-.635zm1.778 0 3.158 4.66-3.14 4.632h1.325c.368 0 .712-.181.918-.486l1.756-2.59a.12.12 0 0 1 .197 0l1.754 2.59c.206.305.55.486.918.486h1.326l-3.14-4.632L24 7.354h-1.326c-.368 0-.712.181-.918.486l-1.772 2.617a.12.12 0 0 1-.197 0L18.014 7.84a1.108 1.108 0 0 0-.918-.486H15.77z"
+      />
+    </svg>
+  );
+}
+
 export function GoogleCalendarLogo({ className }: LogoProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>

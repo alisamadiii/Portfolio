@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
+import { readAccountToken } from "@workspace/auth/tokens";
 import { db } from "@workspace/drizzle/index";
 import { account } from "@workspace/drizzle/schema";
 
@@ -111,7 +112,9 @@ export const integrationsRouter = createTRPCRouter({
       // Best-effort revoke at Google so the grant disappears from the user's
       // Google account permissions too; the row delete is what matters.
       if (integration.providerId === "google") {
-        const token = target.refreshToken ?? target.accessToken;
+        const token =
+          (await readAccountToken(target.refreshToken)) ??
+          (await readAccountToken(target.accessToken));
         if (token) {
           await fetch("https://oauth2.googleapis.com/revoke", {
             method: "POST",
@@ -122,14 +125,18 @@ export const integrationsRouter = createTRPCRouter({
       }
 
       // Resend: revoking the refresh token ends the whole grant.
-      if (integration.providerId === "resend" && target.refreshToken) {
+      const resendRefresh =
+        integration.providerId === "resend"
+          ? await readAccountToken(target.refreshToken)
+          : null;
+      if (resendRefresh) {
         await fetch("https://api.resend.com/oauth/revoke", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({
             client_id: process.env.RESEND_CLIENT_ID ?? "",
             client_secret: process.env.RESEND_CLIENT_SECRET ?? "",
-            token: target.refreshToken,
+            token: resendRefresh,
             token_type_hint: "refresh_token",
           }),
         }).catch(() => {});

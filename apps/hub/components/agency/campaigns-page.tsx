@@ -20,7 +20,7 @@ import type { AdCampaign, AdCampaignKeyword } from "@workspace/drizzle/schema";
 
 import { sectionUrl } from "@/components/agency/business-info-config";
 import { StepShell } from "@/components/agency/business-info/step-shell";
-import { useAgency } from "@/components/agency/use-agency";
+import { useRouteProjectId } from "@/hooks/use-repo";
 import { SideNote } from "@/components/ds/business-info/side-cards";
 import { Button, IconButton } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
@@ -90,7 +90,7 @@ export function CampaignsIndex() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { projectId } = useAgency();
+  const projectId = useRouteProjectId();
 
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
   const [name, setName] = useState("");
@@ -185,7 +185,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { projectId } = useAgency();
+  const projectId = useRouteProjectId();
 
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
   const campaign = campaigns.data?.find((c) => c.id === campaignId);

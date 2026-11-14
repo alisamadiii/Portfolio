@@ -19,7 +19,6 @@ import {
   stepStatuses,
   type StepStatus,
 } from "@/components/agency/business-info/status";
-import { useAgency } from "@/components/agency/use-agency";
 import { SideNote } from "@/components/ds/business-info/side-cards";
 import { WithSide } from "@/components/ds/layout/app-shell";
 import { PageHeader } from "@/components/ds/layout/page-header";
@@ -116,7 +115,7 @@ const ANSWERS_GO = [
 
 export function BusinessInfoOverview() {
   const trpc = useTRPC();
-  const { projectId } = useAgency();
+  const projectId = useRouteProjectId();
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
 

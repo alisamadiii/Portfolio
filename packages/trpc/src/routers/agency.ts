@@ -73,6 +73,7 @@ import {
 } from "../lib/agency/negative-lists";
 import { normalizeOrigin } from "../lib/agency/origins";
 import { isAdminUser, roleAtLeast } from "../lib/authz-shared";
+import { resolveProjectRole } from "../lib/cms/project-access";
 import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
 import { createStarterProject } from "../lib/cms/upload-project";
 import {
@@ -173,6 +174,64 @@ const agencyWriteProcedure = agencyProcedure.use(async ({ next, ctx }) => {
     });
   }
   return next({ ctx });
+});
+
+// Business info + planned ad campaigns are free on every plan and every
+// project: project access is enough (no agency plan, no Leads feature). The
+// agency_client row that holds them is created on the first save.
+const businessProcedure = authenticatedProcedure
+  .input(z.object({ projectId: z.string().uuid() }))
+  .use(async ({ next, ctx, input }) => {
+    const project = await db.query.hubProject.findFirst({
+      where: eq(hubProject.id, input.projectId),
+      columns: { id: true, githubConnectedUserId: true },
+    });
+    if (!project) throw new TRPCError({ code: "NOT_FOUND" });
+    const role = await resolveProjectRole(ctx.session.user, {
+      projectId: project.id,
+      githubConnectedUserId: project.githubConnectedUserId,
+    });
+    if (!role) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No access to this project." });
+    }
+    const client = await db.query.agencyClient.findFirst({
+      where: eq(agencyClient.projectId, input.projectId),
+    });
+    return next({
+      ctx: {
+        ...ctx,
+        role,
+        projectId: input.projectId,
+        ownerId: project.githubConnectedUserId,
+        client: client ?? null,
+      },
+    });
+  });
+
+const businessWriteProcedure = businessProcedure.use(async ({ next, ctx }) => {
+  if (!roleAtLeast(ctx.role, "content-editor")) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "You have view-only access." });
+  }
+  if (ctx.client) return next({ ctx: { ...ctx, client: ctx.client } });
+  // The row's owner gets full access to the agency data, so it is always the
+  // project owner (or a full-access caller when the project has none).
+  const userId =
+    ctx.ownerId ?? (ctx.role === "full-access" ? ctx.session.user.id : null);
+  if (!userId) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Ask the site owner to save business info first.",
+    });
+  }
+  await db
+    .insert(agencyClient)
+    .values({ userId, projectId: ctx.projectId })
+    .onConflictDoNothing({ target: agencyClient.projectId });
+  const client = await db.query.agencyClient.findFirst({
+    where: eq(agencyClient.projectId, ctx.projectId),
+  });
+  if (!client) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+  return next({ ctx: { ...ctx, client } });
 });
 
 const errorMessage = (error: unknown) =>
@@ -1423,8 +1482,8 @@ export const agencyRouter = createTRPCRouter({
   // Keys/shape are driven by the hub's BUSINESS_RESOURCES config, so adding a
   // new list is a config change only — no schema or router change here.
   businessInfo: createTRPCRouter({
-    get: agencyProcedure.query(({ ctx }) => ctx.client.businessInfo ?? {}),
-    set: agencyWriteProcedure
+    get: businessProcedure.query(({ ctx }) => ctx.client?.businessInfo ?? {}),
+    set: businessWriteProcedure
       .input(
         z.object({
           businessInfo: z.record(
@@ -1459,8 +1518,8 @@ export const agencyRouter = createTRPCRouter({
   // Planned ad campaigns: keyword categories with per-keyword metrics and the
   // kept ad copy, stored as one jsonb list on the client.
   campaigns: createTRPCRouter({
-    list: agencyProcedure.query(({ ctx }) => ctx.client.adCampaigns ?? []),
-    create: agencyWriteProcedure
+    list: businessProcedure.query(({ ctx }) => ctx.client?.adCampaigns ?? []),
+    create: businessWriteProcedure
       .input(z.object({ name: z.string().trim().min(1).max(200) }))
       .mutation(async ({ ctx, input }) => {
         const campaign: AdCampaign = {
@@ -1476,7 +1535,7 @@ export const agencyRouter = createTRPCRouter({
           .where(eq(agencyClient.id, ctx.client.id));
         return campaign;
       }),
-    update: agencyWriteProcedure
+    update: businessWriteProcedure
       .input(
         z.object({
           id: z.string().max(64),
@@ -1535,7 +1594,7 @@ export const agencyRouter = createTRPCRouter({
           .where(eq(agencyClient.id, ctx.client.id));
         return updated;
       }),
-    remove: agencyWriteProcedure
+    remove: businessWriteProcedure
       .input(z.object({ id: z.string().max(64) }))
       .mutation(async ({ ctx, input }) => {
         await db

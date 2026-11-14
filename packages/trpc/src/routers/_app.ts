@@ -16,7 +16,9 @@ import { paymentsRouter } from "./payments";
 import { plansRouter } from "./plans";
 import { productsRouter } from "./products";
 import { projectRouter } from "./project";
+import { neonRouter } from "./neon";
 import { resendRouter } from "./resend";
+import { wixRouter } from "./wix";
 import { sourcesRouter } from "./sources";
 import { statsRouter } from "./stats";
 import { uploadsRouter } from "./uploads";
@@ -44,6 +46,8 @@ export const appRouter = createTRPCRouter({
   agency: agencyRouter,
   netlify: netlifyRouter,
   resend: resendRouter,
+  neon: neonRouter,
+  wix: wixRouter,
   gcal: gcalRouter,
 });
 

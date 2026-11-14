@@ -46,14 +46,10 @@ export function HomePage() {
     (s) => s.id.toLowerCase() === `${project?.owner}/${project?.repo}`.toLowerCase()
   );
 
-  // Business info progress needs agency data; without it the row stays todo.
-  const info = useQuery(
-    trpc.agency.businessInfo.get.queryOptions({ projectId }, { enabled: !!agency })
-  );
-  const campaigns = useQuery(
-    trpc.agency.campaigns.list.queryOptions({ projectId }, { enabled: !!agency })
-  );
-  const infoDone = agency ? doneCount(stepStatuses(info.data ?? {}, campaigns.data ?? [])) : 0;
+  // Business info is free on every project.
+  const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
+  const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
+  const infoDone = doneCount(stepStatuses(info.data ?? {}, campaigns.data ?? []));
 
   // GitHub projects without the App installed can't be edited: surface the
   // install link here (the editor shows its own overlay).
