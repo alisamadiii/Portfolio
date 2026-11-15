@@ -26,7 +26,7 @@ import { Button } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable } from "@/components/ds/ui/data-table";
-import { Field, Input } from "@/components/ds/ui/field";
+import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 
 import { EmailEditor, SaveStatus, useAutosave } from "./email-editor";
@@ -96,6 +96,8 @@ function DraftEditor({ campaign }: { campaign: Campaign }) {
   const [sendOpen, setSendOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const domain = useQuery(trpc.newsletter.domain.get.queryOptions({ projectId }));
+  const lists = useQuery(trpc.newsletter.contacts.lists.queryOptions({ projectId }));
+  const [listId, setListId] = useState(campaign.contactBookId ?? "");
 
   const [name, setName] = useState(campaign.name);
   const [subject, setSubject] = useState(campaign.subject);
@@ -186,6 +188,23 @@ function DraftEditor({ campaign }: { campaign: Campaign }) {
                 <span className="shrink-0 text-[13px] text-dim">@{domain.data?.name ?? campaign.fromParts.domain}</span>
               </div>
             </Field>
+            <Field label="Send to" className="sm:col-span-2">
+              <Select
+                value={listId}
+                disabled={!canWrite}
+                onChange={(e) => {
+                  setListId(e.target.value);
+                  saveMeta({ listId: e.target.value });
+                }}
+              >
+                {!listId && <option value="">Choose a list</option>}
+                {lists.data?.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name} ({l.subscribed.toLocaleString()} subscribed)
+                  </option>
+                ))}
+              </Select>
+            </Field>
             <Field label="Subject" className="sm:col-span-2">
               <Input value={subject} disabled={!canWrite} onChange={(e) => setSubject(e.target.value)} onBlur={() => subject !== campaign.subject && saveMeta({ subject })} />
             </Field>
@@ -200,7 +219,13 @@ function DraftEditor({ campaign }: { campaign: Campaign }) {
           />
         </div>
       </div>
-      <SendDialog open={sendOpen} onOpenChange={setSendOpen} pending={schedule.isPending} onSend={send} />
+      <SendDialog
+        open={sendOpen}
+        onOpenChange={setSendOpen}
+        pending={schedule.isPending}
+        onSend={send}
+        list={lists.data?.find((l) => l.id === listId)}
+      />
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
@@ -219,21 +244,17 @@ function SendDialog({
   onOpenChange,
   pending,
   onSend,
+  list,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pending: boolean;
   onSend: (scheduledAt?: string) => void;
+  list?: { name: string; subscribed: number };
 }) {
-  const trpc = useTRPC();
-  const { projectId } = useNewsletter();
   const [when, setWhen] = useState<"now" | "later">("now");
   const [at, setAt] = useState("");
-  const list = useQuery({
-    ...trpc.newsletter.contacts.list.queryOptions({ projectId, page: 1, subscribed: "true" }),
-    enabled: open,
-  });
-  const subscribers = list.data?.subscribed;
+  const subscribers = list?.subscribed;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -243,7 +264,7 @@ function SendDialog({
           <DialogDescription>
             {subscribers == null
               ? "Goes to everyone subscribed to your list."
-              : `Goes to ${subscribers.toLocaleString()} subscriber${subscribers === 1 ? "" : "s"}. Unsubscribed and blocked addresses are skipped.`}
+              : `Goes to ${subscribers.toLocaleString()} subscriber${subscribers === 1 ? "" : "s"} on ${list!.name}. Unsubscribed and blocked addresses are skipped.`}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 text-sm">

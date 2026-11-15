@@ -45,18 +45,24 @@ export function ContactsSection() {
   const [filter, setFilter] = useState<"all" | "true" | "false">("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const lists = useQuery(trpc.newsletter.contacts.lists.queryOptions({ projectId }));
+  const [picked, setPicked] = useState<string | null>(null);
+  // Default: the biggest list (the server sorts by size).
+  const listId = picked ?? lists.data?.[0]?.id;
 
-  const list = useQuery(
-    trpc.newsletter.contacts.list.queryOptions(
+  const list = useQuery({
+    ...trpc.newsletter.contacts.list.queryOptions(
       {
         projectId,
+        listId,
         page,
         search: search.trim() || undefined,
         subscribed: filter === "all" ? undefined : filter,
       },
       { placeholderData: keepPreviousData }
-    )
-  );
+    ),
+    enabled: lists.isSuccess,
+  });
   const refresh = () => queryClient.invalidateQueries({ queryKey: trpc.newsletter.pathKey() });
 
   const update = useMutation(
@@ -153,7 +159,7 @@ export function ContactsSection() {
                 className="text-[13px] font-medium text-coral-text hover:text-coral-deep disabled:opacity-50"
                 disabled={update.isPending}
                 onClick={() =>
-                  update.mutate({ projectId, contactId: c.id, subscribed: !c.subscribed })
+                  update.mutate({ projectId, listId, contactId: c.id, subscribed: !c.subscribed })
                 }
               >
                 {c.subscribed ? "Unsubscribe" : "Resubscribe"}
@@ -176,7 +182,28 @@ export function ContactsSection() {
       />
       <Card className={cn(list.isPlaceholderData && "opacity-60")}>
         <div className="flex flex-wrap items-center gap-3 px-6 py-4">
-          <h2 className="mr-auto text-base font-semibold">Contacts</h2>
+          <div className="mr-auto flex items-center gap-2">
+            <h2 className="text-base font-semibold">Contacts</h2>
+            {(lists.data?.length ?? 0) > 1 && (
+              <Select
+                aria-label="List"
+                className="h-8 w-auto"
+                value={listId ?? ""}
+                onChange={(e) => {
+                  setPicked(e.target.value);
+                  setSelected(new Set());
+                  setPage(1);
+                }}
+              >
+                {lists.data!.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.emoji ? `${l.emoji} ` : ""}
+                    {l.name} ({l.total.toLocaleString()})
+                  </option>
+                ))}
+              </Select>
+            )}
+          </div>
           <Input
             type="search"
             placeholder="Search email or name"
@@ -202,8 +229,8 @@ export function ContactsSection() {
           />
           {canWrite && (
             <>
-              <ImportDialog />
-              <AddContactDialog />
+              <ImportDialog listId={listId} />
+              <AddContactDialog listId={listId} />
             </>
           )}
         </div>
@@ -246,13 +273,13 @@ export function ContactsSection() {
         title={`Delete ${selected.size} contact${selected.size === 1 ? "" : "s"}?`}
         description="They're removed from your list. To stop emailing someone but keep their record, unsubscribe them instead."
         confirmLabel="Delete"
-        onConfirm={() => remove.mutate({ projectId, contactIds: [...selected] })}
+        onConfirm={() => remove.mutate({ projectId, listId, contactIds: [...selected] })}
       />
     </>
   );
 }
 
-function AddContactDialog() {
+function AddContactDialog({ listId }: { listId?: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { projectId } = useNewsletter();
@@ -290,6 +317,7 @@ function AddContactDialog() {
             const form = new FormData(event.currentTarget);
             add.mutate({
               projectId,
+              listId,
               email: String(form.get("email") ?? ""),
               firstName: String(form.get("firstName") ?? "") || undefined,
               lastName: String(form.get("lastName") ?? "") || undefined,
@@ -319,7 +347,7 @@ function AddContactDialog() {
 }
 
 /** CSV import: pick a file, confirm the columns, upload in chunks of 1000. */
-export function ImportDialog() {
+export function ImportDialog({ listId }: { listId?: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { projectId } = useNewsletter();
@@ -368,7 +396,7 @@ export function ImportDialog() {
     let done = 0;
     try {
       for (const rows of batches) {
-        await importChunk.mutateAsync({ projectId, rows });
+        await importChunk.mutateAsync({ projectId, listId, rows });
         done += rows.length;
         setProgress({ done, total: prepared.rows.length });
       }

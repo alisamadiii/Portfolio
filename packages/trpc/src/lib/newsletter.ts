@@ -224,7 +224,10 @@ export async function ensureContactBook(mail: ProjectMail): Promise<string> {
 
   const book = await teamFetch<{ id: string }>(mail, "/api/v1/contactBooks", {
     method: "POST",
-    body: { name: "Subscribers" },
+    // useSend turns double opt-in ON by default for new books, which emails a
+    // "confirm your subscription" to every contact added (imports included)
+    // and holds them as unsubscribed. Our lists are imported/opted-in already.
+    body: { name: "Subscribers", doubleOptInEnabled: false },
   });
   const saved = await db
     .update(hubProject)
@@ -243,6 +246,14 @@ export async function ensureContactBook(mail: ProjectMail): Promise<string> {
     .limit(1);
   return row!.id!;
 }
+
+/**
+ * The contact list to act on: an explicit listId (any list in the project's
+ * workspace; useSend 404s ids from other teams because every call is scoped
+ * to this team), else the project's default list.
+ */
+export const resolveList = (mail: ProjectMail, listId?: string) =>
+  listId ? Promise.resolve(listId) : ensureContactBook(mail);
 
 /** Starter document for a new campaign or template (must carry the unsubscribe link). */
 export const starterContent = (businessName: string) =>

@@ -14,10 +14,10 @@ import {
 import {
   createProjectDomain,
   deleteProjectDomain,
-  ensureContactBook,
   isProvisioned,
   projectDomain,
   projectMail,
+  resolveList,
   setUpWorkspace,
   starterContent,
   teamFetch,
@@ -145,6 +145,8 @@ const resolveFrom = async (mail: ProjectMail, input: z.infer<typeof fromInput>) 
 
 const businessName = (ctx: Ctx) => ctx.repo;
 
+const listId = id.optional();
+
 const campaignsRouter = createTRPCRouter({
   list: read
     .input(z.object({ page, status: z.enum(["DRAFT", "SCHEDULED", "RUNNING", "PAUSED", "SENT"]).optional() }))
@@ -176,12 +178,13 @@ const campaignsRouter = createTRPCRouter({
         name: z.string().trim().min(1).max(200),
         subject: z.string().trim().min(1).max(500),
         templateId: id.optional(),
+        listId,
       })
     )
     .mutation(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
       const from = await resolveFrom(mail, input);
-      const contactBookId = await ensureContactBook(mail);
+      const contactBookId = await resolveList(mail, input.listId);
       let content = starterContent(businessName(ctx));
       if (input.templateId) {
         const template = await teamFetch<{ content: string | null }>(
@@ -217,15 +220,16 @@ const campaignsRouter = createTRPCRouter({
         previewText: z.string().max(500).optional(),
         content: z.string().max(2_000_000).optional(),
         from: fromInput.optional(),
+        listId,
       })
     )
     .mutation(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
-      const { campaignId, from, ...rest } = input;
+      const { campaignId, from, listId: list, ...rest } = input;
       const body: Record<string, unknown> = { ...rest };
       if (from) body.from = await resolveFrom(mail, from);
-      // Always re-pin the project's own list.
-      body.contactBookId = await ensureContactBook(mail);
+      // The fork checks the list belongs to this team.
+      if (list) body.contactBookId = list;
       await teamFetch(mail, `/api/v1/campaigns/${campaignId}`, { method: "PATCH", body });
       return { ok: true };
     }),
@@ -284,9 +288,36 @@ const contactFields = {
 };
 
 const contactsRouter = createTRPCRouter({
+  /** Every list in the project's workspace, with counts. Default list first. */
+  lists: read.query(async ({ ctx }) => {
+    const mail = await mailFor(ctx);
+    const books = await teamFetch<{ id: string; name: string; emoji?: string | null }[]>(
+      mail,
+      "/api/v1/contactBooks"
+    );
+    const lists = await Promise.all(
+      books.map(async (b) => {
+        const counts = await teamFetch<ContactList>(mail, `/api/v1/contactBooks/${b.id}/contact-list`, {
+          query: { limit: "1" },
+        });
+        return {
+          id: b.id,
+          name: b.name.trim() || "Untitled",
+          emoji: b.emoji ?? null,
+          total: counts.total,
+          subscribed: counts.subscribed,
+          isDefault: b.id === mail.contactBookId,
+        };
+      })
+    );
+    // Biggest list first: it's what the client means by "my subscribers".
+    return lists.sort((a, b) => b.total - a.total);
+  }),
+
   list: read
     .input(
       z.object({
+        listId,
         page,
         search: z.string().trim().max(200).optional(),
         subscribed: z.enum(["true", "false"]).optional(),
@@ -294,7 +325,7 @@ const contactsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
-      const book = await ensureContactBook(mail);
+      const book = await resolveList(mail, input.listId);
       return teamFetch<ContactList>(mail, `/api/v1/contactBooks/${book}/contact-list`, {
         query: {
           page: String(input.page),
@@ -306,10 +337,10 @@ const contactsRouter = createTRPCRouter({
     }),
 
   add: write
-    .input(z.object({ email: z.string().trim().toLowerCase().email(), ...contactFields }))
+    .input(z.object({ listId, email: z.string().trim().toLowerCase().email(), ...contactFields }))
     .mutation(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
-      const book = await ensureContactBook(mail);
+      const book = await resolveList(mail, input.listId);
       return teamFetch<{ contactId: string }>(mail, `/api/v1/contactBooks/${book}/contacts`, {
         method: "POST",
         body: { ...input, subscribed: true },
@@ -317,11 +348,11 @@ const contactsRouter = createTRPCRouter({
     }),
 
   update: write
-    .input(z.object({ contactId: id, subscribed: z.boolean().optional(), ...contactFields }))
+    .input(z.object({ listId, contactId: id, subscribed: z.boolean().optional(), ...contactFields }))
     .mutation(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
-      const book = await ensureContactBook(mail);
-      const { contactId, ...body } = input;
+      const book = await resolveList(mail, input.listId);
+      const { contactId, listId: _list, ...body } = input;
       await teamFetch(mail, `/api/v1/contactBooks/${book}/contacts/${contactId}`, {
         method: "PATCH",
         body,
@@ -330,10 +361,10 @@ const contactsRouter = createTRPCRouter({
     }),
 
   delete: write
-    .input(z.object({ contactIds: z.array(id).min(1).max(1000) }))
+    .input(z.object({ listId, contactIds: z.array(id).min(1).max(1000) }))
     .mutation(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
-      const book = await ensureContactBook(mail);
+      const book = await resolveList(mail, input.listId);
       await teamFetch(mail, `/api/v1/contactBooks/${book}/contacts/bulk`, {
         method: "DELETE",
         body: { contactIds: input.contactIds },
@@ -345,6 +376,7 @@ const contactsRouter = createTRPCRouter({
   import: write
     .input(
       z.object({
+        listId,
         rows: z
           .array(z.object({ email: z.string().trim().toLowerCase().email(), ...contactFields }))
           .min(1)
@@ -353,7 +385,7 @@ const contactsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
-      const book = await ensureContactBook(mail);
+      const book = await resolveList(mail, input.listId);
       await teamFetch(mail, `/api/v1/contactBooks/${book}/contacts/bulk`, {
         method: "POST",
         body: input.rows.map((r) => ({ ...r, subscribed: true })),
@@ -579,14 +611,19 @@ export const newsletterRouter = createTRPCRouter({
       });
       return (sent.totalPage - 1) * 30 + last.campaigns.length;
     };
+    const subscribers = async () => {
+      const books = await teamFetch<{ id: string }[]>(mail, "/api/v1/contactBooks");
+      const counts = await Promise.all(
+        books.map((b) =>
+          teamFetch<ContactList>(mail, `/api/v1/contactBooks/${b.id}/contact-list`, {
+            query: { limit: "1" },
+          })
+        )
+      );
+      return { subscribed: counts.reduce((n, c) => n + c.subscribed, 0) };
+    };
     const [list, campaignsSent, last30] = await Promise.all([
-      mail.contactBookId
-        ? soft(
-            teamFetch<ContactList>(mail, `/api/v1/contactBooks/${mail.contactBookId}/contact-list`, {
-              query: { limit: "1" },
-            })
-          )
-        : Promise.resolve({ subscribed: 0 }),
+      soft(subscribers()),
       soft(sentCount()),
       domain ? soft(series(mail, 30)) : null,
     ]);

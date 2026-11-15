@@ -226,3 +226,29 @@ describe("one domain per project", () => {
     });
   });
 });
+
+// Regression (2026-11-15): useSend creates contact books with double opt-in
+// ON, so importing a list emailed every contact a confirmation request.
+describe("subscriber list creation", () => {
+  it("creates the project's list with double opt-in off", async () => {
+    h.state.claimed = [{ id: "cb_1" }];
+    h.state.fetchImpl = async () => ({ id: "cb_1" });
+    await lib.ensureContactBook({ projectId: "p", teamId: 1, domainId: null, contactBookId: null });
+    const create = h.state.fetches.find((f) => f.path === "/api/v1/contactBooks")!;
+    expect(create.init.method).toBe("POST");
+    expect(create.init.body).toEqual({ name: "Subscribers", doubleOptInEnabled: false });
+  });
+});
+
+// Regression (2026-11-15): imported lists (General, MIS…) were invisible in
+// the hub, which only ever used the project's own "Subscribers" list.
+describe("resolveList", () => {
+  const mail = { projectId: "p", teamId: 15, domainId: null, contactBookId: "cb_default" };
+  it("uses the chosen list as-is (scoped to the project's team by useSend)", async () => {
+    expect(await lib.resolveList(mail, "cb_general")).toBe("cb_general");
+    expect(h.state.fetches).toHaveLength(0);
+  });
+  it("falls back to the project's default list", async () => {
+    expect(await lib.resolveList(mail)).toBe("cb_default");
+  });
+});

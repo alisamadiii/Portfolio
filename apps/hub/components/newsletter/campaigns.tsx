@@ -181,6 +181,10 @@ export function NewCampaignDialog({
     ...trpc.newsletter.templates.list.queryOptions({ projectId, page: 1 }),
     enabled: open,
   });
+  const lists = useQuery({
+    ...trpc.newsletter.contacts.lists.queryOptions({ projectId }),
+    enabled: open,
+  });
   const verified = domain.data?.status === "SUCCESS";
 
   const create = useMutation(
@@ -233,6 +237,7 @@ export function NewCampaignDialog({
                 event.preventDefault();
                 const form = new FormData(event.currentTarget);
                 const templateId = String(form.get("templateId") ?? "");
+                const listId = String(form.get("listId") ?? "");
                 create.mutate({
                   projectId,
                   name: String(form.get("name") ?? ""),
@@ -240,6 +245,7 @@ export function NewCampaignDialog({
                   fromName: String(form.get("fromName") ?? ""),
                   localPart: String(form.get("localPart") ?? ""),
                   templateId: templateId || undefined,
+                  listId: listId || undefined,
                 });
               }}
             >
@@ -260,6 +266,17 @@ export function NewCampaignDialog({
                   </div>
                 </Field>
               </div>
+              {(lists.data?.length ?? 0) > 0 && (
+                <Field label="Send to">
+                  <Select name="listId" defaultValue={lists.data![0]!.id}>
+                    {lists.data!.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.name} ({l.subscribed.toLocaleString()} subscribed)
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              )}
               <Field label="Start from" optional>
                 <Select name="templateId" defaultValue="">
                   <option value="">Blank email</option>
