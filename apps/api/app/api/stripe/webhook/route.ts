@@ -3,7 +3,8 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 
 import { stripe } from "@workspace/trpc/lib/payment/stripe";
-import { planForPrice } from "@workspace/trpc/lib/payment/plans";
+import { markOfferPaid } from "@workspace/trpc/lib/payment/offers";
+import { asPlanKey, planForPrice } from "@workspace/trpc/lib/payment/plans";
 import { MIRROR_EVENTS, syncStripeEvent } from "@workspace/trpc/lib/payment/stripe-sync";
 import { trackPurchase } from "@workspace/google-analytics/server";
 import { db } from "@workspace/drizzle/index";
@@ -137,11 +138,15 @@ async function syncCmsSubscription(customerId: string, subscriptionId: string | 
 
   // What this subscription grants lives entirely in metadata — the
   // service-agnostic key every entitlement query reads.
-  const product = planForPrice(price?.id)?.split(":")[0] ?? "";
+  // Catalog price first; admin-built client plans use a custom price and name
+  // their tier in sub metadata (project_offer → Payment Link).
+  const plan = planForPrice(price?.id) ?? asPlanKey(sub.metadata.plan);
+  const product = plan?.split(":")[0] ?? "";
   const metadata = {
     projectId,
     userId: userId ?? "",
     product,
+    ...(plan ? { plan } : {}),
     name: sub.metadata.name || "",
   };
 
@@ -280,6 +285,16 @@ export async function POST(req: Request) {
     // Per-project CMS subscription (hub_subscription).
     if (CMS_EVENTS.has(event.type) && customerId) {
       await syncCmsSubscription(customerId, subscriptionIdOf(event));
+    }
+
+    // A client plan's Payment Link was paid: close the offer and its link.
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const link =
+        typeof session.payment_link === "string"
+          ? session.payment_link
+          : session.payment_link?.id;
+      if (link && session.status === "complete") await markOfferPaid(link);
     }
   } catch (error) {
     // Return 500 so Stripe retries.

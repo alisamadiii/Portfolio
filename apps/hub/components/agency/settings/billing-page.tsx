@@ -6,11 +6,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import { useEntitlement } from "@/hooks/use-plans";
 
 import { DeleteSiteCard } from "@/components/agency/settings/danger-page";
+import { AdminOfferCard } from "@/components/billing/plan-offer-panel";
 import {
   ProjectManage,
   ProjectPlans,
@@ -27,7 +27,6 @@ import { useRouteProjectId } from "@/hooks/use-repo";
 export function AgencyBillingPage() {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
-  const user = useCurrentUser().data?.user ?? null;
   const { refresh: refreshPlans } = useEntitlement(projectId);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery(
@@ -69,19 +68,16 @@ export function AgencyBillingPage() {
             <Spinner className="text-muted-foreground size-6" />
           </div>
         ) : !data.subscription || data.subscription.status === "canceled" ? (
-          user ? (
-            <ProjectPlans
-              projectId={data.projectId}
-              userId={user.id}
-              userEmail={user.email}
-              userName={user.name}
-            />
-          ) : null
+          <ProjectPlans projectId={data.projectId} />
         ) : (
-          <ProjectManage
-            projectId={data.projectId}
-            subscription={data.subscription}
-          />
+          <div className="space-y-6">
+            <ProjectManage
+              projectId={data.projectId}
+              subscription={data.subscription}
+            />
+            {/* Admins can still prepare a replacement plan. */}
+            <AdminOfferCard projectId={data.projectId} />
+          </div>
         )}
       </div>
       <DeleteSiteCard />

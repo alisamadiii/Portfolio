@@ -11,7 +11,6 @@ import {
   entitlementFor,
   type Entitlement,
   type Feature,
-  type SelfServePlan,
 } from "@workspace/trpc/lib/payment/plans";
 
 /**
@@ -76,44 +75,4 @@ export const useEntitlement = (projectId: string | null | undefined) => {
     isLoading: plans.isLoading,
     refresh: plans.refresh,
   };
-};
-
-/** Starts a self-serve plan checkout for one project and redirects to Stripe. */
-export const startPlanCheckout = async ({
-  plan = "website:paid",
-  projectId,
-  userId,
-  email,
-  name,
-}: {
-  plan?: SelfServePlan;
-  projectId: string;
-  userId: string;
-  email: string;
-  name?: string | null;
-}): Promise<void> => {
-  const returnUrl = `${window.location.origin}${window.location.pathname}?purchase=success`;
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/agency/checkouts`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        plan,
-        email,
-        name: name || undefined,
-        projectId,
-        userId,
-        returnUrl,
-      }),
-    }
-  );
-  const payload = (await res.json().catch(() => null)) as {
-    url?: string;
-    error?: string;
-  } | null;
-  if (!res.ok || !payload?.url) {
-    throw new Error(payload?.error || "Failed to start checkout.");
-  }
-  window.location.assign(payload.url);
 };

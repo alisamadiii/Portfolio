@@ -20,7 +20,7 @@ import { useEntitlement } from "@/hooks/use-plans";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
-import { APPS, appState, lockedCta } from "@/lib/apps";
+import { APPS, appState } from "@/lib/apps";
 import { repoPath } from "@/lib/paths";
 
 import { ReplaceSourceDialog } from "./replace-source-dialog";
@@ -145,8 +145,8 @@ export function HomePage() {
           {
             label: entitlement?.label ?? "—",
             value: (
-              <Link href="/billing" className="font-medium text-coral-text">
-                Compare plans
+              <Link href={`${base}/billing`} className="font-medium text-coral-text">
+                View plan
               </Link>
             ),
           },
@@ -237,7 +237,7 @@ export function HomePage() {
           </div>
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {recommended.map((app) => {
-              const state = appState(app, installed, can);
+              const state = appState(app, installed, entitlement);
               const Icon = app.icon;
               const Logo = app.logo;
               return (
@@ -266,8 +266,8 @@ export function HomePage() {
                   </div>
                   <p className="text-[13px] leading-normal text-dim">{app.description}</p>
                   {state === "locked" ? (
-                    <ButtonLink variant="dark" size="sm" href={`${base}/apps`}>
-                      {lockedCta(app) === "upgrade" ? "Upgrade" : "Ask us"}
+                    <ButtonLink variant="dark" size="sm" href={`${base}/billing`}>
+                      Upgrade
                     </ButtonLink>
                   ) : (
                     <Button size="sm" onClick={() =>

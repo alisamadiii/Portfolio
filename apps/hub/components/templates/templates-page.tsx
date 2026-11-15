@@ -17,7 +17,8 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
-import { useAgency } from "@/components/agency/use-agency";
+import { useProject } from "@/hooks/use-project";
+import { useRouteProjectId } from "@/hooks/use-repo";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { Button } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
@@ -73,8 +74,9 @@ const blank = (kind: Kind): Draft => ({ kind, name: "", title: "", durationMinut
 export function TemplatesPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { projectId, role } = useAgency();
-  const canEdit = role !== "view-only";
+  // Free on every project and plan: no agency setup needed.
+  const projectId = useRouteProjectId();
+  const canEdit = useProject()?.role !== "view-only";
   const listKey = trpc.agency.templates.list.queryKey({ projectId });
   const templates = useQuery(trpc.agency.templates.list.queryOptions({ projectId }));
   const [draft, setDraft] = useState<Draft | null>(null);

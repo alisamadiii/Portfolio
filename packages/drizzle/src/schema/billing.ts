@@ -151,6 +151,51 @@ export const subscriptions = pgTable(
   })
 );
 
+// Admin-built payment for one project (hub Billing › "Payment"). Prices are
+// per client, so there's no public plan: the admin picks catalog products
+// and/or custom items (one-time or monthly), and the client pays through a
+// Stripe Payment Link (never expires, unlike Checkout Sessions). The
+// subscription it creates carries metadata { projectId, userId, plan }, which
+// the entitlement reads when the price isn't in the catalog. At most one open
+// offer per project. `amount` = recurring total per interval (0 when the link
+// is one-time only), `setupAmount` = one-time total.
+export const projectOffers = pgTable(
+  "project_offer",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull(),
+    // PlanKey whose features the plan grants ("website:paid", "agency:launch").
+    plan: text("plan").notNull(),
+    name: text("name").notNull(),
+    amount: integer("amount").notNull(), // cents per interval
+    interval: text("interval", { enum: ["month", "year"] }).notNull(),
+    setupAmount: integer("setup_amount"), // one-time initial payment, cents
+    currency: text("currency").notNull().default("usd"),
+    stripePriceId: text("stripe_price_id"),
+    // The link's line items as shown to the client:
+    // [{ name, amount (cents, per unit), quantity, interval: "one_time"|"month"|"year" }]
+    items: jsonb("items")
+      .$type<{ name: string; amount: number; quantity: number; interval: string }[]>()
+      .notNull()
+      .default([]),
+    stripeSetupPriceId: text("stripe_setup_price_id"),
+    stripePaymentLinkId: text("stripe_payment_link_id").notNull(),
+    url: text("url").notNull(),
+    status: text("status", { enum: ["open", "paid", "canceled"] })
+      .notNull()
+      .default("open"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    paidAt: timestamp("paid_at"),
+  },
+  (table) => ({
+    idxProjectOfferProject: index("idx_project_offer_project").on(table.projectId),
+    uqProjectOfferOpen: uniqueIndex("uq_project_offer_open")
+      .on(table.projectId)
+      .where(sql`${table.status} = 'open'`),
+  })
+);
+
 // Mirror of Stripe invoices / one-time payments (in_… / pi_…); historical
 // rows keep Polar UUIDs.
 export const orders = pgTable("order", {

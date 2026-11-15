@@ -29,6 +29,8 @@ const subscriptionColumns = {
   status: subscriptions.status,
   priceId: subscriptions.priceId,
   cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+  // Custom-priced client plans carry their tier here (see project_offer).
+  metaPlan: sql<string | null>`${subscriptions.metadata} ->> 'plan'`,
 };
 
 /** Entitlements for many projects in one query (missing row = website:free). */

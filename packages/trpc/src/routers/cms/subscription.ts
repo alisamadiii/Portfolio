@@ -16,6 +16,15 @@ import {
   assertRepoAccessByProjectId,
 } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
+import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
+import { listCatalog } from "@workspace/trpc/lib/client-websites-payments";
+import {
+  cancelOpenOffer,
+  createOffer,
+  offerItemsSchema,
+  openOffer,
+  publicOffer,
+} from "@workspace/trpc/lib/payment/offers";
 
 const mapInvoice = (inv: Stripe.Invoice) => ({
   id: inv.id,
@@ -82,6 +91,55 @@ export const subscriptionRouter = createTRPCRouter({
       });
       return invoices.data.map(mapInvoice);
     }),
+
+  // The project's open client plan (admin-built), or null. Shown to the client
+  // on Billing with a "Complete billing" link; there is no public plan.
+  offer: authenticatedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ input, ctx }) => {
+      await assertRepoAccessByProjectId(ctx.session.user, input.projectId);
+      const offer = await openOffer(input.projectId);
+      return offer ? publicOffer(offer) : null;
+    }),
+
+  // Admin: build a client plan for this project and get its checkout URL.
+  // Replaces any open one (the old link stops working).
+  createOffer: authenticatedProcedure
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        name: z.string().trim().min(1).max(120),
+        items: offerItemsSchema,
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!isAdminUser(ctx.session.user)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Admins only." });
+      }
+      try {
+        return publicOffer(await createOffer({ ...input, createdBy: ctx.session.user.id }));
+      } catch (error) {
+        throw toTRPCError(error);
+      }
+    }),
+
+  cancelOffer: authenticatedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .mutation(async ({ input, ctx }) => {
+      if (!isAdminUser(ctx.session.user)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Admins only." });
+      }
+      return { canceled: await cancelOpenOffer(input.projectId) };
+    }),
+
+  // Admin: the Stripe catalog the plan builder picks from (same list as the
+  // client-websites Payment dialog).
+  offerCatalog: authenticatedProcedure.query(async ({ ctx }) => {
+    if (!isAdminUser(ctx.session.user)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Admins only." });
+    }
+    return listCatalog();
+  }),
 
   // Stripe billing portal for a project's customer.
   createPortalSession: authenticatedProcedure

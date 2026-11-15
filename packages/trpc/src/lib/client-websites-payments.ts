@@ -72,6 +72,8 @@ export async function listCatalog(): Promise<CatalogPrice[]> {
     // Motion access). AGENCY ones are what gets sold here.
     const { project } = product.metadata;
     if (project && project !== "AGENCY") continue;
+    // One project's client-plan price (hub Billing › Payment), not a list price.
+    if (price.metadata.project === "CLIENT_PLAN") continue;
     // tiered and metered prices have no single amount to show or tweak
     if (price.unit_amount == null) continue;
     if (price.recurring && price.recurring.usage_type !== "licensed") continue;

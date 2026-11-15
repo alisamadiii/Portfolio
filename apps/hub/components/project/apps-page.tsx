@@ -10,18 +10,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
 import { AppCard } from "@/components/ds/features/app-card";
 import { PageHeader } from "@/components/ds/layout/page-header";
-import { Button, buttonClass, ButtonLink, IconButton } from "@/components/ds/ui/button";
+import { ButtonLink, IconButton } from "@/components/ds/ui/button";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { useEntitlement } from "@/hooks/use-plans";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useRouteProjectId } from "@/hooks/use-repo";
-import { APPS, appState, lockedCta, type AppDef, type AppState } from "@/lib/apps";
+import { APPS, appState, type AppDef, type AppState } from "@/lib/apps";
 import { repoPath } from "@/lib/paths";
-import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 
 type Filter = "all" | "installed" | "included" | "locked";
 
@@ -35,7 +33,7 @@ const planLabel = (label?: string) =>
 /** Add tools to a site. Apps included in the plan are free to add. */
 export function AppsPage() {
   const projectId = useRouteProjectId();
-  const { entitlement, can } = useEntitlement(projectId || undefined);
+  const { entitlement } = useEntitlement(projectId || undefined);
   const { installed, install, uninstall, isPending } = useInstalledApps(projectId);
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
@@ -56,8 +54,8 @@ export function AppsPage() {
   };
 
   const states = useMemo(
-    () => APPS.map((app) => ({ app, state: appState(app, installed, can) })),
-    [installed, can]
+    () => APPS.map((app) => ({ app, state: appState(app, installed, entitlement) })),
+    [installed, entitlement]
   );
   const anyLocked = states.some((s) => s.state === "locked");
   const q = search.trim().toLowerCase();
@@ -70,25 +68,12 @@ export function AppsPage() {
   const locked = visible.filter((s) => s.state === "locked");
   const count = (state: AppState) => states.filter((s) => s.state === state).length;
 
-  const lockedAction = (app: AppDef) =>
-    lockedCta(app) === "upgrade" ? (
-      <Button
-        variant="dark"
-        size="sm"
-        className="flex-1"
-        onClick={() =>
-          window.dispatchEvent(
-            new CustomEvent(SUBSCRIPTION_REQUIRED_EVENT, { detail: { feature: app.feature } })
-          )
-        }
-      >
-        Upgrade to add
-      </Button>
-    ) : (
-      <RequestDialog defaultSubject={`Add ${app.name} to my site`}>
-        <span className={buttonClass("dark", "sm", "flex-1")}>Ask us to add</span>
-      </RequestDialog>
-    );
+  // A locked app needs a monthly plan: the project's Billing page shows it.
+  const lockedAction = () => (
+    <ButtonLink variant="dark" size="sm" className="flex-1" href={`${base}/billing`}>
+      Upgrade
+    </ButtonLink>
+  );
 
   const grid = (list: typeof states) => (
     <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
@@ -100,7 +85,7 @@ export function AppsPage() {
           href={`${base}/${app.path}`}
           onAdd={() => add(app)}
           adding={adding.includes(app.id) || isPending}
-          lockedAction={lockedAction(app)}
+          lockedAction={lockedAction()}
           menu={
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -124,10 +109,8 @@ export function AppsPage() {
     <>
       <PageHeader
         title="Apps"
-        description="Add tools to your site. Apps included in your plan are free to add."
-        actions={
-          <ButtonLink href="/billing">Compare plans</ButtonLink>
-        }
+        description="Add tools to your site. Apps come with a monthly plan."
+        actions={<ButtonLink href={`${base}/billing`}>View plan</ButtonLink>}
       />
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedTabs

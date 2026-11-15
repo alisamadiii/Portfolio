@@ -26,8 +26,8 @@ import {
 } from "@workspace/trpc/lib/payment/plans";
 
 import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
-import { PlanCard } from "@/components/billing/plan-card";
-import { startPlanCheckout, usePlans } from "@/hooks/use-plans";
+import { PlanOfferPanel } from "@/components/billing/plan-offer-panel";
+import { usePlans } from "@/hooks/use-plans";
 
 /**
  * App-wide purchase dialog for plan-gated features. Any mutation that comes
@@ -49,7 +49,6 @@ export function SubscriptionGateProvider({
   const [open, setOpen] = useState(false);
   // The feature that was blocked, when the event says (title + verify check).
   const [feature, setFeature] = useState<Feature | null>(null);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const verifiedOnReturnRef = useRef(false);
 
   // The plan is per-project: every 402 fires from inside /p/[projectId], so the
@@ -110,27 +109,6 @@ export function SubscriptionGateProvider({
     verifyAccess({ feature: null, projectId });
   }, [verifyAccess, projectId]);
 
-  const handleSubscribe = async () => {
-    if (!user?.email || !projectId) {
-      toast.error("Open the project and sign in with your email before subscribing.");
-      return;
-    }
-    setIsCheckingOut(true);
-    try {
-      await startPlanCheckout({
-        projectId,
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-      });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to start checkout."
-      );
-      setIsCheckingOut(false);
-    }
-  };
-
   return (
     <>
       {children}
@@ -138,34 +116,26 @@ export function SubscriptionGateProvider({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {feature ? `Subscribe to unlock ${FEATURES[feature]}` : "Subscribe to unlock"}
+              {feature ? `Upgrade to unlock ${FEATURES[feature]}` : "Upgrade to unlock"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This project needs an active plan for publishing, AI editing,
-              emails, and analytics. Your edits stay in the editor — subscribe
-              and continue where you left off.
+              This project needs a monthly plan for this. Your edits stay in the
+              editor, so you can continue where you left off.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <PlanCard
-            compact
-            isCheckingOut={isCheckingOut}
-            onSubscribe={() => void handleSubscribe()}
-          />
+          {projectId && <PlanOfferPanel projectId={projectId} />}
 
           <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
             <Button
               variant="outline"
               className="w-full"
-              disabled={isVerifying || isCheckingOut}
+              disabled={isVerifying}
               onClick={() => verifyAccess({ feature, projectId })}
             >
               {isVerifying ? "Checking…" : "I already subscribed"}
             </Button>
-            <AlertDialogCancel
-              className="w-full"
-              disabled={isCheckingOut}
-            >
+            <AlertDialogCancel className="w-full">
               Not now
             </AlertDialogCancel>
           </AlertDialogFooter>

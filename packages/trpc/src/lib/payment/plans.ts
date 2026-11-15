@@ -125,6 +125,15 @@ export const PLANS = {
         features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads"],
         limits: { adCampaigns: 1, adSpendCap: 3000 },
       },
+      // Admin-built client plan (project_offer): custom monthly price per
+      // client, sold through a Stripe Payment Link. Unlocks everything; the
+      // subscription names this tier in metadata.plan.
+      custom: {
+        label: "Custom plan",
+        priceLabel: null,
+        prices: null,
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
+      },
       growth: {
         label: "Growth",
         priceLabel: "Coming soon",
@@ -214,6 +223,12 @@ export const planForPrice = (
   );
 };
 
+/** A catalog PlanKey from untrusted text (subscription metadata), else null. */
+export const asPlanKey = (value: unknown): PlanKey | null =>
+  typeof value === "string" && (PLAN_KEYS as readonly string[]).includes(value)
+    ? (value as PlanKey)
+    : null;
+
 /** Stripe price ids for a tier (null when the tier isn't sold in this mode). */
 export const pricesFor = (plan: PlanKey) => {
   const prices = tierDef(plan).prices;
@@ -228,8 +243,10 @@ export const planLabel = (plan: PlanKey): string => {
 
 /**
  * Resolves a project's entitlement from its subscription row (or none).
- * A row that isn't live, or whose price isn't in the catalog, falls back to
- * website:free; the Stripe state is still reported so billing can show it.
+ * A catalog price decides the tier; otherwise the row's metadata plan does
+ * (admin-built client plans use a custom price per project). A row that isn't
+ * live, or matches neither, falls back to website:free; the Stripe state is
+ * still reported so billing can show it.
  */
 export const entitlementFor = (
   projectId: string,
@@ -237,10 +254,12 @@ export const entitlementFor = (
     status: SubscriptionStatus;
     priceId: string | null;
     cancelAtPeriodEnd: boolean;
+    metaPlan?: string | null;
   } | null
 ): Entitlement => {
   const live = row && LIVE_STATUSES.includes(row.status);
-  const plan = (live && planForPrice(row.priceId)) || FREE_PLAN;
+  const plan =
+    (live && (planForPrice(row.priceId) ?? asPlanKey(row.metaPlan))) || FREE_PLAN;
   const tier = tierDef(plan);
   return {
     projectId,

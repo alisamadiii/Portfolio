@@ -253,6 +253,15 @@ const businessWriteProcedure = businessProcedure.use(async ({ next, ctx }) => {
   return next({ ctx: { ...ctx, client } });
 });
 
+// Templates are free on every project and plan: project access is enough,
+// keyed on projectId (no agency_client row needed).
+const templateWriteProcedure = businessProcedure.use(async ({ next, ctx }) => {
+  if (!roleAtLeast(ctx.role, "content-editor")) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "You have view-only access." });
+  }
+  return next({ ctx });
+});
+
 const errorMessage = (error: unknown) =>
   error instanceof GoogleAdsError || error instanceof Error
     ? error.message
@@ -1799,21 +1808,21 @@ export const agencyRouter = createTRPCRouter({
   // Reusable text per project: "/" snippets and appointment templates, with
   // [[placeholders]] (lib/templates-shared).
   templates: createTRPCRouter({
-    list: agencyProcedure.query(({ ctx }) =>
+    list: businessProcedure.query(({ ctx }) =>
       db
         .select()
         .from(agencyTemplate)
-        .where(eq(agencyTemplate.projectId, ctx.client.projectId))
+        .where(eq(agencyTemplate.projectId, ctx.projectId))
         .orderBy(agencyTemplate.kind, agencyTemplate.name)
     ),
-    create: agencyWriteProcedure.input(templateInput).mutation(async ({ ctx, input }) => {
+    create: templateWriteProcedure.input(templateInput).mutation(async ({ ctx, input }) => {
       const [row] = await db
         .insert(agencyTemplate)
-        .values({ ...templateValues(input), kind: input.kind, projectId: ctx.client.projectId, createdBy: ctx.session.user.id })
+        .values({ ...templateValues(input), kind: input.kind, projectId: ctx.projectId, createdBy: ctx.session.user.id })
         .returning();
       return row!;
     }),
-    update: agencyWriteProcedure
+    update: templateWriteProcedure
       .input(templateInput.extend({ templateId: z.number().int().positive() }))
       .mutation(async ({ ctx, input }) => {
         const [row] = await db
@@ -1822,14 +1831,14 @@ export const agencyRouter = createTRPCRouter({
           .where(
             and(
               eq(agencyTemplate.id, input.templateId),
-              eq(agencyTemplate.projectId, ctx.client.projectId)
+              eq(agencyTemplate.projectId, ctx.projectId)
             )
           )
           .returning();
         if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Template not found." });
         return row;
       }),
-    remove: agencyWriteProcedure
+    remove: templateWriteProcedure
       .input(z.object({ templateId: z.number().int().positive() }))
       .mutation(async ({ ctx, input }) => {
         await db
@@ -1837,7 +1846,7 @@ export const agencyRouter = createTRPCRouter({
           .where(
             and(
               eq(agencyTemplate.id, input.templateId),
-              eq(agencyTemplate.projectId, ctx.client.projectId)
+              eq(agencyTemplate.projectId, ctx.projectId)
             )
           );
         return { ok: true };

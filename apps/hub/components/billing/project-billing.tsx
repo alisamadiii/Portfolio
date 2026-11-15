@@ -22,7 +22,6 @@ import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { useProject } from "@/hooks/use-project";
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
 import {
   formatCurrency,
@@ -30,8 +29,8 @@ import {
   StatusPill,
 } from "@/components/billing/shared";
 import { PanelError } from "@/components/settings/panel-error";
-import { PlanCard } from "@/components/billing/plan-card";
-import { startPlanCheckout, useEntitlement } from "@/hooks/use-plans";
+import { AdminOfferCard, PlanOfferPanel } from "@/components/billing/plan-offer-panel";
+import { useEntitlement } from "@/hooks/use-plans";
 
 type ProjectSubscription = NonNullable<
   RouterOutputs["cms"]["subscription"]["getProject"]["subscription"]
@@ -44,7 +43,6 @@ type ProjectSubscription = NonNullable<
 export const ProjectBillingPanel = () => {
   const trpc = useTRPC();
   const project = useProject();
-  const user = useCurrentUser().data?.user ?? null;
 
   const projectId = project?.projectId ?? "";
   const { refresh: refreshPlans } = useEntitlement(projectId);
@@ -100,14 +98,7 @@ export const ProjectBillingPanel = () => {
         // resubscribe (distinct from cancelAtPeriodEnd, which stays managed
         // as "Canceling" until the period actually ends).
         data.subscription.status === "canceled" ? (
-        user && projectId ? (
-          <ProjectPlans
-            projectId={data.projectId}
-            userId={user.id}
-            userEmail={user.email}
-            userName={user.name}
-          />
-        ) : null
+        <ProjectPlans projectId={data.projectId} />
       ) : (
         <ProjectManage projectId={data.projectId} subscription={data.subscription} />
       )}
@@ -117,54 +108,12 @@ export const ProjectBillingPanel = () => {
 
 // ─── Products picker (no subscription yet) ──────────────────────
 
-export const ProjectPlans = ({
-  projectId,
-  userId,
-  userEmail,
-  userName,
-}: {
-  projectId: string;
-  userId: string;
-  userEmail: string;
-  userName?: string;
-}) => {
-  const [checkingOut, setCheckingOut] = useState(false);
-
-  const subscribe = async () => {
-    if (!userEmail) {
-      toast.error("Sign in with your email before subscribing.");
-      return;
-    }
-    setCheckingOut(true);
-    try {
-      await startPlanCheckout({
-        projectId,
-        userId,
-        email: userEmail,
-        name: userName,
-      });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to start checkout."
-      );
-      setCheckingOut(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="space-y-1.5">
-        <SectionHeading>One plan. Everything included.</SectionHeading>
-        <p className="text-muted-foreground text-[14.5px]">
-          This project doesn&apos;t have an active subscription yet. One
-          subscription covers everything for this website.
-        </p>
-      </div>
-
-      <PlanCard onSubscribe={() => void subscribe()} isCheckingOut={checkingOut} />
-    </div>
-  );
-};
+export const ProjectPlans = ({ projectId }: { projectId: string }) => (
+  <div className="space-y-6">
+    <PlanOfferPanel projectId={projectId} />
+    <AdminOfferCard projectId={projectId} />
+  </div>
+);
 
 // ─── Manage view (paid subscription) ────────────────────────────
 

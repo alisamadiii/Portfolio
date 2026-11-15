@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useProject } from "@/hooks/use-project";
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-import { toast } from "sonner";
 
 import { Spinner } from "@workspace/ui/components/spinner";
 
 import { FEATURES, type Feature } from "@workspace/trpc/lib/payment/plans";
 
-import { startPlanCheckout, useEntitlement } from "@/hooks/use-plans";
+import { useEntitlement } from "@/hooks/use-plans";
 
-import { PlanCard } from "@/components/billing/plan-card";
+import { PlanOfferPanel } from "@/components/billing/plan-offer-panel";
 import { LockKeyhole } from "@/components/icon";
 
 // Headline per feature, so the lock screen sells what's behind it.
@@ -58,36 +55,13 @@ export const ProjectPaywall = ({
   projectId: string;
   feature: Feature;
 }) => {
-  const user = useCurrentUser().data?.user ?? null;
-  const [checkingOut, setCheckingOut] = useState(false);
   const pitch = PITCH[feature];
-
-  const subscribe = async () => {
-    if (!user?.email) {
-      toast.error("Sign in with your email before subscribing.");
-      return;
-    }
-    setCheckingOut(true);
-    try {
-      await startPlanCheckout({
-        projectId,
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-      });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to start checkout."
-      );
-      setCheckingOut(false);
-    }
-  };
 
   return (
     <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-10">
       <span className="inline-flex h-[22px] items-center gap-1.5 rounded bg-coral-soft px-2 text-xs font-medium text-coral-deep">
         <LockKeyhole className="size-3.5" />
-        {FEATURES[feature]} · Website plan
+        {FEATURES[feature]} · Monthly plan
       </span>
       <h2 className="mt-4 text-center text-[26px] font-semibold leading-tight tracking-[-0.02em] text-balance">
         {pitch.title}
@@ -97,7 +71,7 @@ export const ProjectPaywall = ({
       </p>
 
       <div className="mt-8 w-full max-w-md">
-        <PlanCard onSubscribe={() => void subscribe()} isCheckingOut={checkingOut} />
+        <PlanOfferPanel projectId={projectId} />
       </div>
     </div>
   );

@@ -10,7 +10,8 @@ import {
 import { db } from "@workspace/drizzle/index";
 import { agencyClient, hubProject } from "@workspace/drizzle/schema";
 
-import { APP_IDS, type AppId } from "@workspace/trpc/lib/apps";
+import { APP_IDS, planAllowsApp, type AppId } from "@workspace/trpc/lib/apps";
+import { getEntitlement } from "@workspace/trpc/lib/payment/entitlements";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport } from "@workspace/trpc/lib/content-pilot";
@@ -93,6 +94,24 @@ export const projectRouter = createTRPCRouter({
     .input(z.object({ apps: z.array(z.enum(APP_IDS)).max(APP_IDS.length) }))
     .mutation(async ({ ctx, input }) => {
       const apps = [...new Set(input.apps)];
+      // Adding needs a paid plan that covers the app, for everyone (admins
+      // included). Removing, or keeping what's installed, is always allowed.
+      const [current] = await db
+        .select({ apps: hubProject.apps })
+        .from(hubProject)
+        .where(eq(hubProject.id, input.projectId))
+        .limit(1);
+      const added = apps.filter((id) => !(current?.apps ?? []).includes(id));
+      if (added.length) {
+        const entitlement = await getEntitlement(input.projectId);
+        const blocked = added.filter((id) => !planAllowsApp(id, entitlement));
+        if (blocked.length) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Apps need a monthly plan. Contact us to set one up.",
+          });
+        }
+      }
       try {
         const [project] = await db
           .update(hubProject)

@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 
 import { urls } from "@workspace/ui/lib/company";
-import type { AppId } from "@workspace/trpc/lib/apps";
-import { PLANS, type Feature } from "@workspace/trpc/lib/payment/plans";
+import { planAllowsApp, type AppId } from "@workspace/trpc/lib/apps";
+import type { Entitlement, Feature } from "@workspace/trpc/lib/payment/plans";
 
 import {
   GoogleAdsLogo,
@@ -144,24 +144,13 @@ export type AppState = "installed" | "included" | "locked";
 export const appState = (
   app: AppDef,
   installed: readonly string[],
-  can: (feature: Feature) => boolean
+  entitlement: Pick<Entitlement, "plan" | "features">
 ): AppState =>
   installed.includes(app.id)
     ? "installed"
-    : !app.feature || can(app.feature)
+    : planAllowsApp(app.id, entitlement)
       ? "included"
       : "locked";
-
-/**
- * What a locked app's button does. The only self-serve plan is website:paid;
- * if that plan doesn't include the feature, upgrading wouldn't unlock it, so
- * the card asks us instead.
- */
-export const lockedCta = (app: AppDef): "upgrade" | "ask" =>
-  !!app.feature &&
-  (PLANS.website.tiers.paid.features as readonly Feature[]).includes(app.feature)
-    ? "upgrade"
-    : "ask";
 
 export type NavItem = {
   id: string;
