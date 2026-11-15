@@ -1,4 +1,6 @@
-export const ALLOWED_ORIGINS = [
+// Local dev origins are only trusted outside production: in prod any page on a
+// visitor's localhost could otherwise make credentialed requests to the api.
+const DEV_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3002",
@@ -15,6 +17,10 @@ export const ALLOWED_ORIGINS = [
   "http://127.0.0.1:3008",
   "http://127.0.0.1:3009",
   "http://127.0.0.1:5173",
+];
+
+export const ALLOWED_ORIGINS = [
+  ...(process.env.NODE_ENV === "production" ? [] : DEV_ORIGINS),
   "https://api.alisamadii.com",
   "https://alisamadii.com",
   "https://www.alisamadii.com",

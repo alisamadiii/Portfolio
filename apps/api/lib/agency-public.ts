@@ -51,10 +51,12 @@ export const isRateLimited = async (key: string, max = IP_LIMIT.max) => {
   return (row?.count ?? 0) > max;
 };
 
-// Set by Vercel itself; x-forwarded-for's first entry can be sent by the client.
+// Headers set by our proxies, never the client: Cloudflare's connecting IP,
+// then the one Traefik (Coolify) sets, then the last x-forwarded-for hop
+// (the first entry can be sent by the client).
 export const clientIp = (req: Request) =>
+  req.headers.get("cf-connecting-ip") ??
   req.headers.get("x-real-ip") ??
-  req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ??
   req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ??
   "unknown";
 

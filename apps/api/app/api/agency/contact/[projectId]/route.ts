@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { usesendFetch } from "@workspace/email/usesend";
+import { senderDisplayName } from "@workspace/trpc/lib/inbox-shared";
 import { workspaceFetch } from "@workspace/trpc/lib/usesend-provision";
 import {
   MAX_BODY_BYTES,
@@ -158,13 +159,16 @@ export async function POST(
       tag: "Contact form",
       title,
     });
+    // formName comes from the visitor: plain characters only, so it can't
+    // forge another From address or break the headers.
+    const formName = data.formName ? senderDisplayName(data.formName) : "";
     const email = {
       method: "POST",
       body: {
-        from: `${data.formName || "Contact"} <contact@${SENDING_DOMAIN}>`,
+        from: `"${formName || "Contact"}" <contact@${SENDING_DOMAIN}>`,
         to: recipient,
         ...(replyTo ? { replyTo } : {}),
-        subject: `${data.formName ? `${data.formName}: ` : ""}${title}`,
+        subject: `${formName ? `${formName}: ` : ""}${title}`.replace(/[\r\n]+/g, " "),
         ...body,
       },
     };

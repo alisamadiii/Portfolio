@@ -13,6 +13,7 @@ export const program = {
   approvalDays: '2',
   refundPolicy: "If the client gets a refund before your payout is sent, no payout is owed. Once a payout is sent, it's yours to keep.",
   governingLaw: 'This agreement is governed by the laws of the State of Florida.',
+  // Must equal PARTNER_AGREEMENT_VERSION in packages/trpc/src/lib/partners-shared.ts.
   agreementVersion: '2026-11.1',
 
   // Product facts used in examples.

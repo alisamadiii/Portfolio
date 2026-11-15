@@ -1,7 +1,9 @@
 import "server-only";
 
+import { randomBytes } from "node:crypto";
 import { createElement } from "react";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/pool";
 import {
@@ -16,7 +18,12 @@ import { sendEmail } from "@workspace/email/usesend";
 import { renderEmailParts } from "@workspace/email/utils";
 
 import { leadReplyTo } from "./inbound/reply-address";
-import { telnyxStatus, toE164 } from "./inbox-shared";
+import {
+  OUTBOUND_LIMITS,
+  senderDisplayName,
+  telnyxStatus,
+  toE164,
+} from "./inbox-shared";
 import { putObject } from "./r2";
 import { BUSINESS_CONTACT_KEYS } from "./templates-shared";
 import { sendSms, TelnyxError } from "./telnyx/client";
@@ -40,7 +47,7 @@ export async function putInboxMedia(projectId: string, bytes: Uint8Array, conten
   const ext = MEDIA_TYPES[contentType];
   if (!ext) throw new Error("Only JPG, PNG, GIF or WebP images can be sent.");
   if (bytes.byteLength > MEDIA_MAX_BYTES) throw new Error("Images must be 5 MB or smaller.");
-  const key = `inbox/${projectId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const key = `inbox/${projectId}/${Date.now()}-${randomBytes(12).toString("hex")}.${ext}`;
   return putObject(key, bytes, contentType);
 }
 
@@ -77,6 +84,31 @@ async function replyToFor(client: Client) {
 
 const errorText = (error: unknown) =>
   error instanceof TelnyxError || error instanceof Error ? error.message : "Send failed.";
+
+/** Throws TOO_MANY_REQUESTS once the project hit its outbound limits. */
+export async function assertOutboundQuota(projectId: string) {
+  const since = (ms: number) => new Date(Date.now() - ms);
+  const count = async (ms: number) => {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(agencyMessage)
+      .where(
+        and(
+          eq(agencyMessage.projectId, projectId),
+          eq(agencyMessage.direction, "out"),
+          gt(agencyMessage.createdAt, since(ms))
+        )
+      );
+    return row?.n ?? 0;
+  };
+  const [hour, day] = await Promise.all([count(3_600_000), count(86_400_000)]);
+  if (hour >= OUTBOUND_LIMITS.perHour || day >= OUTBOUND_LIMITS.perDay) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "You've sent a lot of messages in a short time. Try again later.",
+    });
+  }
+}
 
 /**
  * Sends one message to a lead and records it. The row is written first
@@ -139,7 +171,7 @@ export async function sendLeadMessage(input: {
         .orderBy(desc(agencyMessage.createdAt))
         .limit(1);
       const { emailId } = await sendEmail({
-        from: `${name.replace(/[<>"]/g, "")} <noreply@alisamadii.com>`,
+        from: `"${senderDisplayName(name)}" <noreply@alisamadii.com>`,
         to: lead.email,
         // Replies come back into this thread when reply capture is wired,
         // else they go to the owner's own inbox.

@@ -44,6 +44,25 @@ import {
   type WixAppKey,
 } from "../lib/wix-shared";
 
+import { requireApp, requireFeature } from "../lib/payment/entitlements";
+
+// Paid app: every call but status/disconnect checks the plan (requireApp),
+// so a free project can't reach it by calling the API directly.
+const appGate = <T extends { user: { email: string; role?: string | null }; projectId: string }>(ctx: T) =>
+  requireApp(ctx.user, ctx.projectId, "wix");
+const appCmsFullAccessProcedure = cmsFullAccessProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
+const appCmsProcedure = cmsProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
+const appCmsWriteProcedure = cmsWriteProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
+
 // The project's Wix app: the client installs the hub's Wix app on one of
 // their Wix sites (Wix shows its own site picker), and the hub then reads
 // that site's info, manages its blog, imports form submissions into Leads
@@ -79,7 +98,7 @@ const contactName = (first?: string, last?: string) =>
 const blogRouter = createTRPCRouter({
   // Live posts and drafts that aren't live are two separate Wix queries;
   // every post shows up in exactly one.
-  list: cmsProcedure.query(async ({ ctx }) => {
+  list: appCmsProcedure.query(async ({ ctx }) => {
     const { token } = await siteToken(ctx.projectId);
     const [live, drafts] = await Promise.all([
       listWixLivePosts(token),
@@ -107,7 +126,7 @@ const blogRouter = createTRPCRouter({
     ];
   }),
 
-  get: cmsProcedure
+  get: appCmsProcedure
     .input(z.object({ id: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const { token } = await siteToken(ctx.projectId);
@@ -126,7 +145,7 @@ const blogRouter = createTRPCRouter({
     }),
 
   // markdown undefined = keep the body as it is (posts with images etc.).
-  save: cmsWriteProcedure
+  save: appCmsWriteProcedure
     .input(
       z.object({
         id: z.string().min(1).max(100).optional(),
@@ -181,7 +200,7 @@ const blogRouter = createTRPCRouter({
 
   // Wix keeps deleted posts in its trash (restorable). A live post is
   // taken off the blog first, as Wix requires.
-  remove: cmsWriteProcedure
+  remove: appCmsWriteProcedure
     .input(z.object({ id: z.string().min(1).max(100), published: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const { token } = await siteToken(ctx.projectId);
@@ -194,7 +213,7 @@ const blogRouter = createTRPCRouter({
 });
 
 const formsRouter = createTRPCRouter({
-  list: cmsProcedure.query(async ({ ctx }) => {
+  list: appCmsProcedure.query(async ({ ctx }) => {
     const { token } = await siteToken(ctx.projectId);
     const [forms, submissions] = await Promise.all([
       listWixForms(token),
@@ -231,11 +250,12 @@ const formsRouter = createTRPCRouter({
   }),
 
   // Idempotent: each submission becomes at most one lead (external_id).
-  syncToLeads: cmsWriteProcedure.mutation(async ({ ctx }) => {
+  syncToLeads: appCmsWriteProcedure.mutation(async ({ ctx }) => {
     const { row, token } = await siteToken(ctx.projectId);
     if (!(row.apps ?? []).includes("leads")) {
       throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Add the Leads app first." });
     }
+    await requireFeature(ctx.user, ctx.projectId, "leads");
     const [forms, submissions] = await Promise.all([
       listWixForms(token),
       listWixSubmissions(token),
@@ -279,7 +299,7 @@ export const wixRouter = createTRPCRouter({
   }),
 
   // Wix's installer: site picker + permissions, then back to our callback.
-  installUrl: cmsFullAccessProcedure.mutation(({ ctx }) => {
+  installUrl: appCmsFullAccessProcedure.mutation(({ ctx }) => {
     if (!isWixConfigured()) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
@@ -315,7 +335,7 @@ export const wixRouter = createTRPCRouter({
     };
   }),
 
-  overview: cmsProcedure.query(async ({ ctx }) => {
+  overview: appCmsProcedure.query(async ({ ctx }) => {
     const { row, token } = await siteToken(ctx.projectId);
     const [props, urls, installed] = await Promise.all([
       getWixSiteProperties(token),
@@ -341,7 +361,7 @@ export const wixRouter = createTRPCRouter({
   blog: blogRouter,
   forms: formsRouter,
 
-  contacts: cmsProcedure
+  contacts: appCmsProcedure
     .input(z.object({ offset: z.number().int().min(0).max(100_000) }))
     .query(async ({ ctx, input }) => {
       const { token } = await siteToken(ctx.projectId);
@@ -358,7 +378,7 @@ export const wixRouter = createTRPCRouter({
       };
     }),
 
-  orders: cmsProcedure.query(async ({ ctx }) => {
+  orders: appCmsProcedure.query(async ({ ctx }) => {
     const { token } = await siteToken(ctx.projectId);
     const orders = await listWixOrders(token);
     return orders.map((o) => ({
@@ -378,7 +398,7 @@ export const wixRouter = createTRPCRouter({
     }));
   }),
 
-  bookings: cmsProcedure.query(async ({ ctx }) => {
+  bookings: appCmsProcedure.query(async ({ ctx }) => {
     const { token } = await siteToken(ctx.projectId);
     const bookings = await listWixBookings(token);
     return bookings

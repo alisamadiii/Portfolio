@@ -74,6 +74,7 @@ export function AgencyBillingPage() {
             <ProjectManage
               projectId={data.projectId}
               subscription={data.subscription}
+              canManage={data.canManage}
             />
             {/* Admins can still prepare a replacement plan. */}
             <AdminOfferCard projectId={data.projectId} />

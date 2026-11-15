@@ -14,10 +14,13 @@ import {
   partnerAdminUrl,
   sendPartnerApplicationAlert,
 } from "@workspace/trpc/lib/partners";
+import { PARTNER_AGREEMENT_VERSION } from "@workspace/trpc/lib/partners-shared";
 import { putPrivateObject } from "@workspace/trpc/lib/r2";
 import { renderPartnerAgreement } from "@workspace/ui/pdfs/partner-agreement";
 
 import { partnerCors } from "../cors";
+
+import { clientIp, isRateLimited } from "@/lib/agency-public";
 
 // ─── Partner Program application ─────────────────────────────────
 // Form on partners.alisamadii.com. Applicants must be signed in to Client
@@ -29,19 +32,7 @@ export async function OPTIONS(req: Request) {
   return new Response(null, { status: 204, headers: partnerCors(req, "POST") });
 }
 
-// In-memory per-IP limit: best effort per instance.
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const hits = new Map<string, number[]>();
-
-const isRateLimited = (ip: string) => {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return true;
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
-};
+const RATE_LIMIT = 5; // per IP per 10 minutes (shared Postgres window)
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const optional = (max: number) =>
@@ -74,8 +65,8 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   const headers = partnerCors(req, "POST");
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-  if (isRateLimited(ip ?? "unknown")) {
+  const ip = clientIp(req);
+  if (await isRateLimited(`partner-apply:${ip}`, RATE_LIMIT)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }
@@ -97,6 +88,13 @@ export async function POST(req: Request) {
     );
   }
 
+  if (data.agreement.version !== PARTNER_AGREEMENT_VERSION) {
+    return NextResponse.json(
+      { error: "The agreement changed. Reload the page and sign the current version." },
+      { status: 409, headers }
+    );
+  }
+
   // Same rule as the form: the typed signature is the applicant's full name.
   const norm = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
   if (norm(data.agreement.signature) !== norm(data.fullName)) {
@@ -111,7 +109,12 @@ export async function POST(req: Request) {
   const [existing] = await db
     .select({ id: partner.id, status: partner.status })
     .from(partner)
-    .where(or(eq(partner.userId, userId), eq(partner.email, email)))
+    .where(
+      // Email matches only for a verified email (see partners.me).
+      session.user.emailVerified
+        ? or(eq(partner.userId, userId), eq(partner.email, email))
+        : eq(partner.userId, userId)
+    )
     .limit(1);
   if (existing && existing.status !== "pending") {
     return NextResponse.json(
@@ -120,7 +123,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const signedAt = new Date(data.agreement.signedAt);
+  // The record of signing is the server's clock, not the browser's.
+  const signedAt = new Date();
   const pdfToken = randomBytes(24).toString("base64url");
   const fields = {
     userId,

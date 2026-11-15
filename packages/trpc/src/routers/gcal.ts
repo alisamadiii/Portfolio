@@ -6,6 +6,7 @@ import { db } from "@workspace/drizzle/index";
 import { account, hubProject } from "@workspace/drizzle/schema";
 
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
+import { assertProjectOwnerOrAdmin } from "../lib/cms/authz";
 import { GCAL_SCOPES, scopeSatisfied } from "../lib/integrations";
 import {
   createEvent,
@@ -14,6 +15,17 @@ import {
   listCalendars,
   listEvents,
 } from "../lib/integrations/calendar";
+
+import { requireApp } from "../lib/payment/entitlements";
+
+// Paid app: every call but status/disconnect checks the plan (requireApp),
+// so a free project can't reach it by calling the API directly.
+const appGate = <T extends { user: { email: string; role?: string | null }; projectId: string }>(ctx: T) =>
+  requireApp(ctx.user, ctx.projectId, "gcal");
+const appCmsFullAccessProcedure = cmsFullAccessProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
 
 // The project's Google Calendar app: the client connects Google (verified
 // calendar.events + non-sensitive calendar list, always through Google's
@@ -80,7 +92,10 @@ export const gcalRouter = createTRPCRouter({
   // Runs right after Google's consent screen: binds the Google account the
   // caller just linked with the calendar scope (their most recently written
   // Google account row that has it).
-  connect: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+  // Owner or admin only: the calendar is the connecting user's own Google
+  // account, so a collaborator can't swap theirs in for the owner's.
+  connect: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
+    await assertProjectOwnerOrAdmin(ctx.user, ctx.projectId);
     const rows = await db
       .select({ accountId: account.accountId, scope: account.scope })
       .from(account)
@@ -110,14 +125,16 @@ export const gcalRouter = createTRPCRouter({
     return { ok: true };
   }),
 
-  calendars: cmsProcedure.query(async ({ ctx }) => {
+  // Full access only: these are the owner's whole Google calendars
+  // (attendees included), not project content.
+  calendars: appCmsFullAccessProcedure.query(async ({ ctx }) => {
     const token = await projectToken(ctx.projectId);
     const calendars = await listCalendars(token);
     // Primary first, then by name.
     return calendars.sort((a, b) => Number(b.primary) - Number(a.primary) || a.name.localeCompare(b.name));
   }),
 
-  events: cmsProcedure
+  events: appCmsFullAccessProcedure
     .input(
       z
         .object({ calendarId: z.string().min(1).max(500), from: isoDate, to: isoDate })
@@ -130,7 +147,7 @@ export const gcalRouter = createTRPCRouter({
       return listEvents(token, input.calendarId, input.from, input.to);
     }),
 
-  createEvent: cmsFullAccessProcedure.input(newEventInput).mutation(async ({ ctx, input }) => {
+  createEvent: appCmsFullAccessProcedure.input(newEventInput).mutation(async ({ ctx, input }) => {
     const token = await projectToken(ctx.projectId);
     const { calendarId, ...event } = input;
     return createEvent(token, calendarId, event);

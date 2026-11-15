@@ -1,6 +1,7 @@
 import { expo } from "@better-auth/expo";
 import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import {
   admin,
@@ -32,6 +33,13 @@ const decodeJwtPayload = (
     return null;
   }
 };
+
+/**
+ * Providers the hub only links (Integrations), never signs in with. Their
+ * emails are not trusted for identity, so a sign-in through them could log
+ * into whichever user owns that email.
+ */
+const LINK_ONLY_PROVIDERS = new Set(["netlify", "resend", "neon"]);
 
 type Referral = { code: string; partnerId: string; at: string };
 
@@ -79,6 +87,18 @@ export const auth = betterAuth({
     },
   }),
   trustedOrigins: ALLOWED_ORIGINS,
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (
+        ctx.path === "/sign-in/oauth2" &&
+        LINK_ONLY_PROVIDERS.has(String(ctx.body?.providerId ?? ""))
+      ) {
+        throw new APIError("FORBIDDEN", {
+          message: "This provider can only be connected from Integrations.",
+        });
+      }
+    }),
+  },
   // Partner referrals (data only): the first valid partner_ref cookie seen at
   // sign-up or sign-in is kept in user.metadata.referral, never overwritten.
   databaseHooks: {
@@ -261,7 +281,7 @@ export const auth = betterAuth({
               id: profile.id,
               email: profile.email,
               name: profile.full_name || profile.email,
-              emailVerified: true,
+              emailVerified: false,
             };
           },
         },
@@ -293,7 +313,7 @@ export const auth = betterAuth({
             // Auth still requires a name.
             const name =
               typeof claims?.team_name === "string" ? claims.team_name : "Resend";
-            return { id, email, name, emailVerified: true };
+            return { id, email, name, emailVerified: false };
           },
         },
         // Neon: link-only, OAuth + PKCE (partner client from Neon). offline +
@@ -336,7 +356,7 @@ export const auth = betterAuth({
               id: profile.id,
               email,
               name: [profile.name, profile.last_name].filter(Boolean).join(" ") || email,
-              emailVerified: true,
+              emailVerified: false,
             };
           },
         },

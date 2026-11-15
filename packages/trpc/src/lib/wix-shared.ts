@@ -35,20 +35,34 @@ export type WixInstance = {
   instanceId: string;
   appDefId?: string;
   siteOwnerId?: string;
+  signDate?: string;
 };
 
 /**
  * Verifies Wix's signed app instance (`<b64url HMAC-SHA256(payload)>.<payload>`,
  * keyed with the app secret) and returns its data, or null when forged.
+ * With `maxAgeMs`, the instance must also carry a signDate no older than that,
+ * so a leaked install URL can't be replayed later.
  */
-export function verifySignedInstance(signed: string, secret: string): WixInstance | null {
+export function verifySignedInstance(
+  signed: string,
+  secret: string,
+  opts?: { maxAgeMs: number; now?: number }
+): WixInstance | null {
   const [sig, payload] = signed.split(".");
   if (!sig || !payload || !secret) return null;
   const expected = createHmac("sha256", secret).update(payload).digest();
   if (!safeEqual(fromB64url(sig), expected)) return null;
   try {
     const data = JSON.parse(fromB64url(payload).toString("utf8")) as WixInstance;
-    return typeof data.instanceId === "string" ? data : null;
+    if (typeof data.instanceId !== "string") return null;
+    if (opts) {
+      const signedAt = data.signDate ? Date.parse(data.signDate) : NaN;
+      const age = (opts.now ?? Date.now()) - signedAt;
+      // A little clock skew is fine; a missing, future or old date is not.
+      if (!Number.isFinite(signedAt) || age > opts.maxAgeMs || age < -5 * 60_000) return null;
+    }
+    return data;
   } catch {
     return null;
   }

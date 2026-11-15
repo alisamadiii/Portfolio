@@ -7,6 +7,8 @@ import { sendEmail, UseSendError } from "@workspace/email/usesend";
 import { renderEmailParts } from "@workspace/email/utils";
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 
+import { clientIp, isRateLimited } from "@/lib/agency-public";
+
 // ─── CORS ───────────────────────────────────────────────────────
 // Live Server (static agency site during local dev) is not in the
 // shared allowlist, so it's added here.
@@ -35,18 +37,7 @@ export async function OPTIONS(req: Request) {
 // Guard this public endpoint per IP ourselves.
 // In-memory: best effort per serverless instance.
 
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const hits = new Map<string, number[]>();
-
-const isRateLimited = (ip: string) => {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return true;
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
-};
+const RATE_LIMIT = 5; // per IP per 10 minutes (shared Postgres window)
 
 // ─── Quote request ──────────────────────────────────────────────
 // Public "Get a Quote" form on the agency site. Renders the quote-request
@@ -79,9 +70,8 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   const headers = corsHeaders(req);
 
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isRateLimited(ip)) {
+  const ip = clientIp(req);
+  if (await isRateLimited(`quote:${ip}`, RATE_LIMIT)) {
     return NextResponse.json(
       { error: "Too many requests — try again in a few minutes." },
       { status: 429, headers }

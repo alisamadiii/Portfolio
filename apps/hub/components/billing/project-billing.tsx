@@ -3,13 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import {
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
-  FileText,
-  Globe,
-} from "@/components/icon";
 import { toast } from "sonner";
 
 import { Button } from "@workspace/ui/components/button";
@@ -21,16 +14,26 @@ import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
+import { useEntitlement } from "@/hooks/use-plans";
 import { useProject } from "@/hooks/use-project";
 
+import {
+  AdminOfferCard,
+  PlanOfferPanel,
+} from "@/components/billing/plan-offer-panel";
 import {
   formatCurrency,
   SectionHeading,
   StatusPill,
 } from "@/components/billing/shared";
+import {
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  FileText,
+  Globe,
+} from "@/components/icon";
 import { PanelError } from "@/components/settings/panel-error";
-import { AdminOfferCard, PlanOfferPanel } from "@/components/billing/plan-offer-panel";
-import { useEntitlement } from "@/hooks/use-plans";
 
 type ProjectSubscription = NonNullable<
   RouterOutputs["cms"]["subscription"]["getProject"]["subscription"]
@@ -100,7 +103,11 @@ export const ProjectBillingPanel = () => {
         data.subscription.status === "canceled" ? (
         <ProjectPlans projectId={data.projectId} />
       ) : (
-        <ProjectManage projectId={data.projectId} subscription={data.subscription} />
+        <ProjectManage
+          projectId={data.projectId}
+          subscription={data.subscription}
+          canManage={data.canManage}
+        />
       )}
     </div>
   );
@@ -123,9 +130,11 @@ type ProjectInvoice =
 export const ProjectManage = ({
   projectId,
   subscription,
+  canManage,
 }: {
   projectId: string;
   subscription: ProjectSubscription;
+  canManage: boolean;
 }) => {
   const trpc = useTRPC();
   const { entitlement } = useEntitlement(projectId);
@@ -136,7 +145,12 @@ export const ProjectManage = ({
     isFetching: invoicesLoading,
     error: invoicesError,
     refetch: refetchInvoices,
-  } = useQuery(trpc.cms.subscription.getInvoices.queryOptions({ projectId }));
+  } = useQuery(
+    trpc.cms.subscription.getInvoices.queryOptions(
+      { projectId },
+      { enabled: canManage }
+    )
+  );
 
   const portalMutation = useMutation(
     trpc.cms.subscription.createPortalSession.mutationOptions()
@@ -184,7 +198,9 @@ export const ProjectManage = ({
             </p>
           </div>
           <StatusPill
-            status={isCanceling ? "canceling" : (subscription.status ?? "active")}
+            status={
+              isCanceling ? "canceling" : (subscription.status ?? "active")
+            }
           />
         </div>
 
@@ -203,143 +219,150 @@ export const ProjectManage = ({
               Request a change
             </Button>
           </RequestDialog>
-          <Button
-            className="rounded-full px-5"
-            disabled={portalMutation.isPending}
-            isLoading={portalMutation.isPending}
-            onClick={openPortal}
-          >
-            Manage billing
-          </Button>
+          {canManage && (
+            <Button
+              className="rounded-full px-5"
+              disabled={portalMutation.isPending}
+              isLoading={portalMutation.isPending}
+              onClick={openPortal}
+            >
+              Manage billing
+            </Button>
+          )}
         </div>
       </div>
 
-      <section className="space-y-4 pt-2">
-        <SectionHeading>Invoices</SectionHeading>
-        {invoicesError ? (
-          <PanelError
-            title="Failed to load invoices"
-            message={invoicesError.message}
-            onRetry={() => void refetchInvoices()}
-            retrying={invoicesLoading}
-          />
-        ) : invoicesLoading ? (
-          <Skeleton className="h-24 w-full rounded-lg" />
-        ) : (invoices?.length ?? 0) === 0 ? (
-          <div className="rounded-lg border border-dashed px-6 py-10 text-center">
-            <h3 className="text-[19px] font-extrabold tracking-tight">
-              No invoices yet
-            </h3>
-            <p className="text-muted-foreground mx-auto mt-2 max-w-[380px] text-[14.5px]">
-              Your first invoice appears here after your first billing cycle.
-            </p>
-          </div>
-        ) : (
-          <DataTable
-            className="table-card"
-            columns={[
-              {
-                id: "number",
-                header: "Invoice",
-                cell: ({ row }) => (
-                  <span className="font-mono text-sm">
-                    {row.original.number || "—"}
-                  </span>
-                ),
-              },
-              {
-                id: "amount",
-                header: "Amount",
-                cell: ({ row }) => (
-                  <span className="text-sm font-bold">
-                    {formatCurrency(
-                      row.original.amountPaid,
-                      row.original.currency
-                    )}
-                  </span>
-                ),
-              },
-              {
-                id: "status",
-                header: "Status",
-                cell: ({ row }) => (
-                  <StatusPill status={row.original.status ?? "draft"} />
-                ),
-              },
-              {
-                id: "date",
-                header: "Date",
-                cell: ({ row }) => (
-                  <span className="text-muted-foreground text-sm">
-                    {format(new Date(row.original.created * 1000), "MMM d, yyyy")}
-                  </span>
-                ),
-              },
-              {
-                id: "actions",
-                header: "",
-                cell: ({ row }) => {
-                  const { hostedInvoiceUrl, invoicePdf } = row.original;
-                  const isExpanded = expanded.has(row.id);
-                  return (
-                    <div className="flex justify-end gap-1">
-                      {hostedInvoiceUrl && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          render={
-                            <a
-                              href={hostedInvoiceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            />
-                          }
-                        >
-                          <ExternalLink className="size-4" />
-                        </Button>
-                      )}
-                      {invoicePdf && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          render={
-                            <a
-                              href={invoicePdf}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            />
-                          }
-                        >
-                          <FileText className="size-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggle(row.id);
-                        }}
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="size-4" />
-                        ) : (
-                          <ChevronRight className="size-4" />
-                        )}
-                      </Button>
-                    </div>
-                  );
+      {canManage && (
+        <section className="space-y-4 pt-2">
+          <SectionHeading>Invoices</SectionHeading>
+          {invoicesError ? (
+            <PanelError
+              title="Failed to load invoices"
+              message={invoicesError.message}
+              onRetry={() => void refetchInvoices()}
+              retrying={invoicesLoading}
+            />
+          ) : invoicesLoading ? (
+            <Skeleton className="h-24 w-full rounded-lg" />
+          ) : (invoices?.length ?? 0) === 0 ? (
+            <div className="rounded-lg border border-dashed px-6 py-10 text-center">
+              <h3 className="text-[19px] font-extrabold tracking-tight">
+                No invoices yet
+              </h3>
+              <p className="text-muted-foreground mx-auto mt-2 max-w-[380px] text-[14.5px]">
+                Your first invoice appears here after your first billing cycle.
+              </p>
+            </div>
+          ) : (
+            <DataTable
+              className="table-card"
+              columns={[
+                {
+                  id: "number",
+                  header: "Invoice",
+                  cell: ({ row }) => (
+                    <span className="font-mono text-sm">
+                      {row.original.number || "—"}
+                    </span>
+                  ),
                 },
-              },
-            ]}
-            data={invoices ?? []}
-            expandedRows={expanded}
-            renderExpandedRow={(row) => (
-              <InvoiceDetailsPanel invoice={row.original} />
-            )}
-          />
-        )}
-      </section>
+                {
+                  id: "amount",
+                  header: "Amount",
+                  cell: ({ row }) => (
+                    <span className="text-sm font-bold">
+                      {formatCurrency(
+                        row.original.amountPaid,
+                        row.original.currency
+                      )}
+                    </span>
+                  ),
+                },
+                {
+                  id: "status",
+                  header: "Status",
+                  cell: ({ row }) => (
+                    <StatusPill status={row.original.status ?? "draft"} />
+                  ),
+                },
+                {
+                  id: "date",
+                  header: "Date",
+                  cell: ({ row }) => (
+                    <span className="text-muted-foreground text-sm">
+                      {format(
+                        new Date(row.original.created * 1000),
+                        "MMM d, yyyy"
+                      )}
+                    </span>
+                  ),
+                },
+                {
+                  id: "actions",
+                  header: "",
+                  cell: ({ row }) => {
+                    const { hostedInvoiceUrl, invoicePdf } = row.original;
+                    const isExpanded = expanded.has(row.id);
+                    return (
+                      <div className="flex justify-end gap-1">
+                        {hostedInvoiceUrl && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            render={
+                              <a
+                                href={hostedInvoiceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              />
+                            }
+                          >
+                            <ExternalLink className="size-4" />
+                          </Button>
+                        )}
+                        {invoicePdf && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            render={
+                              <a
+                                href={invoicePdf}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              />
+                            }
+                          >
+                            <FileText className="size-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggle(row.id);
+                          }}
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="size-4" />
+                          ) : (
+                            <ChevronRight className="size-4" />
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  },
+                },
+              ]}
+              data={invoices ?? []}
+              expandedRows={expanded}
+              renderExpandedRow={(row) => (
+                <InvoiceDetailsPanel invoice={row.original} />
+              )}
+            />
+          )}
+        </section>
+      )}
     </div>
   );
 };

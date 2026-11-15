@@ -220,10 +220,14 @@ export const partnersRouter = createTRPCRouter({
       })
       .from(partner)
       .where(
-        or(
-          eq(partner.userId, ctx.session.user.id),
-          eq(partner.email, ctx.session.user.email.toLowerCase())
-        )
+        // An email match only counts once the user proved they own it:
+        // anyone can sign up with an applicant's email without verifying.
+        ctx.session.user.emailVerified
+          ? or(
+              eq(partner.userId, ctx.session.user.id),
+              eq(partner.email, ctx.session.user.email.toLowerCase())
+            )
+          : eq(partner.userId, ctx.session.user.id)
       )
       .limit(1);
     if (!p) return null;

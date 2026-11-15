@@ -5,6 +5,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "@workspace/drizzle/index";
 import { subscriptions } from "@workspace/drizzle/schema";
 
+import { type AppId, planAllowsApp } from "../apps";
 import { isAdminUser } from "../authz-shared";
 import { createHttpError, toTRPCError } from "../cms/errors";
 import {
@@ -86,4 +87,34 @@ const requireFeature = async (
   }
 };
 
-export { getEntitlement, getEntitlements, requireFeature };
+/**
+ * The app gate for procedures: same 402 as requireFeature unless the
+ * project's plan allows `appId` (planAllowsApp, the rule the Apps page and
+ * project.setApps use). Admins pass. Without this an app page's lock would
+ * only be UI.
+ */
+const requireApp = async (
+  user: { email: string; role?: string | null },
+  projectId: string,
+  appId: AppId
+): Promise<void> => {
+  if (isAdminUser(user)) return;
+
+  let entitlement: Entitlement;
+  try {
+    entitlement = await getEntitlement(projectId);
+  } catch (error) {
+    console.error(`Plan check failed for repo ${projectId}`, error);
+    throw toTRPCError(
+      createHttpError("Could not verify this project's plan. Please try again.", 503)
+    );
+  }
+
+  if (!planAllowsApp(appId, entitlement)) {
+    throw toTRPCError(
+      createHttpError("This app isn't included in this project's plan.", 402)
+    );
+  }
+};
+
+export { getEntitlement, getEntitlements, requireApp, requireFeature };

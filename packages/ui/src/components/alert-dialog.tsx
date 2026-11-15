@@ -50,7 +50,10 @@ function AlertDialogContent({
 }) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay>
+      {/* The popup lives inside the backdrop, and Base UI skips a nested
+          dialog's backdrop unless forced: a confirm opened from inside a
+          Dialog would render nothing and leave the page inert. */}
+      <AlertDialogOverlay forceRender>
         <AlertDialogPrimitive.Popup
           data-slot="alert-dialog-content"
           data-size={size}

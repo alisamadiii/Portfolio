@@ -13,9 +13,12 @@ import { hubProject, subscriptions } from "@workspace/drizzle/schema";
 
 import {
   assertProjectAccess,
+  assertProjectOwnerOrAdmin,
   assertRepoAccessByProjectId,
+  isProjectOwnerOrAdmin,
 } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
+import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { listCatalog } from "@workspace/trpc/lib/client-websites-payments";
 import {
@@ -45,6 +48,15 @@ const mapInvoice = (inv: Stripe.Invoice) => ({
   })),
 });
 
+// Billing portal return URL: only back to one of our own apps.
+const isOwnUrl = (value: string) => {
+  try {
+    return ALLOWED_ORIGINS.includes(new URL(value).origin);
+  } catch {
+    return false;
+  }
+};
+
 export const subscriptionRouter = createTRPCRouter({
   // The per-project subscription row (or null) for the Billing tab. Drives the
   // products-vs-manage branch.
@@ -64,13 +76,20 @@ export const subscriptionRouter = createTRPCRouter({
       }
       await assertProjectAccess(ctx.session.user, project);
       const [row] = await db
-        .select()
+        .select({
+          status: subscriptions.status,
+          cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+          currentPeriodEnd: subscriptions.currentPeriodEnd,
+        })
         .from(subscriptions)
         .where(eq(sql`${subscriptions.metadata} ->> 'projectId'`, String(project.projectId)))
         .limit(1);
       return {
         projectId: project.projectId,
         subscription: row ?? null,
+        // Invoices and the Stripe portal belong to the owner's Stripe
+        // customer (shared across their projects): owner or admin only.
+        canManage: await isProjectOwnerOrAdmin(ctx.session.user, project.projectId),
       };
     }),
 
@@ -78,15 +97,20 @@ export const subscriptionRouter = createTRPCRouter({
   getInvoices: authenticatedProcedure
     .input(z.object({ projectId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      await assertRepoAccessByProjectId(ctx.session.user, input.projectId);
+      await assertProjectOwnerOrAdmin(ctx.session.user, input.projectId);
       const [row] = await db
-        .select({ stripeCustomerId: subscriptions.stripeCustomerId })
+        .select({
+          id: subscriptions.id,
+          stripeCustomerId: subscriptions.stripeCustomerId,
+        })
         .from(subscriptions)
         .where(eq(sql`${subscriptions.metadata} ->> 'projectId'`, String(input.projectId)))
         .limit(1);
-      if (!row?.stripeCustomerId) return [];
+      if (!row?.stripeCustomerId || !row.id.startsWith("sub_")) return [];
+      // This project's subscription only, not every invoice of the customer.
       const invoices = await stripe.invoices.list({
         customer: row.stripeCustomerId,
+        subscription: row.id,
         limit: 50,
       });
       return invoices.data.map(mapInvoice);
@@ -146,11 +170,11 @@ export const subscriptionRouter = createTRPCRouter({
     .input(
       z.object({
         projectId: z.string().uuid(),
-        returnUrl: z.string(),
+        returnUrl: z.string().refine(isOwnUrl, "Invalid return URL"),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      await assertRepoAccessByProjectId(ctx.session.user, input.projectId);
+      await assertProjectOwnerOrAdmin(ctx.session.user, input.projectId);
       const [row] = await db
         .select({ stripeCustomerId: subscriptions.stripeCustomerId })
         .from(subscriptions)

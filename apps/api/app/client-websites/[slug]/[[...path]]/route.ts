@@ -124,6 +124,7 @@ export async function GET(
         "Cache-Control": "private, no-cache",
         "Content-Type": "text/html; charset=utf-8",
         "Content-Security-Policy": FRAME_ANCESTORS,
+        "X-Content-Type-Options": "nosniff",
       },
     });
   }
@@ -133,6 +134,7 @@ export async function GET(
     "Cache-Control": "private, no-cache",
     "Content-Type": mimeOf(key) ?? res.headers.get("content-type") ?? "application/octet-stream",
     "Content-Security-Policy": FRAME_ANCESTORS,
+    "X-Content-Type-Options": "nosniff",
   });
   for (const name of PASS_THROUGH) {
     const value = res.headers.get(name);

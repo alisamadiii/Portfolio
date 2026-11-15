@@ -21,6 +21,7 @@ import {
   listNetlifySnippets,
   netlifyPlan,
   netlifyTokenFor,
+  netlifyWriteTokenFor,
   provisionNetlifySsl,
   updateNetlifySite,
 } from "../lib/netlify";
@@ -50,6 +51,19 @@ const projectSite = async (projectId: string) => {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "This site isn't on Netlify yet." });
   }
   const token = await netlifyTokenFor(project);
+  return { project, token, siteId: project.netlifySiteId };
+};
+
+/** projectSite for changes: agency-managed sites are admin-only. */
+const projectSiteForWrite = async (
+  projectId: string,
+  caller: Parameters<typeof netlifyWriteTokenFor>[1]
+) => {
+  const project = await projectNetlify(projectId);
+  if (!project.netlifySiteId) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "This site isn't on Netlify yet." });
+  }
+  const token = await netlifyWriteTokenFor(project, caller);
   return { project, token, siteId: project.netlifySiteId };
 };
 
@@ -208,13 +222,13 @@ export const netlifyRouter = createTRPCRouter({
   setCustomDomain: cmsFullAccessProcedure
     .input(z.object({ domain: domainInput.shape.domain.nullable() }))
     .mutation(async ({ ctx, input }) => {
-      const { token, siteId } = await projectSite(ctx.projectId);
+      const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
       await updateNetlifySite(token, siteId, { custom_domain: input.domain || null });
       return { ok: true };
     }),
 
   addAlias: cmsFullAccessProcedure.input(domainInput).mutation(async ({ ctx, input }) => {
-    const { token, siteId } = await projectSite(ctx.projectId);
+    const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
     const site = await getNetlifySite(token, siteId);
     const aliases = site.domain_aliases ?? [];
     if (input.domain === site.custom_domain || aliases.includes(input.domain)) return { ok: true };
@@ -223,7 +237,7 @@ export const netlifyRouter = createTRPCRouter({
   }),
 
   removeAlias: cmsFullAccessProcedure.input(domainInput).mutation(async ({ ctx, input }) => {
-    const { token, siteId } = await projectSite(ctx.projectId);
+    const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
     const site = await getNetlifySite(token, siteId);
     await updateNetlifySite(token, siteId, {
       domain_aliases: (site.domain_aliases ?? []).filter((d) => d !== input.domain),
@@ -232,7 +246,7 @@ export const netlifyRouter = createTRPCRouter({
   }),
 
   provisionHttps: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    const { token, siteId } = await projectSite(ctx.projectId);
+    const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
     await provisionNetlifySsl(token, siteId);
     return { ok: true };
   }),
@@ -240,7 +254,7 @@ export const netlifyRouter = createTRPCRouter({
   setForceHttps: cmsFullAccessProcedure
     .input(z.object({ on: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
-      const { token, siteId } = await projectSite(ctx.projectId);
+      const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
       await updateNetlifySite(token, siteId, { force_ssl: input.on });
       return { ok: true };
     }),
@@ -267,7 +281,7 @@ export const netlifyRouter = createTRPCRouter({
   setPrettyUrls: cmsFullAccessProcedure
     .input(z.object({ on: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
-      const { token, siteId } = await projectSite(ctx.projectId);
+      const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
       await updateNetlifySite(token, siteId, {
         processing_settings: { html: { pretty_urls: input.on } },
       });
@@ -283,7 +297,7 @@ export const netlifyRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { token, siteId } = await projectSite(ctx.projectId);
+      const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
       await createNetlifySnippet(token, siteId, {
         title: input.title,
         general: input.html,
@@ -295,7 +309,7 @@ export const netlifyRouter = createTRPCRouter({
   removeSnippet: cmsFullAccessProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const { token, siteId } = await projectSite(ctx.projectId);
+      const { token, siteId } = await projectSiteForWrite(ctx.projectId, ctx.user);
       await deleteNetlifySnippet(token, siteId, input.id);
       return { ok: true };
     }),

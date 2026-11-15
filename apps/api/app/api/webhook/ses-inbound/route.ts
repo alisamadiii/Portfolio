@@ -17,6 +17,7 @@ type SesReceived = {
     action?: { type?: string; bucketName?: string; objectKey?: string };
     spamVerdict?: { status?: string };
     virusVerdict?: { status?: string };
+    dmarcVerdict?: { status?: string };
   };
 };
 
@@ -55,8 +56,13 @@ export async function POST(request: Request) {
   if (event.notificationType !== "Received" || action?.type !== "S3" || !action.bucketName || !action.objectKey) {
     return new Response(null, { status: 204 });
   }
-  if (event.receipt?.spamVerdict?.status === "FAIL" || event.receipt?.virusVerdict?.status === "FAIL") {
-    console.warn("[ses-inbound] dropped spam/virus", action.objectKey);
+  // DMARC FAIL = the From domain says this sender isn't them (spoofed lead).
+  if (
+    event.receipt?.spamVerdict?.status === "FAIL" ||
+    event.receipt?.virusVerdict?.status === "FAIL" ||
+    event.receipt?.dmarcVerdict?.status === "FAIL"
+  ) {
+    console.warn("[ses-inbound] dropped spam/virus/dmarc", action.objectKey);
     return new Response(null, { status: 204 });
   }
 

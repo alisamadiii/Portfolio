@@ -235,7 +235,7 @@ const campaignsRouter = createTRPCRouter({
       return { ok: true };
     }),
 
-  schedule: write
+  schedule: manage
     .input(z.object({ campaignId: id, scheduledAt: z.string().datetime().optional() }))
     .mutation(async ({ ctx, input }) => {
       const mail = await mailFor(ctx);
@@ -263,7 +263,7 @@ const campaignsRouter = createTRPCRouter({
     return { ok: true };
   }),
 
-  resume: write.input(z.object({ campaignId: id })).mutation(async ({ ctx, input }) => {
+  resume: manage.input(z.object({ campaignId: id })).mutation(async ({ ctx, input }) => {
     const mail = await mailFor(ctx);
     await teamFetch(mail, `/api/v1/campaigns/${input.campaignId}/resume`, { method: "POST" });
     return { ok: true };

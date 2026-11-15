@@ -25,6 +25,7 @@ export function isSnsCertUrl(raw: string) {
     return (
       url.protocol === "https:" &&
       /^sns\.[a-z0-9-]+\.amazonaws\.com(\.cn)?$/.test(url.hostname) &&
+      url.pathname.startsWith("/SimpleNotificationService-") &&
       url.pathname.endsWith(".pem")
     );
   } catch {
@@ -52,11 +53,23 @@ export function verifySnsSignature(msg: SnsMessage, certPem: string) {
   }
 }
 
+/**
+ * SNS retries a delivery for a while, so allow a few hours, but an old
+ * captured message can't be replayed forever.
+ */
+const MAX_AGE_MS = 6 * 3600_000;
+
+export function isFreshSnsTimestamp(timestamp: string, now = Date.now()) {
+  const at = Date.parse(timestamp);
+  return Number.isFinite(at) && now - at <= MAX_AGE_MS && at - now <= 15 * 60_000;
+}
+
 const certCache = new Map<string, string>();
 
-/** Full check: right topic, SNS-hosted cert, valid signature. */
+/** Full check: right topic, recent, SNS-hosted cert, valid signature. */
 export async function verifySnsMessage(msg: SnsMessage, topicArn: string) {
   if (!msg || msg.TopicArn !== topicArn || !isSnsCertUrl(msg.SigningCertURL)) return false;
+  if (!isFreshSnsTimestamp(msg.Timestamp)) return false;
   let pem = certCache.get(msg.SigningCertURL);
   if (!pem) {
     const res = await fetch(msg.SigningCertURL, { signal: AbortSignal.timeout(10_000) });

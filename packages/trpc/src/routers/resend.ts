@@ -9,7 +9,7 @@ import { account, hubProject } from "@workspace/drizzle/schema";
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
 import {
   getNetlifySite,
-  netlifyTokenFor,
+  netlifyWriteTokenFor,
   setNetlifySiteEnv,
 } from "../lib/netlify";
 import {
@@ -24,6 +24,21 @@ import {
   resendTokenFor,
   revokeResendGrant,
 } from "../lib/resend";
+
+import { requireApp } from "../lib/payment/entitlements";
+
+// Paid app: every call but status/disconnect checks the plan (requireApp),
+// so a free project can't reach it by calling the API directly.
+const appGate = <T extends { user: { email: string; role?: string | null }; projectId: string }>(ctx: T) =>
+  requireApp(ctx.user, ctx.projectId, "resend");
+const appCmsFullAccessProcedure = cmsFullAccessProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
+const appCmsProcedure = cmsProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
 
 // The project's Resend app: the client links Resend (OAuth) and binds it to
 // the project, then the hub reads their domains + recent emails and mints
@@ -69,7 +84,7 @@ export const resendRouter = createTRPCRouter({
   // Runs right after Resend's consent screen: binds the team the caller just
   // linked (their most recently written Resend account row). A team already
   // bound to another project is refused, so a project never inherits it.
-  connect: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+  connect: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
     const [linked] = await db
       .select({ accountId: account.accountId })
       .from(account)
@@ -132,7 +147,7 @@ export const resendRouter = createTRPCRouter({
     return { ok: true };
   }),
 
-  overview: cmsProcedure.query(async ({ ctx }) => {
+  overview: appCmsProcedure.query(async ({ ctx }) => {
     const token = await projectToken(ctx.projectId);
     const [domains, emails] = await Promise.all([
       listResendDomains(token),
@@ -156,7 +171,7 @@ export const resendRouter = createTRPCRouter({
     };
   }),
 
-  domain: cmsProcedure
+  domain: appCmsProcedure
     .input(z.object({ domainId: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const token = await projectToken(ctx.projectId);
@@ -175,7 +190,7 @@ export const resendRouter = createTRPCRouter({
     }),
 
   // One sent email with its content, for the email detail page.
-  email: cmsProcedure
+  email: appCmsProcedure
     .input(z.object({ emailId: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const token = await projectToken(ctx.projectId);
@@ -200,7 +215,7 @@ export const resendRouter = createTRPCRouter({
     }),
 
   // Existing keys (names + dates; Resend never returns a secret again).
-  apiKeys: cmsFullAccessProcedure.query(async ({ ctx }) => {
+  apiKeys: appCmsFullAccessProcedure.query(async ({ ctx }) => {
     const token = await projectToken(ctx.projectId);
     const keys = await listResendApiKeys(token);
     return keys.map((k) => ({
@@ -211,7 +226,7 @@ export const resendRouter = createTRPCRouter({
     }));
   }),
 
-  deleteApiKey: cmsFullAccessProcedure
+  deleteApiKey: appCmsFullAccessProcedure
     .input(z.object({ keyId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const token = await projectToken(ctx.projectId);
@@ -220,7 +235,7 @@ export const resendRouter = createTRPCRouter({
     }),
 
   // The key is returned once and never stored by the hub.
-  createApiKey: cmsFullAccessProcedure
+  createApiKey: appCmsFullAccessProcedure
     .input(
       z.object({
         name: z.string().trim().min(1).max(50),
@@ -234,7 +249,7 @@ export const resendRouter = createTRPCRouter({
     }),
 
   // Saves a freshly minted key as RESEND_API_KEY on the project's Netlify site.
-  pushToNetlify: cmsFullAccessProcedure
+  pushToNetlify: appCmsFullAccessProcedure
     .input(z.object({ apiKey: z.string().regex(/^re_[A-Za-z0-9_]+$/) }))
     .mutation(async ({ ctx, input }) => {
       const row = await projectRow(ctx.projectId);
@@ -244,7 +259,7 @@ export const resendRouter = createTRPCRouter({
           message: "This site isn't on Netlify.",
         });
       }
-      const token = await netlifyTokenFor(row);
+      const token = await netlifyWriteTokenFor(row, ctx.user);
       const site = await getNetlifySite(token, row.netlifySiteId);
       await setNetlifySiteEnv(token, site, "RESEND_API_KEY", input.apiKey);
       return { ok: true };

@@ -134,3 +134,10 @@ export function parseRefCookie(cookieHeader: string | null | undefined): string 
   }
   return null;
 }
+
+/**
+ * The agreement version the api accepts on /api/partners/apply. Must equal
+ * apps/partner-program/src/config.ts agreementVersion (bump both together,
+ * with the text in AgreementText.tsx and packages/ui/src/pdfs/partner-agreement.tsx).
+ */
+export const PARTNER_AGREEMENT_VERSION = "2026-11.1";

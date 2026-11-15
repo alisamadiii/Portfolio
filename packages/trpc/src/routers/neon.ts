@@ -23,6 +23,21 @@ import {
 } from "../lib/neon";
 import { NEON_REGIONS } from "../lib/neon-regions";
 
+import { requireApp } from "../lib/payment/entitlements";
+
+// Paid app: every call but status/disconnect checks the plan (requireApp),
+// so a free project can't reach it by calling the API directly.
+const appGate = <T extends { user: { email: string; role?: string | null }; projectId: string }>(ctx: T) =>
+  requireApp(ctx.user, ctx.projectId, "neon");
+const appCmsFullAccessProcedure = cmsFullAccessProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
+const appCmsProcedure = cmsProcedure.use(async ({ ctx, next }) => {
+  await appGate(ctx);
+  return next();
+});
+
 // The project's Neon app: the client links Neon (OAuth), binds one of their
 // Neon projects (or creates one) to this hub project, then sees its branches,
 // databases and compute state and copies connection strings. The hub never
@@ -95,7 +110,7 @@ export const neonRouter = createTRPCRouter({
 
   // Runs right after Neon's consent screen: binds the account the caller
   // just linked (their most recently written Neon account row).
-  connect: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+  connect: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
     const [linked] = await db
       .select({ accountId: account.accountId })
       .from(account)
@@ -160,13 +175,13 @@ export const neonRouter = createTRPCRouter({
     return { ok: true };
   }),
 
-  orgs: cmsFullAccessProcedure.query(async ({ ctx }) => {
+  orgs: appCmsFullAccessProcedure.query(async ({ ctx }) => {
     const { token } = await projectToken(ctx.projectId);
     const orgs = await listNeonOrgs(token);
     return orgs.map((o) => ({ id: o.id, name: o.name }));
   }),
 
-  projects: cmsFullAccessProcedure.input(orgInput).query(async ({ ctx, input }) => {
+  projects: appCmsFullAccessProcedure.input(orgInput).query(async ({ ctx, input }) => {
     const { token } = await projectToken(ctx.projectId);
     const projects = await listNeonProjects(token, input.orgId);
     const bound = await db
@@ -184,7 +199,7 @@ export const neonRouter = createTRPCRouter({
     }));
   }),
 
-  bindProject: cmsFullAccessProcedure
+  bindProject: appCmsFullAccessProcedure
     .input(orgInput.extend({ neonProjectId: z.string().min(1).max(100) }))
     .mutation(async ({ ctx, input }) => {
       const { token } = await projectToken(ctx.projectId);
@@ -194,7 +209,7 @@ export const neonRouter = createTRPCRouter({
       return { ok: true };
     }),
 
-  createProject: cmsFullAccessProcedure
+  createProject: appCmsFullAccessProcedure
     .input(
       orgInput.extend({
         name: z.string().trim().min(1).max(64),
@@ -208,12 +223,12 @@ export const neonRouter = createTRPCRouter({
       return { id: project.id };
     }),
 
-  unbindProject: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+  unbindProject: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
     await bind(ctx.projectId, null, null);
     return { ok: true };
   }),
 
-  overview: cmsProcedure.query(async ({ ctx }) => {
+  overview: appCmsProcedure.query(async ({ ctx }) => {
     const { token, neonProjectId } = await boundProject(ctx.projectId);
     const [project, branches, endpoints] = await Promise.all([
       getNeonProject(token, neonProjectId),
@@ -243,7 +258,7 @@ export const neonRouter = createTRPCRouter({
     };
   }),
 
-  databases: cmsProcedure
+  databases: appCmsProcedure
     .input(z.object({ branchId: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const { token, neonProjectId } = await boundProject(ctx.projectId);
@@ -258,7 +273,7 @@ export const neonRouter = createTRPCRouter({
     }),
 
   // Returns a password-bearing secret: full access only, never stored.
-  connectionString: cmsFullAccessProcedure
+  connectionString: appCmsFullAccessProcedure
     .input(
       z.object({
         branchId: z.string().min(1).max(100),

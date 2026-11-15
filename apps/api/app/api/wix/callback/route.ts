@@ -1,6 +1,8 @@
+import { headers as nextHeaders } from "next/headers";
 import { NextResponse } from "next/server";
 import { and, eq, ne } from "drizzle-orm";
 
+import { auth } from "@workspace/auth/auth";
 import { db } from "@workspace/drizzle/pool";
 import { hubProject, user } from "@workspace/drizzle/schema";
 import { resolveProjectRole } from "@workspace/trpc/lib/cms/project-access";
@@ -11,7 +13,12 @@ import { urls } from "@workspace/ui/lib/company";
 // Wix's installer redirects here after the client installs the hub's Wix app
 // on a site: ?state=<ours>&appId&tenantId&instanceId&signedInstance. The
 // signed instance (HMAC with the app secret) is the proof of install; the
-// state says which hub project and user started it. Then back to the hub.
+// state says which hub project and user started it, and the browser landing
+// here must be signed in as that user: a forwarded install link can't bind
+// someone else's Wix site to the sender's project. Then back to the hub.
+
+// Wix signs the instance right before redirecting here.
+const INSTANCE_MAX_AGE_MS = 10 * 60_000;
 
 const back = (projectId: string | null, result: "connected" | "taken" | "error") =>
   NextResponse.redirect(
@@ -24,10 +31,14 @@ export async function GET(req: Request) {
   const state = verifyWixState(params.get("state") ?? "", process.env.BETTER_AUTH_SECRET ?? "");
   if (!state) return back(null, "error");
 
+  const session = await auth.api.getSession({ headers: await nextHeaders() }).catch(() => null);
+  if (!session || session.user.id !== state.userId) return back(state.projectId, "error");
+
   const instanceId = params.get("instanceId") ?? "";
   const instance = verifySignedInstance(
     params.get("signedInstance") ?? "",
-    process.env.WIX_APP_SECRET ?? ""
+    process.env.WIX_APP_SECRET ?? "",
+    { maxAgeMs: INSTANCE_MAX_AGE_MS }
   );
   if (
     !instance ||

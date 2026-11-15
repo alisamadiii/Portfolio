@@ -9,6 +9,8 @@ import {
 
 import { partnerCors } from "../cors";
 
+import { clientIp, isRateLimited } from "@/lib/agency-public";
+
 // ─── Partner link check ──────────────────────────────────────────
 // www.alisamadii.com/?ref=CODE posts the code here (credentials: include).
 // A code of an approved partner is stored in a 30-day cookie on
@@ -19,26 +21,19 @@ export async function OPTIONS(req: Request) {
   return new Response(null, { status: 204, headers: partnerCors(req, "POST") });
 }
 
-// In-memory per-IP limit: best effort per instance.
-const RATE_LIMIT = 30;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const hits = new Map<string, number[]>();
-
-const isRateLimited = (ip: string) => {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return true;
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
-};
+const RATE_LIMIT = 30; // per IP per 10 minutes (shared Postgres window)
 
 const bodySchema = z.object({ code: z.string().trim().min(1).max(60) });
 
 export async function POST(req: Request) {
   const headers = partnerCors(req, "POST");
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isRateLimited(ip)) {
+  // JSON only: a cross-site form can't send it without a CORS preflight, so
+  // another page can't set the referral cookie behind the visitor's back.
+  if (!req.headers.get("content-type")?.includes("application/json")) {
+    return NextResponse.json({ valid: false }, { status: 415, headers });
+  }
+  const ip = clientIp(req);
+  if (await isRateLimited(`partner-ref:${ip}`, RATE_LIMIT)) {
     return NextResponse.json({ valid: false }, { status: 429, headers });
   }
 

@@ -204,3 +204,22 @@ export function stripQuotedReply(text: string): string {
   }
   return out.join("\n").trim();
 }
+
+/**
+ * Outbound messages a project may send from the inbox: every send is one
+ * click, but the channels are the agency's (Telnyx number, alisamadii.com
+ * mail), so a hijacked or scripted account can't turn them into a bulk relay.
+ */
+export const OUTBOUND_LIMITS = { perHour: 60, perDay: 300 } as const;
+
+/**
+ * Business name as an email display name: plain characters only, so the
+ * From header can't carry another address, quotes or line breaks.
+ */
+export const senderDisplayName = (name: string) =>
+  name
+    .replace(/\s+/g, " ")
+    .replace(/[^\p{L}\p{N} .&'-]/gu, "")
+    .replace(/ +/g, " ")
+    .trim()
+    .slice(0, 60) || "Message";

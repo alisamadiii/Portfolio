@@ -13,6 +13,8 @@ import {
 import { ALLOWED_ORIGINS } from "@workspace/trpc/lib/allow-origin";
 import { attachFormReferral, referralLine } from "@workspace/trpc/lib/partners";
 
+import { clientIp, isRateLimited } from "@/lib/agency-public";
+
 // ─── Agency site form relay ─────────────────────────────────────
 // Every form on alisamadii.com (quote, showcase request, free preview, ...)
 // posts here and lands in Ali's inbox as one email. No Hub lead, no
@@ -36,19 +38,7 @@ export async function OPTIONS(req: Request) {
   return new Response(null, { status: 200, headers: corsHeaders(req) });
 }
 
-// In-memory per-IP limit: best effort per instance.
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 10 * 60 * 1000;
-const hits = new Map<string, number[]>();
-
-const isRateLimited = (ip: string) => {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) return true;
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
-};
+const RATE_LIMIT = 5; // per IP per 10 minutes (shared Postgres window)
 
 const bodySchema = z.object({
   form: z.string().trim().min(1).max(100),
@@ -111,6 +101,11 @@ const renderFormEmail = (data: Body, page: string | null) => {
 
 export async function POST(req: Request) {
   const headers = corsHeaders(req);
+  // Only the agency site's own pages post here (other sites can't).
+  const origin = req.headers.get("origin");
+  if (process.env.NODE_ENV === "production" && origin && !ALLOWED_ORIGINS.includes(origin)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403, headers });
+  }
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
@@ -120,8 +115,8 @@ export async function POST(req: Request) {
   // Bots get the same success a person would, so they don't retry.
   if (data.hp) return NextResponse.json({ ok: true }, { headers });
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isRateLimited(ip)) {
+  const ip = clientIp(req);
+  if (await isRateLimited(`send:${ip}`, RATE_LIMIT)) {
     return NextResponse.json(
       { error: "Too many requests. Try again in a few minutes." },
       { status: 429, headers }

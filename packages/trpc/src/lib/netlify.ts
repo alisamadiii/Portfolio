@@ -45,6 +45,24 @@ export async function netlifyTokenFor(project: {
 
 type Caller = { id: string; role?: string | null; isAdmin?: boolean };
 
+/**
+ * Token for changing an existing site. A site on the agency's Netlify (no
+ * connected user) is managed by the agency: only an admin may change it, so a
+ * client can never use the agency token for domains, snippets or env vars.
+ */
+export async function netlifyWriteTokenFor(
+  project: { netlifyConnectedUserId: string | null },
+  caller: Caller
+): Promise<string> {
+  if (!project.netlifyConnectedUserId && !isAdminUser(caller)) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "This site is managed by our team. Ask us to make this change.",
+    });
+  }
+  return netlifyTokenFor(project);
+}
+
 /** Who would host a publish by `caller` right now. DB only, no Netlify call. */
 export async function netlifyPlan(
   projectId: string,

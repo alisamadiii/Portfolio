@@ -124,6 +124,8 @@ const claimInviteForUser = async (
   return true;
 };
 
+const RESEND_COOLDOWN_MS = 5 * 60 * 1000;
+
 const generateInviteToken = () => randomBytes(32).toString("base64url");
 
 // Caps invite emails per project (DB-backed, so it holds across instances):
@@ -177,6 +179,26 @@ const createInviteUrl = async ({
     Date.now() +
       (Number(process.env.COLLABORATOR_INVITE_LINK_EXPIRES_IN) || 86400) * 1000
   );
+
+  // A new invite replaces the old row, so the hourly quota never sees resends:
+  // one email per address per few minutes keeps resending from spamming it.
+  const [recent] = await db
+    .select({ id: collaboratorInviteTable.id })
+    .from(collaboratorInviteTable)
+    .where(
+      and(
+        sql`lower(${collaboratorInviteTable.email}) = lower(${email})`,
+        eq(collaboratorInviteTable.projectId, projectId),
+        gt(collaboratorInviteTable.createdAt, new Date(Date.now() - RESEND_COOLDOWN_MS))
+      )
+    )
+    .limit(1);
+  if (recent) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "An invite was just sent to this address. Try again in a few minutes.",
+    });
+  }
 
   await db
     .delete(collaboratorInviteTable)

@@ -52,6 +52,7 @@ export const framePolicyFromHeaders = (
 };
 
 const CACHE_TTL_MS = 30 * 60 * 1000;
+const CACHE_MAX = 500;
 const cache = new Map<string, { value: FramePolicy; expiresAt: number }>();
 
 /** Fetches `url` (redirects followed) and reads its framing headers. Cached 30 min. */
@@ -77,6 +78,9 @@ export const fetchFramePolicy = async (
   } catch {
     value = "unreachable";
   }
+  // Bounded: keys come from user-set URLs. Map keeps insertion order, so the
+  // first key is the oldest.
+  if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value!);
   cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
   return value;
 };

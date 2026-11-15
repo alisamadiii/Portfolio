@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq } from "drizzle-orm";
 
-import { createHttpError } from "./errors";
+import { createHttpError, toTRPCError } from "./errors";
 import { isAdminUser } from "../authz-shared";
 import { collaboratorMatchesUserForProjectId } from "./collaborator-access";
 import { isProjectOwner, resolveProjectRole } from "./project-access";
@@ -87,8 +87,37 @@ const assertRepoAccessByProjectId = async (
   return project;
 };
 
+// Owner-level actions (billing, deleting the project): admins or the
+// project's owner only, never collaborators, whatever their role.
+const isProjectOwnerOrAdmin = async (
+  user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
+  projectId: string
+): Promise<boolean> => {
+  if (isAdminUser(user)) return true;
+  const project = await db.query.hubProject.findFirst({
+    where: eq(orgRepoTable.id, projectId),
+    columns: { id: true, githubConnectedUserId: true },
+  });
+  if (!project) return false;
+  return isProjectOwner(user.id, {
+    projectId: project.id,
+    githubConnectedUserId: project.githubConnectedUserId,
+  });
+};
+
+const assertProjectOwnerOrAdmin = async (
+  user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
+  projectId: string
+) => {
+  if (!(await isProjectOwnerOrAdmin(user, projectId))) {
+    throw toTRPCError(createHttpError("Only the project owner can do this.", 403));
+  }
+};
+
 export {
   assertProjectAccess,
+  assertProjectOwnerOrAdmin,
+  isProjectOwnerOrAdmin,
   assertRepoAccessByProjectId,
   getRepoAccessByProjectId,
   requireCollaboratorManageAccess,

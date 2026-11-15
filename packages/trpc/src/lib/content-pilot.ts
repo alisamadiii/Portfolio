@@ -60,11 +60,11 @@ async function pilotFetch(path: string, init?: RequestInit): Promise<Response> {
       },
     });
   } catch (error) {
+    // The detail can name the internal host: log it, don't send it.
+    console.error("[content-pilot] unreachable", error);
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
-      message: `content-pilot unreachable: ${
-        error instanceof Error ? error.message : "network error"
-      }`,
+      message: "The site builder is unreachable. Try again in a minute.",
     });
   }
   return res;

@@ -1,9 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { sql } from "drizzle-orm";
 import z from "zod";
-
-import { db } from "@workspace/drizzle/index";
-import { user as userTable } from "@workspace/drizzle/schema";
 
 import { adminProcedure, createTRPCRouter } from "../init";
 import { createUploadProjectFromFiles } from "../lib/cms/upload-project";
@@ -18,6 +14,7 @@ import {
   listLinks,
 } from "../lib/client-websites-payments";
 import { SLUG } from "../lib/client-websites-shared";
+import { findVerifiedUserByEmail } from "../lib/cms/collaborator-access";
 
 // Admin only: the client website designs in the client-websites R2 bucket
 // (hub /client-websites). Replaces the old apps/client-websites viewer.
@@ -74,18 +71,15 @@ export const clientWebsitesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       let owner = { id: ctx.session.user.id, email: ctx.session.user.email };
       if (input.clientEmail) {
-        const [client] = await db
-          .select({ id: userTable.id, email: userTable.email })
-          .from(userTable)
-          .where(sql`lower(${userTable.email}) = lower(${input.clientEmail})`)
-          .limit(1);
+        // Verified only: anyone can sign up with a client's email unverified.
+        const client = await findVerifiedUserByEmail(input.clientEmail);
         if (!client) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: "No Hub account with that email. Have them sign up first.",
+            message: "No verified Hub account with that email. Have them sign up and verify first.",
           });
         }
-        owner = client;
+        owner = { id: client.id, email: client.email };
       }
       const files = await readSiteFiles(input.slug);
       const project = await createUploadProjectFromFiles({

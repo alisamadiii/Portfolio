@@ -13,6 +13,7 @@ import { agencyClient, hubProject } from "@workspace/drizzle/schema";
 import { APP_IDS, planAllowsApp, type AppId } from "@workspace/trpc/lib/apps";
 import { getEntitlement } from "@workspace/trpc/lib/payment/entitlements";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
+import { assertProjectOwnerOrAdmin } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport } from "@workspace/trpc/lib/content-pilot";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
@@ -37,6 +38,8 @@ export const projectRouter = createTRPCRouter({
    * Never touches the GitHub repo itself or the user's shared Stripe customer.
    */
   delete: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+    // Cancels and refunds the owner's subscription: owner or admin only.
+    await assertProjectOwnerOrAdmin(ctx.session.user, ctx.projectId);
     try {
       const projectId = ctx.projectId;
 
@@ -121,11 +124,15 @@ export const projectRouter = createTRPCRouter({
         // Leads and Google Ads keep their data on the project's agency row:
         // adding either creates it (idempotent), owned by whoever imported
         // the project. Reading the data still needs the agency plan.
-        if (project && apps.some((id) => AGENCY_APPS.includes(id))) {
+        // No owner: only an admin may become it, never a collaborator.
+        const agencyOwner =
+          project?.ownerId ??
+          (isAdminUser(ctx.session.user) ? ctx.session.user.id : null);
+        if (agencyOwner && apps.some((id) => AGENCY_APPS.includes(id))) {
           await db
             .insert(agencyClient)
             .values({
-              userId: project.ownerId ?? ctx.session.user.id,
+              userId: agencyOwner,
               projectId: input.projectId,
             })
             .onConflictDoNothing({ target: agencyClient.projectId });

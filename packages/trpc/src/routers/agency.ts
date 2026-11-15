@@ -75,7 +75,10 @@ import {
 import { normalizeOrigin } from "../lib/agency/origins";
 import { isAdminUser, roleAtLeast } from "../lib/authz-shared";
 import { resolveProjectRole } from "../lib/cms/project-access";
-import { collaboratorMatchesUser } from "../lib/cms/collaborator-access";
+import {
+  collaboratorMatchesUser,
+  findVerifiedUserByEmail,
+} from "../lib/cms/collaborator-access";
 import { createStarterProject } from "../lib/cms/upload-project";
 import {
   addNegativeKeyword,
@@ -112,6 +115,7 @@ import {
   INBOX_MEDIA_MAX_BYTES,
   INBOX_MEDIA_TYPES,
   putInboxMedia,
+  assertOutboundQuota,
   sendLeadMessage,
 } from "../lib/inbox";
 import { placeholderValues, resolveTemplate } from "../lib/templates-shared";
@@ -232,10 +236,10 @@ const businessWriteProcedure = businessProcedure.use(async ({ next, ctx }) => {
     throw new TRPCError({ code: "FORBIDDEN", message: "You have view-only access." });
   }
   if (ctx.client) return next({ ctx: { ...ctx, client: ctx.client } });
-  // The row's owner gets full access to the agency data, so it is always the
-  // project owner (or a full-access caller when the project has none).
+  // The row's owner becomes a project owner, so it is always the project
+  // owner (or an admin when the project has none), never a collaborator.
   const userId =
-    ctx.ownerId ?? (ctx.role === "full-access" ? ctx.session.user.id : null);
+    ctx.ownerId ?? (isAdminUser(ctx.session.user) ? ctx.session.user.id : null);
   if (!userId) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
@@ -1018,6 +1022,7 @@ const inboxRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const lead = await getLead(ctx.client.projectId, input.leadId);
+      await assertOutboundQuota(ctx.client.projectId);
       let mediaUrls: string[] = [];
       try {
         mediaUrls = await Promise.all(
@@ -1293,13 +1298,12 @@ const adminRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
-      const owner = await db.query.user.findFirst({
-        where: sql`lower(${userTable.email}) = lower(${input.email})`,
-      });
+      // Verified only: the owner gets full access to the project.
+      const owner = await findVerifiedUserByEmail(input.email);
       if (!owner) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "No Hub account with that email. Have them sign up first.",
+          message: "No verified Hub account with that email. Have them sign up and verify first.",
         });
       }
       const existing = input.id

@@ -20,6 +20,7 @@ import {
   isGithubAppConfigured,
 } from "@workspace/trpc/lib/github-app";
 import { fetchFramePolicy, type FramePolicy } from "@workspace/trpc/lib/frame-policy";
+import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import type { AppId } from "@workspace/trpc/lib/apps";
 import { db } from "@workspace/drizzle/index";
 import { hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
@@ -94,7 +95,8 @@ export const reposRouter = createTRPCRouter({
         .where(accessibleProjectsWhere(ctx));
       const entries = await Promise.all(
         rows
-          .filter((row) => row.websiteUrl && /^https?:\/\//i.test(row.websiteUrl))
+          // Only public websites (older rows may predate normalizeWebsiteUrl's host rules).
+          .filter((row) => row.websiteUrl && normalizeWebsiteUrl(row.websiteUrl) !== null)
           .map(async (row) => [
             row.projectId,
             await fetchFramePolicy(row.websiteUrl!, new URL(input.origin).origin),
@@ -207,8 +209,11 @@ export const reposRouter = createTRPCRouter({
    */
   installationStatus: authenticatedProcedure
     .input(z.object({ projectId: z.string().uuid() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       try {
+        // Owner/repo names only for people on the project (throws otherwise,
+        // which reads as "ok" below).
+        await assertRepoAccessByProjectId(ctx.session.user, input.projectId);
         const project = await resolveProjectByProjectId(input.projectId);
         if (!project) return { status: "ok" as const };
         // Uploaded projects have no GitHub repo to install anything on.
