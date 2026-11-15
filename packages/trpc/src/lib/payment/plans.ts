@@ -101,7 +101,8 @@ export const PLANS = {
           "price_1UMr7QEhKQbL1BLm2o3DHJ1P",
           "price_1UMoKjEhKQbL1BLm0xZuUQiw",
         ],
-        features: WEBSITE_PAID_FEATURES,
+        // Every monthly subscription unlocks every app (Ali, 2026-11-15).
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
       },
     },
   },
@@ -243,8 +244,8 @@ export const planLabel = (plan: PlanKey): string => {
 
 /**
  * Resolves a project's entitlement from its subscription row (or none).
- * A catalog price decides the tier; otherwise the row's metadata plan does
- * (admin-built client plans use a custom price per project). A row that isn't
+ * The row's metadata plan decides the tier when set (admin-built client
+ * plans, which may mix catalog and custom prices); otherwise the catalog price. A row that isn't
  * live, or matches neither, falls back to website:free; the Stripe state is
  * still reported so billing can show it.
  */
@@ -259,7 +260,9 @@ export const entitlementFor = (
 ): Entitlement => {
   const live = row && LIVE_STATUSES.includes(row.status);
   const plan =
-    (live && (planForPrice(row.priceId) ?? asPlanKey(row.metaPlan))) || FREE_PLAN;
+    // metadata.plan first: an admin-built client plan can include a catalog
+    // price (e.g. Website Management) yet grants its own tier.
+    (live && (asPlanKey(row.metaPlan) ?? planForPrice(row.priceId))) || FREE_PLAN;
   const tier = tierDef(plan);
   return {
     projectId,

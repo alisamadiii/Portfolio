@@ -1750,7 +1750,8 @@ export const agencyRouter = createTRPCRouter({
       if (!role) return null;
 
       const entitlement = await getEntitlement(input.projectId);
-      if (entitlement.product !== "agency" && !isAdminUser(user)) return null;
+      // Any monthly plan with Leads (website plans included since 2026-11-15).
+      if (!entitlement.features.includes("leads") && !isAdminUser(user)) return null;
 
       const project = await db.query.hubProject.findFirst({
         where: eq(hubProject.id, input.projectId),

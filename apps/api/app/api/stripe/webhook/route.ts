@@ -138,9 +138,10 @@ async function syncCmsSubscription(customerId: string, subscriptionId: string | 
 
   // What this subscription grants lives entirely in metadata — the
   // service-agnostic key every entitlement query reads.
-  // Catalog price first; admin-built client plans use a custom price and name
-  // their tier in sub metadata (project_offer → Payment Link).
-  const plan = planForPrice(price?.id) ?? asPlanKey(sub.metadata.plan);
+  // An admin-built client plan names its tier in sub metadata (project_offer
+  // → Payment Link) and wins even when it includes a catalog price; else the
+  // catalog price decides.
+  const plan = asPlanKey(sub.metadata.plan) ?? planForPrice(price?.id);
   const product = plan?.split(":")[0] ?? "";
   const metadata = {
     projectId,

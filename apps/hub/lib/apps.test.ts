@@ -29,10 +29,13 @@ describe("appState", () => {
     expect(appState(resend, ["resend"], FREE)).toBe("installed");
   });
 
-  it("a gated app stays locked without its feature", () => {
+  // DELIBERATE CHANGE (2026-11-15, later the same day): the Website plan now
+  // includes every feature (any monthly subscription unlocks every app), so
+  // Leads is included on it; the "WEBSITE stays locked" assertion was flipped.
+  it("a gated app stays locked on free, included on any monthly plan", () => {
     const leads = appById("leads")!;
     expect(appState(leads, [], FREE)).toBe("locked");
-    expect(appState(leads, [], WEBSITE)).toBe("locked");
+    expect(appState(leads, [], WEBSITE)).toBe("included");
     expect(appState(leads, [], CUSTOM)).toBe("included");
   });
 });
@@ -109,5 +112,50 @@ describe("entitlementFor with a custom price", () => {
         metaPlan: "agency:custom",
       }).plan
     ).toBe("website:free");
+  });
+});
+
+// Regression (2026-11-15): a client plan that includes the catalog Website
+// Management price resolved to "Website plan" and left Leads/Ads/Newsletter
+// locked. metadata.plan now wins over the catalog price.
+describe("client plan containing a catalog price", () => {
+  it("metadata.plan wins over the catalog price", async () => {
+    const { pricesFor } = await import("@workspace/trpc/lib/payment/plans");
+    const websitePrice = pricesFor("website:paid")!.recurring;
+    const entitlement = entitlementFor("p", {
+      status: "active",
+      priceId: websitePrice,
+      cancelAtPeriodEnd: false,
+      metaPlan: "agency:custom",
+    });
+    expect(entitlement.plan).toBe("agency:custom");
+    for (const id of APP_IDS) expect(planAllowsApp(id, entitlement)).toBe(true);
+  });
+
+  it("a catalog subscription without metadata.plan still uses its price", async () => {
+    const { pricesFor } = await import("@workspace/trpc/lib/payment/plans");
+    expect(
+      entitlementFor("p", {
+        status: "active",
+        priceId: pricesFor("website:paid")!.recurring,
+        cancelAtPeriodEnd: false,
+        metaPlan: null,
+      }).plan
+    ).toBe("website:paid");
+  });
+});
+
+// Regression (2026-11-15): legacy Website plan subscribers saw Leads, Google
+// Ads and Newsletter locked although they pay monthly.
+describe("legacy Website plan", () => {
+  it("unlocks every app", async () => {
+    const { pricesFor } = await import("@workspace/trpc/lib/payment/plans");
+    const entitlement = entitlementFor("p", {
+      status: "active",
+      priceId: pricesFor("website:paid")!.recurring,
+      cancelAtPeriodEnd: false,
+      metaPlan: null,
+    });
+    for (const id of APP_IDS) expect(planAllowsApp(id, entitlement)).toBe(true);
   });
 });
