@@ -30,6 +30,8 @@
         "USESEND_API_KEY",
         "USESEND_URL",
         "USESEND_CONTACT_BOOK_ID",
+        "USESEND_ADMIN_API_KEY",
+        "USESEND_DOMAIN_REGION",
         "R2_ENDPOINT",
         "R2_ACCESS_KEY_ID",
         "R2_SECRET_ACCESS_KEY",

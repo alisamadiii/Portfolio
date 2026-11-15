@@ -428,6 +428,20 @@
       "when": 1794756472279,
       "tag": "0060_productive_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1794757843912,
+      "tag": "0061_safe_kronos",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1794759675268,
+      "tag": "0062_normal_norrin_radd",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 @import "@workspace/ui/globals.css";
 @import "./tokens.css";
 @import "./hub-theme.css";
+@source "../../../packages/email-editor/src";
 
 /*
  * Hub theme. The shared @workspace/ui package ships a neutral shadcn theme;

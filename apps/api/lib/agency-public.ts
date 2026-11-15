@@ -106,7 +106,7 @@ export async function findClientByProjectId(projectId: string) {
       ownerEmail: userTable.email,
       websiteUrl: hubProject.websiteUrl,
       repo: hubProject.repo,
-      usesendApiKey: hubProject.usesendApiKey,
+      usesendTeamId: hubProject.usesendTeamId,
       googleAdsCustomerId: agencyClient.googleAdsCustomerId,
       googleAdsActions: agencyClient.googleAdsActions,
     })
@@ -135,7 +135,7 @@ export async function findContactClientByProjectId(projectId: string) {
       origins: hubProject.origins,
       websiteUrl: hubProject.websiteUrl,
       repo: hubProject.repo,
-      usesendApiKey: hubProject.usesendApiKey,
+      usesendTeamId: hubProject.usesendTeamId,
       notifyEmail: hubProject.notifyEmail,
       ownerEmail: userTable.email,
     })

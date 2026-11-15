@@ -9,6 +9,7 @@ import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { deployRouter } from "./deploy";
 import { emailsRouter } from "./emails";
+import { newsletterRouter } from "./newsletter";
 import { gcalRouter } from "./gcal";
 import { inspirationRouter } from "./inspiration";
 import { integrationsRouter } from "./integrations/index";
@@ -40,6 +41,7 @@ export const appRouter = createTRPCRouter({
   uploads: uploadsRouter,
   contact: contactRouter,
   emails: emailsRouter,
+  newsletter: newsletterRouter,
   analytics: analyticsRouter,
   integrations: integrationsRouter,
   deploy: deployRouter,

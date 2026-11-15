@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { usesendFetch } from "@workspace/email/usesend";
+import { workspaceFetch } from "@workspace/trpc/lib/usesend-provision";
 import {
   MAX_BODY_BYTES,
   MAX_FIELDS,
@@ -25,9 +26,9 @@ import {
 // ─── Contact email ──────────────────────────────────────────────
 // Public endpoint behind the contact script (public/contact.js) on clients' websites.
 // Unlike the lead-capture endpoint, this just sends the site owner an email
-// through the PROJECT'S OWN useSend team (hub_project.usesendApiKey), from its
-// agency-managed sending subdomain — so every message shows up in that project's
-// Emails view. No lead row, no ad attribution.
+// from the shared agency sending domain: through the project's own useSend team
+// when it has one (hub_project.usesendTeamId, set by the Newsletter app), else
+// the shared agency key. No lead row, no ad attribution.
 //
 // contact.js posts JSON as text/plain (a "simple" CORS request, no preflight). The
 // Origin header is still checked against the client's own domains.
@@ -82,14 +83,10 @@ export async function POST(
     return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
   }
 
-  // Sending needs a provisioned team (the project's useSend team key). Sending
-  // itself runs on the shared agency domain, always available.
-  if (!client.usesendApiKey) {
-    return NextResponse.json(
-      { error: "Email sending is not set up for this site yet." },
-      { status: 503, headers }
-    );
-  }
+  // Sending runs on the shared agency domain. Projects that set up the
+  // Newsletter app send through their own useSend team (so it shows in their
+  // workspace); the rest use the shared agency key. Workspaces are only
+  // created by the Newsletter app, never at import.
   const recipient = client.notifyEmail ?? client.ownerEmail;
   if (!recipient) {
     return NextResponse.json(
@@ -161,9 +158,8 @@ export async function POST(
       tag: "Contact form",
       title,
     });
-    await usesendFetch("/api/v1/emails", {
+    const email = {
       method: "POST",
-      apiKey: client.usesendApiKey,
       body: {
         from: `${data.formName || "Contact"} <contact@${SENDING_DOMAIN}>`,
         to: recipient,
@@ -171,7 +167,12 @@ export async function POST(
         subject: `${data.formName ? `${data.formName}: ` : ""}${title}`,
         ...body,
       },
-    });
+    };
+    if (client.usesendTeamId != null) {
+      await workspaceFetch(client.usesendTeamId, "/api/v1/emails", email);
+    } else {
+      await usesendFetch("/api/v1/emails", email);
+    }
   } catch (error) {
     console.error("Contact email send failed", error);
     return NextResponse.json(

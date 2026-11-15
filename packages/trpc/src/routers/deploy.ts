@@ -19,7 +19,6 @@ import {
   reserveUploadProject,
 } from "../lib/cms/upload-project";
 import { netlifyPlan } from "../lib/netlify";
-import { provisionProjectEmails } from "../lib/usesend-provision";
 import { checkGithubRepoFramework } from "../lib/detect-framework";
 import { normalizeWebsiteUrl } from "../lib/website-url";
 import { createOctokitInstance } from "../lib/cms/octokit";
@@ -82,13 +81,8 @@ async function insertGithubProject(
     })
     .returning({ id: hubProject.id });
 
-  // Provision this project's useSend email team + sending subdomain in the
-  // background. Idempotent and best-effort — never blocks or fails the import;
-  // the project's Emails view offers a manual retry if this doesn't finish.
-  void provisionProjectEmails({
-    projectId: row!.id,
-    name: `${ghRepo.owner}/${ghRepo.repo}`,
-  });
+  // No useSend workspace here: it's created only when the client sets up the
+  // Newsletter app (newsletter.setup).
   return row!.id;
 }
 

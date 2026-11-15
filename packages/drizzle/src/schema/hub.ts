@@ -132,14 +132,16 @@ export const hubProject = pgTable(
     // Per-project settings, with defaults for new projects.
     basePath: text("base_path").notNull().default(""),
     // ── useSend per-project team (workspace) ──
-    // Every project is its own useSend team, keyed by projectId (Team.externalId).
-    // Provisioned at import via POST /api/v1/workspaces. usesendTeamId is the
-    // useSend Team.id; usesendApiKey is that team's API key, returned once at
-    // creation and NOT re-derivable — server-only, never sent to the client.
-    // All team-scoped useSend calls (emails list, sending, this team's domains)
-    // use usesendApiKey; it being set is what "emails are provisioned" means.
+    // Created only by the Newsletter app's "Set up" (never at import), keyed
+    // by projectId (Team.externalId). Only the team id is stored: every call
+    // uses the instance admin key + X-Team-Id, scoped to this team.
     usesendTeamId: integer("usesend_team_id"),
-    usesendApiKey: text("usesend_api_key"),
+    // The Newsletter app's one sending domain (useSend Domain.id) and the
+    // project's subscriber list (ContactBook.id). Both live inside the
+    // project's own team and are only ever read from here, never from client
+    // input. One domain per project: claimed with a conditional update.
+    usesendDomainId: integer("usesend_domain_id"),
+    usesendContactBookId: text("usesend_contact_book_id"),
     // Per-client Google Analytics. gaPropertyId is the numeric GA4 property id
     // (e.g. "123456789") the project's Analytics tab reports on; gaConnectedUserId
     // is the Better Auth user.id whose stored Google token (account table) we use

@@ -18,6 +18,8 @@ export default defineConfig({
       ),
       "@workspace/trpc": path.resolve(__dirname, "../../packages/trpc/src"),
       "@": path.resolve(__dirname, "."),
+      // server-only throws outside a React server bundle; tests import server libs.
+      "server-only": path.resolve(__dirname, "lib/test-stubs/server-only.ts"),
     },
   },
 });

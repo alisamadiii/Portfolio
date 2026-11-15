@@ -34,11 +34,13 @@ type FetchInit = {
    * Omitted → the shared instance key (admin-level / domain-less operations).
    */
   apiKey?: string;
+  /** Extra headers, e.g. X-Team-Id when calling as a workspace with the admin key. */
+  headers?: Record<string, string>;
 };
 
 export async function usesendFetch<T>(
   path: string,
-  { method = "GET", body, query, apiKey }: FetchInit = {}
+  { method = "GET", body, query, apiKey, headers }: FetchInit = {}
 ): Promise<T> {
   const url = new URL(path, usesendUrl());
   for (const [key, value] of Object.entries(query ?? {})) {
@@ -48,6 +50,7 @@ export async function usesendFetch<T>(
   const res = await fetch(url, {
     method,
     headers: {
+      ...headers,
       Authorization: `Bearer ${apiKey ?? getApiKey()}`,
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
     },

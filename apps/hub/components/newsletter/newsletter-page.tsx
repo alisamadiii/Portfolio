@@ -1,83 +1,91 @@
 "use client";
 
-import { Mail, Sparkles, Upload, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import { RequestDialog } from "@workspace/ui/custom/request-dialog";
+import { useTRPC } from "@workspace/trpc/client";
 
-import { PageHeader } from "@/components/ds/layout/page-header";
-import { buttonClass } from "@/components/ds/ui/button";
-import { Card, CardHeader } from "@/components/ds/ui/card";
-import { EmptyState, IconTile, KpiGrid } from "@/components/ds/ui/misc";
+import { Padded } from "@/components/ds/layout/padded";
+import { SegmentedTabs } from "@/components/ds/ui/tabs";
+
+import { CampaignsSection, NewCampaignDialog } from "./campaigns";
+import { ContactsSection } from "./contacts";
+import { DomainSection } from "./domain";
+import { OverviewSection } from "./overview";
+import { SetupCard } from "./setup-card";
+import { SuppressionsSection } from "./suppressions";
+import { TemplatesSection } from "./templates";
+import { useNewsletter } from "./use-newsletter";
+
+const TABS = [
+  "overview",
+  "campaigns",
+  "contacts",
+  "templates",
+  "suppressions",
+  "domain",
+] as const;
+export type NewsletterTab = (typeof TABS)[number];
 
 /**
- * Newsletter app. There is no campaign or subscriber data in the hub yet (the
- * emails router is a sent log), so every number is "—" and every action asks
- * us to set it up. Never invent metrics.
+ * Newsletter app: the project's own useSend workspace. Full-bleed like Leads:
+ * a slim toolbar with the sections, then the section in the padded column.
  */
 export function NewsletterPage() {
+  const trpc = useTRPC();
+  const { projectId, canWrite } = useNewsletter();
+  const status = useQuery(trpc.newsletter.status.queryOptions({ projectId }));
+  const ready = status.data?.ready === true;
+  const [tab, setTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(TABS).withDefault("overview")
+  );
+  const go = (next: NewsletterTab) => void setTab(next);
+
   return (
-    <>
-      <PageHeader
-        title="Newsletter"
-        description="Email your customers from your own list, with your branding."
-        actions={
-          <>
-            <RequestDialog defaultSubject="Newsletter: import subscribers">
-              <span className={buttonClass("outline")}>
-                <Upload className="size-[15px]" />
-                Import subscribers
-              </span>
-            </RequestDialog>
-            <RequestDialog defaultSubject="Newsletter: new campaign">
-              <span className={buttonClass("primary")}>New campaign</span>
-            </RequestDialog>
-          </>
-        }
-      />
-      <KpiGrid
-        items={[
-          { label: "Subscribers", value: "—" },
-          { label: "Campaigns sent", value: "—" },
-          { label: "Open rate", value: "—" },
-          { label: "Click rate", value: "—" },
-        ]}
-      />
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Card>
-          <CardHeader title="Campaigns" divided />
-          <EmptyState
-            icon={<Mail className="size-5" />}
-            title="No campaigns yet"
-            text="Write your first email, like a seasonal offer or news about your business, and send it to your list."
-            action={
-              <RequestDialog defaultSubject="Newsletter: new campaign">
-                <span className={buttonClass("primary", "sm")}>New campaign</span>
-              </RequestDialog>
-            }
-          />
-        </Card>
-        <Card className="flex flex-col gap-3 p-6">
-          <IconTile>
-            <Users className="size-5" strokeWidth={1.8} />
-          </IconTile>
-          <h2 className="text-base font-semibold">Grow your list</h2>
-          <p className="text-[13px] leading-normal text-dim">
-            Add a signup form to your website so visitors can join your list. Ask the AI editor to
-            place it for you.
-          </p>
-          <div className="mt-1 flex flex-wrap gap-2">
-            <RequestDialog defaultSubject="Newsletter: add signup form">
-              <span className={buttonClass("outline", "sm")}>
-                <Sparkles className="size-3.5 text-coral" />
-                Add signup form
-              </span>
-            </RequestDialog>
-            <RequestDialog defaultSubject="Newsletter: import a list">
-              <span className={buttonClass("outline", "sm")}>Import a list</span>
-            </RequestDialog>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="border-line bg-surface flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-2.5 sm:px-6">
+        <h1 className="text-base font-semibold tracking-[-0.01em]">
+          Newsletter
+        </h1>
+        {ready && (
+          <div className="-mx-1 min-w-0 overflow-x-auto px-1">
+            <SegmentedTabs
+              label="Newsletter sections"
+              value={tab}
+              onChange={(id) => go(id as NewsletterTab)}
+              items={[
+                { id: "overview", label: "Overview" },
+                { id: "campaigns", label: "Campaigns" },
+                { id: "contacts", label: "Contacts" },
+                { id: "templates", label: "Templates" },
+                { id: "suppressions", label: "Suppressions" },
+                { id: "domain", label: "Domain" },
+              ]}
+            />
           </div>
-        </Card>
+        )}
+        {ready && canWrite && (
+          <div className="ml-auto">
+            <NewCampaignDialog onNeedDomain={() => go("domain")} />
+          </div>
+        )}
       </div>
-    </>
+      <Padded>
+        {status.isLoading && (
+          <div className="rounded-card border-line bg-surface h-40 animate-pulse border" />
+        )}
+        {status.error && (
+          <p className="text-danger text-[13px]">{status.error.message}</p>
+        )}
+        {status.data && !ready && <SetupCard />}
+        {ready && tab === "overview" && <OverviewSection go={go} />}
+        {ready && tab === "campaigns" && <CampaignsSection go={go} />}
+        {ready && tab === "contacts" && <ContactsSection />}
+        {ready && tab === "templates" && <TemplatesSection />}
+        {ready && tab === "suppressions" && <SuppressionsSection />}
+        {ready && tab === "domain" && <DomainSection />}
+      </Padded>
+    </div>
   );
 }

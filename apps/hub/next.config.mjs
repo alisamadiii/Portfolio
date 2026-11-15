@@ -17,6 +17,7 @@ const nextConfig = {
     "@workspace/drizzle",
     "@workspace/trpc",
     "@workspace/email",
+    "@workspace/email-editor",
   ],
   async redirects() {
     // portal.alisamadii.com now points at this project; old portal routes map

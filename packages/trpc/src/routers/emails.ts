@@ -15,8 +15,8 @@ import {
 import { getEmailById, type UseSendEmailRow } from "../lib/usesend";
 
 // Emails live in the self-hosted useSend instance. Each project is its own
-// useSend team (workspace), keyed by projectId; hub_project.usesendApiKey is
-// that team's key. The hub only reads the provisioning state, the notify
+// useSend team (workspace), keyed by projectId; hub_project.usesendTeamId is
+// that team's id. The hub only reads the provisioning state, the notify
 // address, and single emails behind the short /e/[id] link.
 
 const NOT_FOUND = () =>
@@ -27,7 +27,7 @@ const emailId = z.string().min(1).max(100);
 async function resolveProject(projectId: string) {
   const [row] = await db
     .select({
-      usesendApiKey: hubProject.usesendApiKey,
+      usesendTeamId: hubProject.usesendTeamId,
       notifyEmail: hubProject.notifyEmail,
     })
     .from(hubProject)
@@ -68,7 +68,7 @@ export const emailsRouter = createTRPCRouter({
   enabled: cmsProcedure.query(async ({ ctx }) => {
     const project = await resolveProject(ctx.projectId);
     return {
-      enabled: !!project.usesendApiKey,
+      enabled: project.usesendTeamId != null,
       notifyEmail: project.notifyEmail ?? null,
     };
   }),
