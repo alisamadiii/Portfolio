@@ -21,7 +21,7 @@
     "@workspace/google-analytics": "workspace:*",
     "@workspace/trpc": "workspace:*",
     "@workspace/ui": "workspace:*",
-    "better-auth": "^1.5.4",
+    "better-auth": "^1.7.14",
     "drizzle-orm": "^0.45.1",
     "next": "16.1.6",
     "pg": "^8.23.1",
