@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Plus, Trash2, Upload, Users } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -20,6 +22,7 @@ import { CONTACT_IMPORT_CHUNK, chunk } from "@workspace/trpc/lib/newsletter-shar
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { cn } from "@workspace/ui/lib/utils";
 
+import { Padded } from "@/components/ds/layout/padded";
 import { Badge } from "@/components/ds/ui/badge";
 import { Button } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
@@ -35,26 +38,117 @@ import { Pager } from "./pager";
 import { QueryError } from "./query-error";
 import { useNewsletter } from "./use-newsletter";
 
+type List = RouterOutputs["newsletter"]["contacts"]["lists"][number];
 type Contact = RouterOutputs["newsletter"]["contacts"]["list"]["contacts"][number];
 const PAGE_SIZE = 50;
 
+const listName = (l: { name: string; emoji: string | null }) =>
+  l.emoji ? `${l.emoji} ${l.name}` : l.name;
+
+/** Contacts tab: every list in the workspace. Opening one shows its contacts. */
 export function ContactsSection() {
   const trpc = useTRPC();
+  const router = useRouter();
+  const { projectId, base, canWrite, canManage } = useNewsletter();
+  const lists = useQuery(trpc.newsletter.contacts.lists.queryOptions({ projectId }));
+  const open = (listId: string) => router.push(`${base}/contacts/${listId}`);
+  const rows = lists.data ?? [];
+
+  const columns: Column<List>[] = [
+    {
+      key: "name",
+      header: "List",
+      cell: (l) => <span className="truncate text-sm font-medium text-ink">{listName(l)}</span>,
+    },
+    {
+      key: "total",
+      header: "Contacts",
+      width: "120px",
+      cell: (l) => l.total.toLocaleString(),
+    },
+    {
+      key: "subscribed",
+      header: "Subscribed",
+      width: "120px",
+      cell: (l) => l.subscribed.toLocaleString(),
+    },
+    {
+      key: "unsubscribed",
+      header: "Unsubscribed",
+      width: "120px",
+      cell: (l) => (l.total - l.subscribed).toLocaleString(),
+    },
+    ...(canWrite
+      ? [
+          {
+            key: "actions",
+            header: "",
+            width: "56px",
+            align: "end" as const,
+            // The menu and its dialogs live inside the row: keep their clicks from opening it.
+            cell: (l: List) => (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ListMenu list={l} canDelete={canManage} onDeleted={() => {}} />
+              </div>
+            ),
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <Card>
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-base font-semibold">Lists</h2>
+          <p className="text-[13px] text-dim">Group your contacts, then send a campaign to one list.</p>
+        </div>
+        {canWrite && <NewListDialog onCreated={open} />}
+      </div>
+      {lists.error && (
+        <div className="px-6 pb-4">
+          <QueryError error={lists.error} onRetry={() => void lists.refetch()} />
+        </div>
+      )}
+      <DataTable
+        columns={columns}
+        rows={rows}
+        rowKey={(l) => l.id}
+        minWidth={600}
+        onRowClick={(l) => open(l.id)}
+        empty={
+          lists.isLoading ? (
+            <div className="px-6 py-10 text-center text-[13px] text-faint">Loading…</div>
+          ) : (
+            <EmptyState
+              icon={<Users className="size-5" />}
+              title="No lists yet"
+              text="Create a list, then import your customers or add them one by one."
+            />
+          )
+        }
+      />
+    </Card>
+  );
+}
+
+/** /newsletter/contacts/[listId]: the contacts in one list. */
+export function ContactListPage({ listId }: { listId: string }) {
+  const trpc = useTRPC();
+  const router = useRouter();
   const queryClient = useQueryClient();
-  const { projectId, canWrite, canManage } = useNewsletter();
+  const { projectId, base, canWrite, canManage } = useNewsletter();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "true" | "false">("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const lists = useQuery(trpc.newsletter.contacts.lists.queryOptions({ projectId }));
-  const [picked, setPicked] = useState<string | null>(null);
-  // Default: the biggest list (the server sorts by size).
-  const listId = picked ?? lists.data?.[0]?.id;
   const current = lists.data?.find((l) => l.id === listId);
+  const back = `${base}?tab=contacts`;
 
-  const list = useQuery({
-    ...trpc.newsletter.contacts.list.queryOptions(
+  const list = useQuery(
+    trpc.newsletter.contacts.list.queryOptions(
       {
         projectId,
         listId,
@@ -63,9 +157,8 @@ export function ContactsSection() {
         subscribed: filter === "all" ? undefined : filter,
       },
       { placeholderData: keepPreviousData }
-    ),
-    enabled: lists.isSuccess,
-  });
+    )
+  );
   const refresh = () => queryClient.invalidateQueries({ queryKey: trpc.newsletter.pathKey() });
 
   const update = useMutation(
@@ -125,17 +218,21 @@ export function ContactsSection() {
     {
       key: "email",
       header: "Email",
-      cell: (c) => <span className="truncate text-sm text-ink">{c.email}</span>,
-    },
-    {
-      key: "name",
-      header: "Name",
-      cell: (c) => [c.firstName, c.lastName].filter(Boolean).join(" ") || "—",
+      cell: (c) => (
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-sm text-ink">{c.email}</span>
+          {(c.firstName || c.lastName) && (
+            <span className="truncate text-xs text-dim">
+              {[c.firstName, c.lastName].filter(Boolean).join(" ")}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       key: "status",
       header: "Status",
-      width: "130px",
+      width: "140px",
       cell: (c) =>
         c.subscribed ? (
           <Badge tone="success" dot>Subscribed</Badge>
@@ -146,7 +243,7 @@ export function ContactsSection() {
     {
       key: "added",
       header: "Added",
-      width: "130px",
+      width: "140px",
       cell: (c) => formatDistanceToNow(new Date(c.createdAt), { addSuffix: true }),
     },
     ...(canWrite
@@ -154,12 +251,12 @@ export function ContactsSection() {
           {
             key: "actions",
             header: "",
-            width: "120px",
+            width: "110px",
             align: "end" as const,
             cell: (c: Contact) => (
               <button
                 type="button"
-                className="text-[13px] font-medium text-coral-text hover:text-coral-deep disabled:opacity-50"
+                className="text-[13px] text-dim hover:text-ink disabled:opacity-50"
                 disabled={update.isPending}
                 onClick={() =>
                   update.mutate({ projectId, listId, contactId: c.id, subscribed: !c.subscribed })
@@ -174,142 +271,115 @@ export function ContactsSection() {
   ];
 
   const total = list.data?.total ?? 0;
+  const n = (v: number | undefined) => (v == null ? "—" : v.toLocaleString());
 
   return (
-    <>
-      <KpiGrid
-        items={[
-          { label: "Subscribed", value: list.data ? list.data.subscribed.toLocaleString() : "—" },
-          { label: "Unsubscribed", value: list.data ? list.data.unsubscribed.toLocaleString() : "—" },
-        ]}
-      />
-      <Card className={cn(list.isPlaceholderData && "opacity-60")}>
-        <div className="flex flex-wrap items-center gap-3 px-6 py-4">
-          <div className="mr-auto flex items-center gap-2">
-            <h2 className="text-base font-semibold">Contacts</h2>
-            {(lists.data?.length ?? 0) > 0 && (
-              <Select
-                aria-label="List"
-                className="h-8 w-auto"
-                value={listId ?? ""}
-                onChange={(e) => {
-                  setPicked(e.target.value);
-                  setSelected(new Set());
-                  setPage(1);
-                }}
-              >
-                {lists.data!.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.emoji ? `${l.emoji} ` : ""}
-                    {l.name} ({l.total.toLocaleString()})
-                  </option>
-                ))}
-              </Select>
-            )}
-            {canWrite && current && (
-              <ListMenu
-                list={current}
-                canDelete={canManage}
-                onDeleted={() => {
-                  setPicked(null);
-                  setSelected(new Set());
-                  setPage(1);
-                }}
-              />
-            )}
-            {canWrite && (
-              <NewListDialog
-                onCreated={(id) => {
-                  setPicked(id);
-                  setSelected(new Set());
-                  setPage(1);
-                }}
-              />
-            )}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface px-4 py-2.5 sm:px-6">
+        <Link href={back} className="inline-flex items-center gap-1.5 text-[13px] text-dim hover:text-ink">
+          <ArrowLeft className="size-3.5" />
+          Contacts
+        </Link>
+        <span className="text-faint">/</span>
+        <h1 className="min-w-0 truncate text-base font-semibold">
+          {current ? listName(current) : lists.isLoading ? "…" : "List"}
+        </h1>
+        {canWrite && current && (
+          <ListMenu list={current} canDelete={canManage} onDeleted={() => router.push(back)} />
+        )}
+        {canWrite && (
+          <div className="ml-auto flex gap-2">
+            <ImportDialog listId={listId} />
+            <AddContactDialog listId={listId} />
           </div>
-          <Input
-            type="search"
-            placeholder="Search email or name"
-            className="h-8 w-[220px]"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-          <SegmentedTabs
-            label="Subscription"
-            value={filter}
-            onChange={(id) => {
-              setFilter(id as typeof filter);
-              setPage(1);
-            }}
-            items={[
-              { id: "all", label: "All" },
-              { id: "true", label: "Subscribed" },
-              { id: "false", label: "Unsubscribed" },
-            ]}
-          />
-          {canWrite && (
-            <>
-              <ImportDialog listId={listId} />
-              <AddContactDialog listId={listId} />
-            </>
-          )}
-        </div>
-        {(lists.error ?? list.error) && (
-          <div className="px-6 pb-4">
-            <QueryError
-              error={lists.error ?? list.error}
-              onRetry={() => {
-                void lists.refetch();
-                void list.refetch();
+        )}
+      </div>
+      <Padded>
+        <QueryError
+          error={lists.error ?? list.error}
+          onRetry={() => {
+            void lists.refetch();
+            void list.refetch();
+          }}
+        />
+        <KpiGrid
+          items={[
+            { label: "Contacts", value: n(current?.total) },
+            { label: "Subscribed", value: n(list.data?.subscribed) },
+            { label: "Unsubscribed", value: n(list.data?.unsubscribed) },
+          ]}
+        />
+        <Card className={cn(list.isPlaceholderData && "opacity-60")}>
+          <div className="flex flex-wrap items-center gap-3 px-6 py-4">
+            <Input
+              type="search"
+              placeholder="Search email or name"
+              className="h-8 w-full sm:w-[260px]"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
               }}
             />
-          </div>
-        )}
-        {canWrite && selected.size > 0 && (
-          <div className="flex items-center gap-3 border-t border-divider bg-sidebar px-6 py-2.5 text-[13px]">
-            <span>{selected.size} selected</span>
-            <Button
-              size="sm"
-              icon={<Trash2 className="size-3.5" />}
-              disabled={remove.isPending}
-              onClick={() => setConfirmDelete(true)}
-            >
-              Delete
-            </Button>
-          </div>
-        )}
-        <DataTable
-          columns={columns}
-          rows={rows}
-          rowKey={(c) => c.id}
-          minWidth={720}
-          empty={
-            list.isLoading ? (
-              <div className="px-6 py-10 text-center text-[13px] text-faint">Loading…</div>
-            ) : (
-              <EmptyState
-                icon={<Users className="size-5" />}
-                title={search || filter !== "all" ? "No matching contacts" : "No subscribers yet"}
-                text="Import your customer list or add a signup form to your website."
+            <div className="sm:ml-auto">
+              <SegmentedTabs
+                label="Subscription"
+                value={filter}
+                onChange={(id) => {
+                  setFilter(id as typeof filter);
+                  setPage(1);
+                }}
+                items={[
+                  { id: "all", label: "All" },
+                  { id: "true", label: "Subscribed" },
+                  { id: "false", label: "Unsubscribed" },
+                ]}
               />
-            )
-          }
-        />
-        <Pager page={page} totalPages={Math.max(1, Math.ceil(total / PAGE_SIZE))} onChange={setPage} />
-      </Card>
+            </div>
+          </div>
+          {canWrite && selected.size > 0 && (
+            <div className="flex items-center gap-3 border-t border-divider bg-sidebar px-6 py-2.5 text-[13px]">
+              <span>{selected.size} selected</span>
+              <Button
+                size="sm"
+                icon={<Trash2 className="size-3.5" />}
+                disabled={remove.isPending}
+                onClick={() => setConfirmDelete(true)}
+              >
+                Delete
+              </Button>
+            </div>
+          )}
+          <DataTable
+            columns={columns}
+            rows={rows}
+            rowKey={(c) => c.id}
+            minWidth={640}
+            empty={
+              list.isLoading ? (
+                <div className="px-6 py-10 text-center text-[13px] text-faint">Loading…</div>
+              ) : (
+                <EmptyState
+                  icon={<Users className="size-5" />}
+                  title={search || filter !== "all" ? "No matching contacts" : "No contacts yet"}
+                  text="Import your customer list or add contacts one by one."
+                />
+              )
+            }
+          />
+          <Pager page={page} totalPages={Math.max(1, Math.ceil(total / PAGE_SIZE))} onChange={setPage} />
+        </Card>
+      </Padded>
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
         danger
         title={`Delete ${selected.size} contact${selected.size === 1 ? "" : "s"}?`}
-        description="They're removed from your list. To stop emailing someone but keep their record, unsubscribe them instead."
+        description="They're removed from this list. To stop emailing someone but keep their record, unsubscribe them instead."
         confirmLabel="Delete"
         onConfirm={() => remove.mutate({ projectId, listId, contactIds: [...selected] })}
       />
-    </>
+    </div>
   );
 }
 
