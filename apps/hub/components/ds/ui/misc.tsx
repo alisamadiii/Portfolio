@@ -137,17 +137,36 @@ export function LetterTile({
   name,
   size = 36,
   tone = "neutral",
+  src,
 }: {
   name: string;
-  size?: 24 | 28 | 36;
+  size?: 24 | 28 | 36 | 64;
   tone?: "neutral" | "ink";
+  /** The business logo; replaces the letter when set. */
+  src?: string | null;
 }) {
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- small R2 logo, already optimized
+      <img
+        src={src}
+        alt=""
+        width={size}
+        height={size}
+        style={{ width: size, height: size }}
+        className={cn(
+          "shrink-0 border border-line bg-white object-contain",
+          size <= 28 ? "rounded-[5px]" : size >= 64 ? "rounded-[12px]" : "rounded-[8px]"
+        )}
+      />
+    );
+  }
   return (
     <span
       style={{ width: size, height: size }}
       className={cn(
         "flex shrink-0 items-center justify-center rounded-[8px] font-semibold",
-        size <= 28 ? "rounded-[5px] text-xs" : "text-sm",
+        size <= 28 ? "rounded-[5px] text-xs" : size >= 64 ? "rounded-[12px] text-2xl" : "text-sm",
         tone === "ink" ? "bg-ink text-white" : "bg-tile text-ink-3"
       )}
     >

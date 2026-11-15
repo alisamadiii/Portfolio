@@ -10,6 +10,7 @@ import { contactRouter } from "./contact";
 import { deployRouter } from "./deploy";
 import { emailsRouter } from "./emails";
 import { newsletterRouter } from "./newsletter";
+import { feedbackRouter } from "./feedback";
 import { gcalRouter } from "./gcal";
 import { inspirationRouter } from "./inspiration";
 import { integrationsRouter } from "./integrations/index";
@@ -57,6 +58,7 @@ export const appRouter = createTRPCRouter({
   clientWebsites: clientWebsitesRouter,
   inspiration: inspirationRouter,
   gcal: gcalRouter,
+  feedback: feedbackRouter,
 });
 
 // export type definition of API

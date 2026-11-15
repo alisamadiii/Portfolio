@@ -53,6 +53,7 @@ type Row = {
   isPrivate: boolean;
   source: "github" | "upload";
   websiteUrl: string | null;
+  logoUrl: string | null;
   planLabel: string;
   isFree: boolean;
   /** undefined = status not loaded yet; null = no domain to check. */
@@ -108,6 +109,7 @@ export function SitesPage() {
         isPrivate: p.private,
         source: p.source === "upload" ? "upload" : "github",
         websiteUrl: p.websiteUrl,
+        logoUrl: p.logoUrl,
         planLabel: entitlement.label,
         isFree: entitlement.plan === FREE_PLAN,
         up: !p.websiteUrl ? null : sites.data ? Boolean(site?.status.up) : undefined,
@@ -137,7 +139,7 @@ export function SitesPage() {
       width: "minmax(240px, 2fr)",
       cell: (r) => (
         <span className={`flex items-center gap-3 ${referralOf.has(r.projectId) ? "py-3" : ""}`}>
-          <LetterTile name={r.name} />
+          <LetterTile name={r.name} src={r.logoUrl} />
           <span className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-medium text-ink">{r.name}</span>
             <span className="truncate text-xs text-dim">

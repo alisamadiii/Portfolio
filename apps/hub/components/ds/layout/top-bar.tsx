@@ -86,6 +86,8 @@ function ProjectSwitcher({
 }) {
   const trpc = useTRPC();
   const projects = useQuery(trpc.cms.repos.listMine.queryOptions());
+  const currentLogo =
+    projects.data?.find((p) => p.projectId === current.projectId)?.logoUrl ?? null;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -94,7 +96,7 @@ function ProjectSwitcher({
             type="button"
             className="inline-flex h-9 min-w-0 max-w-[360px] items-center gap-2 rounded-control bg-subtle pl-1.5 pr-2.5 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral"
           >
-            <LetterTile name={current.name} size={24} tone="ink" />
+            <LetterTile name={current.name} size={24} tone="ink" src={currentLogo} />
             <span className="truncate text-sm font-medium">{current.name}</span>
             {current.plan && <span className="hidden shrink-0 whitespace-nowrap text-xs text-dim sm:inline">{current.plan}</span>}
             <ChevronDown className="size-3.5 shrink-0" aria-hidden />
@@ -114,7 +116,7 @@ function ProjectSwitcher({
               render={<Link href={repoPath(p.projectId)} />}
               className={cn("gap-2.5", active && "bg-selected")}
             >
-              <LetterTile name={name} size={24} />
+              <LetterTile name={name} size={24} src={p.logoUrl} />
               <span className="min-w-0 flex-1 truncate">{name}</span>
               {active && <Check className="size-4 text-coral" aria-hidden />}
             </DropdownMenuItem>

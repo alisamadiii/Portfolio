@@ -36,6 +36,7 @@ export const FEATURES = {
   leads: "Leads",
   ads: "Google Ads reports",
   newsletter: "Newsletter",
+  feedback: "Feedback",
 } as const;
 
 export type Feature = keyof typeof FEATURES;
@@ -102,7 +103,7 @@ export const PLANS = {
           "price_1UMoKjEhKQbL1BLm0xZuUQiw",
         ],
         // Every monthly subscription unlocks every app (Ali, 2026-11-15).
-        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter", "feedback"],
       },
     },
   },
@@ -133,20 +134,20 @@ export const PLANS = {
         label: "Custom plan",
         priceLabel: null,
         prices: null,
-        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter", "feedback"],
       },
       growth: {
         label: "Growth",
         priceLabel: "Coming soon",
         prices: null,
-        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter", "feedback"],
         limits: { adCampaigns: 5, adSpendCap: 6000 },
       },
       scale: {
         label: "Scale",
         priceLabel: "Coming soon",
         prices: null,
-        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter"],
+        features: [...WEBSITE_PAID_FEATURES, "emails", "leads", "ads", "newsletter", "feedback"],
         limits: { adCampaigns: null, adSpendCap: 10000 },
       },
     },

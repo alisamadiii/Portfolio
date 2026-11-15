@@ -15,6 +15,7 @@ import {
   Images,
   Inbox,
   Send,
+  Star,
   LayoutGrid,
   Link2,
   Mail,
@@ -101,6 +102,15 @@ export const APPS: AppDef[] = [
     icon: Mail,
     path: "newsletter",
     feature: "newsletter",
+  },
+  {
+    id: "feedback",
+    name: "Feedback",
+    description:
+      "One review link for your customers. 5 stars go to Google, the rest come to you privately.",
+    icon: Star,
+    path: "feedback",
+    feature: "feedback",
   },
   {
     id: "resend",

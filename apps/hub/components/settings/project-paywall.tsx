@@ -41,6 +41,10 @@ const PITCH: Record<Feature, { title: string; body: string }> = {
     title: "Stay in touch with your customers",
     body: "A newsletter that brings past customers back for repeat business.",
   },
+  feedback: {
+    title: "Get more 5-star Google reviews",
+    body: "Send customers one review link. Happy customers go to Google, the rest tell you privately.",
+  },
 };
 
 /**

@@ -22,6 +22,7 @@ import {
 import { fetchFramePolicy, type FramePolicy } from "@workspace/trpc/lib/frame-policy";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import type { AppId } from "@workspace/trpc/lib/apps";
+import { publicObjectUrl } from "@workspace/trpc/lib/r2";
 import { db } from "@workspace/drizzle/index";
 import { hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
 
@@ -46,6 +47,7 @@ export const reposRouter = createTRPCRouter({
             apps: hubProject.apps,
             netlifySiteId: hubProject.netlifySiteId,
             githubConnectedUserId: hubProject.githubConnectedUserId,
+            logoKey: hubProject.logoKey,
           })
           .from(hubProject)
           .where(accessibleProjectsWhere(ctx))
@@ -61,6 +63,7 @@ export const reposRouter = createTRPCRouter({
           defaultBranch: row.defaultBranch,
           updatedAt: row.updatedAt.toISOString(),
           websiteUrl: row.websiteUrl ?? null,
+          logoUrl: publicObjectUrl(row.logoKey),
           apps: (row.apps ?? []) as AppId[],
           // Upload project published to Netlify: shows the Netlify page.
           netlify: !!row.netlifySiteId,

@@ -233,6 +233,16 @@ export async function listObjects(input: { prefix?: string; cursor?: string }) {
   return { objects, nextCursor };
 }
 
+/**
+ * Public URL of a key in the public bucket, or null when the key is empty or
+ * R2_PUBLIC_BASE_URL is unset. Never throws, so listings can call it per row.
+ */
+export function publicObjectUrl(key: string | null | undefined): string | null {
+  const base = process.env.R2_PUBLIC_BASE_URL?.replace(/\/+$/, "");
+  if (!key || !base) return null;
+  return `${base}/${key}`;
+}
+
 /** Every object under a prefix (all pages of listObjects). */
 export async function listAllObjects(prefix: string) {
   const all: Awaited<ReturnType<typeof listObjects>>["objects"] = [];
@@ -249,13 +259,17 @@ export async function listAllObjects(prefix: string) {
 export async function putObject(
   key: string,
   body: Uint8Array | string,
-  contentType: string
+  contentType: string,
+  opts?: { cacheControl?: string }
 ) {
   const { client, base, bucket, publicBaseUrl } = r2();
   const clean = cleanPath(key);
   const res = await client.fetch(`${base}/${bucket}/${encodeURI(clean)}`, {
     method: "PUT",
-    headers: { "Content-Type": contentType },
+    headers: {
+      "Content-Type": contentType,
+      ...(opts?.cacheControl ? { "Cache-Control": opts.cacheControl } : {}),
+    },
     body: body as BodyInit,
   });
   if (!res.ok) {

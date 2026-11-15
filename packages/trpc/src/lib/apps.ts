@@ -11,6 +11,7 @@ export const APP_IDS = [
   "gcal",
   "neon",
   "wix",
+  "feedback",
 ] as const;
 export type AppId = (typeof APP_IDS)[number];
 
@@ -20,6 +21,7 @@ export const APP_FEATURES: Partial<Record<AppId, Feature>> = {
   analytics: "analytics",
   newsletter: "newsletter",
   "google-ads": "ads",
+  feedback: "feedback",
 };
 
 /**

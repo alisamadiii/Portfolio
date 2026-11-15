@@ -18,6 +18,7 @@ import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport } from "@workspace/trpc/lib/content-pilot";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
+import { deleteProjectLogos } from "@workspace/trpc/lib/logo";
 import { settleAndCancel } from "@workspace/trpc/lib/payment/settle-subscription";
 
 /** Apps whose data lives on the project's agency_client row. */
@@ -68,6 +69,8 @@ export const projectRouter = createTRPCRouter({
       await deleteProjectChildRows([
         { projectId, owner: project.owner, repo: project.repo },
       ]);
+      // Business logo objects in R2 (best effort, never blocks the delete).
+      await deleteProjectLogos(projectId);
 
       // 4. Remove the project row from our database (GitHub and uploaded
       //    alike; the GitHub repo itself is never touched). Nothing re-adds

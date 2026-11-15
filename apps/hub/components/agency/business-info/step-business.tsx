@@ -2,12 +2,17 @@
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
+import { useSearchParams } from "next/navigation";
+
+import { LogoCard } from "@/components/agency/business-info/logo-card";
 import { StepShell } from "@/components/agency/business-info/step-shell";
 import { useBusinessInfo } from "@/components/agency/business-info/use-business-info";
 import { NumberedList } from "@/components/ds/business-info/form-parts";
 import { TipCard, UsedIn } from "@/components/ds/business-info/side-cards";
 import { Card } from "@/components/ds/ui/card";
 import { Field, Input, Textarea } from "@/components/ds/ui/field";
+import { useRouteProjectId } from "@/hooks/use-repo";
+import { repoPath } from "@/lib/paths";
 
 const KEYS = [
   { key: "website", initial: 1 },
@@ -26,17 +31,23 @@ const USED_IN = [
   "Your tagline options in step 4",
   "Every search ad in step 7",
   "Templates and appointments booked from Leads",
+  "Your Feedback review page (name, logo, address, phone)",
 ];
 
 export function StepBusiness() {
   const bi = useBusinessInfo(KEYS);
+  const projectId = useRouteProjectId();
+  // Sent here from the Feedback app to finish setup: saving goes back there.
+  const fromFeedback = useSearchParams().get("from") === "feedback";
+  const saveAnd = (to?: string) =>
+    bi.saveAnd(fromFeedback ? repoPath(projectId, "feedback") : to);
   const description = bi.draft.productDescription?.[0] ?? "";
   const features = bi.draft.features ?? [];
 
   return (
     <StepShell
       stepKey="business"
-      footer={{ dirty: bi.dirty, saving: bi.saving, savedAt: bi.savedAt, saveAnd: bi.saveAnd }}
+      footer={{ dirty: bi.dirty, saving: bi.saving, savedAt: bi.savedAt, saveAnd }}
       aside={
         <>
           <TipCard
@@ -51,6 +62,8 @@ export function StepBusiness() {
       {bi.info.isPending ? (
         <Skeleton className="h-96 w-full rounded-card" />
       ) : (
+        <>
+        <LogoCard name={bi.draft.website?.[0] ?? ""} />
         <Card className="flex flex-col gap-6 p-6">
           <Field label="Business name" hint="The name customers know you by.">
             <Input
@@ -77,7 +90,7 @@ export function StepBusiness() {
             </Field>
           </div>
 
-          <Field label="Address" optional hint="Used as the location of appointments you book from Leads.">
+          <Field label="Address" optional hint="Used for appointments you book from Leads and on your review page.">
             <Input
               value={bi.draft.businessAddress?.[0] ?? ""}
               placeholder="123 Main St, Orlando, FL 32801"
@@ -124,6 +137,7 @@ export function StepBusiness() {
             />
           </Field>
         </Card>
+        </>
       )}
     </StepShell>
   );

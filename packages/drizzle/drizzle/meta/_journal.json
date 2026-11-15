@@ -442,6 +442,13 @@
       "when": 1794759675268,
       "tag": "0062_normal_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1794777128439,
+      "tag": "0063_glorious_whirlwind",
+      "breakpoints": true
     }
   ]
 }

@@ -24,7 +24,11 @@ const toBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
     canvas.toBlob((blob) => resolve(blob), type, quality)
   );
 
-export async function shrinkImage(file: File): Promise<ShrinkResult> {
+export async function shrinkImage(
+  file: File,
+  opts: { maxEdge?: number; maxBytes?: number; allowGif?: boolean } = {}
+): Promise<ShrinkResult> {
+  const { maxEdge = MAX_EDGE, maxBytes = MAX_UPLOAD_BYTES, allowGif = true } = opts;
   const type = file.type.toLowerCase();
   if (type === "image/svg+xml" || /\.svg$/i.test(file.name)) {
     return { ok: false, reason: "svg" };
@@ -37,7 +41,7 @@ export async function shrinkImage(file: File): Promise<ShrinkResult> {
   }
 
   // GIFs pass through untouched so animation survives; only the cap applies.
-  if (type === "image/gif") {
+  if (type === "image/gif" && allowGif) {
     let bitmap: ImageBitmap;
     try {
       bitmap = await createImageBitmap(file);
@@ -46,7 +50,7 @@ export async function shrinkImage(file: File): Promise<ShrinkResult> {
     }
     const { width, height } = bitmap;
     bitmap.close();
-    if (file.size > MAX_UPLOAD_BYTES) return { ok: false, reason: "too-large" };
+    if (file.size > maxBytes) return { ok: false, reason: "too-large" };
     return { ok: true, blob: file, width, height, fileName: file.name };
   }
 
@@ -57,7 +61,7 @@ export async function shrinkImage(file: File): Promise<ShrinkResult> {
   } catch {
     return { ok: false, reason: "decode" };
   }
-  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
   const height = Math.max(1, Math.round(bitmap.height * scale));
 
@@ -83,7 +87,7 @@ export async function shrinkImage(file: File): Promise<ShrinkResult> {
     ext = "jpg";
   }
   if (!blob) return { ok: false, reason: "decode" };
-  if (blob.size > MAX_UPLOAD_BYTES) return { ok: false, reason: "too-large" };
+  if (blob.size > maxBytes) return { ok: false, reason: "too-large" };
   return {
     ok: true,
     blob,

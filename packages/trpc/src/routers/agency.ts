@@ -49,6 +49,9 @@ import {
   ttlForRange,
 } from "../lib/agency/ads-cache";
 import { budgetPacing } from "../lib/agency/budget-pacing";
+import { removeProjectLogo, setProjectLogo } from "../lib/logo";
+import { LOGO_MAX_BYTES } from "../lib/logo-shared";
+import { publicObjectUrl } from "../lib/r2";
 import {
   buildUpdate,
   EDITABLE_CATEGORIES,
@@ -1893,6 +1896,31 @@ export const agencyRouter = createTRPCRouter({
           .where(eq(agencyClient.id, ctx.client.id));
         return cleaned;
       }),
+
+    // The business logo (public R2, one object per project). Lives on
+    // hub_project so it doesn't need an agency_client row.
+    logo: createTRPCRouter({
+      get: businessProcedure.query(async ({ ctx }) => {
+        const row = await db.query.hubProject.findFirst({
+          where: eq(hubProject.id, ctx.projectId),
+          columns: { logoKey: true },
+        });
+        return { logoUrl: publicObjectUrl(row?.logoKey) };
+      }),
+      set: templateWriteProcedure
+        .input(
+          z.object({ data: z.string().max(Math.ceil((LOGO_MAX_BYTES * 4) / 3) + 4) })
+        )
+        .mutation(({ ctx, input }) =>
+          setProjectLogo(
+            ctx.projectId,
+            new Uint8Array(Buffer.from(input.data, "base64"))
+          )
+        ),
+      remove: templateWriteProcedure.mutation(({ ctx }) =>
+        removeProjectLogo(ctx.projectId)
+      ),
+    }),
   }),
 
   // Planned ad campaigns: keyword categories with per-keyword metrics and the
