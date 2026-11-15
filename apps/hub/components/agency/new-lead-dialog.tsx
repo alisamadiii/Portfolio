@@ -37,7 +37,7 @@ export function NewLeadDialog() {
       onSuccess: (lead) => {
         queryClient.invalidateQueries({ queryKey: trpc.agency.leads.pathKey() });
         setOpen(false);
-        router.push(href(`/leads/${lead.id}`));
+        router.push(href(`/leads?tab=conversations&lead=${lead.id}`));
       },
       onError: (error) => toast.error(error.message),
     })
@@ -47,7 +47,7 @@ export function NewLeadDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <DsButton variant="primary" icon={<Plus className="size-4" />}>
+          <DsButton variant="primary" size="sm" icon={<Plus className="size-3.5" />}>
             Add lead
           </DsButton>
         }

@@ -29,6 +29,7 @@ export function TemplateTextarea({
   placeholders = true,
   resolve,
   className,
+  onKeyDown,
   ...props
 }: Omit<ComponentPropsWithoutRef<"textarea">, "value" | "onChange"> & {
   value: string;
@@ -94,7 +95,7 @@ export function TemplateTextarea({
           sync(e.target);
         }}
         onKeyDown={(e) => {
-          if (!open) return;
+          if (!open) return onKeyDown?.(e);
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             const delta = e.key === "ArrowDown" ? 1 : -1;

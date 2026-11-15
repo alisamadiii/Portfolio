@@ -68,7 +68,9 @@ const recorded = (lead: Lead): [string, string | null][] => [
       ? "Added by hand"
       : lead.source === "booking"
         ? "Booked an appointment"
-        : "Website form",
+        : lead.source === "sms"
+          ? "Texted in"
+          : "Website form",
   ],
   ["Form name", lead.formName],
   ["Source", CHANNEL_LABELS[lead.channel]],

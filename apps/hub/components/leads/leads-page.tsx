@@ -20,56 +20,42 @@ import { ChannelBadge } from "@/components/agency/lead-channel";
 import { formatMoney, lastDays, LeadStatusBadge, RANGES, type RangeValue } from "@/components/agency/lead-status";
 import { NewLeadDialog } from "@/components/agency/new-lead-dialog";
 import { useAgency } from "@/components/agency/use-agency";
-import { PageHeader } from "@/components/ds/layout/page-header";
+import { Padded } from "@/components/ds/layout/padded";
 import { Button, ButtonLink } from "@/components/ds/ui/button";
 import { Card, CardHeader, TextLink } from "@/components/ds/ui/card";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, InfoStrip, KpiGrid } from "@/components/ds/ui/misc";
-import { UnderlineTabs } from "@/components/ds/ui/tabs";
+import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { repoPath } from "@/lib/paths";
 
+import { conversationHref } from "./inbox/conversation-href";
+import { LeadsInbox } from "./inbox/inbox";
+import { TextingCard } from "./inbox/texting-card";
 import { LeadSources } from "./lead-sources";
 import { LeadNameCell, LeadsTable } from "./leads-table";
 
-const TABS = ["overview", "all", "sources", "settings"] as const;
+const TABS = ["conversations", "overview", "all", "sources", "settings"] as const;
 type Tab = (typeof TABS)[number];
 
 /**
- * Leads app. Overview (sources strip, performance KPIs, latest leads), the
- * full list, sources and the capture-script settings. Ad spend and cost per
+ * Leads app. Conversations (each lead as a text/email thread), Overview
+ * (sources strip, performance KPIs, latest leads), the full list, sources
+ * and the capture-script + texting settings. Ad spend and cost per
  * ad lead stay "—": ads reporting left the hub.
  */
 export function LeadsPage() {
   const trpc = useTRPC();
   const { projectId, role } = useAgency();
   const base = repoPath(projectId, "leads");
-  const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(TABS).withDefault("overview"));
+  const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(TABS).withDefault("conversations"));
   const [days, setDays] = useState<RangeValue>("30");
 
   const total = useQuery(
     trpc.agency.leads.list.queryOptions({ projectId, page: 1, pageSize: 1 })
   );
 
-  return (
+  const sections = (
     <>
-      <PageHeader
-        title="Leads"
-        description="Where your leads come from and who to follow up with."
-        actions={role !== "view-only" ? <NewLeadDialog /> : undefined}
-        tabs={
-          <UnderlineTabs
-            label="Leads sections"
-            value={tab}
-            onChange={(id) => void setTab(id as Tab)}
-            items={[
-              { id: "overview", label: "Overview" },
-              { id: "all", label: "All leads", count: total.data?.total },
-              { id: "sources", label: "Sources" },
-              { id: "settings", label: "Settings" },
-            ]}
-          />
-        }
-      />
       {tab === "overview" && (
         <Overview days={days} setDays={setDays} base={base} onViewAll={() => void setTab("all")} />
       )}
@@ -77,6 +63,7 @@ export function LeadsPage() {
       {tab === "sources" && <LeadSources onOpenSettings={() => void setTab("settings")} />}
       {tab === "settings" && (
         <>
+          <TextingCard />
           <InstallSnippet />
           <Card className="flex flex-wrap items-center justify-between gap-3 px-6 py-5">
             <div className="flex flex-col gap-1">
@@ -91,6 +78,36 @@ export function LeadsPage() {
         </>
       )}
     </>
+  );
+
+  // Full-bleed page (like the calendar): a slim toolbar, then the inbox edge
+  // to edge or the other sections in the normal padded column.
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-surface px-4 py-2.5 sm:px-6">
+        <h1 className="text-base font-semibold tracking-[-0.01em]">Leads</h1>
+        <div className="-mx-1 min-w-0 overflow-x-auto px-1">
+          <SegmentedTabs
+            label="Leads sections"
+            value={tab}
+            onChange={(id) => void setTab(id as Tab)}
+            items={[
+              { id: "conversations", label: "Conversations" },
+              { id: "overview", label: "Overview" },
+              { id: "all", label: "All leads", count: total.data?.total },
+              { id: "sources", label: "Sources" },
+              { id: "settings", label: "Settings" },
+            ]}
+          />
+        </div>
+        {role !== "view-only" && (
+          <div className="ml-auto">
+            <NewLeadDialog />
+          </div>
+        )}
+      </div>
+      {tab === "conversations" ? <LeadsInbox /> : <Padded>{sections}</Padded>}
+    </div>
   );
 }
 
@@ -217,7 +234,7 @@ function Overview({
           columns={columns}
           rows={latest.data?.rows ?? []}
           rowKey={(lead) => String(lead.id)}
-          rowHref={(lead) => `${base}/${lead.id}`}
+          rowHref={(lead) => conversationHref(base, lead.id)}
           minWidth={560}
           empty={
             latest.isPending ? (

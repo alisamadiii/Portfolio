@@ -26,6 +26,7 @@ import {
   AGENCY_TEMPLATE_KIND_VALUES,
   agencyClient,
   agencyLead,
+  agencyMessage,
   agencyTemplate,
   hubCollaborator,
   hubProject,
@@ -106,7 +107,22 @@ import {
   gcalTokenFor,
 } from "../lib/integrations/calendar";
 import { getEntitlement, requireFeature } from "../lib/payment/entitlements";
+import { emailRepliesEnabled } from "../lib/inbound/reply-address";
+import {
+  INBOX_MEDIA_MAX_BYTES,
+  INBOX_MEDIA_TYPES,
+  putInboxMedia,
+  sendLeadMessage,
+} from "../lib/inbox";
 import { placeholderValues, resolveTemplate } from "../lib/templates-shared";
+import {
+  createMessagingProfile,
+  isTelnyxConfigured,
+  orderNumber,
+  releaseNumber,
+  searchNumbers,
+  TelnyxError,
+} from "../lib/telnyx/client";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
 import { ensureStripeCustomer } from "./payments";
 
@@ -641,6 +657,10 @@ const leadsRouter = createTRPCRouter({
         valueCents: z.number().int().min(0).nullable().optional(),
         notes: z.string().max(10_000).nullable().optional(),
         lostReason: z.string().trim().max(500).nullable().optional(),
+        // Contact details, editable from the Leads inbox ("" clears).
+        name: z.string().trim().max(200).optional(),
+        email: z.string().trim().email().max(320).optional().or(z.literal("")),
+        phone: z.string().trim().max(50).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -678,6 +698,9 @@ const leadsRouter = createTRPCRouter({
           ...(input.lostReason !== undefined && {
             lostReason: input.lostReason,
           }),
+          ...(input.name !== undefined && { name: input.name || null }),
+          ...(input.email !== undefined && { email: input.email || null }),
+          ...(input.phone !== undefined && { phone: input.phone || null }),
         })
         .where(eq(agencyLead.id, current.id))
         .returning();
@@ -804,6 +827,282 @@ const leadsRouter = createTRPCRouter({
       ]);
       return getLead(ctx.client.projectId, input.id);
     }),
+});
+
+// ─── Leads inbox ─────────────────────────────────────────────────
+// One conversation per lead: texts through the project's Telnyx number,
+// emails through useSend (lib/inbox.ts). Telnyx events come back through
+// apps/api /api/webhook/telnyx.
+
+const unreadExpr = sql<number>`(
+  select count(*)::int from ${agencyMessage} m
+  where m.lead_id = ${agencyLead.id} and m.direction = 'in' and m.read_at is null
+)`.mapWith(Number);
+
+const mediaInput = z
+  .array(
+    z.object({
+      type: z.enum(INBOX_MEDIA_TYPES as [string, ...string[]]),
+      // base64, capped below the 5 MB image limit after decoding
+      data: z.string().max(Math.ceil((INBOX_MEDIA_MAX_BYTES * 4) / 3) + 4),
+    })
+  )
+  .max(3);
+
+const inboxRouter = createTRPCRouter({
+  // Leads by latest activity, each with its last message and unread count.
+  list: agencyProcedure
+    .input(
+      z.object({
+        tab: z.enum(["unread", "all", "starred"]).default("all"),
+        q: z.string().trim().max(200).optional(),
+        limit: z.number().int().min(1).max(500).default(50),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where = and(
+        eq(agencyLead.projectId, ctx.client.projectId),
+        ne(agencyLead.status, "spam"),
+        input.tab === "starred" ? eq(agencyLead.starred, true) : undefined,
+        input.tab === "unread" ? sql`${unreadExpr} > 0` : undefined,
+        input.q
+          ? or(
+              ilike(agencyLead.name, `%${input.q}%`),
+              ilike(agencyLead.email, `%${input.q}%`),
+              ilike(agencyLead.phone, `%${input.q}%`)
+            )
+          : undefined
+      );
+      const activity = sql`coalesce(${agencyLead.lastMessageAt}, ${agencyLead.createdAt})`;
+      const [rows, [{ total }], [{ unread }]] = await Promise.all([
+        db
+          .select({
+            id: agencyLead.id,
+            name: agencyLead.name,
+            email: agencyLead.email,
+            phone: agencyLead.phone,
+            message: agencyLead.message,
+            status: agencyLead.status,
+            source: agencyLead.source,
+            starred: agencyLead.starred,
+            createdAt: agencyLead.createdAt,
+            lastMessageAt: agencyLead.lastMessageAt,
+            unread: unreadExpr,
+          })
+          .from(agencyLead)
+          .where(where)
+          .orderBy(desc(activity), desc(agencyLead.id))
+          .limit(input.limit),
+        db.select({ total: count() }).from(agencyLead).where(where),
+        db
+          .select({ unread: count() })
+          .from(agencyLead)
+          .where(
+            and(
+              eq(agencyLead.projectId, ctx.client.projectId),
+              ne(agencyLead.status, "spam"),
+              sql`${unreadExpr} > 0`
+            )
+          ),
+      ]);
+
+      // Last message per listed lead, for the preview line.
+      const ids = rows.map((r) => r.id);
+      const last = ids.length
+        ? await db
+            .selectDistinctOn([agencyMessage.leadId], {
+              leadId: agencyMessage.leadId,
+              body: agencyMessage.body,
+              direction: agencyMessage.direction,
+              channel: agencyMessage.channel,
+              hasMedia: sql<boolean>`${agencyMessage.mediaUrls} is not null`,
+            })
+            .from(agencyMessage)
+            .where(inArray(agencyMessage.leadId, ids))
+            .orderBy(agencyMessage.leadId, desc(agencyMessage.createdAt), desc(agencyMessage.id))
+        : [];
+      const lastByLead = new Map(last.map((m) => [m.leadId, m]));
+
+      return {
+        rows: rows.map((r) => ({ ...r, last: lastByLead.get(r.id) ?? null })),
+        total,
+        unread,
+      };
+    }),
+
+  thread: agencyProcedure
+    .input(z.object({ leadId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const lead = await getLead(ctx.client.projectId, input.leadId);
+      const messages = await db
+        .select({
+          id: agencyMessage.id,
+          channel: agencyMessage.channel,
+          direction: agencyMessage.direction,
+          body: agencyMessage.body,
+          subject: agencyMessage.subject,
+          mediaUrls: agencyMessage.mediaUrls,
+          status: agencyMessage.status,
+          error: agencyMessage.error,
+          readAt: agencyMessage.readAt,
+          createdAt: agencyMessage.createdAt,
+          sentByName: userTable.name,
+        })
+        .from(agencyMessage)
+        .leftJoin(userTable, eq(userTable.id, agencyMessage.sentBy))
+        .where(and(eq(agencyMessage.projectId, ctx.client.projectId), eq(agencyMessage.leadId, lead.id)))
+        .orderBy(agencyMessage.createdAt, agencyMessage.id)
+        .limit(1000);
+      return { lead, messages, smsNumber: ctx.client.smsNumber };
+    }),
+
+  // Opening a thread reads it (view-only members too: it's their inbox).
+  markRead: agencyProcedure
+    .input(z.object({ leadId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      await db
+        .update(agencyMessage)
+        .set({ readAt: new Date() })
+        .where(
+          and(
+            eq(agencyMessage.projectId, ctx.client.projectId),
+            eq(agencyMessage.leadId, input.leadId),
+            eq(agencyMessage.direction, "in"),
+            sql`${agencyMessage.readAt} is null`
+          )
+        );
+      return { ok: true };
+    }),
+
+  star: agencyWriteProcedure
+    .input(z.object({ leadId: z.number().int().positive(), starred: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      await db
+        .update(agencyLead)
+        .set({ starred: input.starred })
+        .where(and(eq(agencyLead.id, input.leadId), eq(agencyLead.projectId, ctx.client.projectId)));
+      return { ok: true };
+    }),
+
+  send: agencyWriteProcedure
+    .input(
+      z
+        .object({
+          leadId: z.number().int().positive(),
+          channel: z.enum(["sms", "email"]),
+          body: z.string().trim().max(20_000),
+          subject: z.string().trim().max(200).optional(),
+          media: mediaInput.optional(),
+        })
+        .refine((v) => v.body.length > 0 || (v.channel === "sms" && v.media?.length), {
+          message: "Write a message first.",
+        })
+        .refine((v) => v.channel === "sms" || !v.media?.length, {
+          message: "Images can only be sent by text.",
+        })
+        .refine((v) => v.channel === "email" || v.body.length <= 1600, {
+          message: "Texts can be at most 1,600 characters.",
+        })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const lead = await getLead(ctx.client.projectId, input.leadId);
+      let mediaUrls: string[] = [];
+      try {
+        mediaUrls = await Promise.all(
+          (input.media ?? []).map((m) =>
+            putInboxMedia(ctx.client.projectId, Uint8Array.from(Buffer.from(m.data, "base64")), m.type)
+          )
+        );
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error instanceof Error ? error.message : "Couldn't upload the image.",
+        });
+      }
+      return sendLeadMessage({
+        client: ctx.client,
+        lead,
+        channel: input.channel,
+        body: input.body,
+        subject: input.subject,
+        mediaUrls,
+        sender: { id: ctx.session.user.id, name: ctx.session.user.name },
+      });
+    }),
+});
+
+// The project's texting number. Buying and releasing are admin only: numbers
+// sit on the agency's Telnyx account, which the agency pays and bills for.
+const smsAdminProcedure = agencyProcedure.use(({ next, ctx }) => {
+  if (!isAdminUser(ctx.session.user)) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Only the agency can manage texting numbers." });
+  }
+  return next({ ctx });
+});
+
+const telnyxMessage = (error: unknown) =>
+  error instanceof TelnyxError || error instanceof Error ? error.message : "Telnyx request failed.";
+
+const smsRouter = createTRPCRouter({
+  status: agencyProcedure.query(({ ctx }) => ({
+    number: ctx.client.smsNumber,
+    configured: isTelnyxConfigured(),
+    canManage: isAdminUser(ctx.session.user),
+    // Email replies come back into the thread (SES inbound wired).
+    emailReplies: emailRepliesEnabled(),
+  })),
+
+  searchNumbers: smsAdminProcedure
+    .input(z.object({ areaCode: z.string().regex(/^[2-9]\d{2}$/).optional() }))
+    .query(async ({ input }) => {
+      try {
+        return await searchNumbers(input.areaCode);
+      } catch (error) {
+        throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
+      }
+    }),
+
+  buyNumber: smsAdminProcedure
+    .input(z.object({ phoneNumber: z.string().regex(/^\+1[2-9]\d{2}[2-9]\d{6}$/) }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.client.smsNumber) {
+        throw new TRPCError({ code: "CONFLICT", message: "This project already has a number. Release it first." });
+      }
+      try {
+        // One profile per project, kept across number changes.
+        const profileId =
+          ctx.client.smsProfileId ?? (await createMessagingProfile(`Hub ${ctx.client.projectId}`));
+        if (!ctx.client.smsProfileId) {
+          await db
+            .update(agencyClient)
+            .set({ smsProfileId: profileId })
+            .where(eq(agencyClient.id, ctx.client.id));
+        }
+        const order = await orderNumber(input.phoneNumber, profileId);
+        await db
+          .update(agencyClient)
+          .set({ smsNumber: input.phoneNumber, smsNumberId: order.orderId })
+          .where(eq(agencyClient.id, ctx.client.id));
+        return { number: input.phoneNumber, status: order.status };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
+      }
+    }),
+
+  releaseNumber: smsAdminProcedure.mutation(async ({ ctx }) => {
+    if (!ctx.client.smsNumber) return { ok: true };
+    try {
+      await releaseNumber(ctx.client.smsNumber);
+    } catch (error) {
+      throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
+    }
+    await db
+      .update(agencyClient)
+      .set({ smsNumber: null, smsNumberId: null })
+      .where(eq(agencyClient.id, ctx.client.id));
+    return { ok: true };
+  }),
 });
 
 const adminRouter = createTRPCRouter({
@@ -1399,6 +1698,8 @@ export const agencyRouter = createTRPCRouter({
     }),
 
   leads: leadsRouter,
+  inbox: inboxRouter,
+  sms: smsRouter,
 
   // Domains the capture scripts are allowed to run on. One list per
   // project, stored on hub_project and shared with the website Domain card.

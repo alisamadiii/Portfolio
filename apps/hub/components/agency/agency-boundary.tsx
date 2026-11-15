@@ -29,6 +29,7 @@ export function AgencyBoundary({
   feature = "leads",
   title = "This app isn't set up for your site yet",
   text = "We switch it on for you. Send us a note and we'll have it ready within a day.",
+  frame = (node) => node,
 }: {
   children: ReactNode;
   /** Rendered above the paywall / empty state (usually the page header). */
@@ -37,20 +38,22 @@ export function AgencyBoundary({
   feature?: Feature;
   title?: string;
   text?: string;
+  /** Wraps the loading / paywall / empty states (full-bleed pages pad them). */
+  frame?: (node: ReactNode) => ReactNode;
 }) {
   const projectId = useRouteProjectId();
   const { can, isLoading } = useEntitlement(projectId || undefined);
   const agency = useAgencyOptional();
 
   if (isLoading) {
-    return (
+    return frame(
       <div className="flex justify-center py-24">
         <Spinner className="text-dim size-6" />
       </div>
     );
   }
   if (projectId && !can(feature)) {
-    return (
+    return frame(
       <>
         {header}
         <ProjectPaywall projectId={projectId} feature={feature} />
@@ -58,7 +61,7 @@ export function AgencyBoundary({
     );
   }
   if (!agency) {
-    return (
+    return frame(
       <>
         {header}
         <Card>

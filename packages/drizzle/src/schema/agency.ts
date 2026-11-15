@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -27,7 +28,7 @@ export const AGENCY_LEAD_STATUS_VALUES = [
   "spam",
 ] as const;
 export type AgencyLeadStatus = (typeof AGENCY_LEAD_STATUS_VALUES)[number];
-export type AgencyLeadSource = "form" | "booking" | "manual" | "wix";
+export type AgencyLeadSource = "form" | "booking" | "manual" | "wix" | "sms";
 
 // Where the lead came from, computed at capture (lib/agency/lead-channel.ts).
 export const AGENCY_LEAD_CHANNEL_VALUES = [
@@ -162,6 +163,13 @@ export const agencyClient = pgTable(
     // Monthly ad spend target for budget pacing; unset = no pacing shown.
     googleAdsBudget: jsonb("google_ads_budget").$type<AgencyAdsBudget>(),
 
+    // Texting (Leads inbox): the project's Telnyx number, bought in the hub on
+    // the agency's Telnyx account, and the messaging profile whose webhook
+    // brings replies back. Null = texting not set up.
+    smsNumber: text("sms_number").unique(),
+    smsNumberId: text("sms_number_id"),
+    smsProfileId: text("sms_profile_id"),
+
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -230,6 +238,10 @@ export const agencyLead = pgTable(
     // Id of the lead in the system it was imported from (e.g. "wix:<submission
     // id>"), so re-importing never duplicates.
     externalId: text("external_id"),
+
+    // Leads inbox: last message either way (sorts the list) and the star.
+    lastMessageAt: timestamp("last_message_at"),
+    starred: boolean("starred").notNull().default(false),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
@@ -316,5 +328,56 @@ export const agencyTemplate = pgTable(
   },
   (table) => ({
     idxProject: index("agency_template_project_idx").on(table.projectId, table.kind),
+  })
+);
+
+// Leads inbox: every text and email to or from a lead. SMS goes through the
+// project's Telnyx number; email goes out through useSend and replies come
+// back through SES receiving on reply.alisamadii.com (lib/inbound-email.ts).
+export const AGENCY_MESSAGE_STATUS_VALUES = [
+  "queued",
+  "sent",
+  "delivered",
+  "failed",
+  "received",
+] as const;
+export type AgencyMessageStatus = (typeof AGENCY_MESSAGE_STATUS_VALUES)[number];
+
+export const agencyMessage = pgTable(
+  "agency_message",
+  {
+    id: serial("id").primaryKey(),
+    projectId: uuid("project_id").notNull(),
+    leadId: integer("lead_id")
+      .notNull()
+      .references(() => agencyLead.id, { onDelete: "cascade" }),
+    channel: text("channel").$type<"sms" | "email">().notNull(),
+    direction: text("direction").$type<"in" | "out">().notNull(),
+    body: text("body").notNull().default(""),
+    subject: text("subject"),
+    // Public CDN URLs (copied into R2; carrier media links expire).
+    mediaUrls: jsonb("media_urls").$type<string[]>(),
+    status: text("status").$type<AgencyMessageStatus>().notNull(),
+    error: text("error"),
+    // Telnyx message id, useSend email id, or an inbound email's Message-ID;
+    // webhooks update (and dedupe) by it.
+    providerId: text("provider_id"),
+    // Email only: this message's RFC Message-ID, so replies stay in one thread
+    // in the lead's mail app (In-Reply-To / References).
+    emailMessageId: text("email_message_id"),
+    sentBy: text("sent_by").references(() => user.id, { onDelete: "set null" }),
+    // Inbound only: when someone opened the thread.
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    idxLead: index("agency_message_lead_idx").on(
+      table.projectId,
+      table.leadId,
+      table.createdAt
+    ),
+    uqProvider: uniqueIndex("uq_agency_message_provider")
+      .on(table.providerId)
+      .where(sql`${table.providerId} is not null`),
   })
 );

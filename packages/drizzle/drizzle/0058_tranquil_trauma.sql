@@ -1,0 +1,1 @@
+ALTER TABLE "agency_message" ADD COLUMN "email_message_id" text;

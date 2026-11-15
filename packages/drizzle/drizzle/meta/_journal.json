@@ -400,6 +400,20 @@
       "when": 1794673570522,
       "tag": "0056_bitter_purple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1794703310670,
+      "tag": "0057_slippery_namora",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794704808176,
+      "tag": "0058_tranquil_trauma",
+      "breakpoints": true
     }
   ]
 }

@@ -28,6 +28,8 @@ import { EmptyState } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { repoPath } from "@/lib/paths";
 
+import { conversationHref } from "./inbox/conversation-href";
+
 const PAGE_SIZE = 25;
 const ALL_SOURCES = "all";
 
@@ -117,7 +119,7 @@ export function LeadsTable() {
       key: "lead",
       header: "Lead",
       width: "minmax(240px, 2fr)",
-      cell: (lead) => <LeadNameCell lead={lead} href={`${base}/${lead.id}`} />,
+      cell: (lead) => <LeadNameCell lead={lead} href={conversationHref(base, lead.id)} />,
     },
     {
       key: "source",
@@ -234,7 +236,7 @@ export function LeadsTable() {
         rows={data?.rows ?? []}
         rowKey={(lead) => String(lead.id)}
         minWidth={980}
-        onRowClick={(lead) => router.push(`${base}/${lead.id}`)}
+        onRowClick={(lead) => router.push(conversationHref(base, lead.id))}
         empty={
           isLoading ? (
             <div className="px-6 py-12 text-center text-[13px] text-dim">Loading leads…</div>

@@ -2,6 +2,7 @@
 
 import { AgencyBoundary } from "@/components/agency/agency-boundary";
 import { DocumentTitle } from "@/components/document-title";
+import { Padded } from "@/components/ds/layout/padded";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { LeadsPage } from "@/components/leads/leads-page";
 
@@ -11,6 +12,7 @@ export default function ProjectLeadsPage() {
       <DocumentTitle title="Leads" />
       <AgencyBoundary
         title="Leads isn't set up for your site yet"
+        frame={(node) => <Padded>{node}</Padded>}
         header={
           <PageHeader
             title="Leads"

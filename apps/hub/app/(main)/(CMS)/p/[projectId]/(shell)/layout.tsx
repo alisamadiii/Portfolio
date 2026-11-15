@@ -24,7 +24,8 @@ export default function ProjectShellLayout({ children }: { children: React.React
   const { installed, netlify } = useInstalledApps(projectId);
   const pathname = usePathname() ?? "";
   const wide = pathname.includes("/business-info/");
-  const bleed = pathname.endsWith("/calendar");
+  // Edge to edge, scrolling inside: the calendar week and the Leads inbox.
+  const bleed = pathname.endsWith("/calendar") || pathname.endsWith("/leads");
 
   const name = siteName(project?.websiteUrl) ?? project?.repo ?? "Site";
   return (
