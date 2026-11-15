@@ -116,11 +116,14 @@ import {
 } from "../lib/inbox";
 import { placeholderValues, resolveTemplate } from "../lib/templates-shared";
 import {
+  assignNumberProfile,
   createMessagingProfile,
   isTelnyxConfigured,
+  listOwnedNumbers,
   orderNumber,
   releaseNumber,
   searchNumbers,
+  setProfileWebhook,
   TelnyxError,
 } from "../lib/telnyx/client";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
@@ -1089,6 +1092,68 @@ const smsRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
       }
     }),
+
+  // Numbers already on the Telnyx account, and which project (if any) uses each.
+  ownedNumbers: smsAdminProcedure.query(async () => {
+    let numbers;
+    try {
+      numbers = await listOwnedNumbers();
+    } catch (error) {
+      throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
+    }
+    const used = await db
+      .select({ number: agencyClient.smsNumber, projectId: agencyClient.projectId, repo: hubProject.repo })
+      .from(agencyClient)
+      .leftJoin(hubProject, eq(hubProject.id, agencyClient.projectId))
+      .where(isNotNull(agencyClient.smsNumber));
+    return numbers.map((n) => {
+      const owner = used.find((u) => u.number === n.phoneNumber);
+      return { ...n, usedBy: owner ? { projectId: owner.projectId, name: owner.repo } : null };
+    });
+  }),
+
+  // Use a number bought outside the hub. Keeps its messaging profile (or puts
+  // it on this project's) and points that profile's webhook at the hub.
+  linkNumber: smsAdminProcedure
+    .input(z.object({ phoneNumber: z.string().regex(/^\+1[2-9]\d{2}[2-9]\d{6}$/) }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.client.smsNumber) {
+        throw new TRPCError({ code: "CONFLICT", message: "This project already has a number. Disconnect it first." });
+      }
+      const taken = await db.query.agencyClient.findFirst({
+        where: eq(agencyClient.smsNumber, input.phoneNumber),
+        columns: { id: true },
+      });
+      if (taken) throw new TRPCError({ code: "CONFLICT", message: "Another project already uses this number." });
+      try {
+        const number = (await listOwnedNumbers()).find((n) => n.phoneNumber === input.phoneNumber);
+        if (!number) throw new TRPCError({ code: "NOT_FOUND", message: "That number isn't on the Telnyx account." });
+        let profileId = number.profileId;
+        if (profileId) {
+          await setProfileWebhook(profileId);
+        } else {
+          profileId = ctx.client.smsProfileId ?? (await createMessagingProfile(`Hub ${ctx.client.projectId}`));
+          await assignNumberProfile(number.id, profileId);
+        }
+        await db
+          .update(agencyClient)
+          .set({ smsNumber: number.phoneNumber, smsNumberId: number.id, smsProfileId: profileId })
+          .where(eq(agencyClient.id, ctx.client.id));
+        return { number: number.phoneNumber };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
+      }
+    }),
+
+  // Stops using the number here but keeps it on the Telnyx account.
+  disconnectNumber: smsAdminProcedure.mutation(async ({ ctx }) => {
+    await db
+      .update(agencyClient)
+      .set({ smsNumber: null, smsNumberId: null })
+      .where(eq(agencyClient.id, ctx.client.id));
+    return { ok: true };
+  }),
 
   releaseNumber: smsAdminProcedure.mutation(async ({ ctx }) => {
     if (!ctx.client.smsNumber) return { ok: true };

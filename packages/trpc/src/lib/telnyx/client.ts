@@ -119,6 +119,48 @@ export async function orderNumber(phoneNumber: string, messagingProfileId: strin
   return { orderId: data.id, status: data.status };
 }
 
+export type OwnedNumber = {
+  id: string;
+  phoneNumber: string;
+  profileId: string | null;
+  profileName: string | null;
+};
+
+/** Active numbers already on the agency account (bought in the Telnyx portal or the hub). */
+export async function listOwnedNumbers(): Promise<OwnedNumber[]> {
+  const params = new URLSearchParams({ "filter[status]": "active", "page[size]": "250" });
+  const { data } = await telnyx<{
+    data: {
+      id: string;
+      phone_number: string;
+      messaging_profile_id?: string | null;
+      messaging_profile_name?: string | null;
+    }[];
+  }>(`/phone_numbers?${params}`);
+  return data.map((n) => ({
+    id: n.id,
+    phoneNumber: n.phone_number,
+    profileId: n.messaging_profile_id || null,
+    profileName: n.messaging_profile_name || null,
+  }));
+}
+
+/** Puts an existing number on a messaging profile. */
+export async function assignNumberProfile(numberId: string, messagingProfileId: string) {
+  await telnyx(`/phone_numbers/${encodeURIComponent(numberId)}/messaging`, {
+    method: "PATCH",
+    body: { messaging_profile_id: messagingProfileId },
+  });
+}
+
+/** Points an existing (portal-made) profile's webhook at the hub so replies come back. */
+export async function setProfileWebhook(messagingProfileId: string) {
+  await telnyx(`/messaging_profiles/${encodeURIComponent(messagingProfileId)}`, {
+    method: "PATCH",
+    body: { webhook_url: telnyxWebhookUrl(), webhook_api_version: "2" },
+  });
+}
+
 /** Gives a number back to Telnyx (stops the monthly charge). */
 export async function releaseNumber(phoneNumber: string) {
   const params = new URLSearchParams({ "filter[phone_number]": phoneNumber });
