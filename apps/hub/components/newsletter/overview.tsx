@@ -26,6 +26,7 @@ import { EmptyState, IconTile, KpiGrid } from "@/components/ds/ui/misc";
 
 import { CampaignTable } from "./campaigns";
 import type { NewsletterTab } from "./newsletter-page";
+import { QueryError } from "./query-error";
 import { pct, useNewsletter } from "./use-newsletter";
 
 const chartConfig = {
@@ -45,24 +46,21 @@ export function OverviewSection({ go }: { go: (tab: NewsletterTab) => void }) {
   );
   const recent = useQuery(trpc.newsletter.campaigns.list.queryOptions({ projectId, page: 1 }));
 
-  if (overview.error) {
-    return (
-      <Card>
-        <EmptyState
-          icon={<Mail className="size-5" />}
-          title="Newsletter unavailable"
-          text={overview.error.message}
-        />
-      </Card>
-    );
-  }
-
   const o = overview.data;
   const domain = o?.domain;
   const n = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString());
 
+  const failed = overview.error ?? analytics.error ?? recent.error;
   return (
     <>
+      <QueryError
+        error={failed}
+        onRetry={() => {
+          void overview.refetch();
+          void analytics.refetch();
+          void recent.refetch();
+        }}
+      />
       {o && (!domain || domain.status !== "SUCCESS") && (
         <Card className="flex flex-wrap items-center gap-4 px-6 py-5">
           <IconTile>

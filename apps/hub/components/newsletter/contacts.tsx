@@ -29,8 +29,10 @@ import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 
+import { ListMenu, NewListDialog } from "./list-actions";
 import { guessColumns, parseCsv, toImportRows, type ColumnMap } from "./csv";
 import { Pager } from "./pager";
+import { QueryError } from "./query-error";
 import { useNewsletter } from "./use-newsletter";
 
 type Contact = RouterOutputs["newsletter"]["contacts"]["list"]["contacts"][number];
@@ -39,7 +41,7 @@ const PAGE_SIZE = 50;
 export function ContactsSection() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { projectId, canWrite } = useNewsletter();
+  const { projectId, canWrite, canManage } = useNewsletter();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "true" | "false">("all");
@@ -49,6 +51,7 @@ export function ContactsSection() {
   const [picked, setPicked] = useState<string | null>(null);
   // Default: the biggest list (the server sorts by size).
   const listId = picked ?? lists.data?.[0]?.id;
+  const current = lists.data?.find((l) => l.id === listId);
 
   const list = useQuery({
     ...trpc.newsletter.contacts.list.queryOptions(
@@ -184,7 +187,7 @@ export function ContactsSection() {
         <div className="flex flex-wrap items-center gap-3 px-6 py-4">
           <div className="mr-auto flex items-center gap-2">
             <h2 className="text-base font-semibold">Contacts</h2>
-            {(lists.data?.length ?? 0) > 1 && (
+            {(lists.data?.length ?? 0) > 0 && (
               <Select
                 aria-label="List"
                 className="h-8 w-auto"
@@ -202,6 +205,26 @@ export function ContactsSection() {
                   </option>
                 ))}
               </Select>
+            )}
+            {canWrite && current && (
+              <ListMenu
+                list={current}
+                canDelete={canManage}
+                onDeleted={() => {
+                  setPicked(null);
+                  setSelected(new Set());
+                  setPage(1);
+                }}
+              />
+            )}
+            {canWrite && (
+              <NewListDialog
+                onCreated={(id) => {
+                  setPicked(id);
+                  setSelected(new Set());
+                  setPage(1);
+                }}
+              />
             )}
           </div>
           <Input
@@ -234,6 +257,17 @@ export function ContactsSection() {
             </>
           )}
         </div>
+        {(lists.error ?? list.error) && (
+          <div className="px-6 pb-4">
+            <QueryError
+              error={lists.error ?? list.error}
+              onRetry={() => {
+                void lists.refetch();
+                void list.refetch();
+              }}
+            />
+          </div>
+        )}
         {canWrite && selected.size > 0 && (
           <div className="flex items-center gap-3 border-t border-divider bg-sidebar px-6 py-2.5 text-[13px]">
             <span>{selected.size} selected</span>

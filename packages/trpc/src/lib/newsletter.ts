@@ -93,6 +93,37 @@ const TRPC_CODE: Record<number, TRPCError["code"]> = {
   429: "TOO_MANY_REQUESTS",
 };
 
+/** useSend rejected the stored team: deleted, or not a hub workspace. */
+const isInvalidWorkspace = (error: unknown) =>
+  error instanceof UseSendError && error.status === 403 && /invalid workspace/i.test(error.message);
+
+/**
+ * Drops a stale workspace link (and the domain/list ids that lived in it) so
+ * the Newsletter page offers "Set up" again. Only if the row still points at
+ * that same team, so a concurrent re-setup isn't undone.
+ */
+async function unlinkWorkspace(projectId: string, teamId: number) {
+  await db
+    .update(hubProject)
+    .set({ usesendTeamId: null, usesendDomainId: null, usesendContactBookId: null })
+    .where(and(eq(hubProject.id, projectId), eq(hubProject.usesendTeamId, teamId)));
+}
+
+/**
+ * Whether the project's workspace is usable: a stored team id that useSend
+ * accepts. A stale id is cleared on the way (→ the page shows "Set up").
+ */
+export async function workspaceReady(projectId: string): Promise<boolean> {
+  if (!(await isProvisioned(projectId))) return false;
+  try {
+    await teamFetch(await projectMail(projectId), "/api/v1/contactBooks");
+    return true;
+  } catch (error) {
+    if (error instanceof TRPCError && error.message === NOT_SET_UP) return false;
+    throw error;
+  }
+}
+
 /** useSend call scoped to the project's team (admin key + X-Team-Id). */
 export async function teamFetch<T>(
   mail: ProjectMail,
@@ -102,16 +133,25 @@ export async function teamFetch<T>(
   try {
     return await workspaceFetch<T>(mail.teamId, path, init);
   } catch (error) {
+    if (isInvalidWorkspace(error)) {
+      await unlinkWorkspace(mail.projectId, mail.teamId);
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: NOT_SET_UP });
+    }
     if (error instanceof UseSendError) {
       const code = TRPC_CODE[error.status];
       if (code) throw new TRPCError({ code, message: error.message });
       console.error("useSend error", path, error.status, error.message);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
-        message: "The email service didn't respond. Please try again.",
+        message: `Email service error (${error.status}): ${error.message}`,
       });
     }
-    throw error;
+    // Network / config failures (e.g. missing admin key): surface the cause.
+    console.error("useSend request failed", path, error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: `Email service unreachable: ${(error as Error).message}`,
+    });
   }
 }
 
@@ -245,6 +285,14 @@ export async function ensureContactBook(mail: ProjectMail): Promise<string> {
     .where(eq(hubProject.id, mail.projectId))
     .limit(1);
   return row!.id!;
+}
+
+/** Forget the project's default list after it was deleted (if still pointing at it). */
+export async function clearDefaultList(projectId: string, listId: string) {
+  await db
+    .update(hubProject)
+    .set({ usesendContactBookId: null })
+    .where(and(eq(hubProject.id, projectId), eq(hubProject.usesendContactBookId, listId)));
 }
 
 /**

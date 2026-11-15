@@ -28,6 +28,7 @@ import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 
 import { Pager } from "./pager";
+import { QueryError } from "./query-error";
 import { useNewsletter } from "./use-newsletter";
 
 type Row = RouterOutputs["newsletter"]["suppressions"]["list"]["suppressions"][number];
@@ -146,6 +147,11 @@ export function SuppressionsSection() {
           />
           {canManage && <AddSuppressionDialog />}
         </div>
+        {list.error && (
+          <div className="px-6 pb-4">
+            <QueryError error={list.error} onRetry={() => void list.refetch()} />
+          </div>
+        )}
         <DataTable
           columns={columns}
           rows={list.data?.suppressions ?? []}

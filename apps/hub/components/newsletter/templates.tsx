@@ -27,6 +27,7 @@ import { Field, Input } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 
 import { Pager } from "./pager";
+import { QueryError } from "./query-error";
 import { useNewsletter } from "./use-newsletter";
 
 type Template = RouterOutputs["newsletter"]["templates"]["list"]["templates"][number];
@@ -120,6 +121,11 @@ export function TemplatesSection() {
           </div>
           {canWrite && <NewTemplateDialog />}
         </div>
+        {list.error && (
+          <div className="px-6 pb-4">
+            <QueryError error={list.error} onRetry={() => void list.refetch()} />
+          </div>
+        )}
         <DataTable
           columns={columns}
           rows={list.data?.templates ?? []}

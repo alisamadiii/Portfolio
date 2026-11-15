@@ -15,6 +15,7 @@ import { OverviewSection } from "./overview";
 import { SetupCard } from "./setup-card";
 import { SuppressionsSection } from "./suppressions";
 import { TemplatesSection } from "./templates";
+import { QueryError } from "./query-error";
 import { useNewsletter } from "./use-newsletter";
 
 const TABS = [
@@ -75,9 +76,7 @@ export function NewsletterPage() {
         {status.isLoading && (
           <div className="rounded-card border-line bg-surface h-40 animate-pulse border" />
         )}
-        {status.error && (
-          <p className="text-danger text-[13px]">{status.error.message}</p>
-        )}
+        <QueryError error={status.error} onRetry={() => void status.refetch()} />
         {status.data && !ready && <SetupCard />}
         {ready && tab === "overview" && <OverviewSection go={go} />}
         {ready && tab === "campaigns" && <CampaignsSection go={go} />}

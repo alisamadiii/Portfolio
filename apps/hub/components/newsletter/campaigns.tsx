@@ -30,6 +30,7 @@ import { SegmentedTabs } from "@/components/ds/ui/tabs";
 
 import type { NewsletterTab } from "./newsletter-page";
 import { Pager } from "./pager";
+import { QueryError } from "./query-error";
 import { CAMPAIGN_STATUS, useNewsletter } from "./use-newsletter";
 
 type Campaign = RouterOutputs["newsletter"]["campaigns"]["list"]["campaigns"][number];
@@ -67,6 +68,11 @@ export function CampaignsSection({ go }: { go: (tab: NewsletterTab) => void }) {
           ]}
         />
       </div>
+      {list.error && (
+        <div className="px-6 pb-4">
+          <QueryError error={list.error} onRetry={() => void list.refetch()} />
+        </div>
+      )}
       <CampaignTable
         rows={list.data?.campaigns ?? []}
         loading={list.isLoading}
@@ -216,7 +222,14 @@ export function NewCampaignDialog({
               : "Campaigns are sent from your own domain. Verify it first."}
           </DialogDescription>
         </DialogHeader>
-        {!verified ? (
+        <QueryError
+          error={domain.error ?? lists.error ?? templates.error}
+          onRetry={() => {
+            void domain.refetch();
+            void lists.refetch();
+          }}
+        />
+        {domain.error ? null : !verified ? (
           <DialogFooter>
             <Button
               variant="primary"

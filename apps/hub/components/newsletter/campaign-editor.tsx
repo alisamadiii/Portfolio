@@ -30,6 +30,7 @@ import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 
 import { EmailEditor, SaveStatus, useAutosave } from "./email-editor";
+import { QueryError } from "./query-error";
 import { CAMPAIGN_STATUS, pct, useNewsletter } from "./use-newsletter";
 
 type Campaign = RouterOutputs["newsletter"]["campaigns"]["get"];
@@ -162,6 +163,13 @@ function DraftEditor({ campaign }: { campaign: Campaign }) {
       </Toolbar>
       <div className="min-h-0 flex-1 overflow-auto bg-canvas px-4 pb-16 pt-6 sm:px-10">
         <div className="mx-auto flex max-w-[720px] flex-col gap-4">
+          <QueryError
+            error={domain.error ?? lists.error}
+            onRetry={() => {
+              void domain.refetch();
+              void lists.refetch();
+            }}
+          />
           <Card className="grid gap-3 p-5 sm:grid-cols-2">
             <Field label="Campaign name">
               <Input value={name} disabled={!canWrite} onChange={(e) => setName(e.target.value)} onBlur={() => name.trim() && name !== campaign.name && saveMeta({ name })} />
@@ -358,6 +366,7 @@ function CampaignReport({ campaign }: { campaign: Campaign }) {
             { label: "Bounced", value: campaign.bounced.toLocaleString() },
           ]}
         />
+        <QueryError error={recipients.error} onRetry={() => void recipients.refetch()} />
         <Card>
           <CardHeader title="Latest recipients" divided />
           <DataTable

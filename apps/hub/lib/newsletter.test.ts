@@ -252,3 +252,76 @@ describe("resolveList", () => {
     expect(await lib.resolveList(mail)).toBe("cb_default");
   });
 });
+
+// Regression (2026-11-15, production): stored team ids that useSend rejects
+// ("Invalid workspace") left every Newsletter tab failing with no way out.
+describe("stale workspace", () => {
+  const mail = { projectId: "p", teamId: 9, domainId: 3, contactBookId: "cb" };
+
+  it("an invalid workspace unlinks the project and reports not set up", async () => {
+    const { UseSendError } = await import("@workspace/email/usesend");
+    h.state.fetchImpl = async () => {
+      throw new UseSendError(403, "FORBIDDEN", "Invalid workspace");
+    };
+    await expect(lib.teamFetch(mail, "/api/v1/templates")).rejects.toMatchObject({
+      code: "PRECONDITION_FAILED",
+      message: lib.NOT_SET_UP,
+    });
+    expect(h.state.updates).toEqual([
+      { usesendTeamId: null, usesendDomainId: null, usesendContactBookId: null },
+    ]);
+  });
+
+  it("workspaceReady is false for a stale id and true for a live one", async () => {
+    const { UseSendError } = await import("@workspace/email/usesend");
+    h.state.row = { teamId: 9, domainId: null, contactBookId: null };
+    h.state.fetchImpl = async () => {
+      throw new UseSendError(403, "FORBIDDEN", "Invalid workspace");
+    };
+    expect(await lib.workspaceReady("p")).toBe(false);
+    h.state.fetchImpl = async () => [];
+    expect(await lib.workspaceReady("p")).toBe(true);
+  });
+});
+
+// The UI shows the server's message, so it must carry the real cause.
+describe("error messages", () => {
+  const mail = { projectId: "p", teamId: 15, domainId: null, contactBookId: null };
+
+  it("unmapped useSend errors keep status and message", async () => {
+    const { UseSendError } = await import("@workspace/email/usesend");
+    h.state.fetchImpl = async () => {
+      throw new UseSendError(502, undefined, "Bad Gateway");
+    };
+    await expect(lib.teamFetch(mail, "/api/v1/templates")).rejects.toThrow(
+      "Email service error (502): Bad Gateway"
+    );
+  });
+
+  it("network or config failures say what broke", async () => {
+    h.state.fetchImpl = async () => {
+      throw new Error("USESEND_ADMIN_API_KEY is not set");
+    };
+    await expect(lib.teamFetch(mail, "/api/v1/templates")).rejects.toThrow(
+      "Email service unreachable: USESEND_ADMIN_API_KEY is not set"
+    );
+  });
+
+  it("mapped codes pass useSend's message through", async () => {
+    const { UseSendError } = await import("@workspace/email/usesend");
+    h.state.fetchImpl = async () => {
+      throw new UseSendError(400, "BAD_REQUEST", "Campaign must include an unsubscribe link");
+    };
+    await expect(lib.teamFetch(mail, "/api/v1/campaigns")).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: "Campaign must include an unsubscribe link",
+    });
+  });
+});
+
+describe("lists (folders)", () => {
+  it("deleting the project's default list forgets it", async () => {
+    await lib.clearDefaultList("p", "cb_default");
+    expect(h.state.updates).toEqual([{ usesendContactBookId: null }]);
+  });
+});

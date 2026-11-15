@@ -14,9 +14,10 @@ import {
 import {
   createProjectDomain,
   deleteProjectDomain,
-  isProvisioned,
+  workspaceReady,
   projectDomain,
   projectMail,
+  clearDefaultList,
   resolveList,
   setUpWorkspace,
   starterContent,
@@ -288,6 +289,37 @@ const contactFields = {
 };
 
 const contactsRouter = createTRPCRouter({
+  /** New list. Double opt-in is always off: adding contacts must never email them. */
+  createList: write
+    .input(z.object({ name: z.string().trim().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      const mail = await mailFor(ctx);
+      const book = await teamFetch<{ id: string; name: string }>(mail, "/api/v1/contactBooks", {
+        method: "POST",
+        body: { name: input.name, doubleOptInEnabled: false },
+      });
+      return { id: book.id, name: book.name };
+    }),
+
+  renameList: write
+    .input(z.object({ listId: id, name: z.string().trim().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      const mail = await mailFor(ctx);
+      await teamFetch(mail, `/api/v1/contactBooks/${input.listId}`, {
+        method: "PATCH",
+        body: { name: input.name },
+      });
+      return { ok: true };
+    }),
+
+  /** Deletes a list and its contacts (confirmed in the UI). */
+  deleteList: manage.input(z.object({ listId: id })).mutation(async ({ ctx, input }) => {
+    const mail = await mailFor(ctx);
+    await teamFetch(mail, `/api/v1/contactBooks/${input.listId}`, { method: "DELETE" });
+    if (mail.contactBookId === input.listId) await clearDefaultList(mail.projectId, input.listId);
+    return { ok: true };
+  }),
+
   /** Every list in the project's workspace, with counts. Default list first. */
   lists: read.query(async ({ ctx }) => {
     const mail = await mailFor(ctx);
@@ -579,7 +611,7 @@ export const newsletterRouter = createTRPCRouter({
   /** Whether the project's useSend workspace exists. The page shows "Set up" when not. */
   status: read.query(async ({ ctx }) => {
     await requireFeature(ctx.user, ctx.projectId, "newsletter");
-    return { ready: await isProvisioned(ctx.projectId) };
+    return { ready: await workspaceReady(ctx.projectId) };
   }),
 
   /** Creates the project's own workspace (idempotent). */

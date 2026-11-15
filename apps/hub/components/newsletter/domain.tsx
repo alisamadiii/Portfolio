@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { Field, Input } from "@/components/ds/ui/field";
 import { IconTile } from "@/components/ds/ui/misc";
 
+import { QueryError } from "./query-error";
 import { useNewsletter } from "./use-newsletter";
 
 type Domain = NonNullable<RouterOutputs["newsletter"]["domain"]["get"]>;
@@ -42,6 +43,9 @@ export function DomainSection() {
     },
   });
 
+  if (domain.error) {
+    return <QueryError error={domain.error} onRetry={() => void domain.refetch()} />;
+  }
   if (domain.isLoading) {
     return <Card className="h-40 animate-pulse" />;
   }
