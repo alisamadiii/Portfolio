@@ -5,13 +5,20 @@ import z from "zod";
 import { db } from "@workspace/drizzle/index";
 import { githubInstallation, hubProject } from "@workspace/drizzle/schema";
 
-import { authenticatedProcedure, createTRPCRouter } from "../init";
+import {
+  authenticatedProcedure,
+  cmsFullAccessProcedure,
+  createTRPCRouter,
+} from "../init";
 import { isAdminUser } from "../lib/authz-shared";
+import { signImportToken } from "../lib/cms/edit-token";
 import {
   cancelUploadProject,
   finalizeUploadProject,
+  importSecret,
   reserveUploadProject,
 } from "../lib/cms/upload-project";
+import { netlifyPlan } from "../lib/netlify";
 import { provisionProjectEmails } from "../lib/usesend-provision";
 import { checkGithubRepoFramework } from "../lib/detect-framework";
 import { normalizeWebsiteUrl } from "../lib/website-url";
@@ -397,6 +404,41 @@ export const deployRouter = createTRPCRouter({
       await cancelUploadProject(input.projectId);
       return { ok: true };
     }),
+
+  // ─── Replace an upload project's source ("Import" inside a project) ──
+  // Same direct browser → pilot upload as the first import, but into the
+  // existing workspace: the pilot builds the new tree as one commit on main
+  // and swaps it in. The live Netlify site keeps the old version until a
+  // redeploy (Ali's call: replacing never deploys on its own).
+  replaceUploadToken: cmsFullAccessProcedure.mutation(({ ctx }) => {
+    if (ctx.source !== "upload") {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Only uploaded projects can import a new version.",
+      });
+    }
+    return {
+      token: signImportToken(
+        { projectId: ctx.projectId, scope: "replace" },
+        importSecret()
+      ),
+    };
+  }),
+
+  // After the pilot accepted the replace: mark the project as changed.
+  finalizeReplace: cmsFullAccessProcedure.mutation(async ({ ctx }) => {
+    if (ctx.source !== "upload") {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Not an uploaded project." });
+    }
+    const [row] = await db
+      .update(hubProject)
+      .set({ githubUpdatedAt: new Date() })
+      .where(eq(hubProject.id, ctx.projectId))
+      .returning({ netlifySiteId: hubProject.netlifySiteId });
+    // Offer Redeploy only when there's a site this caller may deploy.
+    const plan = await netlifyPlan(ctx.projectId, ctx.user);
+    return { netlify: Boolean(row?.netlifySiteId) && plan.action === "deploy" };
+  }),
 });
 
 /** The caller's own upload-sourced row (admins pass), or a clear error. */

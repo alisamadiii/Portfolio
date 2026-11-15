@@ -55,7 +55,7 @@ export const INTEGRATION_APPS: IntegrationApp[] = [
     id: "netlify",
     name: "Netlify",
     description:
-      "Host uploaded websites on your own Netlify account. Without it, they're hosted on ours.",
+      "Host your website on your own Netlify account. Needed to publish uploaded websites.",
     logo: <NetlifyLogo className="size-6" />,
     connect: async (callbackURL) =>
       toError(

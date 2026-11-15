@@ -7,7 +7,7 @@ import { hubProject } from "@workspace/drizzle/schema";
 
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
 import { latestNetlifyDeploy } from "../lib/content-pilot";
-import { getConnectedAccount } from "../lib/integrations";
+import { isAdminUser } from "../lib/authz-shared";
 import {
   createNetlifySnippet,
   deleteNetlifySnippet,
@@ -19,6 +19,7 @@ import {
   getNetlifySsl,
   listNetlifyDeploys,
   listNetlifySnippets,
+  netlifyPlan,
   netlifyTokenFor,
   provisionNetlifySsl,
   updateNetlifySite,
@@ -78,14 +79,11 @@ export const netlifyRouter = createTRPCRouter({
   // Where Publish will deploy, for the confirm dialog. DB only, no Netlify call.
   target: cmsProcedure.query(async ({ ctx }) => {
     const project = await projectNetlify(ctx.projectId);
-    const connected = !!(await getConnectedAccount(ctx.user.id, "netlify"));
+    const plan = await netlifyPlan(ctx.projectId, ctx.user);
     return {
       siteUrl: project.netlifySiteUrl,
-      // Existing site: who owns it. New site: the caller's Netlify if linked.
-      ownedByAgency: project.netlifySiteId
-        ? !project.netlifyConnectedUserId
-        : !connected,
-      connected,
+      action: plan.action,
+      host: plan.action === "deploy" ? plan.host : null,
     };
   }),
 
@@ -111,6 +109,8 @@ export const netlifyRouter = createTRPCRouter({
       },
       // Agency-owned sites live in Ali's Netlify: the link is useless to clients.
       ownedByAgency: !project.netlifyConnectedUserId,
+      // Agency-hosted sites only deploy when an admin asks.
+      canRedeploy: !!project.netlifyConnectedUserId || isAdminUser(ctx.user),
       job,
       deploys: deploys.map((d) => ({
         id: d.id,
@@ -133,11 +133,17 @@ export const netlifyRouter = createTRPCRouter({
         message: "Only uploaded projects deploy to Netlify from here.",
       });
     }
-    const queued = await deployProjectToNetlify(ctx.projectId, ctx.user.id);
-    if (!queued) {
+    const status = await deployProjectToNetlify(ctx.projectId, ctx.user);
+    if (status === "agency_managed") {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Your site is managed by our team. We'll put changes live.",
+      });
+    }
+    if (status === "needs_netlify") {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
-        message: "Connect Netlify in Integrations to deploy this site.",
+        message: "Connect Netlify to host your website.",
       });
     }
     return { ok: true };

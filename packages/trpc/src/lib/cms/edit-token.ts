@@ -50,15 +50,19 @@ const IMPORT_TTL_SECONDS = 15 * 60;
  * secret and format as the edit token, but the `scope: 'import'` claim keeps
  * the two strictly separate: content-pilot's verifyEditToken rejects any
  * payload carrying a `scope`, and its verifyImportToken requires this one.
+ *
+ * `scope: "replace"` authorizes one source replace on an existing upload
+ * project (POST /api/v1/imports/:projectId); the pilot checks the scope per
+ * route, so an import token can't replace and vice versa.
  */
 export function signImportToken(
-  data: { projectId: string },
+  data: { projectId: string; scope?: "import" | "replace" },
   secret: string,
   ttlSeconds: number = IMPORT_TTL_SECONDS
 ): string {
   const payload = {
     projectId: data.projectId,
-    scope: "import" as const,
+    scope: data.scope ?? "import",
     exp: Math.floor(Date.now() / 1000) + ttlSeconds,
   };
   const body = b64url(Buffer.from(JSON.stringify(payload)));

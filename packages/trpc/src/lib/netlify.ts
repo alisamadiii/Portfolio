@@ -6,14 +6,17 @@ import { eq } from "drizzle-orm";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
+import { isAdminUser } from "./authz-shared";
 import { deployToNetlify } from "./content-pilot";
 import { getConnectedAccount, getIntegrationAccessToken } from "./integrations";
+import { type NetlifyPlan, planNetlifyHost } from "./netlify-shared";
 
 // ─── Netlify API ─────────────────────────────────────────────────
-// Raw REST, no SDK. Upload projects publish to a Netlify site: the publishing
-// user's own Netlify (OAuth link, account table) when connected, else the
-// agency's personal access token. Which one owns a site is pinned on the
-// project (hub_project.netlifyConnectedUserId) when the site is created.
+// Raw REST, no SDK. Upload projects publish to a Netlify site on the client's
+// own Netlify (OAuth link, account table). The agency's personal access token
+// is used only when an admin publishes (planNetlifyHost). Which account owns a
+// site is pinned on the project (hub_project.netlifyConnectedUserId, null =
+// agency) when the site is created.
 
 const BASE = "https://api.netlify.com/api/v1";
 
@@ -40,19 +43,36 @@ export async function netlifyTokenFor(project: {
   return token;
 }
 
-/**
- * Who will own a NEW site: the caller when they linked Netlify, else the
- * agency. Null when neither is available (publish then skips the deploy).
- */
-export async function netlifyOwnerForNewSite(
-  userId: string
-): Promise<{ token: string; connectedUserId: string | null } | null> {
-  if (await getConnectedAccount(userId, "netlify")) {
-    const token = await getIntegrationAccessToken(userId, "netlify", "Netlify");
-    return { token, connectedUserId: userId };
-  }
-  const token = agencyToken();
-  return token ? { token, connectedUserId: null } : null;
+type Caller = { id: string; role?: string | null; isAdmin?: boolean };
+
+/** Who would host a publish by `caller` right now. DB only, no Netlify call. */
+export async function netlifyPlan(
+  projectId: string,
+  caller: Caller
+): Promise<NetlifyPlan> {
+  const [project] = await db
+    .select({
+      netlifySiteId: hubProject.netlifySiteId,
+      netlifyConnectedUserId: hubProject.netlifyConnectedUserId,
+      ownerId: hubProject.githubConnectedUserId,
+    })
+    .from(hubProject)
+    .where(eq(hubProject.id, projectId))
+    .limit(1);
+  if (!project) throw new TRPCError({ code: "NOT_FOUND" });
+  const callerIsAdmin = isAdminUser(caller);
+  const connected = async (userId: string | null) =>
+    !!userId && !!(await getConnectedAccount(userId, "netlify"));
+  return planNetlifyHost({
+    siteExists: !!project.netlifySiteId,
+    pinnedUserId: project.netlifyConnectedUserId,
+    callerId: caller.id,
+    callerIsAdmin,
+    callerConnected: await connected(caller.id),
+    ownerId: project.ownerId,
+    // Only an admin publish can land on the owner's account.
+    ownerConnected: callerIsAdmin ? await connected(project.ownerId) : false,
+  });
 }
 
 async function netlify<T>(
@@ -183,36 +203,35 @@ export async function setNetlifySiteEnv(
 export const listNetlifyDeploys = (token: string, siteId: string) =>
   netlify<NetlifyDeploy[]>(token, `/sites/${siteId}/deploys?per_page=10`);
 
+export type NetlifyDeployStatus = "deploying" | "needs_netlify" | "agency_managed";
+
 /**
- * Publishes an upload project's default branch to Netlify: creates the site on
- * the first deploy (owned by the caller's Netlify when linked, else the
- * agency), then queues the build + zip deploy on content-pilot. Returns
- * false when no Netlify token is available at all.
+ * Publishes an upload project's default branch to Netlify per netlifyPlan:
+ * creates the site on the first deploy, then queues the build + deploy on
+ * content-pilot. Returns what happened instead of throwing for the two
+ * "no deploy" outcomes, so publish can still land the edits.
  */
 export async function deployProjectToNetlify(
   projectId: string,
-  userId: string
-): Promise<boolean> {
+  caller: Caller
+): Promise<NetlifyDeployStatus> {
+  const plan = await netlifyPlan(projectId, caller);
+  if (plan.action !== "deploy") return plan.action;
+
   const [project] = await db
     .select({
       repo: hubProject.repo,
       websiteUrl: hubProject.websiteUrl,
       netlifySiteId: hubProject.netlifySiteId,
-      netlifyConnectedUserId: hubProject.netlifyConnectedUserId,
     })
     .from(hubProject)
     .where(eq(hubProject.id, projectId))
     .limit(1);
   if (!project) throw new TRPCError({ code: "NOT_FOUND" });
 
+  const token = await netlifyTokenFor({ netlifyConnectedUserId: plan.tokenUserId });
   let siteId = project.netlifySiteId;
-  let token: string;
-  if (siteId) {
-    token = await netlifyTokenFor(project);
-  } else {
-    const owner = await netlifyOwnerForNewSite(userId);
-    if (!owner) return false;
-    token = owner.token;
+  if (!siteId) {
     const site = await createNetlifySite(token, project.repo);
     const url = site.ssl_url ?? site.url;
     siteId = site.id;
@@ -221,7 +240,7 @@ export async function deployProjectToNetlify(
       .set({
         netlifySiteId: site.id,
         netlifySiteUrl: url,
-        netlifyConnectedUserId: owner.connectedUserId,
+        netlifyConnectedUserId: plan.tokenUserId,
         // Fill the live URL the rest of the hub uses, never overwrite one.
         ...(project.websiteUrl ? {} : { websiteUrl: url }),
       })
@@ -229,7 +248,7 @@ export async function deployProjectToNetlify(
   }
 
   await deployToNetlify({ projectId, siteId, token });
-  return true;
+  return "deploying";
 }
 
 // ─── Team plan & usage ───────────────────────────────────────────

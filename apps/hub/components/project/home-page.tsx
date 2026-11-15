@@ -23,6 +23,7 @@ import { useRouteProjectId } from "@/hooks/use-repo";
 import { APPS, appState, lockedCta } from "@/lib/apps";
 import { repoPath } from "@/lib/paths";
 
+import { ReplaceSourceDialog } from "./replace-source-dialog";
 import { hostOf, SitePreview } from "./site-preview";
 
 function greeting() {
@@ -218,6 +219,10 @@ export function HomePage() {
                 View site
               </ButtonAnchor>
             )}
+            {project?.source === "upload" &&
+              (project.role == null || project.role === "full-access") && (
+                <ReplaceSourceDialog projectId={projectId} />
+              )}
           </div>
         </div>
       </Card>

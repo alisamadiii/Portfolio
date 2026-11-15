@@ -144,7 +144,11 @@ export function NetlifyPage() {
   const header = (
     <PageHeader
       title="Netlify"
-      description="Where your website is hosted. Every publish builds the site and deploys it here."
+      description={
+        data && !data.canRedeploy
+          ? "Where your website is hosted. Your site is managed by our team: we put published changes live."
+          : "Where your website is hosted. Every publish builds the site and deploys it here."
+      }
       actions={
         data && (
           <>
@@ -158,7 +162,7 @@ export function NetlifyPage() {
                 Open in Netlify
               </ButtonAnchor>
             )}
-            {canDeploy && (
+            {canDeploy && data.canRedeploy && (
               <Button
                 onClick={() => setConfirmRedeploy(true)}
                 disabled={running || redeploy.isPending}

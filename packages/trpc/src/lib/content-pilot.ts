@@ -132,6 +132,13 @@ export type PilotProjectStatus = {
   /** Workspace on disk (uploads always; GitHub after the first session). */
   exists: boolean;
   framework: string | null;
+  /** Upload projects: the private GitHub org mirror of main; null until the first push. */
+  backup?: {
+    repo: string;
+    url: string;
+    sha: string | null;
+    error: string | null;
+  } | null;
 };
 
 /** A project's pilot workspace state. */

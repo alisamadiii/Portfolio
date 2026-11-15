@@ -11,7 +11,11 @@ import { installationCommitAuthor } from "@workspace/trpc/lib/github-app";
 import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 import { getBranchHeadSha } from "@workspace/trpc/lib/cms/github-cache-file";
 import { createOctokitInstance } from "@workspace/trpc/lib/cms/octokit";
-import { deployProjectToNetlify } from "@workspace/trpc/lib/netlify";
+import {
+  deployProjectToNetlify,
+  type NetlifyDeployStatus,
+  netlifyPlan,
+} from "@workspace/trpc/lib/netlify";
 import {
   cancelPreviewMessage,
   closePreviewSession,
@@ -377,6 +381,18 @@ export const previewSessionRouter = createTRPCRouter({
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const session = await sessionForRepo(ctx.projectId, input.sessionId);
+
+      // Uploads host on the client's own Netlify. A first publish without it
+      // is refused BEFORE the squash, so the edits stay in the editor.
+      if (ctx.source === "upload") {
+        const plan = await netlifyPlan(ctx.projectId, ctx.user);
+        if (plan.action === "needs_netlify") {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Connect Netlify to host your website.",
+          });
+        }
+      }
       await closePreviewSession(session.id, "discard");
       // Uploads have no remote refs; the local branch dies with the workspace
       // sync on the next session.
@@ -429,9 +445,9 @@ export const previewSessionRouter = createTRPCRouter({
       const { sha, changed } = await publishPreviewSession(session.id);
 
       await closePreviewSession(session.id, "published");
-      // Upload projects only: whether the build + Netlify deploy was queued
-      // (false = no Netlify token anywhere, the site stays preview-only).
-      let netlify: boolean | null = null;
+      // Upload projects only: "deploying", or "agency_managed" when the site
+      // lives on the agency's Netlify and only an admin puts it live.
+      let netlify: NetlifyDeployStatus | "failed" | null = null;
       if (ctx.source === "upload") {
         // Local-only publish: no GitHub refs to clean up. Bump the activity
         // timestamp so the gallery sorts the freshly published site up.
@@ -441,10 +457,10 @@ export const previewSessionRouter = createTRPCRouter({
           .where(eq(hubProject.id, ctx.projectId));
         // The squash already landed, so a Netlify failure must not fail the
         // publish: the Netlify page shows the error and can redeploy.
-        netlify = await deployProjectToNetlify(ctx.projectId, ctx.user.id).catch(
+        netlify = await deployProjectToNetlify(ctx.projectId, ctx.user).catch(
           (error) => {
             console.error("[publish] netlify deploy failed", error);
-            return false;
+            return "failed" as const;
           }
         );
       } else {

@@ -59,3 +59,18 @@ describe("signImportToken", () => {
     expect("scope" in decodePayload(token)).toBe(false);
   });
 });
+
+// "Import" inside an upload project (deploy.replaceUploadToken, 2026-11-15).
+describe("signImportToken replace scope", () => {
+  const SECRET = "test-secret";
+  const PROJECT_ID = "6f1d3c1e-2b8a-4a57-9d0e-3c4b5a6d7e8f";
+
+  it("mints scope:'replace' when asked", () => {
+    const token = signImportToken({ projectId: PROJECT_ID, scope: "replace" }, SECRET);
+    expect(decodePayload(token).scope).toBe("replace");
+  });
+
+  it("defaults to scope:'import' so the first-import flow is unchanged", () => {
+    expect(decodePayload(signImportToken({ projectId: PROJECT_ID }, SECRET)).scope).toBe("import");
+  });
+});

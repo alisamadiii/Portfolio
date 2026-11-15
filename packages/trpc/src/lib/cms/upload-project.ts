@@ -17,7 +17,7 @@ import { uploadSlug } from "./upload-slug";
 // agency starter project (server-side zip of a placeholder index.html) and
 // client website Import (server-side zip of an R2 design folder).
 
-const importSecret = () => {
+export const importSecret = () => {
   const secret = process.env.EDIT_TOKEN_SECRET;
   if (!secret) {
     throw new TRPCError({

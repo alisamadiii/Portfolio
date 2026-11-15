@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRepo } from "@/hooks/use-repo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -19,7 +19,10 @@ import { Button } from "@workspace/ui/components/button";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { INTEGRATION_APPS } from "@/lib/integrations";
+import {
+  NETLIFY_CONNECTED_PARAM,
+  NetlifyConnectDialog,
+} from "@/components/netlify/netlify-connect-dialog";
 
 import { roleAtLeast } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
@@ -63,11 +66,15 @@ export function SessionActions() {
           void queryClient.invalidateQueries({
             queryKey: trpc.cms.repos.listMine.queryKey(),
           });
-          if (result.netlify) {
+          if (result.netlify === "deploying") {
             toast.success("Published. Deploying to Netlify…");
+          } else if (result.netlify === "agency_managed") {
+            toast.success("Saved.", {
+              description: "Your site is managed by our team. We'll put these changes live.",
+            });
           } else {
             toast.success("Published.", {
-              description: "Connect Netlify in Integrations to put the site online.",
+              description: "The Netlify deploy didn't start. Try Redeploy on the Netlify page.",
             });
           }
           return;
@@ -102,18 +109,34 @@ export function SessionActions() {
   const busy = transcriptBusy(transcriptQuery.data);
 
   const [confirmPublish, setConfirmPublish] = useState(false);
-  // Upload projects deploy to Netlify: the dialog says where.
+  const [connectOpen, setConnectOpen] = useState(false);
+  // Upload projects deploy to Netlify: where, and whether the caller can.
   const netlifyTarget = useQuery(
     trpc.netlify.target.queryOptions(
       { projectId },
-      { enabled: confirmPublish && source === "upload" }
+      { enabled: source === "upload" && canPublish }
     )
   );
-  const connectNetlify = async () => {
-    const app = INTEGRATION_APPS.find((a) => a.id === "netlify");
-    const error = await app?.connect(window.location.href);
-    if (error) toast.error(error.message ?? "Couldn't connect Netlify.");
+  const startPublish = async () => {
+    if (source !== "upload") {
+      setConfirmPublish(true);
+      return;
+    }
+    const target = (await netlifyTarget.refetch()).data;
+    if (target?.action === "needs_netlify") setConnectOpen(true);
+    else setConfirmPublish(true);
   };
+
+  // Back from the Netlify OAuth link: drop the marker and resume publishing.
+  useEffect(() => {
+    if (source !== "upload" || !canPublish || !session) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get(NETLIFY_CONNECTED_PARAM) !== "connected") return;
+    url.searchParams.delete(NETLIFY_CONNECTED_PARAM);
+    window.history.replaceState(null, "", url.toString());
+    void startPublish();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, canPublish, session?.id]);
 
   const [confirmDiscard, setConfirmDiscard] = useState(false);
 
@@ -151,7 +174,7 @@ export function SessionActions() {
             publishMutation.isPending ||
             (session.status !== "ready" && session.status !== "paused")
           }
-          onClick={() => setConfirmPublish(true)}
+          onClick={() => void startPublish()}
         >
           {publishMutation.isPending ? (
             <Loader2 className="size-4 animate-spin" />
@@ -172,24 +195,17 @@ export function SessionActions() {
                 : "Everything you see in the preview goes live on your website."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {netlifyTarget.data && !netlifyTarget.data.siteUrl && (
+          {source === "upload" && netlifyTarget.data && (
             <p className="text-sm text-muted-foreground">
-              {netlifyTarget.data.ownedByAgency ? (
-                <>
-                  Your website will be hosted on our agency&apos;s Netlify account.
-                  Want it on your own Netlify account instead?{" "}
-                  <button
-                    type="button"
-                    className="font-medium text-foreground underline underline-offset-2"
-                    onClick={() => void connectNetlify()}
-                  >
-                    Connect Netlify
-                  </button>{" "}
-                  before publishing.
-                </>
-              ) : (
-                "Your website will be published to your own Netlify account."
-              )}
+              {netlifyTarget.data.action === "agency_managed"
+                ? "Your site is managed by our team. Your changes are saved and we'll put them live."
+                : netlifyTarget.data.host === "agency"
+                  ? "Deploys to the agency Netlify account."
+                  : netlifyTarget.data.host === "owner"
+                    ? "Deploys to the client's own Netlify account."
+                    : netlifyTarget.data.siteUrl
+                      ? "Deploys to your Netlify account."
+                      : "Your website will be created on your own Netlify account."}
             </p>
           )}
           <AlertDialogFooter>
@@ -207,6 +223,8 @@ export function SessionActions() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <NetlifyConnectDialog open={connectOpen} onClose={() => setConnectOpen(false)} />
 
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <AlertDialogContent>
