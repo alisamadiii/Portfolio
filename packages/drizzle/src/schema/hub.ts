@@ -313,6 +313,12 @@ export const hubReviewLink = pgTable("hub_review_link", {
   placeId: text("place_id").notNull(),
   businessName: text("business_name").notNull(),
   address: text("address"),
+  // Google place types, to tell a business from a bare street address
+  // (Google only opens the review popup for businesses).
+  placeTypes: text("place_types").array(),
+  // Optional official g.page/r/<code>/review link pasted from the Business
+  // Profile; overrides the placeid link when set.
+  googleReviewUrl: text("google_review_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

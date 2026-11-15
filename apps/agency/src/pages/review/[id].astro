@@ -300,14 +300,14 @@ const telHref = business.phone ? `tel:${business.phone.replace(/[^\d+]/g, "")}` 
         star.classList.remove("rv-tap");
         void star.offsetWidth;
         star.classList.add("rv-tap");
+        // Nothing is saved on tap: only a sent form or a Google click counts.
         show(rating === 5 ? "google" : "feedback");
-        // Record the tap (chained so a quick change never creates two rows).
-        pending = pending.then(() => post({ rating })).catch(() => {});
       });
     });
 
     document.querySelectorAll("[data-google]").forEach((a) =>
       a.addEventListener("click", () => {
+        // Chained so a double click never creates two rows.
         pending = pending.then(() => post({ rating, google: true })).catch(() => {});
       })
     );

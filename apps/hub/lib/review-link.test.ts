@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import { sniffLogoType } from "@workspace/trpc/lib/logo-shared";
 import {
   SLUG_LENGTH,
+  businessSearchQuery,
   googleReviewUrl,
   isReviewSlug,
   newReviewSlug,
+  parseGoogleReviewUrl,
   reviewBusiness,
   reviewInfoStatus,
 } from "@workspace/trpc/lib/review-link-shared";
@@ -96,5 +98,45 @@ describe("sniffLogoType", () => {
   it("rejects SVG and anything else", () => {
     expect(sniffLogoType(new TextEncoder().encode("<svg xmlns='x'></svg>"))).toBeNull();
     expect(sniffLogoType(new Uint8Array())).toBeNull();
+  });
+});
+
+describe("parseGoogleReviewUrl", () => {
+  it("accepts the Business Profile short link", () => {
+    expect(parseGoogleReviewUrl(" https://g.page/r/CQ8pNmDSUzx8EAE/review ")).toBe(
+      "https://g.page/r/CQ8pNmDSUzx8EAE/review"
+    );
+    expect(parseGoogleReviewUrl("https://g.page/r/CQ8pNmDSUzx8EAE/review/?x=1")).toBe(
+      "https://g.page/r/CQ8pNmDSUzx8EAE/review"
+    );
+  });
+
+  // Deliberately flipped (2026-11-15): the Business Profile link is required,
+  // the placeid link no longer counts as one.
+  it("rejects the writereview placeid link", () => {
+    expect(
+      parseGoogleReviewUrl("https://search.google.com/local/writereview?placeid=ChIJT5scynmXKyIRlwFotSc8Yqc")
+    ).toBeNull();
+  });
+
+  it("rejects other links and junk", () => {
+    expect(parseGoogleReviewUrl("https://g.page/r/abc")).toBeNull();
+    expect(parseGoogleReviewUrl("https://evil.com/r/abc/review")).toBeNull();
+    expect(parseGoogleReviewUrl("https://search.google.com/local/writereview")).toBeNull();
+    expect(parseGoogleReviewUrl("javascript:alert(1)")).toBeNull();
+    expect(parseGoogleReviewUrl("not a url")).toBeNull();
+  });
+});
+
+describe("businessSearchQuery", () => {
+  it("uses the name plus the city part, never the street", () => {
+    expect(businessSearchQuery("Acme Plumbing", "566 Kit St, Jacksonville, FL 32216, USA")).toBe(
+      "Acme Plumbing, Jacksonville, FL 32216"
+    );
+  });
+
+  it("falls back to the name alone when the address has no city part", () => {
+    expect(businessSearchQuery("Acme Plumbing", "566 Kit St")).toBe("Acme Plumbing");
+    expect(businessSearchQuery("Acme Plumbing", "")).toBe("Acme Plumbing");
   });
 });

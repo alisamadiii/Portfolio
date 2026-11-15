@@ -9,6 +9,42 @@ export const googleReviewUrl = (placeId: string) =>
 
 export const reviewPageUrl = (linkId: string) => `${REVIEW_PAGE_BASE}/${linkId}`;
 
+/**
+ * The pasted Business Profile review link (g.page/r/<code>/review),
+ * normalized, or null. Required before a review link goes live: it is the
+ * only link Google guarantees opens the review form for the business.
+ */
+export function parseGoogleReviewUrl(input: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(input.trim());
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  const host = url.hostname.toLowerCase();
+  if (host === "g.page") {
+    const m = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)\/review\/?$/);
+    return m ? `https://g.page/r/${m[1]}/review` : null;
+  }
+  return null;
+}
+
+/**
+ * The Google Maps search for the business: its name plus the city part of
+ * the address ("Jacksonville, FL 32216"). The street is left out on purpose,
+ * it makes Google return the bare address instead of the business.
+ */
+export function businessSearchQuery(name: string, address: string): string {
+  const parts = address
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .filter((p) => !/^(usa|us|united states)$/i.test(p));
+  const area = parts.length >= 3 ? parts.slice(-2).join(", ") : "";
+  return [name.trim(), area].filter(Boolean).join(", ");
+}
+
 const SLUG_ALPHABET = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 export const SLUG_LENGTH = 8;
 

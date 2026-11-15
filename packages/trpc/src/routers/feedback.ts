@@ -12,11 +12,13 @@ import {
 
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
 import { requireApp } from "../lib/payment/entitlements";
-import { getPlaceDetails, searchPlacesLite } from "../lib/places";
+import { getPlaceDetails, isAddressResult, searchPlacesLite } from "../lib/places";
 import {
   REVIEW_FIELD_LABELS,
   REVIEW_INFO_KEYS,
+  businessSearchQuery,
   newReviewSlug,
+  parseGoogleReviewUrl,
   reviewInfoStatus,
   reviewPageUrl,
 } from "../lib/review-link-shared";
@@ -65,10 +67,11 @@ export const feedbackRouter = createTRPCRouter({
     ]);
     const name = info?.[REVIEW_INFO_KEYS.name]?.[0]?.trim() ?? "";
     const address = info?.[REVIEW_INFO_KEYS.address]?.[0]?.trim() ?? "";
+
     return {
       ...status,
-      // Prefills the Google Maps search.
-      defaultQuery: [name, address].filter(Boolean).join(", "),
+      // Prefills the Google Maps search (name + city, never the street).
+      defaultQuery: businessSearchQuery(name, address),
       link: link
         ? {
             id: link.id,
@@ -76,6 +79,8 @@ export const feedbackRouter = createTRPCRouter({
             placeId: link.placeId,
             businessName: link.businessName,
             address: link.address,
+            // Required before the link goes live (null = not pasted yet).
+            googleUrl: link.googleReviewUrl,
           }
         : null,
     };
@@ -93,7 +98,8 @@ export const feedbackRouter = createTRPCRouter({
           message: "Google Maps search failed. Try again in a moment.",
         });
       }
-      return result.places.map((p) => ({
+      // Only businesses: a street address has no Google reviews.
+      return result.places.filter((p) => !isAddressResult(p.types)).map((p) => ({
         placeId: p.id,
         name: p.displayName?.text ?? "",
         address: p.formattedAddress ?? null,
@@ -124,8 +130,17 @@ export const feedbackRouter = createTRPCRouter({
           message: "We couldn't find that business on Google Maps.",
         });
       }
+      if (isAddressResult(place.types)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "That's an address, not a business listing. Pick your business from the results.",
+        });
+      }
       const values = {
         placeId: place.id,
+        placeTypes: place.types ?? [],
+        // A pasted review link belongs to the previous business.
+        googleReviewUrl: null,
         businessName: place.displayName?.text ?? "",
         address: place.formattedAddress ?? null,
         updatedAt: new Date(),
@@ -137,6 +152,28 @@ export const feedbackRouter = createTRPCRouter({
         .onConflictDoUpdate({ target: hubReviewLink.projectId, set: values })
         .returning();
       return { id: row!.id, url: reviewPageUrl(row!.id) };
+    }),
+
+  /** The Business Profile review link. Required: the review page is live only once it's set. */
+  setGoogleUrl: appCmsFullAccessProcedure
+    .input(z.object({ url: z.string().trim().min(1).max(500) }))
+    .mutation(async ({ ctx, input }) => {
+      const url = parseGoogleReviewUrl(input.url);
+      if (!url) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Paste the review link from your Google Business Profile (g.page/r/.../review).",
+        });
+      }
+      const [row] = await db
+        .update(hubReviewLink)
+        .set({ googleReviewUrl: url, updatedAt: new Date() })
+        .where(eq(hubReviewLink.projectId, ctx.projectId))
+        .returning({ id: hubReviewLink.id });
+      if (!row) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Set up your review link first." });
+      }
+      return { ok: true };
     }),
 
   list: appCmsProcedure

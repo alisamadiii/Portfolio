@@ -19,7 +19,6 @@ import { getEntitlement } from "@workspace/trpc/lib/payment/entitlements";
 import { publicObjectUrl } from "@workspace/trpc/lib/r2";
 import {
   PRIVATE_MAX_RATING,
-  googleReviewUrl,
   isReviewSlug,
   reviewBusiness,
 } from "@workspace/trpc/lib/review-link-shared";
@@ -37,10 +36,10 @@ import {
 // posts ratings back. GET = the business details the page shows (whitelisted
 // fields from Business info, Google place as fallback). POST = record or
 // update one visitor's rating:
-//   { rating }                       → new row, returns { feedbackId }
-//   { feedbackId, rating?, message } → private feedback, emails the owner
-//   { feedbackId, google: true }     → the visitor opened the Google review
-// A row can only be changed for an hour after it was created.
+//   { rating, message }              → private feedback (1 to 4), emails the owner
+//   { rating, google: true }         → the visitor opened the Google review
+// Star taps alone are never saved. Both return { feedbackId }; a later post
+// with it updates the same row, for an hour after it was created.
 
 const EDIT_WINDOW_MS = 60 * 60 * 1000;
 // One visit is up to ~3 posts (tap, change, submit); allow a couple of visits.
@@ -64,7 +63,8 @@ async function resolveLink(id: string) {
     .leftJoin(agencyClient, eq(agencyClient.projectId, hubReviewLink.projectId))
     .where(eq(hubReviewLink.id, id))
     .limit(1);
-  if (!row) return null;
+  // Not live until the Business Profile review link is pasted.
+  if (!row?.link.googleReviewUrl) return null;
   const entitlement = await getEntitlement(row.link.projectId);
   if (!planAllowsApp("feedback", entitlement)) return null;
   return row;
@@ -91,7 +91,7 @@ export async function GET(
       ...reviewBusiness(row.businessInfo, row.link),
       logoUrl: publicObjectUrl(row.logoKey),
       websiteUrl: row.websiteUrl,
-      googleUrl: googleReviewUrl(row.link.placeId),
+      googleUrl: row.link.googleReviewUrl,
     },
     { headers: { ...headers, "Cache-Control": "public, max-age=60" } }
   );
@@ -148,8 +148,8 @@ export async function POST(
     return NextResponse.json({ ok: true, feedbackId: data.feedbackId ?? null }, { headers });
   }
 
-  // First tap creates the visitor's row; later steps update their own recent
-  // row (a submit whose first tap failed simply starts a new one).
+  // A sent form or a Google click creates the visitor's row; later posts
+  // update their own recent row.
   let existing: typeof hubReviewFeedback.$inferSelect | undefined;
   if (data.feedbackId) {
     [existing] = await db
@@ -167,6 +167,12 @@ export async function POST(
   } else {
     if (!data.rating) {
       return NextResponse.json({ error: "Pick a rating" }, { status: 400, headers });
+    }
+    if (!data.google && !(data.message && data.rating <= PRIVATE_MAX_RATING)) {
+      return NextResponse.json(
+        { error: "Write your feedback or open Google to post a review" },
+        { status: 400, headers }
+      );
     }
     [existing] = await db
       .insert(hubReviewFeedback)
