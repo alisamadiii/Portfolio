@@ -1,16 +1,18 @@
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
   Html,
-  Link,
   Preview,
   Section,
   Text,
 } from "@react-email/components";
 
 import {
+  button,
+  buttonSection,
   codeBox,
   container,
   EmailFooter,
@@ -21,7 +23,6 @@ import {
   paragraph,
   strong,
   subheading,
-  textLink,
   urlBox,
 } from "./components/shared";
 
@@ -30,10 +31,11 @@ import {
 export interface PartnerApprovedEmailProps {
   fullName: string;
   code: string;
-  pdfUrl: string;
 }
 
-export default function PartnerApprovedEmail({ fullName, code, pdfUrl }: PartnerApprovedEmailProps) {
+const PARTNER_PAGE = "https://app.alisamadii.com/partner";
+
+export default function PartnerApprovedEmail({ fullName, code }: PartnerApprovedEmailProps) {
   const first = fullName.trim().split(/\s+/)[0] ?? fullName;
   const site = `https://www.alisamadii.com/?ref=${encodeURIComponent(code)}`;
   return (
@@ -62,16 +64,19 @@ export default function PartnerApprovedEmail({ fullName, code, pdfUrl }: Partner
 
           <Text style={{ ...paragraph, margin: "24px 0 20px" }}>
             When a business you referred pays for its website, you earn{" "}
-            <span style={strong}>40% of that first payment</span>. We&apos;ll email you when that
+            <span style={strong}>40% of that first payment</span>, after payment processing fees. We&apos;ll email you when that
             happens and when your payout is sent.
           </Text>
 
+          <Section style={buttonSection}>
+            <Button href={PARTNER_PAGE} style={button}>
+              Open your partner page
+            </Button>
+          </Section>
+
           <Text style={mutedText}>
-            Your signed agreement:{" "}
-            <Link href={pdfUrl} style={textLink}>
-              download PDF
-            </Link>
-            . Questions? Just reply to this email.
+            Your code, referrals, payouts and signed agreement are all there. Questions? Just reply
+            to this email.
           </Text>
 
           <Text style={{ ...mutedText, margin: "24px 0 0" }}>Ali Samadi</Text>
@@ -86,7 +91,6 @@ export default function PartnerApprovedEmail({ fullName, code, pdfUrl }: Partner
 PartnerApprovedEmail.PreviewProps = {
   fullName: "Dana Brooks",
   code: "DANA",
-  pdfUrl: "https://api.alisamadii.com/api/partners/agreement/example-token",
 } satisfies PartnerApprovedEmailProps;
 
 const codeText: React.CSSProperties = {

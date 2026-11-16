@@ -25,9 +25,9 @@ export function WhatWeBuild() {
             <p className="body-2">Designed and hand-coded for each local business. The business owns its website code, design and accounts.</p>
           </div>
           <div style={{ flex: '0 1 260px', borderLeft: '1px solid var(--line)', paddingLeft: 24 }}>
-            <p className="muted" style={{ fontSize: 15 }}>Main plan setup</p>
-            <p style={{ marginTop: 2, fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>{money(program.mainPlanPrice)}</p>
-            <p className="muted" style={{ marginTop: 4, fontSize: 15 }}>plus {money(program.hubMonthly)} a month for Client Hub</p>
+            <p className="muted" style={{ fontSize: 15 }}>Website price</p>
+            <p style={{ marginTop: 2, fontSize: 28, fontWeight: 700, letterSpacing: '-0.02em' }}>Varies</p>
+            <p className="muted" style={{ marginTop: 4, fontSize: 15 }}>Depends on the kind of website the business needs, plus {money(program.hubMonthly)} a month for Client Hub</p>
           </div>
         </div>
         <div className="grid-3" style={{ marginTop: 24 }}>

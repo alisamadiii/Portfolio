@@ -160,7 +160,6 @@ export async function sendPartnerApproved(a: {
   fullName: string;
   email: string;
   code: string;
-  pdfUrl: string;
 }) {
   return sendEmail({
     from: FROM,
@@ -171,7 +170,6 @@ export async function sendPartnerApproved(a: {
       createElement(PartnerApprovedTemplate, {
         fullName: a.fullName,
         code: a.code,
-        pdfUrl: a.pdfUrl,
       })
     )),
   });

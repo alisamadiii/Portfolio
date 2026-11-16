@@ -5,7 +5,12 @@ import { describe, expect, it } from "vitest";
 
 import { isFreshSnsTimestamp, isSnsCertUrl } from "@workspace/trpc/lib/inbound/sns";
 import { OUTBOUND_LIMITS, senderDisplayName } from "@workspace/trpc/lib/inbox-shared";
-import { PARTNER_AGREEMENT_VERSION } from "@workspace/trpc/lib/partners-shared";
+import {
+  commissionFor,
+  PARTNER_AGREEMENT_VERSION,
+  PROVIDER_FEES,
+  providerFeeCents,
+} from "@workspace/trpc/lib/partners-shared";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import { verifySignedInstance } from "@workspace/trpc/lib/wix-shared";
 
@@ -109,5 +114,28 @@ describe("partner agreement version", () => {
       "utf8"
     );
     expect(config).toContain(`agreementVersion: '${PARTNER_AGREEMENT_VERSION}'`);
+  });
+});
+
+describe("partner commission after provider fees (agreement 2026-11.2)", () => {
+  const stripeFee = (cents: number) =>
+    providerFeeCents(cents, PROVIDER_FEES.stripe.percent, PROVIDER_FEES.stripe.fixedCents);
+
+  it("matches the agreement's Stripe examples", () => {
+    expect(stripeFee(69_900)).toBe(2_057);
+    expect(commissionFor(69_900, stripeFee(69_900))).toBe(27_137);
+    expect(stripeFee(100_000)).toBe(2_930);
+    expect(commissionFor(100_000, stripeFee(100_000))).toBe(38_828);
+    expect(stripeFee(119_900)).toBe(3_507);
+    expect(commissionFor(119_900, stripeFee(119_900))).toBe(46_557);
+  });
+
+  it("pays 40% of the full amount when there are no fees", () => {
+    expect(PROVIDER_FEES.zelle).toEqual({ percent: 0, fixedCents: 0 });
+    expect(commissionFor(69_900)).toBe(27_960);
+  });
+
+  it("never goes negative when the fee exceeds the amount", () => {
+    expect(commissionFor(20, 50)).toBe(0);
   });
 });

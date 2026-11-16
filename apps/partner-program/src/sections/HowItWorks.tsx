@@ -29,7 +29,7 @@ export function HowItWorks() {
               <p className="step__num">Step 3</p>
               <h3 className="step__title">Get paid</h3>
               <p className="body-2">
-                40% of their first payment, after they pay. Sent within <Ph>{program.payoutDays}</Ph> by <Ph>{program.paymentMethod}</Ph>.
+                40% of their first website payment, after payment processing fees. Sent within <Ph>{program.payoutDays}</Ph> after they pay, by <Ph>{program.paymentMethod}</Ph>.
               </p>
             </li>
           </ol>

@@ -287,6 +287,10 @@ button.stepper__item:hover { background: var(--card); }
 .agreement__body { max-height: 340px; overflow-y: auto; padding: 4px 22px 24px; background: var(--card); scroll-behavior: smooth; }
 .agreement__body h4 { margin: 22px 0 6px; font-size: 16px; font-weight: 700; }
 .agreement__body p { font-size: 15px; line-height: 1.65; color: var(--text-2); }
+.agreement__table { width: 100%; margin-top: 10px; border-collapse: collapse; font-size: 14px; line-height: 1.5; color: var(--text-2); }
+.agreement__table th, .agreement__table td { padding: 8px 10px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+.agreement__table thead th { background: var(--bg); color: var(--ink); font-weight: 700; }
+.agreement__table tbody th { color: var(--ink); font-weight: 600; width: 32%; }
 .read-ok { color: var(--success-ink); font-weight: 500; }
 
 .sig { font-family: var(--font-sig); font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; }

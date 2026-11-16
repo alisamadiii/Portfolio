@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { Eyebrow } from '../components/Eyebrow';
 import { program } from '../config';
-import { money, payoutFor } from '../lib/money';
+import { cardFee, money, payoutFor } from '../lib/money';
 import { useCountUp } from '../lib/motion';
 
 const SCALE_MAX = 3000;
 const EXAMPLES = [
-  { price: program.mainPlanPrice, label: 'Main website plan' },
-  { price: 1000, label: 'Example custom price' },
-  { price: program.largerPlanPrice, label: 'Larger plan' },
+  { price: program.mainPlanPrice, label: 'Example: simple website' },
+  { price: 1000, label: 'Example: mid-size website' },
+  { price: program.largerPlanPrice, label: 'Example: larger website' },
 ];
 
 export function Earnings() {
   const [amount, setAmount] = useState(1000);
   const [amountText, setAmountText] = useState('1000');
+  const fee = cardFee(amount);
   const earn = payoutFor(amount);
   const shown = useCountUp(earn);
 
@@ -32,7 +33,7 @@ export function Earnings() {
         <h2 id="earn-h" className="h2" data-reveal="2">Your payout follows the price.</h2>
         <p className="lead" data-reveal="3">
           Every business is different, so website prices are too. Whatever the business pays for its website, you
-          get 40% of that first payment.
+          get 40% of that first payment after payment processing fees.
         </p>
 
         <div className="earn">
@@ -45,9 +46,12 @@ export function Earnings() {
                   <span style={{ display: 'flex', flexDirection: 'column' }}>
                     <span className="ex__label">{ex.label}</span>
                     <span className="ex__price">Business pays {money(ex.price)}</span>
+                    <span className="ex__label">
+                      Stripe fee about {money(cardFee(ex.price))} · Net {money(ex.price - cardFee(ex.price))}
+                    </span>
                   </span>
                   <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                    <span className="ex__label">You get</span>
+                    <span className="ex__label">You get about</span>
                     <span className="ex__earn">{money(payoutFor(ex.price))}</span>
                   </span>
                 </button>
@@ -106,30 +110,36 @@ export function Earnings() {
                 <div className="bar-row__label"><span>Business pays</span><span>{money(amount)}</span></div>
                 <div className="track" aria-hidden="true"><div className="track__fill bar" style={{ width: pct(amount), background: 'var(--ink)' }} /></div>
               </div>
+              <div className="bar-row__label muted" style={{ fontSize: 14 }}>
+                <span>Card processing fee (est. 2.9% + $0.30)</span><span>−{money(fee)}</span>
+              </div>
               <div className="bar-row">
-                <div className="bar-row__label"><span>You get (40%)</span><span>{money(earn)}</span></div>
+                <div className="bar-row__label"><span>You get (40% of {money(Math.max(0, amount - fee))})</span><span>{money(earn)}</span></div>
                 <div className="track" aria-hidden="true"><div className="track__fill bar" style={{ width: pct(earn), background: 'var(--coral)' }} /></div>
               </div>
             </div>
             <div className="calc__result">
-              <p style={{ color: 'var(--on-ink-2)' }}>You'd earn, one time</p>
+              <p style={{ color: 'var(--on-ink-2)' }}>You'd earn about, one time</p>
               <p className="calc__num" aria-hidden="true">{money(shown)}</p>
-              <p className="sr-only" aria-live="polite">You'd earn {money(earn)}, one time.</p>
+              <p className="sr-only" aria-live="polite">You'd earn about {money(earn)}, one time.</p>
             </div>
+            <p className="muted" style={{ fontSize: 13 }}>
+              Estimate based on Stripe's standard US card fee (2.9% + $0.30). Actual fees vary by payment method and card.
+            </p>
           </div>
         </div>
 
         <div className="example-strip" data-reveal="2">
           <span className="badge-outline">Example, not a promise</span>
           <p style={{ flex: '1 1 320px', fontSize: 18, lineHeight: 1.45 }}>
-            If 3 businesses you refer each pay {money(program.mainPlanPrice)} for a website, you'd earn{' '}
+            If 3 businesses you refer each pay {money(program.mainPlanPrice)} for a website, you'd earn about{' '}
             <strong>{money(payoutFor(program.mainPlanPrice) * 3)}</strong> in total.
           </p>
         </div>
         <p className="body-2" data-reveal="3" style={{ marginTop: 20, fontSize: 16 }}>
           <strong style={{ color: 'var(--ink)' }}>One-time payout only.</strong> You don't earn from the client's monthly
-          subscription. Figures are examples; your payout is 40% of what the business actually pays as its first website
-          payment.
+          subscription. Figures are estimates; your payout is 40% of what the business actually pays as its first website
+          payment, after the payment provider's fees. If they pay with no fees, you get 40% of the full amount.
         </p>
       </div>
     </section>

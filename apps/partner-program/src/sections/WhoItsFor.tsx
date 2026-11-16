@@ -30,6 +30,7 @@ export function WhoItsFor() {
               Accountants, realtors, community organizers and similar. If owners trust your recommendation, you're well
               placed to make an introduction.
             </p>
+            <p style={{ marginTop: 10, color: 'var(--on-ink-2)', fontSize: 15 }}>You must be 18 or older. Joining is free.</p>
           </div>
         </div>
       </div>

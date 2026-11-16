@@ -16,7 +16,7 @@ import { hubProject } from "./hub";
 // ─── Partner program ─────────────────────────────────────────────
 // Referral partners apply on partners.alisamadii.com, Ali approves them by
 // hand in admin, and they earn 40% of a referred client's first website
-// payment. Status/source columns are plain text (not pgEnum), like hub.ts.
+// payment after payment processing fees. Status/source columns are plain text (not pgEnum), like hub.ts.
 
 export const PARTNER_STATUS_VALUES = ["pending", "approved", "rejected"] as const;
 export type PartnerStatus = (typeof PARTNER_STATUS_VALUES)[number];
@@ -57,6 +57,8 @@ export const partner = pgTable(
     fullName: text("full_name").notNull(),
     email: text("email").notNull(),
     phone: text("phone"),
+    // Mailing address on the agreement (null for applications before 2026-11.2).
+    address: text("address"),
     // "Your network" step is optional.
     occupation: text("occupation"),
     city: text("city"),
@@ -74,8 +76,9 @@ export const partner = pgTable(
     pdfToken: text("pdf_token").notNull().unique(),
     agreementKey: text("agreement_key"),
 
-    // Admin only.
+    // "Zelle: handle" from the application (2026-11.2+); admin can edit it.
     payoutMethod: text("payout_method"),
+    // Admin only.
     notes: text("notes"),
     approvedAt: timestamp("approved_at"),
     rejectedAt: timestamp("rejected_at"),

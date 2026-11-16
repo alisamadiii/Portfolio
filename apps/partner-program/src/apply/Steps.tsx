@@ -3,7 +3,7 @@ import { contact, program } from '../config';
 import { AgreementText } from './AgreementText';
 import { TextAreaField, TextField } from './Field';
 import type { Errors, FieldName, FormValues } from './form';
-import { todayLabel } from './form';
+import { payoutLabel, todayLabel } from './form';
 
 type StepProps = {
   values: FormValues;
@@ -31,11 +31,41 @@ function StepHeading({ title, sub }: { title: string; sub: string }) {
 export function StepAbout(props: StepProps) {
   return (
     <div className="wizard__step">
-      <StepHeading title="About you" sub="How we'll reach you about your application." />
+      <StepHeading title="About you" sub="How we'll reach you, and where we send your payouts. These go on your agreement." />
       <TextField id="fullName" label="Full name" type="text" autoComplete="name" required {...text(props, 'fullName')} />
       <div className="grid-fields">
         <TextField id="email" label="Email" type="email" autoComplete="email" inputMode="email" required readOnly hint="From your Client Hub account." {...text(props, 'email')} />
         <TextField id="phone" label={<>Phone <span className="label__opt">(optional)</span></>} type="tel" autoComplete="tel" inputMode="tel" {...text(props, 'phone')} />
+      </div>
+      <TextField id="address" label="Mailing address" type="text" autoComplete="street-address" required placeholder="Street, city, state and ZIP" {...text(props, 'address')} />
+      <div className="grid-fields">
+        <div className="field-group">
+          <label className="label" htmlFor="payoutMethod">Payout method</label>
+          <select
+            className="field"
+            id="payoutMethod"
+            name="payoutMethod"
+            required
+            value={props.values.payoutMethod}
+            aria-invalid={!!props.errors.payoutMethod}
+            aria-describedby={props.errors.payoutMethod ? 'payoutMethod-err' : undefined}
+            onChange={(e) => props.onChange('payoutMethod', e.target.value)}
+            onBlur={() => props.onBlur('payoutMethod')}
+          >
+            <option value="" disabled>Choose one</option>
+            <option value="Zelle">Zelle</option>
+            <option value="Cash App">Cash App</option>
+          </select>
+          {props.errors.payoutMethod && <p className="field-error" id="payoutMethod-err">✕ {props.errors.payoutMethod}</p>}
+        </div>
+        <TextField
+          id="payoutHandle"
+          label={props.values.payoutMethod === 'Cash App' ? 'Cash App $cashtag or phone' : 'Zelle email or phone'}
+          type="text"
+          autoComplete="off"
+          required
+          {...text(props, 'payoutHandle')}
+        />
       </div>
     </div>
   );
@@ -89,7 +119,7 @@ export function StepAgreement(props: StepProps & { hasRead: boolean; onRead: () 
             if (!hasRead && t.scrollTop + t.clientHeight >= t.scrollHeight - 16) onRead();
           }}
         >
-          <AgreementText />
+          <AgreementText values={values} />
         </div>
       </div>
 
@@ -112,9 +142,26 @@ export function StepAgreement(props: StepProps & { hasRead: boolean; onRead: () 
             aria-describedby={errors.agree ? 'agree-err' : undefined}
             onChange={(e) => onChange('agree', e.target.checked)}
           />
-          <span>I've read and agree to the Partner Agreement. I understand payouts are one-time, 40% of a referred client's first payment, sent after they pay.</span>
+          <span>I've read and agree to the Partner Agreement. I understand payouts are one-time, 40% of a referred business's first website payment after payment processing fees, sent after they pay.</span>
         </label>
         {errors.agree && <p className="field-error" id="agree-err">✕ {errors.agree}</p>}
+      </div>
+
+      <div className="field-group">
+        <label htmlFor="adult" className="checkbox-card">
+          <input
+            className="checkbox"
+            id="adult"
+            name="adult"
+            type="checkbox"
+            checked={values.adult}
+            aria-invalid={!!errors.adult}
+            aria-describedby={errors.adult ? 'adult-err' : undefined}
+            onChange={(e) => onChange('adult', e.target.checked)}
+          />
+          <span>I'm 18 or older.</span>
+        </label>
+        {errors.adult && <p className="field-error" id="adult-err">✕ {errors.adult}</p>}
       </div>
 
       <div className="grid-fields" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
@@ -165,6 +212,8 @@ export function StepReview({ values, onEdit, failed, message }: { values: FormVa
           <div><dt>Full name</dt><dd>{values.fullName}</dd></div>
           <div><dt>Email</dt><dd>{values.email}</dd></div>
           <div><dt>Phone</dt><dd>{values.phone.trim() || 'Not provided'}</dd></div>
+          <div><dt>Mailing address</dt><dd>{values.address.trim()}</dd></div>
+          <div><dt>Payout method</dt><dd>{payoutLabel(values)}</dd></div>
         </dl>
       </section>
 
@@ -188,7 +237,7 @@ export function StepReview({ values, onEdit, failed, message }: { values: FormVa
           <h3 id="r3" style={{ fontSize: 18 }}>Partner agreement</h3>
           <button type="button" className="edit-btn" onClick={() => onEdit(3)} aria-label="Edit Partner agreement signature">Edit</button>
         </div>
-        <p className="read-ok" style={{ marginTop: 10, fontSize: 15 }}><span aria-hidden="true">✓ </span>Read and agreed</p>
+        <p className="read-ok" style={{ marginTop: 10, fontSize: 15 }}><span aria-hidden="true">✓ </span>Read and agreed. Confirmed 18 or older.</p>
         <div className="sig-preview__row" style={{ marginTop: 12, gap: '12px 36px' }}>
           <div style={{ minWidth: 0 }}><p className="sig" style={{ fontSize: 38 }}>{values.signature}</p><p className="muted" style={{ fontSize: 14 }}>Signature</p></div>
           <div><p className="sig" style={{ fontSize: 34 }}>{values.initials}</p><p className="muted" style={{ fontSize: 14 }}>Initials</p></div>

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Logo } from '../components/Logo';
-import { money, payoutFor } from '../lib/money';
+import { cardFee, money, payoutFor } from '../lib/money';
 import { program } from '../config';
 
 const HERO_EXAMPLE = 1000;
@@ -15,11 +15,11 @@ export function Hero() {
             {program.company} Partner Program
           </p>
           <h1 className="h1" data-reveal="2">
-            Earn <span className="underline-coral">40%</span> when a business you refer pays for its website.
+            Earn <span className="underline-coral">40%</span> of what a business you refer pays for its website, after payment processing fees.
           </h1>
           <p className="hero__sub" data-reveal="3">
-            When they pay, you get 40% of their first website payment. If they don't pay, there's no payout.
-            Simple and honest.
+            When they pay, you get 40% of their first website payment after the payment provider's fee. If they don't
+            pay, there's no payout. Simple and honest.
           </p>
           <div className="hero__ctas" data-reveal="4">
             <Link className="btn" to="/apply">
@@ -45,11 +45,15 @@ export function Hero() {
               <div className="track__fill track__fill--hero" />
             </div>
             <div className="payout-card__row muted" style={{ marginTop: 8, fontSize: 13, fontWeight: 600 }}>
-              <span>40% to you</span>
+              <span>40% to you, after fees</span>
               <span>60% stays with us</span>
             </div>
+            <div className="payout-card__row muted" style={{ marginTop: 14, fontSize: 14 }}>
+              <span>Card processing fee (about)</span>
+              <span>−{money(cardFee(HERO_EXAMPLE))}</span>
+            </div>
             <div className="you-get">
-              <p style={{ color: 'var(--on-ink-2)' }}>You get</p>
+              <p style={{ color: 'var(--on-ink-2)' }}>You get about</p>
               <p className="big-num">{money(payoutFor(HERO_EXAMPLE))}</p>
             </div>
             <div className="payout-card__row" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px dashed #D9D2CA' }}>

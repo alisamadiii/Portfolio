@@ -6,15 +6,18 @@
 export const program = {
   company: 'Ali Samadii LLC',
   payoutRate: 0.4,
+  // Stripe's standard US card fee, taken off the first payment before the 40%.
+  // Used for "about" figures and the calculator only: real fees vary.
+  cardFeeRate: 0.029,
+  cardFeeFixed: 0.3,
 
   // Program terms (the agreement PDF mirrors these: packages/ui/src/pdfs/partner-agreement.tsx).
   payoutDays: '14 days',
   paymentMethod: 'Zelle or Cash App',
   approvalDays: '2',
-  refundPolicy: "If the client gets a refund before your payout is sent, no payout is owed. Once a payout is sent, it's yours to keep.",
-  governingLaw: 'This agreement is governed by the laws of the State of Florida.',
+  refundPolicy: "If the business is refunded before your payout is sent, no payout is owed. Once it's sent, it's yours to keep.",
   // Must equal PARTNER_AGREEMENT_VERSION in packages/trpc/src/lib/partners-shared.ts.
-  agreementVersion: '2026-11.1',
+  agreementVersion: '2026-11.2',
 
   // Product facts used in examples.
   mainPlanPrice: 699,

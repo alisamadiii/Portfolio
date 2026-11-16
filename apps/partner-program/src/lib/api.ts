@@ -4,6 +4,9 @@ export type ApplicationPayload = {
   fullName: string;
   email: string;
   phone: string | null;
+  address: string;
+  payoutMethod: string; // "Zelle: name@example.com"
+  adult: true;
   occupation: string;
   city: string;
   knowOwners: string;

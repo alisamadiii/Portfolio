@@ -201,7 +201,6 @@ export const StripeBilling = () => {
             )}
           </div>
         </div>
-        <LegalFooter />
       </div>
     );
   }
@@ -223,7 +222,6 @@ export const StripeBilling = () => {
             </Button>
           </RequestDialog>
         </div>
-        <LegalFooter />
       </div>
     );
   }
@@ -376,7 +374,6 @@ export const StripeBilling = () => {
         )}
       </section>
 
-      <LegalFooter />
     </div>
   );
 };
@@ -512,67 +509,5 @@ const InvoiceDetailsPanel = ({ invoice }: { invoice: StripeInvoice }) => (
         ))}
       </div>
     )}
-  </div>
-);
-
-// ─── Legal Footer ───────────────────────────────────────────────
-
-const LegalFooter = () => (
-  <div className="text-secondary-foreground mt-8 max-w-[760px] space-y-3.5 border-t pt-8 text-sm leading-relaxed">
-    <p>
-      <strong className="text-foreground">AliSamadii.LLC</strong> is a software
-      development and digital services company based in Portland, OR. All plans
-      are fully managed — we handle your website, hosting, domain, and email
-      end-to-end so you never have to deal with technical infrastructure.
-    </p>
-    <p>
-      <strong className="text-foreground">Please note.</strong> This is a fully
-      managed service subscription. The source code, underlying codebase, and
-      all proprietary development assets remain the exclusive intellectual
-      property of AliSamadii.LLC. This subscription does not include ownership,
-      transfer, or distribution of source code. The client is subscribing to a
-      continuous, professionally managed web presence — not a one-time
-      deliverable. If you are interested in a custom-built website with full
-      source code ownership, please{" "}
-      <a
-        href="mailto:a@alisamadii.com"
-        className="hover:text-foreground underline underline-offset-2 transition-colors"
-      >
-        reach out
-      </a>{" "}
-      to discuss a separate development project.
-    </p>
-    <p>
-      <strong className="text-foreground">Ownership &amp; IP.</strong> All
-      source code, design assets, and proprietary development work remain the
-      exclusive intellectual property of AliSamadii.LLC. Subscribing gives you a
-      professionally managed web presence — not ownership of the underlying
-      codebase.
-    </p>
-    <p>
-      <strong className="text-foreground">Billing.</strong> Subscriptions are
-      billed monthly and renew automatically. You can cancel at any time —
-      cancellation takes effect at the end of the current billing period. No
-      refunds are issued for partial months.
-    </p>
-    <p>
-      <strong className="text-foreground">Service &amp; support.</strong> All
-      maintenance, updates, and minor copy changes are included. Requests are
-      handled on a priority basis depending on your plan. For urgent issues,
-      reach us at{" "}
-      <a
-        href="mailto:a@alisamadii.com"
-        className="hover:text-foreground underline underline-offset-2 transition-colors"
-      >
-        a@alisamadii.com
-      </a>
-      .
-    </p>
-    <p>
-      <strong className="text-foreground">Privacy.</strong> We collect only the
-      information necessary to provide your services — name, email, billing
-      details, and business information you share with us. We do not sell or
-      share your data with third parties.
-    </p>
   </div>
 );

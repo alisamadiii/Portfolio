@@ -11,11 +11,16 @@ const FAQS: { q: string; a: ReactNode }[] = [
   },
   {
     q: 'How much will I earn?',
-    a: <>40% of the business's first website payment. Prices vary by business and plan, so for example a {money(program.mainPlanPrice)} website pays you {money(payoutFor(program.mainPlanPrice))} and a $1,000 website pays you {money(payoutFor(1000))}.</>,
+    a: <>40% of the business's first website payment, after payment processing fees (like Stripe). Website prices depend on the kind of website the business needs, so for example a {money(program.mainPlanPrice)} website pays you about {money(payoutFor(program.mainPlanPrice))} and a $1,000 website pays you about {money(payoutFor(1000))}.</>,
+  },
+  {
+    q: 'What fees come out first?',
+    a: "Only the fees the payment provider charges on the business's first website payment, such as Stripe's card fee. If they pay with no fees, you get 40% of the full amount.",
   },
   { q: 'What counts as a referral?', a: "A business that uses your code or names you when it signs up, wasn't already talking to us, and pays for a website." },
   { q: 'Do I earn from the monthly subscription?', a: 'No. You earn only from the first website payment.' },
   { q: 'Does it cost anything to join?', a: 'No. Joining is free.' },
+  { q: 'Who can join?', a: 'Anyone 18 or older who knows local business owners. We review every application by hand.' },
   { q: 'What if the client asks for a refund?', a: <Ph>{program.refundPolicy}</Ph> },
   { q: 'Do I need to sell or do anything technical?', a: 'No. Just introduce us. We handle the conversation, design and build.' },
   { q: 'How long does approval take?', a: <>We review every application by hand, usually within <Ph>{program.approvalDays}</Ph> business days.</> },

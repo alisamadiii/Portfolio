@@ -32,6 +32,8 @@ import {
   CLIENT_PAYMENT_LABELS,
   commissionFor,
   formatCents,
+  PROVIDER_FEES,
+  providerFeeCents,
   RECEIPT_MAX_BYTES,
   RECEIPT_TYPES,
   type ReceiptType,
@@ -97,7 +99,7 @@ function PriceField({ value, onChange }: { value: string; onChange: (v: string) 
       </div>
       <p className="text-muted-foreground text-xs">
         {cents
-          ? `What the client pays for the website. Partner earns 40%: ${formatCents(commissionFor(cents))}.`
+          ? `What the client pays for the website. Partner earns 40% after card fees: about ${formatCents(commissionFor(cents, providerFeeCents(cents, PROVIDER_FEES.stripe.percent, PROVIDER_FEES.stripe.fixedCents)))}.`
           : "What the client pays for the website."}
       </p>
     </div>
@@ -244,9 +246,22 @@ export function ClientPaidDialog({
   const [amount, setAmount] = useState(dollars(referral?.priceCents) || "699");
   const [commission, setCommission] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("stripe");
+  // Provider fee, prefilled from the payment method and editable.
+  const [feePercent, setFeePercent] = useState(String(PROVIDER_FEES.stripe.percent));
+  const [feeFixed, setFeeFixed] = useState(String(PROVIDER_FEES.stripe.fixedCents));
   const [day, setDay] = useState(today);
   const cents = toCents(amount);
-  const suggested = cents ? commissionFor(cents) : null;
+  const pct = Number(feePercent) || 0;
+  const fixed = Math.round(Number(feeFixed) || 0);
+  const feeValid = pct >= 0 && pct < 100 && fixed >= 0;
+  const fee = cents && feeValid ? providerFeeCents(cents, pct, fixed) : 0;
+  const suggested = cents ? commissionFor(cents, fee) : null;
+
+  const changeMethod = (m: PaymentMethod) => {
+    setMethod(m);
+    setFeePercent(String(PROVIDER_FEES[m].percent));
+    setFeeFixed(String(PROVIDER_FEES[m].fixedCents));
+  };
 
   const mark = useMutation(
     trpc.partners.markClientPaid.mutationOptions({
@@ -266,19 +281,20 @@ export function ClientPaidDialog({
           <DialogTitle>Client paid</DialogTitle>
           <DialogDescription>
             {referral?.project?.name ?? referral?.businessName} paid for its website. The partner earns 40% of this
-            first payment.
+            first payment after the payment provider&apos;s fee.
           </DialogDescription>
         </DialogHeader>
         <form
           className="grid gap-3"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!referral || !cents) return;
+            if (!referral || !cents || !feeValid) return;
             const commissionCents = commission.trim() ? toCents(commission) : null;
             mark.mutate({
               referralId: referral.id,
               amountCents: cents,
               ...(commissionCents ? { commissionCents } : {}),
+              feeCents: fee,
               paidAt: fromDay(day),
               method,
             });
@@ -290,9 +306,9 @@ export function ClientPaidDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Paid with</Label>
-            <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethod)}>
+            <Select value={method} onValueChange={(v) => changeMethod(v as PaymentMethod)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{(v: PaymentMethod) => CLIENT_PAYMENT_LABELS[v]}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(CLIENT_PAYMENT_LABELS).map(([value, label]) => (
@@ -303,6 +319,21 @@ export function ClientPaidDialog({
               </SelectContent>
             </Select>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cp-fee-pct">Fee (%)</Label>
+              <Input id="cp-fee-pct" inputMode="decimal" value={feePercent} onChange={(e) => setFeePercent(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cp-fee-fixed">Fixed fee (¢)</Label>
+              <Input id="cp-fee-fixed" inputMode="numeric" value={feeFixed} onChange={(e) => setFeeFixed(e.target.value)} />
+            </div>
+            <p className="text-muted-foreground col-span-2 text-xs">
+              {feeValid
+                ? `Provider fee ${formatCents(fee)}. Net ${cents ? formatCents(cents - fee) : "—"}.`
+                : "Enter a fee from 0 to 99%."}
+            </p>
+          </div>
           <div className="space-y-1.5">
             <Label htmlFor="cp-date">Paid on</Label>
             <Input id="cp-date" type="date" required value={day} onChange={(e) => setDay(e.target.value)} />
@@ -312,16 +343,16 @@ export function ClientPaidDialog({
             <Input
               id="cp-commission"
               inputMode="decimal"
-              placeholder={suggested ? `${(suggested / 100).toFixed(2)} (40%)` : "40%"}
+              placeholder={suggested ? `${(suggested / 100).toFixed(2)} (40% of net)` : "40% of net"}
               value={commission}
               onChange={(e) => setCommission(e.target.value)}
             />
             <p className="text-muted-foreground text-xs">
-              Leave empty for 40%{suggested ? `: ${formatCents(suggested)}` : ""}.
+              Leave empty for 40% of net{suggested ? `: ${formatCents(suggested)}` : ""}.
             </p>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={!cents || mark.isPending}>
+            <Button type="submit" disabled={!cents || !feeValid || mark.isPending}>
               Mark as paying
             </Button>
           </DialogFooter>

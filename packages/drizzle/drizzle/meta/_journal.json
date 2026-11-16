@@ -456,6 +456,13 @@
       "when": 1794784132092,
       "tag": "0064_smooth_blob",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1794847075720,
+      "tag": "0065_flashy_giant_girl",
+      "breakpoints": true
     }
   ]
 }

@@ -61,7 +61,7 @@ function NotPartner() {
   const steps = [
     { icon: <UserPlus className="size-5" />, title: "Apply", text: "Tell us a bit about you. We review every application by hand." },
     { icon: <Send className="size-5" />, title: "Refer", text: "Share your code with a local business that needs a website." },
-    { icon: <Wallet className="size-5" />, title: "Get paid", text: "Earn 40% of their first website payment, after they pay." },
+    { icon: <Wallet className="size-5" />, title: "Get paid", text: "Earn 40% of their first website payment, after payment processing fees." },
   ];
   return (
     <div className="flex flex-col gap-6">
@@ -75,7 +75,7 @@ function NotPartner() {
           </h2>
           <p className="text-sm leading-relaxed text-dim">
             Know local business owners who need a website? Introduce them to us. When a business you referred pays for
-            its website, you get 40% of that first payment. If they don&apos;t pay, there&apos;s no payout. You
+            its website, you get 40% of that first payment, after payment processing fees. If they don&apos;t pay, there&apos;s no payout. You
             don&apos;t earn from the monthly subscription, and joining is free.
           </p>
         </div>
@@ -204,7 +204,7 @@ function ApprovedPartner({ partner }: { partner: Partner }) {
           </button>
           <p className="max-w-[620px] text-[13px] leading-normal text-dim">
             Businesses can enter your code on our quote form, mention it when we talk, or use your link. You earn 40%
-            of a referred business&apos;s first website payment, sent after they pay.
+            of a referred business&apos;s first website payment after payment processing fees, sent after they pay.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="max-w-full truncate rounded-control bg-canvas px-3 py-2 text-[13px] text-ink-3">{link}</code>

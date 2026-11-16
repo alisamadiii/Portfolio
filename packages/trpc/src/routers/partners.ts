@@ -25,6 +25,8 @@ import {
 import { getEntitlements } from "../lib/payment/entitlements";
 import {
   commissionFor,
+  PROVIDER_FEES,
+  providerFeeCents,
   normalizePartnerCode,
   partnerCodeError,
   partnerStats,
@@ -353,6 +355,8 @@ export const partnersRouter = createTRPCRouter({
     const pdf = await renderPartnerAgreement({
       fullName: p.fullName,
       email: p.email,
+      address: p.address,
+      payoutMethod: p.payoutMethod,
       signature: p.signature,
       initials: p.initials,
       signedAt: p.signedAt,
@@ -389,7 +393,6 @@ export const partnersRouter = createTRPCRouter({
         fullName: p.fullName,
         email: p.email,
         code,
-        pdfUrl: agreementUrl(p.pdfToken),
       });
     } catch (err) {
       throw emailError(err);
@@ -410,7 +413,6 @@ export const partnersRouter = createTRPCRouter({
             fullName: p.fullName,
             email: p.email,
             code: input.code,
-            pdfUrl: agreementUrl(p.pdfToken),
           });
         } catch (err) {
           throw emailError(err);
@@ -429,7 +431,6 @@ export const partnersRouter = createTRPCRouter({
         fullName: p.fullName,
         email: p.email,
         code: p.code,
-        pdfUrl: agreementUrl(p.pdfToken),
       });
     } catch (err) {
       throw emailError(err);
@@ -624,13 +625,15 @@ export const partnersRouter = createTRPCRouter({
     return { ok: true };
   }),
 
-  // The client paid for its website. Commission defaults to 40%.
+  // The client paid for its website. Commission defaults to 40% of the
+  // payment after the provider fee (the method's default fee unless given).
   markClientPaid: adminProcedure
     .input(
       referralIdInput.extend({
         // Defaults to the website price set on the referral.
         amountCents: centsInput.optional(),
         commissionCents: z.number().int().min(0).max(10_000_000).optional(),
+        feeCents: z.number().int().min(0).max(10_000_000).optional(),
         paidAt: z.coerce.date(),
         method: z.enum(CLIENT_PAYMENT_METHODS),
       })
@@ -647,7 +650,13 @@ export const partnersRouter = createTRPCRouter({
           clientPaidCents: amount,
           clientPaidAt: input.paidAt,
           clientPaymentMethod: input.method,
-          commissionCents: input.commissionCents ?? commissionFor(amount),
+          commissionCents:
+            input.commissionCents ??
+            commissionFor(
+              amount,
+              input.feeCents ??
+                providerFeeCents(amount, PROVIDER_FEES[input.method].percent, PROVIDER_FEES[input.method].fixedCents)
+            ),
           status: "won",
         })
         .where(eq(partnerReferral.id, input.referralId));

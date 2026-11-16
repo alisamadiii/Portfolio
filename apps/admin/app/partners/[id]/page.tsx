@@ -252,6 +252,8 @@ export default function PartnerPage() {
             </dd>
             <dt className="text-muted-foreground">Phone</dt>
             <dd>{p.phone ? <a className="hover:underline" href={`tel:${p.phone}`}>{p.phone}</a> : "—"}</dd>
+            <dt className="text-muted-foreground">Address</dt>
+            <dd>{p.address ?? "—"}</dd>
             <dt className="text-muted-foreground">Occupation</dt>
             <dd>{p.occupation ?? "—"}</dd>
             <dt className="text-muted-foreground">City</dt>

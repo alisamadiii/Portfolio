@@ -3,9 +3,25 @@
 
 export const PARTNER_PAYOUT_RATE = 0.4;
 
-/** 40% of the client's first payment, in cents. 69_900 -> 27_960. */
-export const commissionFor = (clientPaidCents: number) =>
-  Math.round(clientPaidCents * PARTNER_PAYOUT_RATE);
+/**
+ * 40% of the client's first payment after the payment provider's fee, in
+ * cents (agreement 2026-11.2, section 3.1). 69_900 with a 2_057 fee -> 27_137.
+ */
+export const commissionFor = (clientPaidCents: number, feeCents = 0) =>
+  Math.max(0, Math.round((clientPaidCents - feeCents) * PARTNER_PAYOUT_RATE));
+
+/** Default provider fee per payment method: Stripe's US card fee, 2.9% + 30¢. */
+export const PROVIDER_FEES = {
+  stripe: { percent: 2.9, fixedCents: 30 },
+  cashapp: { percent: 0, fixedCents: 0 },
+  zelle: { percent: 0, fixedCents: 0 },
+  cash: { percent: 0, fixedCents: 0 },
+  other: { percent: 0, fixedCents: 0 },
+} as const;
+
+/** The provider fee on a payment, in cents. 69_900 at 2.9% + 30¢ -> 2_057. */
+export const providerFeeCents = (amountCents: number, percent: number, fixedCents: number) =>
+  amountCents > 0 ? Math.round((amountCents * percent) / 100 + fixedCents) : 0;
 
 // No 0/O/1/I/L: codes get read out over the phone and typed by hand.
 export const CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
@@ -140,4 +156,4 @@ export function parseRefCookie(cookieHeader: string | null | undefined): string 
  * apps/partner-program/src/config.ts agreementVersion (bump both together,
  * with the text in AgreementText.tsx and packages/ui/src/pdfs/partner-agreement.tsx).
  */
-export const PARTNER_AGREEMENT_VERSION = "2026-11.1";
+export const PARTNER_AGREEMENT_VERSION = "2026-11.2";

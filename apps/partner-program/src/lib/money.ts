@@ -13,6 +13,14 @@ export function money(n: number): string {
   );
 }
 
+const cents = (n: number) => Math.round(n * 100) / 100;
+
+/** Estimated Stripe card fee on a payment: 2.9% + $0.30. */
+export function cardFee(price: number): number {
+  return price > 0 ? cents(price * program.cardFeeRate + program.cardFeeFixed) : 0;
+}
+
+/** Estimated payout: 40% of the price after the card fee. $699 -> $271.37 */
 export function payoutFor(price: number): number {
-  return Math.round(price * program.payoutRate * 100) / 100;
+  return Math.max(0, cents((price - cardFee(price)) * program.payoutRate));
 }
