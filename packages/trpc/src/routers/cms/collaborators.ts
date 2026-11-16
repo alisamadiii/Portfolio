@@ -20,8 +20,10 @@ import {
   collaboratorInviteTable,
   collaboratorTable,
   db,
+  orgRepoTable,
   userTable,
 } from "@workspace/trpc/lib/cms/db";
+import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import {
   bindCollaboratorInvitesToUser,
   findVerifiedUserByEmail,
@@ -284,6 +286,7 @@ export const collaboratorsRouter = createTRPCRouter({
 
       return {
         canManageFullAccess: isActorAdmin || isActorOwner,
+        canTransferOwnership: isActorAdmin || isActorOwner,
         owners,
         // An admin who also owns the project shows once, as owner.
         admins: admins.filter((a) => !ownerSet.has(a.id)),
@@ -625,6 +628,93 @@ export const collaboratorsRouter = createTRPCRouter({
         }
 
         return { message: `Invitation email resent to ${collaborator.email}.` };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
+
+  /**
+   * Makes an active collaborator the project's owner (hub_project owner and
+   * the agency row, if any). The previous owner stays on as a full-access
+   * collaborator unless they're an admin (admins see every project anyway).
+   * Owner or admin only. Billing stays on the existing Stripe subscription.
+   */
+  transferOwnership: collaboratorManageProcedure
+    .input(z.object({ collaboratorId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const { repoAccess, isActorAdmin, isActorOwner } = ctx;
+        if (!isActorAdmin && !isActorOwner) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only the project owner can transfer ownership.",
+          });
+        }
+        const projectId = repoAccess.projectId;
+
+        const collaborator = await findProjectCollaborator(
+          projectId,
+          input.collaboratorId
+        );
+        const newOwnerId = collaborator.userId;
+        if (!newOwnerId) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `${collaborator.email} hasn't joined yet. They need to accept the invite first.`,
+          });
+        }
+
+        const agencyOwner = await db.query.agencyClient.findFirst({
+          where: eq(agencyClient.projectId, projectId),
+          columns: { userId: true },
+        });
+        const previousOwnerIds = [
+          ...new Set(
+            [repoAccess.githubConnectedUserId, agencyOwner?.userId].filter(
+              (id): id is string => Boolean(id) && id !== newOwnerId
+            )
+          ),
+        ];
+        const previousOwners = previousOwnerIds.length
+          ? await db
+              .select({ id: userTable.id, email: userTable.email, role: userTable.role })
+              .from(userTable)
+              .where(inArray(userTable.id, previousOwnerIds))
+          : [];
+
+        await db.transaction(async (tx) => {
+          await tx
+            .update(orgRepoTable)
+            .set({ githubConnectedUserId: newOwnerId })
+            .where(eq(orgRepoTable.id, projectId));
+          await tx
+            .update(agencyClient)
+            .set({ userId: newOwnerId })
+            .where(eq(agencyClient.projectId, projectId));
+          // The new owner no longer needs a collaborator row.
+          await tx
+            .delete(collaboratorTable)
+            .where(eq(collaboratorTable.id, collaborator.id));
+          for (const prev of previousOwners) {
+            if (isAdminUser(prev)) continue;
+            await tx
+              .insert(collaboratorTable)
+              .values({
+                type: repoAccess.ownerType,
+                projectId,
+                owner: repoAccess.ownerLogin,
+                repo: repoAccess.repoName,
+                email: normalizeEmail(prev.email),
+                userId: prev.id,
+                invitedBy: ctx.session.user.id,
+                role: "full-access",
+              })
+              .onConflictDoNothing();
+          }
+        });
+
+        return { message: `${collaborator.email} is now the owner.` };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

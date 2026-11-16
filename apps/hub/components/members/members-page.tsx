@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNowStrict } from "date-fns";
-import { Mail, Trash2, UserPlus, Users } from "lucide-react";
+import { Crown, Mail, MoreHorizontal, Trash2, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
@@ -15,6 +15,12 @@ import {
 } from "@workspace/trpc/lib/cms/members-shared";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { PageHeader } from "@/components/ds/layout/page-header";
@@ -55,7 +61,8 @@ type Pending =
   | { type: "invite"; emails: string[]; role: CollaboratorRole }
   | { type: "role"; member: Collaborator; role: CollaboratorRole }
   | { type: "resend"; member: Collaborator }
-  | { type: "remove"; member: Collaborator };
+  | { type: "remove"; member: Collaborator }
+  | { type: "owner"; member: Collaborator };
 
 const parseEmails = (raw: string) =>
   Array.from(
@@ -122,7 +129,17 @@ export function MembersPage() {
       onError: (error) => toast.error(handleCmsError(error, "Couldn't remove the member.")),
     })
   );
-  const busy = add.isPending || changeRole.isPending || resend.isPending || remove.isPending;
+  const transfer = useMutation(
+    trpc.cms.collaborators.transferOwnership.mutationOptions({
+      onSuccess: (result) => {
+        toast.success(result.message);
+        refresh();
+      },
+      onError: (error) => toast.error(handleCmsError(error, "Couldn't transfer ownership.")),
+    })
+  );
+  const busy =
+    add.isPending || changeRole.isPending || resend.isPending || remove.isPending || transfer.isPending;
 
   const header = (
     <PageHeader
@@ -164,7 +181,7 @@ export function MembersPage() {
     );
   }
 
-  const { canManageFullAccess } = members.data;
+  const { canManageFullAccess, canTransferOwnership } = members.data;
   const roles = assignableRoles(canManageFullAccess);
   const emails = parseEmails(emailsRaw);
   const invalid = emails.filter((e) => !looksLikeEmail(e));
@@ -256,35 +273,45 @@ export function MembersPage() {
     {
       key: "actions",
       header: "",
-      width: "190px",
+      width: "64px",
       align: "end",
-      cell: (r) =>
-        r.kind === "collaborator" && canManageMember(r.role, canManageFullAccess) ? (
-          <div className="flex items-center justify-end gap-1">
-            {r.status !== "active" && (
-              <Button
-                size="sm"
-                variant="ghost"
-                icon={<Mail className="size-3.5" />}
-                disabled={busy}
-                onClick={() => setPending({ type: "resend", member: r })}
-              >
-                Resend
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              icon={<Trash2 className="size-3.5" />}
-              disabled={busy}
-              onClick={() => setPending({ type: "remove", member: r })}
-            >
-              Remove
-            </Button>
-          </div>
-        ) : (
-          <span className="text-[13px] text-faint">—</span>
-        ),
+      cell: (r) => {
+        if (r.kind !== "collaborator") return <span className="text-[13px] text-faint">—</span>;
+        const canManage = canManageMember(r.role, canManageFullAccess);
+        const canMakeOwner = canTransferOwnership && r.status === "active";
+        if (!canManage && !canMakeOwner) return <span className="text-[13px] text-faint">—</span>;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button size="sm" variant="ghost" aria-label={`Actions for ${r.email}`} disabled={busy} className="px-2 text-dim hover:text-ink">
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="min-w-44">
+              {canMakeOwner && (
+                <DropdownMenuItem onClick={() => setPending({ type: "owner", member: r })}>
+                  <Crown />
+                  Make owner
+                </DropdownMenuItem>
+              )}
+              {canManage && r.status !== "active" && (
+                <DropdownMenuItem onClick={() => setPending({ type: "resend", member: r })}>
+                  <Mail />
+                  Resend invite
+                </DropdownMenuItem>
+              )}
+              {canManage && (
+                <DropdownMenuItem variant="destructive" onClick={() => setPending({ type: "remove", member: r })}>
+                  <Trash2 />
+                  Remove
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];
 
@@ -329,6 +356,15 @@ export function MembersPage() {
           confirmLabel: "Remove",
           danger: true,
           run: () => remove.mutate({ projectId, collaboratorId: pending.member.id }),
+        };
+      case "owner":
+        return {
+          title: `Make ${pending.member.name || pending.member.email} the owner?`,
+          description:
+            "They get full control of this project, including billing and deleting it. You stay on with full access, but only the new owner can transfer it again.",
+          confirmLabel: "Make owner",
+          danger: true,
+          run: () => transfer.mutate({ projectId, collaboratorId: pending.member.id }),
         };
     }
   })();
