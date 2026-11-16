@@ -228,6 +228,7 @@ export function AnalyticsPage() {
       <PageHeader
         title="Analytics"
         description="Visitors, sessions and your most-viewed pages from Google Analytics."
+        docs="client-hub/apps#analytics"
         actions={rangeMenu || undefined}
         tabs={
           <UnderlineTabs

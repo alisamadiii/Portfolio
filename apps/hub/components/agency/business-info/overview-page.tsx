@@ -123,6 +123,7 @@ export function BusinessInfoOverview() {
     <PageHeader
       title="Business info"
       description="Seven short sections about your business. Answer them once and we use them for your website copy, your Google Ads and your emails. Each section has a ready-made AI prompt if you get stuck."
+      docs="client-hub/settings#business-info"
     />
   );
 

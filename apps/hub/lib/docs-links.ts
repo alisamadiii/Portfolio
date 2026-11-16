@@ -14,8 +14,8 @@ export const DOCS_RESOURCES = [
     href: docsUrl("client-hub/ai-editing"),
   },
   {
-    title: "Analytics, emails & speed",
-    href: docsUrl("client-hub/features"),
+    title: "Apps for your site",
+    href: docsUrl("client-hub/apps"),
   },
   {
     title: "How we work, step by step",

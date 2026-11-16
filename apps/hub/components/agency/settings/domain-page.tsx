@@ -19,6 +19,7 @@ export function AgencyDomainPage() {
       <PageHeader
         title="Domain"
         description="Where your website is hosted, and where its form submissions are sent."
+        docs="client-hub/settings#domain"
       />
       <WebsiteUrlCard projectId={projectId} />
       <NotifyEmailCard projectId={projectId} />

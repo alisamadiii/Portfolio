@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { DocsLink } from "@/components/ds/ui/docs-link";
+
 /**
  * Page title block. Title 26px/600, tracking -0.02em. Subtitle 14px muted.
  * NO giant headings, NO monospace/uppercase eyebrows. Eyebrow (optional) is 13px muted sentence case.
@@ -12,6 +14,7 @@ export function PageHeader({
   actions,
   pill,
   tabs,
+  docs,
 }: {
   title: ReactNode;
   count?: number;
@@ -20,6 +23,8 @@ export function PageHeader({
   actions?: ReactNode;
   pill?: ReactNode;
   tabs?: ReactNode;
+  /** Docs path (e.g. "client-hub/feedback"): adds "Learn more ↗" after the description. */
+  docs?: string;
 }) {
   return (
     <div className="flex flex-col gap-3.5">
@@ -31,8 +36,16 @@ export function PageHeader({
             {count !== undefined && <span className="font-normal text-faint">{count}</span>}
             {pill}
           </h1>
-          {description && (
-            <p className="max-w-[620px] text-sm leading-relaxed text-dim">{description}</p>
+          {(description || docs) && (
+            <p className="max-w-[620px] text-sm leading-relaxed text-dim">
+              {description}
+              {docs && (
+                <>
+                  {description ? " " : null}
+                  <DocsLink path={docs} />
+                </>
+              )}
+            </p>
           )}
         </div>
         {actions && <div className="flex flex-wrap gap-2">{actions}</div>}

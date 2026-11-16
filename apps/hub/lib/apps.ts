@@ -39,6 +39,7 @@ import {
   ResendLogo,
   WixLogo,
 } from "@/components/ds/brand-logos";
+import { docsUrl } from "@/lib/docs-links";
 
 export type { AppId };
 
@@ -217,7 +218,8 @@ export const accountNav = ({ isAdmin }: { isAdmin: boolean }): NavItem[] => [
   { id: "integrations", label: "Integrations", icon: Plug, path: "/integrations" },
   { id: "billing", label: "Billing", icon: CreditCard, path: "/billing" },
   { id: "partner", label: "Partner Program", icon: Handshake, path: "/partner" },
-  { id: "guide", label: "Guide", icon: BookOpen, path: "/guide" },
+  // The Client Hub docs live on the agency site only.
+  { id: "guide", label: "Guide", icon: BookOpen, path: docsUrl("client-hub/getting-started"), external: true },
   ...(isAdmin
     ? [
         { id: "client-websites", label: "Client websites", icon: MonitorSmartphone, path: "/client-websites", adminOnly: true },

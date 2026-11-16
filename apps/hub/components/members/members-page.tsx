@@ -150,6 +150,7 @@ export function MembersPage() {
           : undefined
       }
       description="Everyone who can open this project, and what they're allowed to do."
+      docs="client-hub/settings#members"
     />
   );
 

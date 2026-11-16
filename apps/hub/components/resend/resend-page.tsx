@@ -148,6 +148,7 @@ export function ResendPage() {
     <PageHeader
       title="Resend"
       description="The email account your website sends from: domains, recent emails and API keys."
+      docs="client-hub/apps#resend"
       actions={
         connected ? (
           <div className="flex gap-2">

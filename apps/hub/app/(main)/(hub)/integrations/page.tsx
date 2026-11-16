@@ -26,6 +26,7 @@ export default function IntegrationsPage() {
       <PageHeader
         title="Integrations"
         description="Accounts the hub uses across all of your sites."
+        docs="client-hub/settings#integrations"
       />
       {user.isPending || isPending ? (
         <Skeleton className="h-44 w-full rounded-card" />

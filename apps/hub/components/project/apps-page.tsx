@@ -110,6 +110,7 @@ export function AppsPage() {
       <PageHeader
         title="Apps"
         description="Add tools to your site. Apps come with a monthly plan."
+        docs="client-hub/apps"
         actions={<ButtonLink href={`${base}/billing`}>View plan</ButtonLink>}
       />
       <div className="flex flex-wrap items-center gap-3">

@@ -12,6 +12,7 @@ import {
 } from "@workspace/ui/components/dialog";
 
 import { Check, HelpCircle, X } from "@/components/icon";
+import { DocsLink } from "@/components/ds/ui/docs-link";
 
 /**
  * "Learn about AI" button in the chat header. Opens a plain-language guide to
@@ -112,7 +113,10 @@ export function AiInfoDialog() {
             </section>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm">
+              <DocsLink path="client-hub/ai-editing">Read the full guide</DocsLink>
+            </span>
             <Button type="button" size="sm" onClick={() => setOpen(false)}>
               Got it
             </Button>

@@ -21,7 +21,6 @@ import { useRepo } from "@/hooks/use-repo";
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { SessionActions } from "@/components/canvas/session-actions";
 import { ArrowLeft, Info, Settings } from "@/components/icon";
-import { AiIntroDialog } from "@/components/shell/ai-intro-dialog";
 import { User } from "@/components/user";
 
 /**
@@ -89,7 +88,7 @@ export function ShellHeader({
 
       {/* Right */}
       <div className="ml-auto flex items-center gap-1.5">
-        <AiIntroDialog />
+        {/* AI intro dialog + its "?" button hidden for now: components/shell/ai-intro-dialog.tsx */}
         <Button
           variant="ghost"
           size="icon-sm"

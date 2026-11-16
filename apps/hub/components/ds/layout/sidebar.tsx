@@ -52,7 +52,10 @@ export function SidebarLink({
     >
       {item.external ? (
         <>
-          <span>{item.label}</span>
+          <span className="flex items-center gap-2.5">
+            {Icon && <Icon className="size-4" strokeWidth={1.8} aria-hidden />}
+            {item.label}
+          </span>
           <ArrowUpRight className="size-3.5" aria-hidden />
         </>
       ) : (

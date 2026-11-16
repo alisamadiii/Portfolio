@@ -1,111 +1,195 @@
 ---
 title: "Editing Your Site with AI"
-description: "Two ways to change your site with AI: quick edits that run in the background, or a full chat session with a live preview."
+description: "Change your website by describing what you want: point at the part to change, chat with the AI, check the result, then publish."
 order: 2
+updatedDate: 2026-11-16
 ---
 
-The fastest way to change your website is to just ask. The Hub gives you AI in
-two places, and they fit different jobs:
-
-1. **Quick edits**: click any element on the page, tell the AI what to change,
-   and it happens in the background while you keep working.
-2. **Chat sessions**: a full conversation with a live preview of your site,
-   for bigger changes you want to watch happen.
-
-## Quick edits
-
-For small changes, you don't need a conversation. Click any text element in
-the editor, type what you want ("make this friendlier", "update the hours to
-9-5"), and send it. The AI applies the change in the background. You can close
-the tab and move on with your day.
-
-<video
-  src="/docs-media/client-hub/ai-quick-edit.mp4"
-  controls
-  muted
-  playsinline
-  preload="metadata"
-></video>
-
-Every quick edit is tracked in the **Deployments** tab. Any request you send
-outside a chat session shows up there with all its data: what was asked, what
-the AI changed, and the resulting publish. Deployments only cover these
-background edits; chat sessions don't appear there because you already watch
-those live.
+The fastest way to change your website is to ask. Open **Website** in the
+sidebar (or click **Edit with AI** anywhere) and you get a chat on the left and
+a live preview of your site on the right. You describe a change, the AI makes
+it in the preview, and nothing reaches your real website until you click
+**Publish**.
 
 <img
-  src="/docs-media/client-hub/deployments.png"
-  alt="The Deployments tab listing every AI edit with the request, what changed, and the resulting publish"
-  width="2000"
-  height="1282"
+  src="/docs-media/client-hub/ai-editor.webp"
+  alt="The AI editor: chat panel on the left, live preview of the website on the right, Changes, Discard and Publish at the top"
+  width="1440"
+  height="900"
   loading="lazy"
 />
 
-Because quick edits run in the background (you're not watching them live), the
-Hub tells you by **email** if something couldn't be applied. The email shows
-exactly what you asked for, why it didn't apply, and what to do next: rephrase
-the request, or reach out to us. If a change is rejected, nothing on your site
-is touched.
+Above the preview you can switch pages (**Pages**), switch between desktop,
+tablet and phone views, **Reload** the preview, open it in a new tab
+(**Preview**), and check each page's search title and description (**SEO**).
+
+## Make a change in 4 steps
+
+1. **Point at it.** Click the cursor button at the top right of the preview,
+   then click the text, image or button you want to change. It shows up above
+   the message box, so the AI knows exactly what you mean.
+2. **Describe the change** in plain words, like texting a designer:
+   "Change this headline to 'Jacksonville's friendly, same-day plumbers'".
+3. **Send** with Enter (Shift+Enter adds a new line). Watch the preview update.
+   While the AI works, the send button turns into a pause button.
+4. **Publish** when you're happy. Until then, everything stays in the preview.
 
 <img
-  src="/docs-media/client-hub/ai-error-email.png"
-  alt="Email alert explaining that an AI edit could not be applied, showing what was asked and why it was rejected"
-  width="910"
-  height="1334"
+  src="/docs-media/client-hub/ai-pick.webp"
+  alt="The headline is selected in the preview and a message describing the change is typed in the chat"
+  width="1440"
+  height="900"
   loading="lazy"
 />
 
-## Chat sessions
-
-For bigger changes, start an **AI session**: a chat sidebar next to a live
-preview of your actual site.
-
-*A preview video of chat sessions will be ready soon.*
-
-1. Open your project in the Hub and start an AI session.
-2. A live preview of your site loads on the left, with a chat sidebar on the
-   right.
-3. Type what you want, the way you'd tell a person:
-   - *"Change the headline on the homepage to 'Serving the community since
-     2019'."*
-   - *"Add a new section under services about kitchen remodeling."*
-   - *"Make the photos on the About page bigger."*
-4. The AI makes the change and the preview updates in front of you. Not quite
-   right? Keep talking (*"a bit smaller"*, *"use a warmer tone"*) until it is.
-
 <img
-  src="/docs-media/client-hub/ai-session-guide.png"
-  alt="The editing guide panel showing how to edit text and images and manage lists, with the Publish button in the top bar"
-  width="1076"
-  height="686"
+  src="/docs-media/client-hub/ai-result.webp"
+  alt="The AI replied that it updated the headline, and the preview shows the new headline"
+  width="1440"
+  height="900"
   loading="lazy"
 />
 
-### You see everything live before publishing
+Open **Details** under a reply to see each step the AI took. The small file
+button next to a step shows exactly what changed, line by line.
 
-When you enable a chat session, you get a **preview URL**: your own private
-copy of the site where every change shows up live as the AI works. Open it on
-your phone, share it with a colleague, poke around. Your visitors never see
-any of it.
+<img
+  src="/docs-media/client-hub/ai-details.webp"
+  alt="The Details list under an AI reply, showing the edited file and the saved preview step"
+  width="1440"
+  height="900"
+  loading="lazy"
+/>
 
-That's the point of a session: you watch every change with your own eyes, so
-when you press **Publish**, you do it freely and with confidence. Your changes
-go to the live site, usually within a minute.
+## How to ask so it works the first time
 
-## What if I break something?
+- **Click the element before you type.** It removes all guessing.
+- **One clear change per message** beats a long list.
+- **Name the page or section** when the element isn't on screen: "On the
+  About page, add a fourth team member card".
+- **Quote the exact text** when there are several similar things: "the button
+  that says Get a quote", not "the button".
+- **Say "everywhere"** to change something across the whole site, like a new
+  phone number.
+- **"Do the same for..."** repeats your last request somewhere else.
 
-You can't. Three safety nets:
+If your request matches several things on the page, the AI asks which one you
+mean instead of guessing. If it's too vague ("make it pop"), it asks what
+exactly to change. Click **Learn about AI** at the top of the chat for a quick
+summary any time.
 
-- Chat sessions happen on a preview that's completely separate from your live
-  site, so experiments cost nothing.
-- Quick edits that can't be applied are rejected and change nothing; you get
-  an email explaining why.
-- Every published change is saved in version control, so we can restore any
-  previous version of your site at any time.
+<img
+  src="/docs-media/client-hub/ai-learn.webp"
+  alt="The How the AI editor works dialog listing what the AI can and cannot do"
+  width="1440"
+  height="900"
+  loading="lazy"
+/>
 
-## Tips for good requests
+## What the AI can and can't do
 
-- **One change at a time** works better than a list of ten.
-- **Point at the page**: "on the homepage", "in the footer", "the pricing
-  section".
-- **Paste the exact text** you want when wording matters.
+**It can:**
+
+- Change text, headings, buttons and labels anywhere.
+- Add, remove or reorder sections and list items on a page.
+- Add new entries, like a team member, an FAQ, a project or an event.
+- Change colors, spacing and styling on what you point to.
+- Update titles and descriptions for search engines.
+- Place images you upload.
+
+**It can't:**
+
+- Undo from memory. Use **Changes** to revert (see below).
+- Crop or reposition inside a photo. Crop it first, then upload it.
+- Redesign a whole page, or create and delete pages, unless your site has a
+  skill for it (see below).
+- Wire up payments, logins or new form behavior. It can add a link to a
+  checkout or booking page you give it.
+- Change site settings or billing.
+
+For bigger projects like a redesign or a new feature, [contact us](/contact).
+
+## Adding images
+
+Click the paperclip, drag images into the chat, or paste them.
+
+- Up to **10 images** per message, **1 MB** each. Large photos are shrunk
+  automatically, so most phone photos fit.
+- JPG, PNG, WebP and GIF work. Export iPhone HEIC photos as JPG first. SVG
+  files aren't supported here.
+- **Add a short description to each image** before sending, like "new team
+  photo for the About page". The AI places images by that description.
+- Videos can't be uploaded. Host them on YouTube or Vimeo and paste the link.
+
+## Skills: shortcuts for your site
+
+Some sites come with **skills**, ready-made tasks we set up for your site,
+like "add a page", "update business info", "manage FAQs" or "add an event".
+Type **/** in the message box to see them, or click a skill chip above the
+box. If you pick a skill without details, the AI asks one short question
+first, then does the work. Skills can do things normal chat can't, like
+creating a new page wired into your menu and sitemap.
+
+Want a skill for something you do often? Ask us.
+
+## Changes, revert and discard
+
+**Changes** at the top shows every file that differs from your live site, with
+removed lines in red and added lines in green. **Revert** puts one file back
+exactly as it is live.
+
+<img
+  src="/docs-media/client-hub/ai-changes.webp"
+  alt="The Your changes dialog showing the old headline in red and the new headline in green, with a Revert button"
+  width="1440"
+  height="900"
+  loading="lazy"
+/>
+
+Typing "undo" in the chat doesn't work: the AI doesn't remember old content.
+Use **Changes** instead.
+
+**Discard** throws away every change from this session and resets the preview
+to your live site.
+
+## Publishing
+
+Click **Publish** to put everything in the preview on your real website. Only
+owners and full access members see the button.
+
+- **Sites on GitHub:** your changes are saved to GitHub and your host updates
+  the live site, usually within a minute or two.
+- **Uploaded sites:** the first time, the Hub asks you to connect your own
+  Netlify account, which hosts the site. After that, Publish deploys straight
+  to Netlify, and the **Netlify** page in the sidebar shows the deploy.
+- **Sites we manage for you:** the Hub saves your changes and our team puts
+  them live.
+
+<img
+  src="/docs-media/client-hub/ai-publish-netlify.webp"
+  alt="The Connect Netlify to go live dialog shown on the first publish of an uploaded site"
+  width="1440"
+  height="900"
+  loading="lazy"
+/>
+
+You can't publish while the AI is still working on a request. After
+publishing, a fresh preview starts automatically.
+
+## Branches: try ideas side by side
+
+The branch chip above the preview (it says **main** by default) lets you
+create a named branch, like "New hero test", to try changes without touching
+your main version. Switching branches starts a new session on that branch.
+Publish or discard your changes on main before switching. Uploaded sites don't
+have branches.
+
+## Good to know
+
+- The editor goes to sleep after about 30 minutes without activity. Publish
+  when you finish a batch of changes, then open it again whenever you need it.
+- Each message has up to 10 minutes to finish.
+- If the editor is busy, wait a minute and try again.
+- To replace your whole uploaded site with new files, use **Import** on Home.
+  Unpublished editor changes are discarded, and your live site keeps the old
+  version until you publish or redeploy.

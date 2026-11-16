@@ -26,6 +26,7 @@ import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { repoPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
+import { DocsLink } from "@/components/ds/ui/docs-link";
 
 type Status = RouterOutputs["feedback"]["status"];
 type Entry = RouterOutputs["feedback"]["list"]["items"][number];
@@ -71,6 +72,7 @@ export function FeedbackPage() {
     <PageHeader
       title="Feedback"
       description="Share one link with your customers. Happy customers are asked to review you on Google, everyone else can tell you privately."
+      docs="client-hub/feedback"
     />
   );
 
@@ -183,7 +185,8 @@ function PlaceSearch({ status, onDone }: { status: Status; onDone?: () => void }
       <CardHeader title="Find your business on Google Maps" divided />
       <div className="flex flex-col gap-4 p-6">
         <p className="text-sm text-dim">
-          We send 5-star customers to your Google review page. Search your business name as it appears on Google, then pick your business listing (not your street address).
+          We send 5-star customers to your Google review page. Search your business name as it appears on Google, then pick your business listing (not your street address).{" "}
+          <DocsLink path="client-hub/feedback#setting-it-up">How it works</DocsLink>
         </p>
         <form
           className="flex flex-wrap gap-2"
@@ -359,6 +362,9 @@ function GoogleLinkForm({ initial, onDone }: { initial?: string; onDone?: () => 
         <li>Select Read reviews, then Get more reviews.</li>
         <li>Select Share, copy the link and paste it here.</li>
       </ol>
+      <p className="text-sm text-dim">
+        <DocsLink path="client-hub/feedback#setting-it-up">See how to set it up, step by step</DocsLink>
+      </p>
       <div className="flex flex-wrap gap-2">
         <Input
           value={value}

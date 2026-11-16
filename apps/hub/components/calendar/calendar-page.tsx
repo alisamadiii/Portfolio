@@ -117,6 +117,7 @@ export function CalendarPage() {
     <PageHeader
       title="Google Calendar"
       description="Your calendars and upcoming appointments, right in the hub."
+      docs="client-hub/apps#google-calendar"
     />
   );
 

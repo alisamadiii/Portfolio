@@ -120,6 +120,7 @@ export function GoogleAdsPage() {
       <PageHeader
         title="Google Ads"
         description="What your ads cost, what they bring in, and where the budget goes."
+        docs="client-hub/apps#google-ads"
         actions={adsConnected && tab !== "budget" && tab !== "conversions" ? rangeMenu : undefined}
         tabs={
           <UnderlineTabs

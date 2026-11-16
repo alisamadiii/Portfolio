@@ -80,6 +80,7 @@ export function WixPage() {
     <PageHeader
       title="Wix"
       description="Your Wix site in one place: blog posts, form leads, contacts, orders and bookings."
+      docs="client-hub/apps#wix"
       actions={
         connected && fullAccess ? (
           <Button

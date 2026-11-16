@@ -54,7 +54,11 @@ export function AgencyBillingPage() {
 
   return (
     <>
-      <PageHeader title="Billing" description="Your plan and invoices for this site." />
+      <PageHeader
+        title="Billing"
+        description="Your plan and invoices for this site."
+        docs="client-hub/settings#billing-your-site"
+      />
       <div className="max-w-screen-md">
         {error ? (
           <PanelError

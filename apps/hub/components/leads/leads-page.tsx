@@ -33,6 +33,7 @@ import { LeadsInbox } from "./inbox/inbox";
 import { TextingCard } from "./inbox/texting-card";
 import { LeadSources } from "./lead-sources";
 import { LeadNameCell, LeadsTable } from "./leads-table";
+import { DocsLink } from "@/components/ds/ui/docs-link";
 
 const TABS = ["conversations", "overview", "all", "sources", "settings"] as const;
 type Tab = (typeof TABS)[number];
@@ -86,6 +87,9 @@ export function LeadsPage() {
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-surface px-4 py-2.5 sm:px-6">
         <h1 className="text-base font-semibold tracking-[-0.01em]">Leads</h1>
+        <span className="text-[13px]">
+          <DocsLink path="client-hub/leads" />
+        </span>
         <div className="-mx-1 min-w-0 overflow-x-auto px-1">
           <SegmentedTabs
             label="Leads sections"

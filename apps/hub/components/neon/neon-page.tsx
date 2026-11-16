@@ -118,6 +118,7 @@ export function NeonPage() {
     <PageHeader
       title="Neon"
       description="Your website's Postgres database: branches, databases and connection strings."
+      docs="client-hub/apps#neon"
       actions={
         connected && fullAccess ? (
           <div className="flex gap-2">

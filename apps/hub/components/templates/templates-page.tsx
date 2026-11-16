@@ -219,6 +219,7 @@ export function TemplatesPage() {
       <PageHeader
         title="Templates"
         description="Reusable text for appointments and messages. Type [[ to add placeholders like the lead's name, and / to drop in a snippet."
+        docs="client-hub/leads#templates"
         actions={
           canEdit && (
             <>

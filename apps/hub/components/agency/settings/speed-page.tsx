@@ -221,7 +221,7 @@ export function AgencySpeedPage() {
   if (domainStatus === "missing") {
     return (
       <>
-        <PageHeader title="Speed" description={LEAD} />
+        <PageHeader title="Speed" description={LEAD} docs="client-hub/settings#speed" />
         <Card>
           <EmptyState
             icon={<SpeedMark className="size-5" />}
@@ -238,6 +238,7 @@ export function AgencySpeedPage() {
       <PageHeader
         title="Speed"
         description={LEAD}
+        docs="client-hub/settings#speed"
         actions={
         <>
           {psi.data && websiteUrl && (
