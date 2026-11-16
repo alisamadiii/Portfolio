@@ -1,18 +1,66 @@
 import { Img, Link, Section, Text } from "@react-email/components";
 
 // Shared header/footer + style constants for all transactional emails.
-// Zero-prop components so template prop interfaces stay untouched.
 
-export function EmailHeader() {
+const AGENCY_LOGO = "https://cdn.alisamadii.com/company/business-logo-soft-rounded.png";
+
+/**
+ * Agency logo, or (with `logoUrl`) the client's logo with a small agency badge
+ * in its bottom-right corner. The client logo is the cell's background so the
+ * badge can sit on top without positioning (Gmail strips it); clients without
+ * background images (Outlook desktop) show only the badge.
+ */
+export function EmailHeader({ logoUrl }: { logoUrl?: string | null } = {}) {
+  if (!logoUrl) {
+    return (
+      <Section style={headerSection}>
+        <Img
+          src={AGENCY_LOGO}
+          width="44"
+          height="44"
+          alt="Ali Samadii LLC"
+          style={{ borderRadius: "10px", display: "block" }}
+        />
+      </Section>
+    );
+  }
   return (
     <Section style={headerSection}>
-      <Img
-        src="https://cdn.alisamadii.com/company/business-logo-soft-rounded.png"
-        width="44"
-        height="44"
-        alt="Ali Samadii LLC"
-        style={{ borderRadius: "10px", display: "block" }}
-      />
+      <table role="presentation" cellPadding={0} cellSpacing={0} border={0}>
+        <tbody>
+          <tr>
+            <td
+              width={48}
+              height={48}
+              align="right"
+              valign="bottom"
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "10px",
+                backgroundImage: `url(${logoUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundColor: "#ffffff",
+              }}
+            >
+              <Img
+                src={AGENCY_LOGO}
+                width="18"
+                height="18"
+                alt="Ali Samadii LLC"
+                style={{
+                  display: "block",
+                  borderRadius: "5px",
+                  border: "2px solid #ffffff",
+                  margin: "0 -4px -4px 0",
+                }}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </Section>
   );
 }

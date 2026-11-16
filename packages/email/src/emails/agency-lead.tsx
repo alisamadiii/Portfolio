@@ -31,6 +31,8 @@ export interface AgencyLeadEmailProps {
   leadUrl: string;
   tag?: string;
   title?: string;
+  /** The project's business logo; the agency logo becomes a corner badge. */
+  logoUrl?: string | null;
 }
 
 export default function AgencyLeadEmail({
@@ -39,6 +41,7 @@ export default function AgencyLeadEmail({
   leadUrl,
   tag = "New lead",
   title,
+  logoUrl,
 }: AgencyLeadEmailProps) {
   const headline = title ?? `Someone contacted ${siteName}`;
   return (
@@ -47,7 +50,7 @@ export default function AgencyLeadEmail({
       <Preview>{headline}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <EmailHeader />
+          <EmailHeader logoUrl={logoUrl} />
 
           <Heading style={heading}>{headline}</Heading>
           <Text style={subheading}>
@@ -79,4 +82,5 @@ AgencyLeadEmail.PreviewProps = {
     ["Source", "Google Ads"],
   ],
   leadUrl: "https://app.alisamadii.com/p/00000000-0000-0000-0000-000000000000/agency/1",
+  logoUrl: "https://cdn.alisamadii.com/company/business-logo-soft-rounded.png",
 } satisfies AgencyLeadEmailProps;

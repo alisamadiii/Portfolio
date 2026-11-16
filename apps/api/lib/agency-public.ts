@@ -12,6 +12,7 @@ import {
 import AgencyLeadEmail from "@workspace/email/emails/agency-lead";
 import { renderEmailParts } from "@workspace/email/utils";
 import { IP_LIMIT } from "@workspace/trpc/lib/agency/lead-capture";
+import { publicObjectUrl } from "@workspace/trpc/lib/r2";
 
 // ─── Shared plumbing for the public agency endpoints ─────────────
 // The form capture (forms/[projectId]) and contact (contact/[projectId]) routes
@@ -109,6 +110,7 @@ export async function findClientByProjectId(projectId: string) {
       websiteUrl: hubProject.websiteUrl,
       repo: hubProject.repo,
       usesendTeamId: hubProject.usesendTeamId,
+      logoKey: hubProject.logoKey,
       googleAdsCustomerId: agencyClient.googleAdsCustomerId,
       googleAdsActions: agencyClient.googleAdsActions,
     })
@@ -140,6 +142,7 @@ export async function findContactClientByProjectId(projectId: string) {
       usesendTeamId: hubProject.usesendTeamId,
       notifyEmail: hubProject.notifyEmail,
       ownerEmail: userTable.email,
+      logoKey: hubProject.logoKey,
     })
     .from(hubProject)
     .leftJoin(userTable, eq(userTable.id, hubProject.githubConnectedUserId))
@@ -198,8 +201,15 @@ export const leadEmail = (
   lines: [string, string][],
   leadUrl: string,
   siteName: string,
-  opts?: { tag?: string; title?: string }
+  opts?: { tag?: string; title?: string; logoKey?: string | null }
 ) =>
   renderEmailParts(
-    createElement(AgencyLeadEmail, { lines, leadUrl, siteName, ...opts })
+    createElement(AgencyLeadEmail, {
+      lines,
+      leadUrl,
+      siteName,
+      tag: opts?.tag,
+      title: opts?.title,
+      logoUrl: publicObjectUrl(opts?.logoKey),
+    })
   );

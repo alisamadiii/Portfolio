@@ -243,7 +243,9 @@ export async function POST(
         to: client.notifyEmail ?? client.ownerEmail,
         ...(email ? { replyTo: email } : {}),
         subject: `New lead from ${name ?? email ?? phone ?? siteName}`,
-        ...(await leadEmail(lines, `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`, siteName)),
+        ...(await leadEmail(lines, `${urls.cms}/p/${client.projectId}/agency/${lead!.id}`, siteName, {
+          logoKey: client.logoKey,
+        })),
       });
     } catch (error) {
       // The lead is saved; a failed notification must not fail the visitor's submit.

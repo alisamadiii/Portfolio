@@ -158,6 +158,7 @@ export async function POST(
     const body = await leadEmail(lines, `${urls.cms}/p/${projectId}`, siteName, {
       tag: "Contact form",
       title,
+      logoKey: client.logoKey,
     });
     // formName comes from the visitor: plain characters only, so it can't
     // forge another From address or break the headers.
