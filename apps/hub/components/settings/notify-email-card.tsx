@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { useCurrentUser } from "@workspace/auth/hooks/use-user";
-
 import { useTRPC } from "@workspace/trpc/client";
 
 import { Button } from "@/components/ds/ui/button";
@@ -16,12 +14,11 @@ import { Input } from "@/components/ds/ui/field";
  * Where this project's embed-form submissions (lead / booking / contact) are
  * emailed. One value per project (hub_project.notifyEmail), editable from both
  * the website Emails tab and the agency settings. Empty = the project owner's
- * account email.
+ * account email (shown here, never the viewer's).
  */
 export function NotifyEmailCard({ projectId }: { projectId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const user = useCurrentUser().data?.user ?? null;
 
   const gate = useQuery(trpc.emails.enabled.queryOptions({ projectId }));
   const [value, setValue] = useState("");
@@ -45,6 +42,7 @@ export function NotifyEmailCard({ projectId }: { projectId: string }) {
   );
 
   const saved = gate.data?.notifyEmail ?? "";
+  const ownerEmail = gate.data?.ownerEmail ?? null;
 
   return (
     <Card>
@@ -52,13 +50,13 @@ export function NotifyEmailCard({ projectId }: { projectId: string }) {
       <div className="flex flex-col gap-3 px-6 py-5">
       <p className="text-[13px] text-dim">
         Where lead form and contact submissions are sent. Leave empty to use the
-        account email{user?.email ? ` (${user.email})` : ""}.
+        project owner&apos;s email{ownerEmail ? ` (${ownerEmail})` : ""}.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <Input
           type="email"
           value={value}
-          placeholder={user?.email || "you@example.com"}
+          placeholder={ownerEmail || "you@example.com"}
           className="max-w-sm"
           disabled={gate.isPending}
           onChange={(e) => {

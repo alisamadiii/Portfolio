@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/index";
-import { hubProject } from "@workspace/drizzle/schema";
+import { agencyClient, hubProject, user } from "@workspace/drizzle/schema";
 
 import {
   authenticatedProcedure,
@@ -39,6 +39,25 @@ async function resolveProject(projectId: string) {
   return row;
 }
 
+// The fallback recipient when notifyEmail is empty: the project owner's
+// account email, else the agency row's owner (what the form routes use).
+async function projectOwnerEmail(projectId: string): Promise<string | null> {
+  const [owner] = await db
+    .select({ email: user.email })
+    .from(hubProject)
+    .innerJoin(user, eq(user.id, hubProject.githubConnectedUserId))
+    .where(eq(hubProject.id, projectId))
+    .limit(1);
+  if (owner) return owner.email;
+  const [agencyOwner] = await db
+    .select({ email: user.email })
+    .from(agencyClient)
+    .innerJoin(user, eq(user.id, agencyClient.userId))
+    .where(eq(agencyClient.projectId, projectId))
+    .limit(1);
+  return agencyOwner?.email ?? null;
+}
+
 // Other teams' emails never leave the server — every response is narrowed
 // to this shape.
 const toPublic = (e: UseSendEmailRow) => ({
@@ -70,6 +89,7 @@ export const emailsRouter = createTRPCRouter({
     return {
       enabled: project.usesendTeamId != null,
       notifyEmail: project.notifyEmail ?? null,
+      ownerEmail: await projectOwnerEmail(ctx.projectId),
     };
   }),
 
