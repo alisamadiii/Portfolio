@@ -191,6 +191,13 @@ export async function createNetlifySite(
 export const getNetlifySite = (token: string, siteId: string) =>
   netlify<NetlifySite>(token, `/sites/${siteId}`);
 
+/** Every site the token can see (first 100, newest first). */
+export const listNetlifySites = (token: string) =>
+  netlify<NetlifySite[]>(token, "/sites?filter=all&sort_by=created_at&per_page=100");
+
+/** The agency PAT, or null when it isn't configured. */
+export const netlifyAgencyToken = agencyToken;
+
 /**
  * Sets a site-scoped env var (all deploy contexts): updates it when it
  * exists, creates it otherwise. Applies to the next deploy.

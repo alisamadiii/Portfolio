@@ -5,8 +5,14 @@ import z from "zod";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
-import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
+import {
+  authenticatedProcedure,
+  cmsFullAccessProcedure,
+  cmsProcedure,
+  createTRPCRouter,
+} from "../init";
 import { latestNetlifyDeploy } from "../lib/content-pilot";
+import { getConnectedAccount, getIntegrationAccessToken } from "../lib/integrations";
 import { isAdminUser } from "../lib/authz-shared";
 import {
   createNetlifySnippet,
@@ -16,6 +22,8 @@ import {
   getNetlifyBuildMinutes,
   getNetlifySite,
   getNetlifySiteDns,
+  listNetlifySites,
+  netlifyAgencyToken,
   getNetlifySsl,
   listNetlifyDeploys,
   listNetlifySnippets,
@@ -89,6 +97,52 @@ const hostOf = (url: string) => {
 const capability = (c?: { included?: number | null; used?: number | null }) =>
   c ? { used: c.used ?? null, included: c.included ?? null } : null;
 
+type LinkAccount = "agency" | "owner";
+
+const projectOwnerId = async (projectId: string) => {
+  const [row] = await db
+    .select({ ownerId: hubProject.githubConnectedUserId })
+    .from(hubProject)
+    .where(eq(hubProject.id, projectId))
+    .limit(1);
+  return row?.ownerId ?? null;
+};
+
+/** Token for a link source: the agency PAT, or the owner's connected Netlify. */
+const linkToken = async (projectId: string, account: LinkAccount) => {
+  if (account === "agency") {
+    const token = netlifyAgencyToken();
+    if (!token) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Netlify is not configured on this server.",
+      });
+    }
+    return { token, userId: null };
+  }
+  const ownerId = await projectOwnerId(projectId);
+  if (!ownerId || !(await getConnectedAccount(ownerId, "netlify"))) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "The project owner hasn't connected Netlify.",
+    });
+  }
+  return {
+    token: await getIntegrationAccessToken(ownerId, "netlify", "Netlify"),
+    userId: ownerId,
+  };
+};
+
+// DB-only (no GitHub token), so it works on every project source.
+const adminProjectProcedure = authenticatedProcedure
+  .input(z.object({ projectId: z.string().uuid() }))
+  .use(({ next, ctx, input }) => {
+    if (!isAdminUser(ctx.session.user)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Only admins can link a Netlify project." });
+    }
+    return next({ ctx: { ...ctx, projectId: input.projectId } });
+  });
+
 export const netlifyRouter = createTRPCRouter({
   // Where Publish will deploy, for the confirm dialog. DB only, no Netlify call.
   target: cmsProcedure.query(async ({ ctx }) => {
@@ -100,6 +154,58 @@ export const netlifyRouter = createTRPCRouter({
       host: plan.action === "deploy" ? plan.host : null,
     };
   }),
+
+  // Admin: existing Netlify sites this project could be linked to, from the
+  // agency's Netlify and the owner's connected Netlify (if any).
+  linkableSites: adminProjectProcedure.query(async ({ ctx }) => {
+    const sources: LinkAccount[] = ["agency", "owner"];
+    const lists = await Promise.all(
+      sources.map(async (account) => {
+        try {
+          const { token } = await linkToken(ctx.projectId, account);
+          const sites = await listNetlifySites(token);
+          return sites.map((site) => ({
+            id: site.id,
+            name: site.name,
+            url: site.ssl_url ?? site.url,
+            customDomain: site.custom_domain,
+            account,
+          }));
+        } catch {
+          return [];
+        }
+      })
+    );
+    return lists.flat();
+  }),
+
+  // Admin: pin an existing Netlify site to the project. Later publishes deploy
+  // to it with the token of the account it came from.
+  linkSite: adminProjectProcedure
+    .input(z.object({ siteId: z.string().min(1).max(100), account: z.enum(["agency", "owner"]) }))
+    .mutation(async ({ ctx, input }) => {
+      const { token, userId } = await linkToken(ctx.projectId, input.account);
+      const site = await getNetlifySite(token, input.siteId);
+      const url = site.ssl_url ?? site.url;
+      const [current] = await db
+        .select({ websiteUrl: hubProject.websiteUrl })
+        .from(hubProject)
+        .where(eq(hubProject.id, ctx.projectId))
+        .limit(1);
+      await db
+        .update(hubProject)
+        .set({
+          netlifySiteId: site.id,
+          netlifySiteUrl: url,
+          netlifyConnectedUserId: userId,
+          // Fill the live URL the rest of the hub uses, never overwrite one.
+          ...(current?.websiteUrl
+            ? {}
+            : { websiteUrl: site.custom_domain ? `https://${site.custom_domain}` : url }),
+        })
+        .where(eq(hubProject.id, ctx.projectId));
+      return { name: site.name };
+    }),
 
   overview: cmsProcedure.query(async ({ ctx }) => {
     const project = await projectNetlify(ctx.projectId);

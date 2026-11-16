@@ -8,6 +8,7 @@ import { ArrowUpRight, Building2, Sparkles } from "lucide-react";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 
 import { BUSINESS_STEPS } from "@/components/agency/business-info-config";
 import { doneCount, stepStatuses } from "@/components/agency/business-info/status";
@@ -23,6 +24,7 @@ import { useRouteProjectId } from "@/hooks/use-repo";
 import { APPS, appState } from "@/lib/apps";
 import { repoPath } from "@/lib/paths";
 
+import { LinkNetlifyDialog } from "./link-netlify-dialog";
 import { ReplaceSourceDialog } from "./replace-source-dialog";
 import { hostOf, SitePreview } from "./site-preview";
 
@@ -40,6 +42,9 @@ export function HomePage() {
   const { entitlement, can } = useEntitlement(projectId || undefined);
   const { installed, install, isPending } = useInstalledApps(projectId);
   const router = useRouter();
+  // Admins can pin an existing Netlify site while none is linked yet.
+  const projects = useQuery(trpc.cms.repos.listMine.queryOptions(undefined, { enabled: !!projectId }));
+  const netlifyLinked = projects.data?.find((p) => p.projectId === projectId)?.netlify ?? true;
 
   const websiteUrl = project?.websiteUrl ?? null;
   const sites = useQuery(trpc.websites.getMine.queryOptions(undefined, { enabled: !!websiteUrl }));
@@ -224,6 +229,11 @@ export function HomePage() {
                 <ReplaceSourceDialog projectId={projectId} />
               )}
           </div>
+          {isAdminUser(user) && !netlifyLinked && (
+            <div>
+              <LinkNetlifyDialog projectId={projectId} />
+            </div>
+          )}
         </div>
       </Card>
 

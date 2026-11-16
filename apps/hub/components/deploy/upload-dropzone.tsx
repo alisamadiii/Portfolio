@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { zip } from "fflate";
+import { unzip, zip } from "fflate";
+import ignore, { type Ignore } from "ignore";
 import { toast } from "sonner";
 
 /**
@@ -19,11 +20,53 @@ export const pilotUrl = (process.env.NEXT_PUBLIC_CONTENT_PILOT_URL ?? "").replac
   ""
 );
 
-// Heavy or derived directories that never belong in a site upload.
-const SKIP_DIRS = new Set(["node_modules", ".git", ".next", ".vercel"]);
+// Heavy or derived directories that never belong in a site upload, skipped
+// even without a .gitignore (and before reading it, so they're never walked).
+const SKIP_DIRS = new Set(["node_modules", ".git", ".next", ".vercel", "__MACOSX"]);
 const SKIP_FILES = new Set([".DS_Store"]);
 
-export type Picked = { name: string; files: { path: string; file: File }[] };
+const isSkipped = (path: string) => {
+  const segments = path.split("/");
+  return (
+    segments.slice(0, -1).some((s) => SKIP_DIRS.has(s)) ||
+    SKIP_FILES.has(segments[segments.length - 1] ?? "")
+  );
+};
+
+/**
+ * Drops every path a .gitignore in the tree ignores (root and nested ones,
+ * each relative to its own folder, like git). The .gitignore files stay.
+ */
+const gitignoreFilter = (gitignores: { path: string; text: string }[]) => {
+  const rules: { dir: string; ig: Ignore }[] = gitignores.map(({ path, text }) => ({
+    dir: path.slice(0, path.length - ".gitignore".length),
+    ig: ignore().add(text),
+  }));
+  return (path: string) =>
+    !rules.some(({ dir, ig }) => path.startsWith(dir) && ig.ignores(path.slice(dir.length)));
+};
+
+const isGitignore = (path: string) => path === ".gitignore" || path.endsWith("/.gitignore");
+
+export type Picked = {
+  name: string;
+  files: { path: string; file: File }[];
+  /** Files left out because a .gitignore ignores them (folder picks). */
+  ignored?: number;
+};
+
+/** A folder pick with .gitignore'd files removed. */
+const withGitignore = async (picked: Picked): Promise<Picked> => {
+  const gitignores = await Promise.all(
+    picked.files
+      .filter((f) => isGitignore(f.path))
+      .map(async (f) => ({ path: f.path, text: await f.file.text() }))
+  );
+  if (!gitignores.length) return picked;
+  const keep = gitignoreFilter(gitignores);
+  const files = picked.files.filter((f) => keep(f.path));
+  return { ...picked, files, ignored: picked.files.length - files.length };
+};
 
 /** Recursively walk a dropped directory entry into { path, file } pairs. */
 const walkEntry = async (
@@ -54,20 +97,21 @@ const walkEntry = async (
 };
 
 /** Strip the folder's own name from webkitdirectory paths and filter noise. */
-const fromFileList = (files: FileList): Picked | null => {
+const fromFileList = async (files: File[]): Promise<Picked | null> => {
   const list: { path: string; file: File }[] = [];
   let root = "";
-  for (const file of Array.from(files)) {
+  for (const file of files) {
     const rel = file.webkitRelativePath || file.name;
     const segments = rel.split("/");
     root = segments[0] ?? "";
     const inner = segments.slice(1);
-    if (inner.some((s) => SKIP_DIRS.has(s)) || SKIP_FILES.has(file.name)) {
-      continue;
-    }
-    list.push({ path: inner.join("/") || file.name, file });
+    const path = inner.join("/") || file.name;
+    if (isSkipped(path)) continue;
+    list.push({ path, file });
   }
-  return list.length ? { name: root || "site", files: list } : null;
+  if (!list.length) return null;
+  const picked = await withGitignore({ name: root || "site", files: list });
+  return picked.files.length ? picked : null;
 };
 
 const isZipPick = (picked: Picked) =>
@@ -91,9 +135,39 @@ const packZip = async (picked: Picked): Promise<Blob> => {
   return new Blob([bytes as BlobPart], { type: "application/zip" });
 };
 
-/** The picked zip as-is, or the picked folder packed into one. Size-checked. */
+/**
+ * A picked zip with the same filtering as a folder: skipped dirs and
+ * .gitignore'd files removed.
+ */
+const cleanZip = async (file: File): Promise<Blob> => {
+  const data = new Uint8Array(await file.arrayBuffer());
+  const entries = await new Promise<Record<string, Uint8Array>>((resolve, reject) =>
+    unzip(
+      data,
+      // Never inflate node_modules & co, they're the bulk of a bad zip.
+      { filter: (f) => !f.name.endsWith("/") && !isSkipped(f.name) },
+      (err, data) => (err ? reject(err) : resolve(data))
+    )
+  );
+  const decoder = new TextDecoder();
+  const keep = gitignoreFilter(
+    Object.keys(entries)
+      .filter(isGitignore)
+      .map((path) => ({ path, text: decoder.decode(entries[path]) }))
+  );
+  const tree: Record<string, Uint8Array> = {};
+  for (const [path, bytes] of Object.entries(entries)) {
+    if (keep(path)) tree[path] = bytes;
+  }
+  const bytes = await new Promise<Uint8Array>((resolve, reject) =>
+    zip(tree, { level: 6 }, (err, data) => (err ? reject(err) : resolve(data)))
+  );
+  return new Blob([bytes as BlobPart], { type: "application/zip" });
+};
+
+/** The picked zip (cleaned), or the picked folder packed into one. Size-checked. */
 export const zipForUpload = async (picked: Picked): Promise<Blob> => {
-  const blob = isZipPick(picked) ? picked.files[0]!.file : await packZip(picked);
+  const blob = isZipPick(picked) ? await cleanZip(picked.files[0]!.file) : await packZip(picked);
   if (blob.size > MAX_ZIP_BYTES) {
     throw new Error("The upload is larger than 100 MB.");
   }
@@ -163,7 +237,8 @@ export const UploadDropzone = ({
           if (!batch.length) break;
           for (const child of batch) await walkEntry(child, "", files);
         }
-        pick(files.length ? { name: entry.name, files } : null);
+        const cleaned = files.length ? await withGitignore({ name: entry.name, files }) : null;
+        pick(cleaned?.files.length ? cleaned : null);
         return;
       }
       const file = event.dataTransfer.files?.[0];
@@ -204,6 +279,7 @@ export const UploadDropzone = ({
             <p className="text-[14px] font-medium">{picked.name}</p>
             <p className="text-muted-foreground mt-1 text-[12.5px]">
               {fileCount} ready to upload
+              {picked.ignored ? ` · ${picked.ignored} ignored by .gitignore` : ""}
             </p>
           </>
         ) : (
@@ -247,7 +323,9 @@ export const UploadDropzone = ({
         multiple
         className="hidden"
         onChange={(e) => {
-          if (e.target.files?.length) pick(fromFileList(e.target.files));
+          // Copy before clearing the input, which empties its FileList.
+          const files = Array.from(e.target.files ?? []);
+          if (files.length) void fromFileList(files).then(pick);
           e.target.value = "";
         }}
       />
