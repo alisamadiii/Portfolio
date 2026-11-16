@@ -18,8 +18,8 @@ import { clearWebsiteUrlCache } from "@/hooks/use-website-url";
  * The client's live website address (hosted on their own Netlify etc.; the
  * hub only previews and publishes). Feeds speed reports, campaign URLs, the
  * SEO base URL, and is auto-allowed for the embed scripts. Editable by
- * full-access collaborators (owner) or an admin; everyone else sees it
- * read-only. Reads the project row, so it never depends on GitHub.
+ * the owner or an admin (same rule as project.setWebsiteUrl); everyone else
+ * sees it read-only. Reads the project row, so it never depends on GitHub.
  */
 export function WebsiteUrlCard({ projectId }: { projectId: string }) {
   const trpc = useTRPC();
@@ -28,7 +28,7 @@ export function WebsiteUrlCard({ projectId }: { projectId: string }) {
   const user = useCurrentUser().data?.user ?? null;
 
   const websiteUrl = project?.websiteUrl ?? null;
-  const canEdit = isAdminUser(user) || project?.role === "full-access";
+  const canEdit = isAdminUser(user) || !!project?.ownerOrAdmin;
 
   const [url, setUrl] = useState("");
   useEffect(() => setUrl(websiteUrl ?? ""), [websiteUrl]);

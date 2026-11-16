@@ -84,7 +84,7 @@ export const DeleteSiteCard = () => {
           <div className="space-y-5 px-6 py-5">
             <p className="text-sm text-ink-3">
               This is permanent and cannot be undone. Deleting{" "}
-              <span className="font-semibold">{repo}</span> will:
+              <span className="font-semibold">{project?.name?.trim() || repo}</span> will:
             </p>
 
             <ul className="space-y-2">
@@ -145,7 +145,7 @@ export const DeleteSiteCard = () => {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete {repo}?</AlertDialogTitle>
+                  <AlertDialogTitle>Delete {project?.name?.trim() || repo}?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This cancels and refunds any paid subscription and wipes all
                     its hub data. Your GitHub repo and connection stay. This

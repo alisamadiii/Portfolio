@@ -35,11 +35,12 @@ const toBase64 = async (blob: Blob) => {
 };
 
 /**
- * Business logo (Business info › Your business). Saves on pick, separate from
- * the step's Save button: the image is shrunk to a 512px WebP in the browser,
- * then stored in R2. Replacing it deletes the old file.
+ * The site's logo (hub_project.logo_key), one card for project Settings and
+ * Business info › Your business. Saves on pick: the image is shrunk to a
+ * 512px WebP in the browser, then stored in R2. Replacing it deletes the old
+ * file. The review page and the site switcher read the same logo.
  */
-export function LogoCard({ name }: { name: string }) {
+export function SiteLogoCard({ name }: { name: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const projectId = useRouteProjectId();
@@ -99,9 +100,10 @@ export function LogoCard({ name }: { name: string }) {
         <LetterTile name={name || "?"} size={64} src={logoUrl} />
       )}
       <div className="flex min-w-[200px] flex-1 flex-col gap-1">
-        <span className="text-sm font-semibold text-ink">Logo</span>
+        <span className="text-sm font-semibold text-ink">Site logo</span>
         <span className="text-[13px] text-dim">
-          Shown on your review page and in Client Hub. PNG, JPG or WebP, square works best.
+          One logo for your site: shown on your review page, in the site switcher and your Sites list. PNG, JPG or
+          WebP, square works best.
         </span>
       </div>
       {canEdit && (

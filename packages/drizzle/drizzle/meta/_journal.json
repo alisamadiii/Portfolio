@@ -463,6 +463,13 @@
       "when": 1794847075720,
       "tag": "0065_flashy_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1794850155719,
+      "tag": "0066_pretty_obadiah_stane",
+      "breakpoints": true
     }
   ]
 }

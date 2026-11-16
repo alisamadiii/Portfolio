@@ -188,4 +188,33 @@ export const projectRouter = createTRPCRouter({
         throw toTRPCError(error);
       }
     }),
+
+  // Display name from project Settings. Empty clears it (falls back to the
+  // website host, then the repo slug). Same rule as the website URL.
+  setName: cmsFullAccessProcedure
+    .input(z.object({ name: z.string().trim().max(80).nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const [project] = await db
+          .select({ ownerId: hubProject.githubConnectedUserId })
+          .from(hubProject)
+          .where(eq(hubProject.id, ctx.projectId))
+          .limit(1);
+        if (!project) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
+        }
+        if (!isAdminUser(ctx.user) && project.ownerId !== ctx.user.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only the project owner or an admin can rename the site.",
+          });
+        }
+        const name = input.name?.replace(/\s+/g, " ").trim() || null;
+        await db.update(hubProject).set({ name }).where(eq(hubProject.id, ctx.projectId));
+        return { name };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw toTRPCError(error);
+      }
+    }),
 });

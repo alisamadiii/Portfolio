@@ -44,6 +44,7 @@ export const reposRouter = createTRPCRouter({
             defaultBranch: hubProject.defaultBranch,
             updatedAt: hubProject.githubUpdatedAt,
             websiteUrl: hubProject.websiteUrl,
+            name: hubProject.name,
             apps: hubProject.apps,
             netlifySiteId: hubProject.netlifySiteId,
             githubConnectedUserId: hubProject.githubConnectedUserId,
@@ -63,6 +64,7 @@ export const reposRouter = createTRPCRouter({
           defaultBranch: row.defaultBranch,
           updatedAt: row.updatedAt.toISOString(),
           websiteUrl: row.websiteUrl ?? null,
+          name: row.name ?? null,
           logoUrl: publicObjectUrl(row.logoKey),
           apps: (row.apps ?? []) as AppId[],
           // Upload project published to Netlify: shows the Netlify page.
@@ -71,6 +73,8 @@ export const reposRouter = createTRPCRouter({
           // (settings group only for full access). The importer and admins own
           // the project; otherwise the collaborator invite's role, else
           // view-only (agency-owned sites reach here through ownedAgency).
+          // Owner (importer) or admin: the project Settings page.
+          ownerOrAdmin: ctx.isAdmin || row.githubConnectedUserId === userId,
           role: (ctx.isAdmin || row.githubConnectedUserId === userId
             ? "full-access"
             : (ctx.collaborations?.find((c) => c.projectId === row.projectId)
@@ -151,6 +155,7 @@ export const reposRouter = createTRPCRouter({
             myRole: role,
             isOwner,
             websiteUrl: project.websiteUrl ?? null,
+            name: project.name ?? null,
             apps: (project.apps ?? []) as AppId[],
             source: "upload" as const,
           };
@@ -196,6 +201,7 @@ export const reposRouter = createTRPCRouter({
           myRole: role,
           isOwner,
           websiteUrl: project.websiteUrl ?? null,
+          name: project.name ?? null,
           apps: (project.apps ?? []) as AppId[],
           source: "github" as const,
         };

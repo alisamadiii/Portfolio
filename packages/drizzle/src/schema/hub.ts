@@ -156,6 +156,9 @@ export const hubProject = pgTable(
     // canvas/SEO base URL and auto-allowed for the embed scripts. Set at import
     // or in Settings > Domain.
     websiteUrl: text("website_url"),
+    // Display name set in project Settings. Wins over the website host and
+    // the repo slug everywhere a site is named (projectDisplayName).
+    name: text("name"),
     // Hostnames the project's embed scripts (lead form / booking / contact) may
     // run on. One list per project, managed from both the website Domain card and
     // the agency settings card. Bare hostnames, www-insensitive; empty/unset =

@@ -80,7 +80,7 @@ const centsInput = z.number().int().positive().max(10_000_000);
 
 const getProject = async (projectId: string) => {
   const [row] = await db
-    .select({ id: hubProject.id, repo: hubProject.repo, websiteUrl: hubProject.websiteUrl })
+    .select({ id: hubProject.id, repo: hubProject.repo, websiteUrl: hubProject.websiteUrl, name: hubProject.name })
     .from(hubProject)
     .where(eq(hubProject.id, projectId))
     .limit(1);
@@ -158,7 +158,7 @@ const projectInfo = async (projectIds: string[]) => {
   if (!ids.length) return new Map<string, { name: string; websiteUrl: string | null; plan: string; isFree: boolean }>();
   const [projects, entitlements] = await Promise.all([
     db
-      .select({ id: hubProject.id, repo: hubProject.repo, websiteUrl: hubProject.websiteUrl })
+      .select({ id: hubProject.id, repo: hubProject.repo, websiteUrl: hubProject.websiteUrl, name: hubProject.name })
       .from(hubProject)
       .where(inArray(hubProject.id, ids)),
     getEntitlements(ids),
@@ -240,6 +240,7 @@ export const partnersRouter = createTRPCRouter({
         businessName: partnerReferral.businessName,
         repo: hubProject.repo,
         websiteUrl: hubProject.websiteUrl,
+        name: hubProject.name,
         status: partnerReferral.status,
         clientPaidAt: partnerReferral.clientPaidAt,
         commissionCents: partnerReferral.commissionCents,
@@ -250,9 +251,9 @@ export const partnersRouter = createTRPCRouter({
       .leftJoin(hubProject, eq(hubProject.id, partnerReferral.projectId))
       .where(eq(partnerReferral.partnerId, p.id))
       .orderBy(desc(partnerReferral.createdAt));
-    const referrals = rows.map(({ repo, websiteUrl, ...r }) => ({
+    const referrals = rows.map(({ repo, websiteUrl, name, ...r }) => ({
       ...r,
-      businessName: repo ? projectDisplayName({ repo, websiteUrl }) : r.businessName,
+      businessName: repo ? projectDisplayName({ name, repo, websiteUrl }) : r.businessName,
     }));
     return {
       status: p.status,
@@ -597,7 +598,7 @@ export const partnersRouter = createTRPCRouter({
   projects: adminProcedure.query(async () => {
     const [projects, referred] = await Promise.all([
       db
-        .select({ id: hubProject.id, repo: hubProject.repo, websiteUrl: hubProject.websiteUrl })
+        .select({ id: hubProject.id, repo: hubProject.repo, websiteUrl: hubProject.websiteUrl, name: hubProject.name })
         .from(hubProject)
         .where(eq(hubProject.hidden, false))
         .orderBy(asc(hubProject.repo)),

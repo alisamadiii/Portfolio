@@ -99,11 +99,12 @@ export const formatCents = (cents: number) =>
     maximumFractionDigits: 2,
   });
 
-/** Same name the hub Sites table shows: the site's host, else the repo. */
-export const projectDisplayName = (p: { websiteUrl: string | null; repo: string }) =>
-  p.websiteUrl?.trim()
+/** Same name the hub Sites table shows: the Settings name, else the site's host, else the repo. */
+export const projectDisplayName = (p: { name?: string | null; websiteUrl: string | null; repo: string }) =>
+  p.name?.trim() ||
+  (p.websiteUrl?.trim()
     ? p.websiteUrl.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "") || p.repo
-    : p.repo;
+    : p.repo);
 
 export const CLIENT_PAYMENT_LABELS = {
   stripe: "Stripe",

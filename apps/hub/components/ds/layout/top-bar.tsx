@@ -108,7 +108,7 @@ function ProjectSwitcher({
           <DropdownMenuLabel className="text-xs font-medium text-dim">Switch site</DropdownMenuLabel>
         </DropdownMenuGroup>
         {(projects.data ?? []).map((p) => {
-          const name = siteName(p.websiteUrl) ?? p.repo;
+          const name = p.name?.trim() || siteName(p.websiteUrl) || p.repo;
           const active = p.projectId === current.projectId;
           return (
             <DropdownMenuItem

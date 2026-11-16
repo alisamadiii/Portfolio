@@ -187,3 +187,16 @@ describe("parseRefCookie", () => {
     expect(PARTNER_REF_MAX_AGE).toBe(2_592_000);
   });
 });
+
+describe("projectDisplayName with a Settings name", () => {
+  it("prefers the Settings name over the website host and repo", () => {
+    expect(projectDisplayName({ name: "Sunny Side Plumbing", websiteUrl: "https://www.sunnyside.com", repo: "dist" })).toBe(
+      "Sunny Side Plumbing"
+    );
+  });
+
+  it("falls back to the host, then the repo, when the name is blank", () => {
+    expect(projectDisplayName({ name: "   ", websiteUrl: "https://www.sunnyside.com/", repo: "dist" })).toBe("www.sunnyside.com");
+    expect(projectDisplayName({ name: null, websiteUrl: null, repo: "dist" })).toBe("dist");
+  });
+});

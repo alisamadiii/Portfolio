@@ -4,7 +4,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 
 import { useSearchParams } from "next/navigation";
 
-import { LogoCard } from "@/components/agency/business-info/logo-card";
+import { SiteLogoCard } from "@/components/settings/site-logo-card";
 import { StepShell } from "@/components/agency/business-info/step-shell";
 import { useBusinessInfo } from "@/components/agency/business-info/use-business-info";
 import { NumberedList } from "@/components/ds/business-info/form-parts";
@@ -63,7 +63,7 @@ export function StepBusiness() {
         <Skeleton className="h-96 w-full rounded-card" />
       ) : (
         <>
-        <LogoCard name={bi.draft.website?.[0] ?? ""} />
+        <SiteLogoCard name={bi.draft.website?.[0] ?? ""} />
         <Card className="flex flex-col gap-6 p-6">
           <Field label="Business name" hint="The name customers know you by.">
             <Input

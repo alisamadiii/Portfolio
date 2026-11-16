@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { APPS, PROJECT_SETTINGS, projectCoreNav, type AppId } from "@/lib/apps";
+import { APPS, PROJECT_SETTINGS, projectCoreNav, SETTINGS_NAV, type AppId } from "@/lib/apps";
 
 import { Sidebar, SidebarDivider, SidebarLink, SidebarSection, useIsActive } from "./sidebar";
 
@@ -16,11 +16,14 @@ export function ProjectSidebar({
   installed,
   netlify = false,
   showSettings = true,
+  showProjectSettings = false,
 }: {
   base: string;
   installed: readonly AppId[];
   netlify?: boolean;
   showSettings?: boolean;
+  /** Owner or admin: the project Settings page. */
+  showProjectSettings?: boolean;
 }) {
   const isActive = useIsActive();
   const url = (p: string) => (p ? `${base}/${p}` : base);
@@ -55,10 +58,10 @@ export function ProjectSidebar({
           muted
         />
       </SidebarSection>
-      {showSettings && (
+      {(showSettings || showProjectSettings) && (
         <>
           <SidebarDivider />
-          {PROJECT_SETTINGS.map((i) => (
+          {[...(showSettings ? PROJECT_SETTINGS : []), ...(showProjectSettings ? [SETTINGS_NAV] : [])].map((i) => (
             <SidebarLink key={i.id} item={i} href={url(i.path)} active={isActive(url(i.path))} />
           ))}
         </>

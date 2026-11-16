@@ -104,7 +104,7 @@ export function SitesPage() {
       const site = siteFor(p.owner, p.repo);
       return {
         projectId: p.projectId,
-        name: p.websiteUrl ? hostOf(p.websiteUrl) : p.repo,
+        name: p.name?.trim() || (p.websiteUrl ? hostOf(p.websiteUrl) : p.repo),
         repo: p.repo,
         isPrivate: p.private,
         source: p.source === "upload" ? "upload" : "github",

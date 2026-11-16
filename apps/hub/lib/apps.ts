@@ -17,7 +17,7 @@ import {
   Send,
   Star,
   LayoutGrid,
-  Link2,
+  Settings,
   Mail,
   Megaphone,
   MonitorSmartphone,
@@ -206,10 +206,12 @@ export const projectCoreNav = ({
 
 /** Project sidebar, bottom group. Full-access collaborators only. */
 export const PROJECT_SETTINGS: NavItem[] = [
-  { id: "domain", label: "Domain", icon: Link2, path: "domain" },
   { id: "speed", label: "Speed", icon: Gauge, path: "speed" },
   { id: "billing", label: "Billing", icon: CreditCard, path: "billing" },
 ];
+
+/** Project Settings (name, logo, website, domains, delete). Owner and admins only. */
+export const SETTINGS_NAV: NavItem = { id: "settings", label: "Settings", icon: Settings, path: "settings" };
 
 /** Account-level sidebar (no project selected). Client websites: admins only. */
 export const accountNav = ({ isAdmin }: { isAdmin: boolean }): NavItem[] => [

@@ -9,7 +9,6 @@ import { useTRPC } from "@workspace/trpc/client";
 
 import { useEntitlement } from "@/hooks/use-plans";
 
-import { DeleteSiteCard } from "@/components/agency/settings/danger-page";
 import { AdminOfferCard } from "@/components/billing/plan-offer-panel";
 import {
   ProjectManage,
@@ -85,7 +84,6 @@ export function AgencyBillingPage() {
           </div>
         )}
       </div>
-      <DeleteSiteCard />
     </>
   );
 }

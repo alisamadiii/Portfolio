@@ -31,7 +31,7 @@ export default function ProjectShellLayout({ children }: { children: React.React
     pathname.endsWith("/leads") ||
     /\/newsletter(\/|$)/.test(pathname);
 
-  const name = siteName(project?.websiteUrl) ?? project?.repo ?? "Site";
+  const name = project?.name?.trim() || siteName(project?.websiteUrl) || project?.repo || "Site";
   return (
     <AppShell
       wide={wide}
@@ -48,6 +48,7 @@ export default function ProjectShellLayout({ children }: { children: React.React
           installed={installed}
           netlify={netlify}
           showSettings={project?.role == null || project.role === "full-access"}
+          showProjectSettings={project?.ownerOrAdmin ?? false}
         />
       }
     >

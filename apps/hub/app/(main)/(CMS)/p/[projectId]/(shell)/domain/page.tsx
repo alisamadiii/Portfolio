@@ -1,13 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { AgencyDomainPage } from "@/components/agency/settings/domain-page";
-import { DocumentTitle } from "@/components/document-title";
-
-export default function DomainPage() {
-  return (
-    <>
-      <DocumentTitle title="Domain" />
-      <AgencyDomainPage />
-    </>
-  );
+// Domain merged into project Settings.
+export default async function DomainPage({ params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = await params;
+  redirect(`/p/${projectId}/settings`);
 }

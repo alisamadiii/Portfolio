@@ -1897,8 +1897,9 @@ export const agencyRouter = createTRPCRouter({
         return cleaned;
       }),
 
-    // The business logo (public R2, one object per project). Lives on
-    // hub_project so it doesn't need an agency_client row.
+    // The site logo (public R2, one object per project) on hub_project, not
+    // business info: Settings and Business info share one card for it, and
+    // the review page and site switcher read it.
     logo: createTRPCRouter({
       get: businessProcedure.query(async ({ ctx }) => {
         const row = await db.query.hubProject.findFirst({

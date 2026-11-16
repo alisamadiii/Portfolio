@@ -15,9 +15,13 @@ export type Project = {
   /** Default branch; "" when only the agency row is known. */
   branch: string;
   websiteUrl: string | null;
+  /** Display name from project Settings, if set. */
+  name: string | null;
   source: "github" | "upload";
   /** The caller's role on the project (nav gating); null when unknown. */
   role: CollaboratorRole | null;
+  /** Owner or admin: may open project Settings. */
+  ownerOrAdmin: boolean;
 };
 
 /**
@@ -51,8 +55,10 @@ export const useProject = (): Project | null => {
       repo: repo.repo.toLowerCase(),
       branch: repo.defaultBranch ?? "",
       websiteUrl: repo.websiteUrl ?? null,
+      name: repo.name ?? row?.name ?? null,
       source: repo.source,
       role: repo.myRole ?? row?.role ?? null,
+      ownerOrAdmin: row?.ownerOrAdmin ?? repo.isOwner ?? false,
     };
   }
 
@@ -63,8 +69,10 @@ export const useProject = (): Project | null => {
       repo: row.repo.toLowerCase(),
       branch: row.defaultBranch,
       websiteUrl: row.websiteUrl,
+      name: row.name,
       source: row.source === "upload" ? "upload" : "github",
       role: row.role,
+      ownerOrAdmin: row.ownerOrAdmin,
     };
   }
 
@@ -76,7 +84,9 @@ export const useProject = (): Project | null => {
     repo: client.repo.toLowerCase(),
     branch: "",
     websiteUrl: client.websiteUrl ?? null,
+    name: null,
     source: "github",
     role: client.role ?? null,
+    ownerOrAdmin: false,
   };
 };

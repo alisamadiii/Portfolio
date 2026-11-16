@@ -71,14 +71,14 @@ export function HomePage() {
       id: "live",
       title: "Your website is live",
       state: live ? "done" : "todo",
-      href: domainSet ? undefined : `${base}/domain`,
+      href: domainSet ? undefined : `${base}/settings`,
       meta: domainSet && !live ? (sites.isPending ? "Checking…" : "Not reachable") : undefined,
     },
     {
       id: "domain",
       title: "Connect your domain",
       state: domainSet ? "done" : "todo",
-      href: `${base}/domain`,
+      href: `${base}/settings`,
     },
     {
       id: "business-info",
@@ -153,7 +153,7 @@ export function HomePage() {
           {
             label: websiteUrl ? hostOf(websiteUrl) : "No domain yet",
             value: !websiteUrl ? (
-              <Link href={`${base}/domain`} className="font-medium text-coral-text">
+              <Link href={`${base}/settings`} className="font-medium text-coral-text">
                 Add your domain
               </Link>
             ) : sites.isPending ? (
