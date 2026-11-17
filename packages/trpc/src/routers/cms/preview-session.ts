@@ -26,6 +26,7 @@ import {
   resetPreviewSession,
   type PreviewSession,
 } from "@workspace/trpc/lib/content-pilot";
+import { backupRepoForPublish } from "@workspace/trpc/lib/github-backup";
 import { db } from "@workspace/drizzle/index";
 import { hubProject } from "@workspace/drizzle/schema";
 
@@ -442,7 +443,10 @@ export const previewSessionRouter = createTRPCRouter({
       // Throws CONFLICT when production moved under the session (the pilot
       // restores the session branch, so nothing is lost). The client's host
       // (Netlify) deploys the pushed commit.
-      const { sha, changed } = await publishPreviewSession(session.id);
+      // Upload projects also mirror main to their backup-org repo (the hub
+      // links or creates it; pilot pushes). Never blocks the publish.
+      const backupRepo = ctx.source === "upload" ? await backupRepoForPublish(ctx.projectId) : null;
+      const { sha, changed } = await publishPreviewSession(session.id, { backupRepo });
 
       await closePreviewSession(session.id, "published");
       // Upload projects only: "deploying", or "agency_managed" when the site

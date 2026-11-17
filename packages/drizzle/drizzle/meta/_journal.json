@@ -470,6 +470,13 @@
       "when": 1794850155719,
       "tag": "0066_pretty_obadiah_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1794913646356,
+      "tag": "0067_panoramic_masked_marvel",
+      "breakpoints": true
     }
   ]
 }

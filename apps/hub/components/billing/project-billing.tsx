@@ -30,7 +30,7 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
-  FileText,
+  FileDown,
   Globe,
 } from "@/components/icon";
 import { PanelError } from "@/components/settings/panel-error";
@@ -332,7 +332,7 @@ export const ProjectManage = ({
                               />
                             }
                           >
-                            <FileText className="size-4" />
+                            <FileDown className="size-4" />
                           </Button>
                         )}
                         <Button

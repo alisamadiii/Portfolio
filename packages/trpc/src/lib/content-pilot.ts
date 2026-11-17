@@ -148,6 +148,15 @@ export async function getImport(projectId: string): Promise<PilotProjectStatus> 
   return (await res.json()) as PilotProjectStatus;
 }
 
+/** Upload projects: pilot force-pushes main to this backup-org repo (queued). */
+export async function pushBackup(projectId: string, repo: string): Promise<void> {
+  const res = await pilotFetch(`/api/v1/imports/${projectId}/backup`, {
+    method: "POST",
+    body: JSON.stringify({ repo }),
+  });
+  if (!res.ok) await pilotError(res);
+}
+
 /**
  * Removes an uploaded project's workspace. Hard gate in project.delete.
  * Throws CONFLICT while a preview session is live.
@@ -185,11 +194,13 @@ export async function getPreviewSession(
  * branch stay intact.
  */
 export async function publishPreviewSession(
-  sessionId: string
+  sessionId: string,
+  options: { backupRepo?: string | null } = {}
 ): Promise<{ sha: string | null; changed: boolean }> {
   const res = await pilotFetch(`/api/v1/sessions/${sessionId}`, {
     method: "POST",
-    body: JSON.stringify({ action: "publish" }),
+    // Upload projects: pilot pushes the new main to this backup-org repo.
+    body: JSON.stringify({ action: "publish", ...(options.backupRepo && { backupRepo: options.backupRepo }) }),
   });
   if (res.status === 409) {
     const body = (await res.json().catch(() => null)) as {

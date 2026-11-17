@@ -8,7 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
-  FileText,
+  FileDown,
 } from "@/components/icon";
 import { toast } from "sonner";
 
@@ -343,7 +343,7 @@ export const StripeBilling = () => {
                             />
                           }
                         >
-                          <FileText className="size-4" />
+                          <FileDown className="size-4" />
                         </Button>
                       )}
                       <Button

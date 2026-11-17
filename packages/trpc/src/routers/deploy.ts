@@ -29,6 +29,7 @@ import {
   mintInstallationToken,
 } from "../lib/github-app";
 import { getConnectedAccount } from "../lib/integrations";
+import { backupNow } from "@workspace/trpc/lib/github-backup";
 
 // ─── Deploy / import flow ────────────────────────────────────────
 // "Add project": pick a GitHub repo + enter its live website URL (used for the
@@ -429,6 +430,8 @@ export const deployRouter = createTRPCRouter({
       .set({ githubUpdatedAt: new Date() })
       .where(eq(hubProject.id, ctx.projectId))
       .returning({ netlifySiteId: hubProject.netlifySiteId });
+    // Mirror the new source to the backup-org repo. Best effort.
+    await backupNow(ctx.projectId);
     // Offer Redeploy only when there's a site this caller may deploy.
     const plan = await netlifyPlan(ctx.projectId, ctx.user);
     return { netlify: Boolean(row?.netlifySiteId) && plan.action === "deploy" };

@@ -300,10 +300,24 @@ export function NetlifyDomains({ canEdit }: { canEdit: boolean }) {
             </span>
             {d.certificate ? (
               <span className="flex items-center gap-2">
-                <Badge tone={d.certificate.state === "issued" ? "success" : "info"} dot>
+                <Badge
+                  tone={
+                    d.certificate.state === "issued"
+                      ? "success"
+                      : /fail|error/i.test(d.certificate.state)
+                        ? "warning"
+                        : "info"
+                  }
+                  dot
+                >
                   {d.certificate.state === "issued" ? "Active" : d.certificate.state}
                 </Badge>
-                {d.certificate.expiresAt && (
+                {d.certificate.state !== "issued" && canEdit && (
+                  <Button size="sm" disabled={busy} onClick={() => https.mutate({ projectId })}>
+                    {https.isPending ? "Retrying…" : "Retry certificate"}
+                  </Button>
+                )}
+                {d.certificate.state === "issued" && d.certificate.expiresAt && (
                   <span className="text-[13px] text-dim">
                     Renews automatically · expires {format(parseISO(d.certificate.expiresAt), "MMM d, yyyy")}
                   </span>

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+
+import { useTRPC } from "@workspace/trpc/client";
 
 import { AppShell } from "@/components/ds/layout/app-shell";
 import { ProjectSidebar } from "@/components/ds/layout/project-sidebar";
@@ -22,6 +25,10 @@ export default function ProjectShellLayout({ children }: { children: React.React
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const { installed, netlify } = useInstalledApps(projectId);
+  const trpc = useTRPC();
+  const sourceCode = useQuery(
+    trpc.project.sourceCode.queryOptions({ projectId }, { enabled: Boolean(project?.ownerOrAdmin), staleTime: 60_000 })
+  );
   const pathname = usePathname() ?? "";
   const wide = pathname.includes("/business-info/");
   // Edge to edge, scrolling inside: the calendar week, the Leads inbox and
@@ -49,6 +56,7 @@ export default function ProjectShellLayout({ children }: { children: React.React
           netlify={netlify}
           showSettings={project?.role == null || project.role === "full-access"}
           showProjectSettings={project?.ownerOrAdmin ?? false}
+          showSourceCode={sourceCode.data?.available ?? false}
         />
       }
     >

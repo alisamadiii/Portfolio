@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   BookOpen,
+  Code,
   Building2,
   CalendarDays,
   FileText,
@@ -209,6 +210,9 @@ export const PROJECT_SETTINGS: NavItem[] = [
   { id: "speed", label: "Speed", icon: Gauge, path: "speed" },
   { id: "billing", label: "Billing", icon: CreditCard, path: "billing" },
 ];
+
+/** Download the site's code. Owner and admins, once Website Setup is paid (admins always). */
+export const SOURCE_CODE_NAV: NavItem = { id: "source-code", label: "Source Code", icon: Code, path: "source-code" };
 
 /** Project Settings (name, logo, website, domains, delete). Owner and admins only. */
 export const SETTINGS_NAV: NavItem = { id: "settings", label: "Settings", icon: Settings, path: "settings" };

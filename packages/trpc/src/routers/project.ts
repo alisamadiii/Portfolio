@@ -3,6 +3,8 @@ import { eq } from "drizzle-orm";
 import z from "zod";
 
 import {
+  adminProcedure,
+  authenticatedProcedure,
   cmsFullAccessProcedure,
   collaboratorManageProcedure,
   createTRPCRouter,
@@ -16,6 +18,14 @@ import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { assertProjectOwnerOrAdmin } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport } from "@workspace/trpc/lib/content-pilot";
+import {
+  archiveBackupRepo,
+  hasWebsiteSetup,
+  linkBackupRepo,
+  linkedBackupRepo,
+  listBackupRepos,
+  sourceCodeZipUrl,
+} from "@workspace/trpc/lib/github-backup";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { deleteProjectLogos } from "@workspace/trpc/lib/logo";
@@ -63,6 +73,8 @@ export const projectRouter = createTRPCRouter({
       //    staged uploads), and the per-repo setting overrides. Auto-closes a
       //    live editing session, so this never 409s.
       await deleteImport(projectId);
+      // Upload projects: archive (never delete) the backup-org repo. Best effort.
+      await archiveBackupRepo(projectId);
 
       // 3. Wipe project-scoped hub rows (subscription, collaborators, invites,
       //    config + content cache).
@@ -217,4 +229,51 @@ export const projectRouter = createTRPCRouter({
         throw toTRPCError(error);
       }
     }),
+
+  /** Source Code download: upload projects whose client paid Website Setup (admins always). */
+  sourceCode: authenticatedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => ({
+      available: await canDownloadSource(ctx.session.user, input.projectId),
+    })),
+
+  /** Source Code page: the linked backup repo (null = not linked yet). */
+  sourceCodeRepo: authenticatedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      if (!(await canDownloadSource(ctx.session.user, input.projectId))) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Source code comes with the Website Setup plan." });
+      }
+      return {
+        repo: await linkedBackupRepo(input.projectId),
+        canLink: isAdminUser(ctx.session.user),
+      };
+    }),
+
+  /** Admin: every repo in the backup org, to link one to a project. */
+  backupRepos: adminProcedure.query(() => listBackupRepos()),
+
+  linkBackupRepo: adminProcedure
+    .input(z.object({ projectId: z.string().uuid(), repoId: z.number().int().positive() }))
+    .mutation(({ input }) => linkBackupRepo(input.projectId, input.repoId)),
+
+  downloadSourceCode: authenticatedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!(await canDownloadSource(ctx.session.user, input.projectId))) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Source code comes with the Website Setup plan." });
+      }
+      return { url: await sourceCodeZipUrl(input.projectId) };
+    }),
 });
+
+async function canDownloadSource(user: Parameters<typeof assertProjectOwnerOrAdmin>[0], projectId: string) {
+  await assertProjectOwnerOrAdmin(user, projectId);
+  const [project] = await db
+    .select({ source: hubProject.source })
+    .from(hubProject)
+    .where(eq(hubProject.id, projectId))
+    .limit(1);
+  if (project?.source !== "upload") return false;
+  return isAdminUser(user) || (await hasWebsiteSetup(projectId));
+}

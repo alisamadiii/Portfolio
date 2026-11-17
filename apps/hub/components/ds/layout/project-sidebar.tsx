@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
-import { APPS, PROJECT_SETTINGS, projectCoreNav, SETTINGS_NAV, type AppId } from "@/lib/apps";
+import { APPS, PROJECT_SETTINGS, projectCoreNav, SETTINGS_NAV, SOURCE_CODE_NAV, type AppId } from "@/lib/apps";
 
 import { Sidebar, SidebarDivider, SidebarLink, SidebarSection, useIsActive } from "./sidebar";
 
@@ -17,6 +17,7 @@ export function ProjectSidebar({
   netlify = false,
   showSettings = true,
   showProjectSettings = false,
+  showSourceCode = false,
 }: {
   base: string;
   installed: readonly AppId[];
@@ -24,6 +25,8 @@ export function ProjectSidebar({
   showSettings?: boolean;
   /** Owner or admin: the project Settings page. */
   showProjectSettings?: boolean;
+  /** Upload project with Website Setup paid (or admin): the Source Code page. */
+  showSourceCode?: boolean;
 }) {
   const isActive = useIsActive();
   const url = (p: string) => (p ? `${base}/${p}` : base);
@@ -58,10 +61,14 @@ export function ProjectSidebar({
           muted
         />
       </SidebarSection>
-      {(showSettings || showProjectSettings) && (
+      {(showSettings || showProjectSettings || showSourceCode) && (
         <>
           <SidebarDivider />
-          {[...(showSettings ? PROJECT_SETTINGS : []), ...(showProjectSettings ? [SETTINGS_NAV] : [])].map((i) => (
+          {[
+            ...(showSettings ? PROJECT_SETTINGS : []),
+            ...(showSourceCode ? [SOURCE_CODE_NAV] : []),
+            ...(showProjectSettings ? [SETTINGS_NAV] : []),
+          ].map((i) => (
             <SidebarLink key={i.id} item={i} href={url(i.path)} active={isActive(url(i.path))} />
           ))}
         </>

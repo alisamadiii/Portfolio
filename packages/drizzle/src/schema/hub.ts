@@ -185,6 +185,10 @@ export const hubProject = pgTable(
     netlifySiteId: text("netlify_site_id"),
     netlifySiteUrl: text("netlify_site_url"),
     netlifyConnectedUserId: text("netlify_connected_user_id"),
+    // Upload projects: GitHub repo id of the private backup repo content-pilot
+    // pushes main to (GITHUB_BACKUP_ORG). Resolved from pilot on the first
+    // Source Code download; the id survives repo renames.
+    backupRepoId: bigint("backup_repo_id", { mode: "number" }),
     // The project's own Resend team (one team per project, never shared): the
     // Better Auth user.id who linked it + the Resend team id, which is that
     // user's account.account_id row for provider "resend". Set from the

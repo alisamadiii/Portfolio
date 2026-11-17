@@ -1,0 +1,1 @@
+ALTER TABLE "hub_project" ADD COLUMN "backup_repo_id" bigint;
