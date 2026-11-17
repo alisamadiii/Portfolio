@@ -7,10 +7,9 @@
 // category columns (featureGroups) and routes to a free consultation or a
 // custom quote. Flip the flag to bring back the WEBSITE_PLANS / CARE /
 // NEWSLETTER cards, the priced Offer schema and the "From $" lines. Project
-// cards come from src/data/projects.ts, reviews from the Elfsight widget.
+// cards come from src/data/projects.ts, reviews from the `reviews` array below.
 import Analytics from "../components/Analytics.astro";
 import FormSubmit from "../components/FormSubmit.astro";
-import GoogleReviews from "../components/GoogleReviews.astro";
 import { CARE, NEWSLETTER, WEBSITE_FROM, WEBSITE_PLANS, fmtPrice } from "../data/pricing";
 import { PROJECTS } from "../data/projects";
 
@@ -37,7 +36,7 @@ const quoteHref = '/quote?plan=website';
 // "custom" pre-checks the "Not sure yet" chip on the quote form.
 const customQuoteHref = '/quote?plan=custom';
 
-const projects = ['fla2z-construction', 'mohammad-samadi', 'hazara-oregon']
+const projects = ['bunnys-donut-shop', 'jax-auto-lab', 'empowerher-initiative']
   .map((slug) => PROJECTS.find((p) => p.slug === slug))
   .filter((p) => p !== undefined);
 
@@ -117,6 +116,26 @@ const featureGroups: FeatureGroup[] = [
       { icon: "megaphone", name: "Google Ads management", note: "Campaigns, call tracking, monthly tuning" },
       { icon: "plug", name: "Booking, CRM & payment integrations", note: "Calendars, Stripe, your existing tools" },
     ],
+  },
+];
+
+// Google reviews, copied verbatim from the ALI SAMADII LLC listing, each with
+// its Google share link. Add new ones here by hand; the rating line counts
+// this array.
+const STAR = '<svg viewBox="0 0 20 20" width="18" height="18" fill="#f5b100" aria-hidden="true"><path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" /></svg>';
+const REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJT5scynmXKyIRlwFotSc8Yqc';
+const reviews = [
+  {
+    name: 'Mahdi Rahimi',
+    org: 'Co-Founder, EmpowerHer Initiative',
+    href: 'https://share.google/gZJG37PvxXQ9CfHvA',
+    text: "I am the Co-Founder and Executive Member of EmpowerHer Initiative, a global nonprofit organization supporting Afghan girls and women in the Middle East and Central Asia. Ali Samadi is our IT & Systems Manager. Ali has come to be the most meaningful addition to our organization; we always worried about our digital side and how we could build our brand so it is accessible online at an affordable price. Ali jumped in and created a whole system for EmpowerHer that was a hundred percent customized; there was no template used. He made sure every single detail, from colors, to codes, to shapes, and fonts were the same things we wanted. Aside from the customized system that we still use and that has made our team's job so much easier, Ali has constantly updated it and has brought many new features that have made our job on the admin side even easier; that includes a newsletter platform, reminders, manual updates to the website, and a client hub where we can edit the website ourselves with the help of a very easy and accessible AI tool. As an executive, I strongly suggest looking into the services Ali has to offer. I cannot imagine how much we would have spent if he were not there to offer us his generous help; neither could I have imagined a website where everything was how we wanted it to be. Ali continues to be part of our team and is maintaining our systems and website. He is available, reliable, and responsive, something that makes him and his services stand out among all the other web developer. He is an awesome web developer, and I strongly recommend him.",
+  },
+  {
+    name: 'Fawad Aria',
+    org: 'Hazara Community of Oregon',
+    href: 'https://share.google/2O60QuS6wcICpYY9R',
+    text: 'Ali Samadi is a very happy, awesome, and easy-going person to work with. He did a phenomenal job building our community website. He is very professional and always accessible. I believe he can build any website that you or your company may need. I highly recommend Ali Samadi!',
   },
 ];
 
@@ -391,6 +410,8 @@ const jsonLd = {
 <div class="wrap" style="position: relative; padding-top: 80px; padding-bottom: 150px; display: flex; flex-direction: column; align-items: center; gap: 22px">
 <p class="cap" style="margin: 0; color: #4a433d">Live sites we've designed &amp; built</p>
 <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 40px; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: rgba(34,31,28,0.62)">
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">●</span>Bunny's Donut Shop</li>
+<li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">■</span>Jax Auto Lab</li>
 <li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">◐</span>Hazara Community of Oregon</li>
 <li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">✦</span>EmpowerHer</li>
 <li style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true">▲</span>Florida A2Z Construction</li>
@@ -541,15 +562,53 @@ const jsonLd = {
 <a href="/work" class="btn dark">See all work ↗</a>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 18px">
-{projects.map((p) => (
-<a href={p.url} target="_blank" rel="noopener" class="card lift tlink" style="color: #221f1c; padding: 10px 10px 22px; display: flex; flex-direction: column; gap: 18px"><div style="aspect-ratio: 16 / 11; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)"><img src={p.image.src} alt={p.image.alt} style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block" width="1600" height="1000" loading="lazy" decoding="async"></div><div style="padding: 0 12px; display: flex; flex-direction: column; gap: 4px"><span class="cap" style="font-size: 11px; color: #6d645c">{p.category}</span><span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{p.name}</span><span style="font-size: 14px; color: #5a524b">{p.description.replace(' — ', ': ')}</span></div></a>
-))}
+{projects.map((p) => {
+const platform = platforms.find((x) => x.name === p.platform);
+return (
+<a href={p.url} target="_blank" rel="noopener" class="card lift tlink" style="color: #221f1c; padding: 10px 10px 22px; display: flex; flex-direction: column; gap: 18px"><div style="position: relative; aspect-ratio: 16 / 11; border-radius: 16px; overflow: hidden; background: #fbf6f2; box-shadow: inset 0 0 0 1px rgba(34,31,28,0.05)">{platform && <span style="position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 9999px; background: #fff; box-shadow: 0 0 0 1px rgba(34,31,28,0.08), 0 6px 16px rgba(34,31,28,0.12); font-size: 12px; font-weight: 600; color: #5a524b">Custom design · checkout by<svg viewBox={platform.viewBox} fill={platform.color} role="img" aria-label={platform.name} style={platform.wordmark ? 'width: 16px; height: 16px' : 'height: 12px; width: auto'}><path d={platform.path} /></svg>{platform.wordmark && <span style="margin-left: -3px; font-weight: 800; letter-spacing: -0.03em; color: #221f1c">{platform.name}</span>}</span>}<img src={p.image.src} alt={p.image.alt} style="width: 100%; height: 100%; object-fit: cover; object-position: top; display: block" width="1600" height="1000" loading="lazy" decoding="async"></div><div style="padding: 0 12px; display: flex; flex-direction: column; gap: 4px"><span class="cap" style="font-size: 11px; color: #6d645c">{p.category}</span><span style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">{p.name}</span><span style="font-size: 14px; color: #5a524b">{p.description.replace(' — ', ': ')}</span></div></a>
+);
+})}
 </div>
 </div>
 </section>
 
-<!-- GOOGLE REVIEWS (Elfsight, lazy-loaded) -->
-<GoogleReviews />
+<!-- REVIEWS: Google reviews, rendered from the `reviews` array -->
+<section id="reviews" style="position: relative; padding: 100px 0">
+<div class="wrap" style="display: flex; flex-direction: column; gap: 48px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 18px"><p class="pill cap" style="margin: 0; align-self: flex-start; color: #3d3833"><span aria-hidden="true" style="color: #fc8464">✦</span>Reviews</p><h2 class="h2">What clients say</h2></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px">
+<div style="display: flex; align-items: center; gap: 10px"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9z"/></svg><span style="font-size: 28px; font-weight: 800; letter-spacing: -0.03em">5.0</span><span style="display: flex; gap: 2px">{[1, 2, 3, 4, 5].map(() => <Fragment set:html={STAR} />)}</span><span style="font-size: 14px; color: #6d645c">{reviews.length} Google reviews</span></div>
+<a href={REVIEW_URL} target="_blank" rel="noopener" class="btn dark">Review us on Google ↗</a>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 18px; align-items: start">
+{reviews.map((r) => (
+<figure class="card" style="margin: 0; padding: 32px; display: flex; flex-direction: column; gap: 22px">
+<span style="display: flex; gap: 2px" role="img" aria-label="5 out of 5 stars">{[1, 2, 3, 4, 5].map(() => <Fragment set:html={STAR} />)}</span>
+<blockquote style="margin: 0"><p data-review-text style="margin: 0; font-size: 16px; line-height: 1.65; color: #3d3833; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 7; overflow: hidden">{r.text}</p><button type="button" data-review-more hidden style="margin-top: 10px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 700; color: #c4502e; cursor: pointer">Read more</button></blockquote>
+<figcaption style="margin-top: auto; display: flex; align-items: center; gap: 14px">
+<span aria-hidden="true" style="flex: none; width: 44px; height: 44px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; background: rgba(252,132,100,0.16); color: #c4502e; font-weight: 800; font-size: 15px">{r.name.split(' ').map((w) => w[0]).join('')}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 16px; font-weight: 800; letter-spacing: -0.02em; color: #221f1c">{r.name}</span><span style="font-size: 13px; color: #6d645c">{r.org}</span></span>
+<a href={r.href} target="_blank" rel="noopener" class="tlink" aria-label={`Read ${r.name}'s review on Google`} style="margin-left: auto; flex: none; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6d645c"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9z"/></svg>Google ↗</a>
+</figcaption>
+</figure>
+))}
+</div>
+</div>
+</section>
+<script is:inline>
+document.querySelectorAll('[data-review-text]').forEach((p) => {
+  const btn = p.nextElementSibling;
+  if (p.scrollHeight <= p.clientHeight + 2) return;
+  btn.hidden = false;
+  btn.addEventListener('click', () => {
+    const open = p.style.webkitLineClamp === 'unset';
+    p.style.webkitLineClamp = open ? '7' : 'unset';
+    btn.textContent = open ? 'Read more' : 'Show less';
+  });
+});
+</script>
 
 <!-- FEATURES: everything we can build, in category columns. Replaces the
      priced plan cards while SHOW_PRICING is false. -->

@@ -27,10 +27,41 @@ export interface Project {
   };
   // Slug of a case-study blog post about this project, if one exists.
   caseStudy?: string;
+  // Platform that runs products, orders and checkout behind the custom site;
+  // the homepage card shows "Custom design · checkout by <logo>".
+  platform?: "Wix" | "Shopify";
 }
 
 export const PROJECTS: Project[] = [
-  // ── Client work (live sites) ───────────────────────────────────
+  // ── Client work (live sites), newest first ─────────────────────
+  {
+    slug: "bunnys-donut-shop",
+    kind: "client",
+    name: "Bunny's Donut Shop",
+    category: "Food · Bakery",
+    description:
+      "Custom-designed site for a family-owned Jacksonville donut shop: fresh daily menu, catering, and online ordering, with Wix running orders and checkout behind it.",
+    url: "https://bunnysdonutshop.com/",
+    image: {
+      src: "/clients/bunnys-donut-shop.webp",
+      alt: "Bunny's Donut Shop website",
+    },
+    platform: "Wix",
+  },
+  {
+    slug: "jax-auto-lab",
+    kind: "client",
+    name: "Jax Auto Lab",
+    category: "Automotive · Repair & Custom Builds",
+    description:
+      "Custom-designed site for a Jacksonville auto repair shop: services, online booking, and a store, with Shopify running products, orders, and checkout behind it.",
+    url: "https://jaxautorepairlab.com/",
+    image: {
+      src: "/clients/jax-auto-lab.webp",
+      alt: "Jax Auto Lab website",
+    },
+    platform: "Shopify",
+  },
   {
     slug: "hazara-oregon",
     kind: "client",

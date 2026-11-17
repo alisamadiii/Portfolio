@@ -7,8 +7,9 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   output: "server",
-  // devFeatures off: the image CDN emulation spawns a Deno edge-dev server that
-  // fails locally and paints an error overlay. No images are optimised here anyway.
-  adapter: netlify({ devFeatures: false, imageCDN: false }),
+  // Adapter only for builds: in dev, Netlify's emulation boots a Deno edge-functions
+  // server (for the middleware a local build leaves in .netlify/v1) that fails
+  // without Deno and paints an error overlay. Plain `astro dev` needs no adapter.
+  adapter: process.argv.includes("dev") ? undefined : netlify({ devFeatures: false, imageCDN: false }),
   vite: { plugins: [tailwindcss()] },
 });
