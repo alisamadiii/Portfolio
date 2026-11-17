@@ -382,18 +382,6 @@ export const previewSessionRouter = createTRPCRouter({
     .input(z.object({ sessionId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const session = await sessionForRepo(ctx.projectId, input.sessionId);
-
-      // Uploads host on the client's own Netlify. A first publish without it
-      // is refused BEFORE the squash, so the edits stay in the editor.
-      if (ctx.source === "upload") {
-        const plan = await netlifyPlan(ctx.projectId, ctx.user);
-        if (plan.action === "needs_netlify") {
-          throw new TRPCError({
-            code: "PRECONDITION_FAILED",
-            message: "Connect Netlify to host your website.",
-          });
-        }
-      }
       await closePreviewSession(session.id, "discard");
       // Uploads have no remote refs; the local branch dies with the workspace
       // sync on the next session.
@@ -439,6 +427,18 @@ export const previewSessionRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       await requireFeature(ctx.user, ctx.projectId, "ai-chat");
       const session = await sessionForRepo(ctx.projectId, input.sessionId);
+
+      // Uploads host on the client's own Netlify. A first publish without it
+      // is refused BEFORE the squash, so the edits stay in the editor.
+      if (ctx.source === "upload") {
+        const plan = await netlifyPlan(ctx.projectId, ctx.user);
+        if (plan.action === "needs_netlify") {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Connect Netlify to host your website.",
+          });
+        }
+      }
 
       // Throws CONFLICT when production moved under the session (the pilot
       // restores the session branch, so nothing is lost). The client's host

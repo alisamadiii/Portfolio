@@ -8,24 +8,27 @@ import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { Padded } from "@/components/ds/layout/padded";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { Button } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { Input } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
+import { CodeBrowser } from "@/components/source-code/code-browser";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 /**
  * Source Code: clients who bought Website Setup own their code and can
- * download it any time. It's the project's backup repo in the private GitHub
- * org; when none is linked yet, admins pick one from that org.
+ * browse or download it any time. It's the project's backup repo in the
+ * private GitHub org; when none is linked yet, admins pick one from that org.
  */
 export function SourceCodePage() {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
   const status = useQuery(trpc.project.sourceCodeRepo.queryOptions({ projectId }, { retry: false }));
+  const [changing, setChanging] = useState(false);
 
   const download = useMutation(
     trpc.project.downloadSourceCode.mutationOptions({
@@ -38,17 +41,11 @@ export function SourceCodePage() {
     <PageHeader title="Source Code" description="Your website's full code. It's yours, download it whenever you want." />
   );
 
-  if (status.isPending) {
-    return (
-      <>
-        {header}
-        <Skeleton className="h-[140px] rounded-card" />
-      </>
-    );
-  }
+  // Blank full-bleed canvas while loading, so no heading flashes before the browser.
+  if (status.isPending) return <div className="flex-1 bg-surface" />;
   if (status.isError) {
     return (
-      <>
+      <Padded>
         {header}
         <Card>
           <EmptyState
@@ -57,35 +54,17 @@ export function SourceCodePage() {
             text={handleCmsError(status.error, "Couldn't load your source code.")}
           />
         </Card>
-      </>
+      </Padded>
     );
   }
 
   const { repo, canLink } = status.data;
 
-  return (
-    <>
-      {header}
-      {repo ? (
-        <Card className="flex flex-wrap items-center justify-between gap-3 px-6 py-5">
-          <div className="flex flex-col gap-1">
-            <span className="text-[15px] font-semibold">Download your code</span>
-            <p className="text-[13px] text-dim">
-              A .zip of the latest published version of your site
-              {repo.pushedAt && `, updated ${formatDistanceToNow(parseISO(repo.pushedAt), { addSuffix: true })}`}.
-            </p>
-          </div>
-          <Button
-            variant="primary"
-            icon={<Download className="size-4" />}
-            disabled={download.isPending}
-            onClick={() => download.mutate({ projectId })}
-          >
-            {download.isPending ? "Preparing…" : "Download .zip"}
-          </Button>
-        </Card>
-      ) : (
-        !canLink && (
+  if (!repo || changing) {
+    return (
+      <Padded>
+        {header}
+        {!repo && !canLink && (
           <Card>
             <EmptyState
               icon={<Code className="size-5" />}
@@ -93,28 +72,65 @@ export function SourceCodePage() {
               text="It shows up here after your site's next update. Check back soon."
             />
           </Card>
-        )
-      )}
-      {canLink && <LinkRepoCard projectId={projectId} linkedId={repo?.id ?? null} />}
-    </>
+        )}
+        {canLink && (
+          <LinkRepoCard projectId={projectId} linkedId={repo?.id ?? null} onDone={() => setChanging(false)} />
+        )}
+      </Padded>
+    );
+  }
+
+  // Linked: the code browser fills the page edge to edge (like the calendar);
+  // the page actions sit in its top bar.
+  return (
+    <CodeBrowser
+      projectId={projectId}
+      footer={repo.pushedAt && `Updated ${formatDistanceToNow(parseISO(repo.pushedAt), { addSuffix: true })}`}
+      actions={
+        <>
+          {canLink && (
+            <Button size="sm" onClick={() => setChanging(true)}>
+              Change repo
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="primary"
+            icon={<Download className="size-3.5" />}
+            disabled={download.isPending}
+            onClick={() => download.mutate({ projectId })}
+          >
+            {download.isPending ? "Preparing…" : "Download .zip"}
+          </Button>
+        </>
+      }
+    />
   );
 }
 
 /** Admin: link a repo from the backup GitHub org to this project. */
-function LinkRepoCard({ projectId, linkedId }: { projectId: string; linkedId: number | null }) {
+function LinkRepoCard({
+  projectId,
+  linkedId,
+  onDone,
+}: {
+  projectId: string;
+  linkedId: number | null;
+  onDone: () => void;
+}) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(linkedId == null);
-  const repos = useQuery(trpc.project.backupRepos.queryOptions(undefined, { enabled: open, retry: false }));
+  const repos = useQuery(trpc.project.backupRepos.queryOptions(undefined, { retry: false }));
 
   const link = useMutation(
     trpc.project.linkBackupRepo.mutationOptions({
       onSuccess: (repo) => {
         if (repo.pushed) toast.success(`Linked ${repo.name}. Pushing the latest code there now.`);
         else toast.warning(`Linked ${repo.name}, but the code couldn't be pushed yet. It goes there on the next publish.`);
-        setOpen(false);
+        onDone();
         void queryClient.invalidateQueries({ queryKey: trpc.project.sourceCodeRepo.pathKey() });
+        void queryClient.invalidateQueries({ queryKey: trpc.project.sourceTree.pathKey() });
       },
       onError: (error) => toast.error(handleCmsError(error, "Couldn't link the repository.")),
     })
@@ -125,20 +141,6 @@ function LinkRepoCard({ projectId, linkedId }: { projectId: string; linkedId: nu
     return (repos.data ?? []).filter((r) => !q || r.name.toLowerCase().includes(q));
   }, [repos.data, search]);
 
-  if (!open) {
-    return (
-      <Card className="flex flex-wrap items-center justify-between gap-3 px-6 py-5">
-        <div className="flex flex-col gap-1">
-          <span className="text-[15px] font-semibold">Linked repository</span>
-          <p className="text-[13px] text-dim">Admins only. Change which backup repo this project downloads.</p>
-        </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
-          Change
-        </Button>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader
@@ -146,7 +148,7 @@ function LinkRepoCard({ projectId, linkedId }: { projectId: string; linkedId: nu
         divided
         action={
           linkedId != null && (
-            <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
+            <Button size="sm" variant="ghost" onClick={onDone}>
               Cancel
             </Button>
           )

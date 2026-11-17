@@ -273,3 +273,69 @@ export async function sourceCodeZipUrl(projectId: string): Promise<string> {
   }
   return location;
 }
+
+export type SourceTreeEntry = { path: string; type: "blob" | "tree"; sha: string; size: number | null };
+
+/** Every file and folder in the backup repo's default branch (code browser). */
+export async function sourceTree(projectId: string): Promise<{ entries: SourceTreeEntry[]; truncated: boolean }> {
+  const { token } = config();
+  const repo = await linkedBackupRepo(projectId);
+  if (!repo) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Your code isn't ready to download yet." });
+  }
+  const full = await githubJson<GithubRepo>(`/repositories/${repo.id}`, token);
+  const branch = encodeURIComponent(full?.default_branch ?? "main");
+  const tree = await githubJson<{
+    tree: { path: string; type: string; sha: string; size?: number }[];
+    truncated: boolean;
+  }>(`/repositories/${repo.id}/git/trees/${branch}?recursive=1`, token);
+  // An empty repo (never pushed) has no branch yet.
+  if (!tree) return { entries: [], truncated: false };
+  return {
+    entries: tree.tree
+      .filter((e) => e.type === "blob" || e.type === "tree")
+      .map((e) => ({ path: e.path, type: e.type as "blob" | "tree", sha: e.sha, size: e.size ?? null })),
+    truncated: tree.truncated,
+  };
+}
+
+const MAX_FILE_BYTES = 1024 * 1024;
+const IMAGE_TYPES: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  avif: "image/avif",
+  ico: "image/x-icon",
+  svg: "image/svg+xml",
+};
+
+export type SourceFile =
+  | { kind: "text"; content: string }
+  | { kind: "image"; dataUrl: string }
+  | { kind: "binary"; size: number }
+  | { kind: "too-large"; size: number };
+
+/**
+ * One file of the backup repo, by blob sha. The lookup is scoped to the
+ * project's own repo id, so a sha from another repo can't be read.
+ */
+export async function sourceFile(projectId: string, sha: string, path: string): Promise<SourceFile> {
+  const { token } = config();
+  const repo = await linkedBackupRepo(projectId);
+  if (!repo) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Your code isn't ready to download yet." });
+  }
+  const blob = await githubJson<{ content: string; encoding: string; size: number }>(
+    `/repositories/${repo.id}/git/blobs/${sha}`,
+    token
+  );
+  if (!blob) throw new TRPCError({ code: "NOT_FOUND", message: "That file isn't in your code anymore." });
+  if (blob.size > MAX_FILE_BYTES) return { kind: "too-large", size: blob.size };
+  const bytes = Buffer.from(blob.content, blob.encoding === "base64" ? "base64" : "utf8");
+  const mime = IMAGE_TYPES[path.split(".").pop()?.toLowerCase() ?? ""];
+  if (mime) return { kind: "image", dataUrl: `data:${mime};base64,${bytes.toString("base64")}` };
+  if (bytes.subarray(0, 8000).includes(0)) return { kind: "binary", size: blob.size };
+  return { kind: "text", content: bytes.toString("utf8") };
+}

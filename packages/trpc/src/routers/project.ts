@@ -25,6 +25,8 @@ import {
   linkedBackupRepo,
   listBackupRepos,
   sourceCodeZipUrl,
+  sourceFile,
+  sourceTree,
 } from "@workspace/trpc/lib/github-backup";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
@@ -264,6 +266,32 @@ export const projectRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN", message: "Source code comes with the Website Setup plan." });
       }
       return { url: await sourceCodeZipUrl(input.projectId) };
+    }),
+
+  /** Code browser: every path in the backup repo. */
+  sourceTree: authenticatedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      if (!(await canDownloadSource(ctx.session.user, input.projectId))) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Source code comes with the Website Setup plan." });
+      }
+      return sourceTree(input.projectId);
+    }),
+
+  /** Code browser: one file's contents (path only picks the image type). */
+  sourceFile: authenticatedProcedure
+    .input(
+      z.object({
+        projectId: z.string().uuid(),
+        sha: z.string().regex(/^[0-9a-f]{40}$/),
+        path: z.string().max(1024),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      if (!(await canDownloadSource(ctx.session.user, input.projectId))) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Source code comes with the Website Setup plan." });
+      }
+      return sourceFile(input.projectId, input.sha, input.path);
     }),
 });
 

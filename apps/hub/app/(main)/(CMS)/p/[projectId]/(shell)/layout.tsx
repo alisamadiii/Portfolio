@@ -31,11 +31,13 @@ export default function ProjectShellLayout({ children }: { children: React.React
   );
   const pathname = usePathname() ?? "";
   const wide = pathname.includes("/business-info/");
-  // Edge to edge, scrolling inside: the calendar week, the Leads inbox and
-  // the Newsletter app (including its campaign and template editors).
+  // Edge to edge, scrolling inside: the calendar week, the Leads inbox, the
+  // Source Code browser and the Newsletter app (including its campaign and
+  // template editors).
   const bleed =
     pathname.endsWith("/calendar") ||
     pathname.endsWith("/leads") ||
+    pathname.endsWith("/source-code") ||
     /\/newsletter(\/|$)/.test(pathname);
 
   const name = project?.name?.trim() || siteName(project?.websiteUrl) || project?.repo || "Site";
