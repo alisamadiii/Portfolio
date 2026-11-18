@@ -88,6 +88,7 @@ Rules:
 - Do not call the API endpoint directly and do not write your own fetch; the script loads the reviews.
 - Do not rename any data-* attribute or event name.
 - Style the markup freely (grid, cards, slider); the script only reads attributes.
+- Keep a filled-in span inside one text element. The script sets plain text with no spaces around it, so if a button or link is display: flex or inline-flex with a gap (common for icon buttons), each piece of text around the span becomes its own flex item and the gap shows up as extra space on both sides of the number. Write <a class="btn"><span>Read all <span data-reviews-count></span> reviews on Google</span></a>, not <a class="btn">Read all <span data-reviews-count></span> reviews on Google</a>. Same for data-reviews-rating and data-reviews-name.
 - The script only works on my site's allowed domains (set in my hub under Settings), so reviews will not load on a random local preview URL. That is expected.
 
 When you are done, tell me:

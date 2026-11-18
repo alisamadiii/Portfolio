@@ -75,6 +75,16 @@ styled to match your site:
 | `data-review="reply"` | Your reply on Google, if any |
 | `data-review="link"` (on a link) | The review on Google |
 
+One thing to watch: the script writes the number as plain text with no
+spaces around it. If a button is laid out with `display: flex` and a `gap`
+(the usual setup for buttons with an icon), the words before and after the
+number become separate flex items and the gap shows up as extra space on
+both sides of it. Keep the whole label in one element:
+
+```html
+<a class="btn"><span>Read all <span data-reviews-count></span> reviews on Google</span></a>
+```
+
 Add `data-limit="6"` to the script tag to load fewer reviews (up to 50).
 Developers who build their own layout can listen for the `reviews:load` event
 on `document` instead; its `detail` holds the business info and the reviews.

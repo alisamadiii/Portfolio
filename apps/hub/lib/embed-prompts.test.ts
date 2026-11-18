@@ -109,6 +109,15 @@ describe("reviewsPrompt", () => {
   it("has no em dash", () => {
     expect(prompt).not.toContain("—");
   });
+
+  // 2026-11-18: two client sites showed "Read all  264  on Google" because
+  // their button was inline-flex with a gap, so the count span and the text
+  // around it became three flex items. The script cannot fix that; the AI
+  // has to wrap the whole label in one element.
+  it("warns about flex gap buttons around a filled-in span", () => {
+    expect(prompt).toContain("inline-flex with a gap");
+    expect(prompt).toContain('<a class="btn"><span>Read all <span data-reviews-count></span> reviews on Google</span></a>');
+  });
 });
 
 // The hub shows the prompt in a 6-line clamp; keep each one short enough to
