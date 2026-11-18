@@ -6,7 +6,10 @@
 /** Where the scraper starts: a place id once known, else a Maps URL. */
 export type ReviewsTarget = { placeId: string } | { url: string };
 
-const PLACE_ID_RE = /^ChIJ[\w-]{10,}$/;
+import { PLACE_ID_RE, googleMapsUrl, writeReviewUrl } from "./project-business-shared";
+
+export { PLACE_ID_RE, googleMapsUrl, writeReviewUrl };
+
 // Google "feature id" in a Maps data path: !1s0x<hex>:0x<hex>. The second half
 // is the listing's CID. Only the !1s one is the place itself: place URLs also
 // carry !5s0x…:0x… (the building or plaza around it), never use that one.
@@ -61,9 +64,6 @@ export const isShortGoogleLink = (input: string) => {
   }
 };
 
-export const writeReviewUrl = (placeId: string) =>
-  `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
-
 /** One review item from compass/google-maps-reviews-scraper (fields we use). */
 export interface ApifyReviewItem {
   reviewId?: string | null;
@@ -78,6 +78,7 @@ export interface ApifyReviewItem {
   // Place fields, repeated on every item.
   placeId?: string | null;
   title?: string | null;
+  address?: string | null;
   totalScore?: number | null;
   reviewsCount?: number | null;
 }
@@ -154,6 +155,7 @@ export function placeInfo(items: ApifyReviewItem[]) {
   return {
     placeId: pick("placeId") as string | null,
     businessName: pick("title") as string | null,
+    address: pick("address") as string | null,
     rating: pick("totalScore") as number | null,
     totalReviews: pick("reviewsCount") as number | null,
   };

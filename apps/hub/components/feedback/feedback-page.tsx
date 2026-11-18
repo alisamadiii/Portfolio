@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
-import { Building2, Check, Copy, ExternalLink, MapPin, MessageSquare, Search, Star, Trash2 } from "lucide-react";
+import { Building2, Check, Copy, ExternalLink, MapPin, MessageSquare, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -22,11 +22,11 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Input } from "@/components/ds/ui/field";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
+import { GoogleLinkForm, GoogleLinkRow } from "@/components/settings/google-business-card";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { repoPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
-import { DocsLink } from "@/components/ds/ui/docs-link";
 
 type Status = RouterOutputs["feedback"]["status"];
 type Entry = RouterOutputs["feedback"]["list"]["items"][number];
@@ -39,9 +39,6 @@ const RATING_TABS = [
   { id: "low", label: "1 to 2" },
 ] as const;
 type RatingFilter = (typeof RATING_TABS)[number]["id"];
-
-const businessInfoHref = (projectId: string) =>
-  `${repoPath(projectId, "business-info", "business")}?from=feedback`;
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -62,7 +59,7 @@ export function FeedbackPage() {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
 
-  // Always refetch: the user may have just finished Business info.
+  // Always refetch: the user may have just changed Settings.
   const status = useQuery({
     ...trpc.feedback.status.queryOptions({ projectId }),
     refetchOnMount: "always",
@@ -103,10 +100,12 @@ export function FeedbackPage() {
   return (
     <div className="flex flex-col gap-6">
       {header}
-      {!data.ready ? (
-        <BusinessInfoRequired projectId={projectId} missing={data.missing} />
+      {!data.placeId ? (
+        <ListingRequired projectId={projectId} />
       ) : !data.link ? (
-        <PlaceSearch status={data} />
+        <CreateLinkCard status={data} />
+      ) : !data.ready ? (
+        <SettingsRequired projectId={projectId} missing={data.missing} />
       ) : !data.link.googleUrl ? (
         <GoogleLinkRequired status={data} link={data.link} />
       ) : (
@@ -120,24 +119,19 @@ export function FeedbackPage() {
   );
 }
 
-function BusinessInfoRequired({
-  projectId,
-  missing,
-}: {
-  projectId: string;
-  missing: Status["missing"];
-}) {
+/** The review page shows the business name and address: both come from Settings. */
+function SettingsRequired({ projectId, missing }: { projectId: string; missing: Status["missing"] }) {
   return (
     <Card>
       <EmptyState
         icon={<Building2 className="size-5" />}
-        title="Finish your business info first"
+        title="Finish your business details first"
         text={`Your review page shows your business details. Add your ${missing
           .map((f) => REVIEW_FIELD_LABELS[f].toLowerCase())
-          .join(" and ")} in Business info, then come back here.`}
+          .join(" and ")} in Settings, then come back here.`}
         action={
-          <ButtonLink variant="primary" href={businessInfoHref(projectId)}>
-            Add business info
+          <ButtonLink variant="primary" href={repoPath(projectId, "settings")}>
+            Open Settings
           </ButtonLink>
         }
       />
@@ -145,109 +139,101 @@ function BusinessInfoRequired({
   );
 }
 
-function PlaceSearch({ status, onDone }: { status: Status; onDone?: () => void }) {
+/** Where the Google listing lives: Settings. */
+const settingsHref = (projectId: string) => `${repoPath(projectId, "settings")}#google-listing`;
+
+/** No Google listing in Settings yet: nothing to link to. */
+function ListingRequired({ projectId }: { projectId: string }) {
+  return (
+    <Card>
+      <EmptyState
+        icon={<MapPin className="size-5" />}
+        title="Add your Google listing first"
+        text="Happy customers are sent to your Google review page, so we need your business on Google Maps. Find it under Google listing in Settings, then come back here."
+        action={
+          <ButtonLink variant="primary" href={settingsHref(projectId)}>
+            Open Settings
+          </ButtonLink>
+        }
+      />
+    </Card>
+  );
+}
+
+/** Listing set, link not created yet. */
+function CreateLinkCard({ status }: { status: Status }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const projectId = useRouteProjectId();
   const fullAccess = useProject()?.role === "full-access";
-  const [query, setQuery] = useState(status.defaultQuery);
 
-  const search = useMutation(
-    trpc.feedback.search.mutationOptions({
-      onError: (error) => toast.error(error.message),
-    })
-  );
-  const setPlace = useMutation(
-    trpc.feedback.setPlace.mutationOptions({
+  const createLink = useMutation(
+    trpc.feedback.createLink.mutationOptions({
       onSuccess: () => {
-        toast.success("Business saved.");
+        toast.success("Review link created.");
         void queryClient.invalidateQueries({ queryKey: trpc.feedback.pathKey() });
-        onDone?.();
       },
       onError: (error) => toast.error(error.message),
     })
   );
 
-  if (!fullAccess) {
-    return (
-      <Card>
-        <EmptyState
-          icon={<MapPin className="size-5" />}
-          title="No review link yet"
-          text="Ask the site owner to find the business on Google Maps to create the review link."
-        />
-      </Card>
-    );
-  }
-
   return (
     <Card>
-      <CardHeader title="Find your business on Google Maps" divided />
+      <CardHeader title="Create your review link" divided />
       <div className="flex flex-col gap-4 p-6">
         <p className="text-sm text-dim">
-          We send 5-star customers to your Google review page. Search your business name as it appears on Google, then pick your business listing (not your street address).{" "}
-          <DocsLink path="client-hub/feedback#setting-it-up">How it works</DocsLink>
+          One link to share with customers: 5 stars go to your Google review page, everyone else tells you
+          privately.
         </p>
-        <form
-          className="flex flex-wrap gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (query.trim().length >= 2) search.mutate({ projectId, query: query.trim() });
-          }}
-        >
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Your business name as it appears on Google"
-            className="min-w-[240px] flex-1"
-            aria-label="Business name and city"
-          />
-          <Button
-            type="submit"
-            variant="dark"
-            icon={<Search className="size-4" />}
-            disabled={search.isPending || query.trim().length < 2}
-          >
-            {search.isPending ? "Searching…" : "Search"}
-          </Button>
-        </form>
-
-        {search.data && search.data.length === 0 && (
-          <p className="text-sm text-dim">
-            No Google business found. Search the exact name shown on Google Maps, plus your city.
-          </p>
-        )}
-        {search.data && search.data.length > 0 && (
-          <ul className="divide-y divide-divider overflow-hidden rounded-card border border-line">
-            {search.data.map((p) => (
-              <li key={p.placeId} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <MapPin className="size-4 shrink-0 text-dim" aria-hidden />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-medium text-ink">{p.name || "Unnamed place"}</span>
-                  {p.address && <span className="truncate text-[13px] text-dim">{p.address}</span>}
-                </div>
-                <Button
-                  size="sm"
-                  variant={status.link?.placeId === p.placeId ? "subtle" : "outline"}
-                  disabled={setPlace.isPending}
-                  onClick={() => setPlace.mutate({ projectId, placeId: p.placeId })}
-                >
-                  {status.link?.placeId === p.placeId ? "Current" : "Use this"}
-                </Button>
-              </li>
-            ))}
-          </ul>
+        <Listing status={status} />
+        {fullAccess ? (
+          <div>
+            <Button variant="primary" disabled={createLink.isPending} onClick={() => createLink.mutate({ projectId })}>
+              {createLink.isPending ? "Creating…" : "Create review link"}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-dim">Ask the site owner to create the review link.</p>
         )}
       </div>
     </Card>
   );
 }
 
+/** The listing from Settings, with a way to change it there. */
+function Listing({ status }: { status: Status }) {
+  const projectId = useRouteProjectId();
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-inner border border-line px-4 py-3">
+      <MapPin className="size-4 shrink-0 text-dim" aria-hidden />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-sm font-medium text-ink">{status.businessName || "Your listing"}</span>
+        {status.address && <span className="truncate text-[13px] text-dim">{status.address}</span>}
+      </div>
+      <ButtonLink size="sm" variant="outline" href={settingsHref(projectId)}>
+        Change in Settings
+      </ButtonLink>
+    </div>
+  );
+}
+
 function LinkCard({ status, link }: { status: Status; link: NonNullable<Status["link"]> }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const projectId = useRouteProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [copied, setCopied] = useState(false);
-  const [changing, setChanging] = useState(false);
+
+  const setGoogleUrl = useMutation(
+    trpc.feedback.setGoogleUrl.mutationOptions({
+      onSuccess: () => {
+        toast.success("Google review link saved.");
+        void queryClient.invalidateQueries({ queryKey: trpc.feedback.pathKey() });
+        void queryClient.invalidateQueries({ queryKey: trpc.project.business.pathKey() });
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
 
   const copy = async () => {
     try {
@@ -263,17 +249,7 @@ function LinkCard({ status, link }: { status: Status; link: NonNullable<Status["
   return (
     <>
       <Card>
-        <CardHeader
-          title="Your review link"
-          divided
-          action={
-            fullAccess && (
-              <Button size="sm" variant="ghost" onClick={() => setChanging((v) => !v)}>
-                {changing ? "Cancel" : "Change business"}
-              </Button>
-            )
-          }
-        />
+        <CardHeader title="Your review link" divided />
         <div className="flex flex-col gap-4 p-6">
           <div className="flex flex-wrap gap-2">
             <Input
@@ -299,163 +275,67 @@ function LinkCard({ status, link }: { status: Status; link: NonNullable<Status["
               Open
             </ButtonAnchor>
           </div>
-          <p className="text-[13px] text-dim">
-            Google listing: <span className="text-ink">{link.businessName}</span>
-            {link.address ? `, ${link.address}` : ""}
-          </p>
-          {link.googleUrl && <GoogleLinkRow googleUrl={link.googleUrl} canEdit={fullAccess} />}
+          <Listing status={status} />
+          <GoogleLinkRow
+            googleUrl={link.googleUrl}
+            canEdit={fullAccess}
+            saving={setGoogleUrl.isPending}
+            onSave={(url) => setGoogleUrl.mutate({ projectId, url })}
+          />
           {status.recommended.length > 0 && (
             <p className="text-[13px] text-dim">
               Tip: add your {status.recommended.map((f) => REVIEW_FIELD_LABELS[f].toLowerCase()).join(" and ")} in{" "}
-              <Link href={businessInfoHref(projectId)} className="text-coral-text underline-offset-2 hover:underline">
-                Business info
+              <Link href={repoPath(projectId, "settings")} className="text-coral-text underline-offset-2 hover:underline">
+                Settings
               </Link>{" "}
               so customers recognize you.
             </p>
           )}
         </div>
       </Card>
-      {changing && <PlaceSearch status={status} onDone={() => setChanging(false)} />}
     </>
   );
 }
 
-/** Paste box for the Business Profile review link (Read reviews › Get more reviews › Share). */
-function GoogleLinkForm({ initial, onDone }: { initial?: string; onDone?: () => void }) {
+/** Required step after picking the business: nothing is live until the review link is pasted. */
+function GoogleLinkRequired({ status, link }: { status: Status; link: NonNullable<Status["link"]> }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const projectId = useRouteProjectId();
-  const [value, setValue] = useState(initial ?? "");
+  const fullAccess = useProject()?.role === "full-access";
 
-  const save = useMutation(
+  const setGoogleUrl = useMutation(
     trpc.feedback.setGoogleUrl.mutationOptions({
       onSuccess: () => {
         toast.success("Google review link saved.");
-        void queryClient.invalidateQueries({ queryKey: trpc.feedback.status.queryKey({ projectId }) });
-        onDone?.();
+        void queryClient.invalidateQueries({ queryKey: trpc.feedback.pathKey() });
+        void queryClient.invalidateQueries({ queryKey: trpc.project.business.pathKey() });
       },
       onError: (error) => toast.error(error.message),
     })
   );
 
   return (
-    <form
-      className="flex flex-col gap-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (value.trim()) save.mutate({ projectId, url: value.trim() });
-      }}
-    >
-      <ol className="flex list-decimal flex-col gap-1 pl-5 text-sm text-dim">
-        <li>
-          Open your{" "}
-          <a
-            href="https://business.google.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-coral-text underline-offset-2 hover:underline"
-          >
-            Google Business Profile
-          </a>
-          .
-        </li>
-        <li>Select Read reviews, then Get more reviews.</li>
-        <li>Select Share, copy the link and paste it here.</li>
-      </ol>
-      <p className="text-sm text-dim">
-        <DocsLink path="client-hub/feedback#setting-it-up">See how to set it up, step by step</DocsLink>
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <Input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="https://g.page/r/.../review"
-          className="min-w-[240px] flex-1"
-          aria-label="Google review link"
-        />
-        <Button type="submit" variant="dark" disabled={save.isPending || !value.trim()}>
-          {save.isPending ? "Saving…" : "Save"}
-        </Button>
-        {onDone && initial && (
-          <Button variant="ghost" disabled={save.isPending} onClick={onDone}>
-            Cancel
-          </Button>
-        )}
-      </div>
-    </form>
-  );
-}
-
-/** Required step after picking the business: nothing is live until the review link is pasted. */
-function GoogleLinkRequired({ status, link }: { status: Status; link: NonNullable<Status["link"]> }) {
-  const fullAccess = useProject()?.role === "full-access";
-  const [changing, setChanging] = useState(false);
-
-  return (
     <>
       <Card>
-        <CardHeader
-          title="Add your Google review link"
-          divided
-          action={
-            fullAccess && (
-              <Button size="sm" variant="ghost" onClick={() => setChanging((v) => !v)}>
-                {changing ? "Cancel" : "Change business"}
-              </Button>
-            )
-          }
-        />
+        <CardHeader title="Add your Google review link" divided />
         <div className="flex flex-col gap-4 p-6">
           <p className="text-sm text-dim">
             Happy customers are sent to this link to post their review on Google. Your review page goes live once
-            it's added.
+            it&apos;s added.
           </p>
-          <p className="text-[13px] text-dim">
-            Google listing: <span className="text-ink">{link.businessName}</span>
-            {link.address ? `, ${link.address}` : ""}
-          </p>
+          <Listing status={status} />
           {fullAccess ? (
-            <GoogleLinkForm />
+            <GoogleLinkForm
+              saving={setGoogleUrl.isPending}
+              onSave={(url) => setGoogleUrl.mutate({ projectId, url })}
+            />
           ) : (
             <p className="text-sm text-dim">Ask the site owner to add the Google review link.</p>
           )}
         </div>
       </Card>
-      {changing && <PlaceSearch status={status} onDone={() => setChanging(false)} />}
     </>
-  );
-}
-
-/** Where 5-star customers land, with a way to replace the link. */
-function GoogleLinkRow({ googleUrl, canEdit }: { googleUrl: string; canEdit: boolean }) {
-  const [editing, setEditing] = useState(false);
-  return (
-    <div className="flex flex-col gap-2 rounded-inner border border-line px-4 py-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[13px] font-medium text-ink">Google review link</span>
-        <a
-          href={googleUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-auto inline-flex items-center gap-1 text-[13px] text-coral-text underline-offset-2 hover:underline"
-        >
-          Test it <ExternalLink className="size-3.5" aria-hidden />
-        </a>
-      </div>
-      <span className="truncate text-[13px] text-dim">{googleUrl}</span>
-      {canEdit &&
-        (editing ? (
-          <GoogleLinkForm initial={googleUrl} onDone={() => setEditing(false)} />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="self-start text-[13px] text-coral-text underline-offset-2 hover:underline"
-          >
-            Change link
-          </button>
-        ))}
-    </div>
   );
 }
 

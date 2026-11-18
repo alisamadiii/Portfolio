@@ -8,7 +8,6 @@ import {
   isReviewSlug,
   newReviewSlug,
   parseGoogleReviewUrl,
-  reviewBusiness,
   reviewInfoStatus,
 } from "@workspace/trpc/lib/review-link-shared";
 
@@ -42,9 +41,14 @@ describe("newReviewSlug", () => {
   });
 });
 
+// 2026-11-18: reviewInfoStatus reads the project's business details
+// (hub_project) instead of agency_client.business_info; reviewBusiness is
+// gone since the review page reads the project row directly.
 describe("reviewInfoStatus", () => {
+  const none = { name: null, address: null, phone: null, logoKey: null };
+
   it("needs business name and address", () => {
-    expect(reviewInfoStatus({}, false)).toMatchObject({
+    expect(reviewInfoStatus(none)).toMatchObject({
       ready: false,
       missing: ["name", "address"],
     });
@@ -52,35 +56,22 @@ describe("reviewInfoStatus", () => {
 
   it("whitespace-only values count as missing", () => {
     expect(
-      reviewInfoStatus({ website: ["  "], businessAddress: ["1 Main St"] }, true).missing
+      reviewInfoStatus({ ...none, name: "  ", address: "1 Main St", logoKey: "logos/x.webp" }).missing
     ).toEqual(["name"]);
   });
 
   it("is ready without logo or phone, but recommends them", () => {
-    expect(
-      reviewInfoStatus({ website: ["Acme"], businessAddress: ["1 Main St"] }, false)
-    ).toEqual({ ready: true, missing: [], recommended: ["logo", "phone"] });
-  });
-});
-
-describe("reviewBusiness", () => {
-  const place = { businessName: "Acme Plumbing LLC", address: "9 Google Rd" };
-
-  it("prefers Business info", () => {
-    expect(
-      reviewBusiness(
-        { website: ["Acme"], businessAddress: ["1 Main St"], businessPhone: ["555"] },
-        place
-      )
-    ).toEqual({ name: "Acme", address: "1 Main St", phone: "555" });
-  });
-
-  it("falls back to the Google place when Business info is cleared later", () => {
-    expect(reviewBusiness(null, place)).toEqual({
-      name: "Acme Plumbing LLC",
-      address: "9 Google Rd",
-      phone: null,
+    expect(reviewInfoStatus({ ...none, name: "Acme", address: "1 Main St" })).toEqual({
+      ready: true,
+      missing: [],
+      recommended: ["logo", "phone"],
     });
+  });
+
+  it("recommends nothing once logo and phone are set", () => {
+    expect(
+      reviewInfoStatus({ name: "Acme", address: "1 Main St", phone: "555", logoKey: "logos/x.webp" })
+    ).toEqual({ ready: true, missing: [], recommended: [] });
   });
 });
 

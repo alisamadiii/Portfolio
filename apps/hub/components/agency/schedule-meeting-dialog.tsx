@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import { useTRPC } from "@workspace/trpc/client";
 import {
-  BUSINESS_CONTACT_KEYS,
   placeholderValues,
   resolveTemplate,
 } from "@workspace/trpc/lib/templates-shared";
@@ -27,7 +26,6 @@ import { Button } from "@/components/ds/ui/button";
 import { DatePicker } from "@/components/ds/ui/date-picker";
 import { Field, Input, Select } from "@/components/ds/ui/field";
 import { TemplateTextarea } from "@/components/templates/template-textarea";
-import { useProject } from "@/hooks/use-project";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Lead = RouterOutputs["agency"]["leads"]["get"];
@@ -63,16 +61,15 @@ export function ScheduleMeetingDialog({
   onDone: (updated: Lead) => void;
 }) {
   const trpc = useTRPC();
-  const websiteUrl = useProject()?.websiteUrl ?? null;
   const myName = useCurrentUser().data?.user?.name ?? null;
   const calendars = useQuery(trpc.gcal.calendars.queryOptions({ projectId }));
   const templates = useQuery(trpc.agency.templates.list.queryOptions({ projectId }));
-  const businessInfo = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
+  const business = useQuery(trpc.project.business.get.queryOptions({ projectId }));
 
   const writable = writableCalendars(calendars.data ?? []);
   const appointments = (templates.data ?? []).filter((t) => t.kind === "appointment");
   const snippets = (templates.data ?? []).filter((t) => t.kind === "text");
-  const hasAddress = !!businessInfo.data?.[BUSINESS_CONTACT_KEYS.address]?.[0];
+  const hasAddress = !!business.data?.address;
 
   const rescheduling = !!lead.meetingAt;
   const initialStart = lead.meetingAt ? new Date(lead.meetingAt) : nextHour();
@@ -101,8 +98,7 @@ export function ScheduleMeetingDialog({
 
   const values = placeholderValues({
     lead,
-    businessInfo: businessInfo.data,
-    websiteUrl,
+    business: business.data,
     myName,
     meetingStart: start,
   });

@@ -3,18 +3,13 @@ import { and, count, desc, eq, lt, sql } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/pool";
-import { hubReview, hubReviewLink, hubReviewsSource } from "@workspace/drizzle/schema";
+import { hubProject, hubReview, hubReviewsSource } from "@workspace/drizzle/schema";
 
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
-import { isAdminUser } from "../lib/authz-shared";
-import {
-  isApifyConfigured,
-  resolveReviewsLink,
-  syncGoogleReviews,
-  targetToUrl,
-} from "../lib/google-reviews";
+import { bindGoogleSource, isApifyConfigured, syncGoogleReviews } from "../lib/google-reviews";
 import { cleanReviewText, isFeedReview, writeReviewUrl } from "../lib/google-reviews-shared";
 import { requireApp } from "../lib/payment/entitlements";
+import { rateLimit } from "../middleware/rate-limit";
 
 // Google Reviews app: the project's Google listing is scraped (Apify) on
 // connect and then daily by apps/api /api/cron/google-reviews. Every new
@@ -32,7 +27,8 @@ const appCmsFullAccessProcedure = cmsFullAccessProcedure.use(async ({ ctx, next 
 });
 
 const PAGE_SIZE = 50;
-const SYNC_COOLDOWN_MS = 10 * 60 * 1000;
+// Every manual run (connect, Sync now) is a paid Apify run.
+const SCRAPE_LIMIT = { max: 3, windowMs: 10 * 60 * 1000, scope: "google-reviews" };
 
 const googleSource = (projectId: string) =>
   db.query.hubReviewsSource.findFirst({
@@ -48,7 +44,7 @@ const notConfigured = () =>
 export const googleReviewsRouter = createTRPCRouter({
   /** The connected listing (null = not connected) and review counts. */
   get: appCmsProcedure.query(async ({ ctx }) => {
-    const [source, counts, feedbackLink] = await Promise.all([
+    const [source, counts, project] = await Promise.all([
       googleSource(ctx.projectId),
       db
         .select({
@@ -58,19 +54,20 @@ export const googleReviewsRouter = createTRPCRouter({
         })
         .from(hubReview)
         .where(and(eq(hubReview.projectId, ctx.projectId), eq(hubReview.provider, "google"))),
-      db.query.hubReviewLink.findFirst({
-        where: eq(hubReviewLink.projectId, ctx.projectId),
-        columns: { placeId: true },
+      db.query.hubProject.findFirst({
+        where: eq(hubProject.id, ctx.projectId),
+        columns: { name: true, address: true, googlePlaceId: true },
       }),
     ]);
     return {
-      // The Feedback app's place, offered as a one-click connect.
-      suggestedPlaceId: source ? null : (feedbackLink?.placeId ?? null),
+      // The listing from Settings; syncing starts with one click.
+      placeId: project?.googlePlaceId ?? null,
+      businessName: project?.name ?? null,
+      address: project?.address ?? null,
       source: source
         ? {
             url: source.url,
             placeId: source.externalId,
-            businessName: source.businessName,
             rating: source.rating,
             totalReviews: source.totalReviews,
             writeReviewUrl: source.externalId ? writeReviewUrl(source.externalId) : null,
@@ -84,72 +81,38 @@ export const googleReviewsRouter = createTRPCRouter({
     };
   }),
 
-  /** Connect (or change) the Google listing, then run the first sync. */
-  connect: appCmsFullAccessProcedure
-    .input(z.object({ link: z.string().trim().min(1).max(2000) }))
-    .mutation(async ({ ctx, input }) => {
-      if (!isApifyConfigured()) throw notConfigured();
-      const target = await resolveReviewsLink(input.link);
-      if (!target) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message:
-            "That isn't a Google Maps business link. Open your business on Google Maps, tap Share, and paste the link.",
-        });
-      }
+  /** Start syncing the Google listing from Settings, then run the first sync. */
+  connect: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
+    if (!isApifyConfigured()) throw notConfigured();
+    const project = await db.query.hubProject.findFirst({
+      where: eq(hubProject.id, ctx.projectId),
+      columns: { googlePlaceId: true },
+    });
+    if (!project?.googlePlaceId) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Set your Google listing in Settings first.",
+      });
+    }
+    await rateLimit(SCRAPE_LIMIT.max, SCRAPE_LIMIT.windowMs, SCRAPE_LIMIT.scope);
+    await bindGoogleSource(ctx.projectId, project.googlePlaceId);
 
-      const existing = await googleSource(ctx.projectId);
-      const url = targetToUrl(target);
-      const externalId = "placeId" in target ? target.placeId : null;
-      // A different listing starts over: its reviews aren't this business's.
-      if (existing && existing.url !== url) {
-        await db
-          .delete(hubReview)
-          .where(and(eq(hubReview.projectId, ctx.projectId), eq(hubReview.provider, "google")));
-      }
-      const values = {
-        url,
-        externalId,
-        businessName: null,
-        rating: null,
-        totalReviews: null,
-        firstSyncedAt: null,
-        lastSyncedAt: null,
-        lastError: null,
-        updatedAt: new Date(),
-      };
-      if (!existing || existing.url !== url) {
-        await db
-          .insert(hubReviewsSource)
-          .values({ projectId: ctx.projectId, provider: "google", ...values })
-          .onConflictDoUpdate({
-            target: [hubReviewsSource.projectId, hubReviewsSource.provider],
-            set: values,
-          });
-      }
-
-      const result = await syncGoogleReviews(ctx.projectId);
-      if (!result.ok) {
-        throw new TRPCError({
-          code: "BAD_GATEWAY",
-          message: "We saved your listing but couldn't read its reviews yet. Try Sync now in a minute.",
-        });
-      }
-      return { added: result.added };
-    }),
+    const result = await syncGoogleReviews(ctx.projectId);
+    if (!result.ok) {
+      throw new TRPCError({
+        code: "BAD_GATEWAY",
+        message: "We saved your listing but couldn't read its reviews yet. Try Sync now in a minute.",
+      });
+    }
+    return { added: result.added };
+  }),
 
   /** Re-scrape now instead of waiting for the daily run. */
   syncNow: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
     if (!isApifyConfigured()) throw notConfigured();
     const source = await googleSource(ctx.projectId);
-    if (!source) throw new TRPCError({ code: "NOT_FOUND", message: "Connect your Google listing first." });
-    const last = source.lastSyncedAt?.getTime() ?? 0;
-    if (!isAdminUser(ctx.user) && Date.now() - last < SYNC_COOLDOWN_MS) {
-      throw new TRPCError({
-        code: "TOO_MANY_REQUESTS",
-        message: "Reviews were just synced. Try again in a few minutes.",
-      });
-    }
+    if (!source) throw new TRPCError({ code: "NOT_FOUND", message: "Start syncing your Google listing first." });
+    await rateLimit(SCRAPE_LIMIT.max, SCRAPE_LIMIT.windowMs, SCRAPE_LIMIT.scope);
     const result = await syncGoogleReviews(ctx.projectId);
     if (!result.ok) {
       throw new TRPCError({ code: "BAD_GATEWAY", message: "Couldn't read your Google reviews. Try again later." });

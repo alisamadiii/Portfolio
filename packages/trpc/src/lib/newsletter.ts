@@ -303,8 +303,11 @@ export async function clearDefaultList(projectId: string, listId: string) {
 export const resolveList = (mail: ProjectMail, listId?: string) =>
   listId ? Promise.resolve(listId) : ensureContactBook(mail);
 
-/** Starter document for a new campaign or template (must carry the unsubscribe link). */
-export const starterContent = (businessName: string) =>
+/**
+ * Starter document for a new campaign or template (must carry the unsubscribe
+ * link). The business name and postal address come from Settings.
+ */
+export const starterContent = ({ name, address }: { name: string; address: string | null }) =>
   JSON.stringify({
     type: "doc",
     content: [
@@ -319,7 +322,7 @@ export const starterContent = (businessName: string) =>
         content: [
           {
             type: "text",
-            text: `You are receiving this email because you subscribed to ${businessName}. `,
+            text: `You are receiving this email because you subscribed to ${name}${address ? `, ${address}` : ""}. `,
           },
           {
             type: "text",

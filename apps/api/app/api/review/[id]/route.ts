@@ -4,12 +4,7 @@ import { and, eq, gt } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "@workspace/drizzle/pool";
-import {
-  agencyClient,
-  hubProject,
-  hubReviewFeedback,
-  hubReviewLink,
-} from "@workspace/drizzle/schema";
+import { hubProject, hubReviewFeedback, hubReviewLink } from "@workspace/drizzle/schema";
 import { email } from "@workspace/email";
 import ReviewFeedbackEmail from "@workspace/email/emails/review-feedback";
 import { planAllowsApp } from "@workspace/trpc/lib/apps";
@@ -17,11 +12,7 @@ import { MAX_BODY_BYTES, tooFast } from "@workspace/trpc/lib/agency/lead-capture
 import { senderDisplayName } from "@workspace/trpc/lib/inbox-shared";
 import { getEntitlement } from "@workspace/trpc/lib/payment/entitlements";
 import { publicObjectUrl } from "@workspace/trpc/lib/r2";
-import {
-  PRIVATE_MAX_RATING,
-  isReviewSlug,
-  reviewBusiness,
-} from "@workspace/trpc/lib/review-link-shared";
+import { PRIVATE_MAX_RATING, isReviewSlug } from "@workspace/trpc/lib/review-link-shared";
 import { urls } from "@workspace/ui/lib/company";
 
 import {
@@ -34,7 +25,7 @@ import {
 // ─── Feedback app: public review link ───────────────────────────
 // www.alisamadii.com/review/<id> (apps/agency) reads the business here and
 // posts ratings back. GET = the business details the page shows (whitelisted
-// fields from Business info, Google place as fallback). POST = record or
+// fields from the project's Settings). POST = record or
 // update one visitor's rating:
 //   { rating, message }              → private feedback (1 to 4), emails the owner
 //   { rating, google: true }         → the visitor opened the Google review
@@ -53,21 +44,23 @@ async function resolveLink(id: string) {
   if (!isReviewSlug(id)) return null;
   const [row] = await db
     .select({
-      link: hubReviewLink,
+      link: { id: hubReviewLink.id, projectId: hubReviewLink.projectId },
+      name: hubProject.name,
+      address: hubProject.address,
+      phone: hubProject.phone,
       logoKey: hubProject.logoKey,
       websiteUrl: hubProject.websiteUrl,
-      businessInfo: agencyClient.businessInfo,
+      googleReviewUrl: hubProject.googleReviewUrl,
     })
     .from(hubReviewLink)
     .innerJoin(hubProject, eq(hubProject.id, hubReviewLink.projectId))
-    .leftJoin(agencyClient, eq(agencyClient.projectId, hubReviewLink.projectId))
     .where(eq(hubReviewLink.id, id))
     .limit(1);
   // Not live until the Business Profile review link is pasted.
-  if (!row?.link.googleReviewUrl) return null;
+  if (!row?.googleReviewUrl) return null;
   const entitlement = await getEntitlement(row.link.projectId);
   if (!planAllowsApp("feedback", entitlement)) return null;
-  return row;
+  return { ...row, name: row.name?.trim() || "Our business" };
 }
 
 export async function OPTIONS(req: Request) {
@@ -88,10 +81,12 @@ export async function GET(
 
   return NextResponse.json(
     {
-      ...reviewBusiness(row.businessInfo, row.link),
+      name: row.name,
+      address: row.address,
+      phone: row.phone,
       logoUrl: publicObjectUrl(row.logoKey),
       websiteUrl: row.websiteUrl,
-      googleUrl: row.link.googleReviewUrl,
+      googleUrl: row.googleReviewUrl,
     },
     { headers: { ...headers, "Cache-Control": "public, max-age=60" } }
   );
@@ -204,13 +199,12 @@ export async function POST(
     const target = await findContactClientByProjectId(link.projectId);
     const to = target?.notifyEmail ?? target?.ownerEmail;
     if (to) {
-      const business = reviewBusiness(row.businessInfo, link);
       const result = await email.send({
-        from: `"${senderDisplayName(`${business.name} feedback`)}" <noreply@alisamadii.com>`,
+        from: `"${senderDisplayName(`${row.name} feedback`)}" <noreply@alisamadii.com>`,
         to,
-        subject: `${rating}-star feedback for ${business.name}`.replace(/[\r\n]+/g, " "),
+        subject: `${rating}-star feedback for ${row.name}`.replace(/[\r\n]+/g, " "),
         react: createElement(ReviewFeedbackEmail, {
-          businessName: business.name,
+          businessName: row.name,
           rating,
           message: data.message!,
           name: data.name ?? null,

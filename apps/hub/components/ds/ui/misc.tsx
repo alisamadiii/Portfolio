@@ -9,8 +9,11 @@ export function IconTile({
   size = 40,
 }: {
   children: ReactNode;
-  /** brand = white tile with a line border, for full-color third-party logos. */
-  tone?: "coral" | "neutral" | "brand";
+  /**
+   * solid = white icon on coral, our own apps. brand = white tile with a line
+   * border, for full-color third-party logos.
+   */
+  tone?: "coral" | "solid" | "neutral" | "brand";
   size?: 32 | 36 | 40 | 48 | 56;
 }) {
   return (
@@ -19,6 +22,7 @@ export function IconTile({
       className={cn(
         "flex shrink-0 items-center justify-center rounded-[9px]",
         tone === "coral" && "bg-coral-soft text-coral-deep",
+        tone === "solid" && "bg-coral text-white",
         tone === "neutral" && "bg-tile text-ink-3",
         tone === "brand" && "border border-line bg-surface text-ink"
       )}

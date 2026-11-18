@@ -45,6 +45,7 @@ import {
 } from "../lib/wix-shared";
 
 import { requireApp, requireFeature } from "../lib/payment/entitlements";
+import { setProjectBusiness } from "../lib/project-business";
 
 // Paid app: every call but status/disconnect checks the plan (requireApp),
 // so a free project can't reach it by calling the API directly.
@@ -346,6 +347,12 @@ export const wixRouter = createTRPCRouter({
       .filter((a) => a.enabled !== false && WIX_APPS[a.appDefId])
       .map((a) => WIX_APPS[a.appDefId]!);
     const apps = [...new Map(known.map((a) => [a.key, a])).values()];
+    // Settings learns the business from Wix where the owner left it empty.
+    await setProjectBusiness(
+      ctx.projectId,
+      { name: props.businessName ?? null, phone: props.phone ?? null, address: formatWixAddress(props.address) },
+      { onlyIfEmpty: true }
+    );
     return {
       siteName: props.siteDisplayName ?? props.businessName ?? null,
       businessName: props.businessName ?? null,

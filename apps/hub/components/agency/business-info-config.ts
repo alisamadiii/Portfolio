@@ -208,7 +208,7 @@ export const BUSINESS_STEPS: BusinessStep[] = [
     part: "Brand foundation",
     title: "Your business",
     shortLabel: "Your business",
-    lead: "Describe what you sell once. Every later step, prompt and ad builds on what you write here.",
+    lead: "Describe what you sell once. Every later step, prompt and ad builds on what you write here. Your name, phone, address and hours are the ones from Settings.",
     rowDescription: "What you sell, your features and your main goal.",
     minutes: 10,
   },

@@ -3,7 +3,8 @@ import { and, desc, eq, isNotNull, ne, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/pool";
 import { hubProject, hubReview, hubReviewsSource } from "@workspace/drizzle/schema";
-import { cleanReviewText, writeReviewUrl } from "@workspace/trpc/lib/google-reviews-shared";
+import { cleanReviewText } from "@workspace/trpc/lib/google-reviews-shared";
+import { reviewTargetUrl } from "@workspace/trpc/lib/project-business-shared";
 
 import { corsHeaders, isAllowedOrigin, parseProjectIdParam } from "@/lib/agency-public";
 
@@ -42,6 +43,9 @@ export async function GET(
       origins: hubProject.origins,
       websiteUrl: hubProject.websiteUrl,
       apps: hubProject.apps,
+      name: hubProject.name,
+      googlePlaceId: hubProject.googlePlaceId,
+      googleReviewUrl: hubProject.googleReviewUrl,
     })
     .from(hubProject)
     .where(eq(hubProject.id, projectId))
@@ -77,10 +81,14 @@ export async function GET(
   return NextResponse.json(
     {
       business: {
-        name: source.businessName,
+        name: project.name,
         rating: source.rating,
         totalReviews: source.totalReviews,
-        writeReviewUrl: source.externalId ? writeReviewUrl(source.externalId) : null,
+        // The pasted Business Profile link first, else the place id link.
+        writeReviewUrl: reviewTargetUrl({
+          googlePlaceId: project.googlePlaceId ?? source.externalId,
+          googleReviewUrl: project.googleReviewUrl,
+        }),
         mapsUrl: source.url,
       },
       reviews: reviews.map((r) => ({

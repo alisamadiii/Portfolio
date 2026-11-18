@@ -25,7 +25,6 @@ import {
   MarkWonDialog,
 } from "@/components/agency/lead-status-dialogs";
 import { TemplateTextarea } from "@/components/templates/template-textarea";
-import { useProject } from "@/hooks/use-project";
 import {
   CHANNEL_LABELS,
   ChannelBadge,
@@ -158,8 +157,7 @@ export function LeadDetail({ id }: { id: number }) {
   // "/" snippets for the notes box.
   const templates = useQuery(trpc.agency.templates.list.queryOptions({ projectId }));
   const snippets = (templates.data ?? []).filter((t) => t.kind === "text");
-  const businessInfo = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
-  const websiteUrl = useProject()?.websiteUrl ?? null;
+  const business = useQuery(trpc.project.business.get.queryOptions({ projectId }));
   const myName = useCurrentUser().data?.user?.name ?? null;
 
   const [value, setValue] = useState("");
@@ -504,7 +502,7 @@ export function LeadDetail({ id }: { id: number }) {
               resolve={(text) =>
                 resolveTemplate(
                   text,
-                  placeholderValues({ lead, businessInfo: businessInfo.data, websiteUrl, myName })
+                  placeholderValues({ lead, business: business.data, myName })
                 ).text
               }
             />

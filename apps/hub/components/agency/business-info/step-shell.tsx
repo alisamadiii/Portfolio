@@ -54,10 +54,11 @@ export function StepShell({
 }) {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
-  const role = useProject()?.role ?? null;
+  const project = useProject();
+  const role = project?.role ?? null;
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId: projectId }));
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId: projectId }));
-  const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? []);
+  const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? [], project?.name);
   const done = BUSINESS_STEPS.filter((s) => statuses.get(s.step)?.state === "done").map((s) => s.step);
 
   const step = stepFor(stepKey)!;

@@ -27,7 +27,9 @@ const count = (info: Info, key: string) =>
  */
 export function stepStatuses(
   info: Info,
-  campaigns: AdCampaign[]
+  campaigns: AdCampaign[],
+  /** The business name from Settings (hub_project.name); step 1 needs it. */
+  businessName?: string | null
 ): Map<number, StepStatus> {
   const statuses = new Map<number, StepStatus>();
   const segments = count(info, "segments");
@@ -42,14 +44,11 @@ export function stepStatuses(
   ) => statuses.set(step, { state, badge, tone, unlocks });
 
   // 1 — Your business
-  if (
-    filled(info, "website") &&
-    filled(info, "productDescription") &&
-    count(info, "features") >= 1
-  )
+  const named = !!businessName?.trim();
+  if (named && filled(info, "productDescription") && count(info, "features") >= 1)
     put(1, "done", "Done", "success");
   else if (
-    filled(info, "website") ||
+    named ||
     filled(info, "productDescription") ||
     filled(info, "features") ||
     filled(info, "goal")

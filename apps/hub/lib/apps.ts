@@ -179,6 +179,8 @@ export type NavItem = {
   icon?: LucideIcon;
   /** Full-color brand mark, rendered instead of `icon`. */
   logo?: ComponentType<{ className?: string }>;
+  /** Our own apps: the icon sits white on a small coral tile, like the Apps page. */
+  tile?: boolean;
   path: string;
   external?: boolean;
   /** Admin-only page: the sidebar shows a lock on it. */

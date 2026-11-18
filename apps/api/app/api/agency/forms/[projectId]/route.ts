@@ -236,7 +236,7 @@ export async function POST(
       ["Source", CHANNEL_LABELS[channel]],
     ];
     const siteName =
-      hostOf(client.websiteUrl) ?? client.repo ?? client.origins?.[0] ?? "your site";
+      client.name?.trim() || hostOf(client.websiteUrl) || client.repo || client.origins?.[0] || "your site";
     try {
       await sendEmail({
         from: "New Lead <noreply@alisamadii.com>",

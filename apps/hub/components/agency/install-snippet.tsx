@@ -1,11 +1,17 @@
 "use client";
 
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { codeToHtml } from "shiki";
 import { toast } from "sonner";
+
+import { cn } from "@workspace/ui/lib/utils";
 
 import { useAgency } from "@/components/agency/use-agency";
 import { Button } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { Copy } from "@/components/icon";
+import { leadsPrompt } from "@/lib/embed-prompts";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");
 
@@ -21,22 +27,86 @@ const EXAMPLE_FORM = `<form data-lead-form="Contact" data-success="Thanks! We'll
   <button type="submit">Send</button>
 </form>`;
 
-export function CopyBlock({ code }: { code: string }) {
+const copy = (text: string) => navigator.clipboard.writeText(text).then(() => toast.success("Copied."));
+
+/**
+ * A snippet to paste: dark block (Shiki github-dark on ink) with the copy
+ * button in the corner. Plain mono until Shiki is ready, so nothing jumps.
+ */
+export function CopyBlock({ code, lang = "html" }: { code: string; lang?: string }) {
+  const html = useQuery({
+    queryKey: ["shiki", "github-dark", lang, code],
+    queryFn: () => codeToHtml(code, { lang, theme: "github-dark" }),
+    staleTime: Infinity,
+    retry: false,
+  });
   return (
-    <div className="flex items-start gap-2">
-      <code className="flex-1 rounded-inner border border-divider bg-canvas p-3 text-[12.5px] break-all whitespace-pre-wrap text-ink-2">
-        {code}
-      </code>
-      <Button
-        size="sm"
-        aria-label="Copy"
-        onClick={() =>
-          navigator.clipboard.writeText(code).then(() => toast.success("Copied."))
-        }
-      >
-        <Copy className="size-4" />
-      </Button>
+    <div className="relative rounded-inner bg-ink">
+      <div className="overflow-x-auto p-4 pr-14 font-mono text-[12.5px] leading-[1.6] text-white [&_pre]:!bg-transparent [&_pre]:whitespace-pre">
+        {html.data ? (
+          // Shiki escapes the snippet; the HTML is its own token spans.
+          <div dangerouslySetInnerHTML={{ __html: html.data }} />
+        ) : (
+          <pre>{code}</pre>
+        )}
+      </div>
+      <CopyCorner text={code} />
     </div>
+  );
+}
+
+/** Copy button for the corner of a dark block. */
+function CopyCorner({ text }: { text: string }) {
+  return (
+    <button
+      type="button"
+      aria-label="Copy"
+      onClick={() => void copy(text)}
+      className="absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-control border border-white/15 text-white/80 hover:bg-white/10 hover:text-white"
+    >
+      <Copy className="size-4" />
+    </button>
+  );
+}
+
+// A ready-made prompt for clients who edit their site with ChatGPT, Claude or
+// Cursor: paste it with the site code and the AI installs the whole contract.
+export function AiPromptBlock({ prompt }: { prompt: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <section className="flex flex-col gap-2 border-t border-divider pt-4">
+      <p className="text-sm font-semibold text-ink">Using an AI to edit your site?</p>
+      <p className="text-[13px] text-dim">
+        Copy this prompt, paste it with your site code, and it installs everything above.
+      </p>
+      <div className="relative rounded-inner bg-ink">
+        <pre
+          className={cn(
+            "p-4 pr-14 font-mono text-[12.5px] leading-[1.6] whitespace-pre-wrap text-white/90",
+            !expanded && "line-clamp-6"
+          )}
+        >
+          {prompt}
+        </pre>
+        <CopyCorner text={prompt} />
+      </div>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="self-start text-[13px] font-medium text-coral-text"
+      >
+        {expanded ? "Show less" : "Show full prompt"}
+      </button>
+      <Button
+        variant="dark"
+        size="sm"
+        className="self-start"
+        icon={<Copy className="size-3.5" />}
+        onClick={() => void copy(prompt)}
+      >
+        Copy prompt
+      </Button>
+    </section>
   );
 }
 
@@ -92,26 +162,27 @@ export function InstallSnippet() {
         </p>
         <ul className="text-dim list-disc space-y-1 pl-5">
           <li>
-            <code>lead:beforesubmit</code> — fires before the request; cancel it
+            <code>lead:beforesubmit</code>: fires before the request; cancel it
             to run your own validation and block the send.
           </li>
           <li>
-            <code>lead:success</code> — fires on success; cancel it to show your
+            <code>lead:success</code>: fires on success; cancel it to show your
             own thank-you instead of the built-in message.
           </li>
           <li>
-            <code>lead:error</code> — fires on failure; cancel it to show your own
+            <code>lead:error</code>: fires on failure; cancel it to show your own
             error message. <code>event.detail</code> is{" "}
-            <code>{"{ status, message }"}</code> — the server&apos;s reason (e.g.
+            <code>{"{ status, message }"}</code>: the server&apos;s reason (e.g.
             429 &quot;Too many requests.&quot;) to display.
           </li>
         </ul>
         <p className="text-dim">
           The attribution, the honeypot, and any <code>data-conversion</code>{" "}
-          still work the same — the conversion fires on every real success even
+          still work the same: the conversion fires on every real success even
           when you handle the UI yourself. Leave the events alone and the built-in
           behavior above runs unchanged.
         </p>
+        <AiPromptBlock prompt={leadsPrompt({ apiUrl: API_URL, projectId })} />
       </div>
     </Card>
   );

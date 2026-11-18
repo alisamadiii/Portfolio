@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
 
+import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 
 export type Draft = Record<string, string[]>;
@@ -22,6 +23,7 @@ export function useBusinessInfo(keys: { key: string; initial: number }[]) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const projectId = useRouteProjectId();
+  const businessName = useProject()?.name ?? "";
 
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const [draft, setDraft] = useState<Draft>({});
@@ -58,10 +60,11 @@ export function useBusinessInfo(keys: { key: string; initial: number }[]) {
   );
 
   // Other steps' saved values + this step's live edits: prompts and
-  // cross-step lookups read through this.
-  const values = useMemo(
-    () => ({ ...(info.data ?? {}), ...draft }),
-    [info.data, draft]
+  // cross-step lookups read through this. The business name comes from
+  // Settings (hub_project.name) under its legacy prompt key "website".
+  const values = useMemo<Draft>(
+    () => ({ ...(info.data ?? {}), ...draft, website: [businessName] }),
+    [info.data, draft, businessName]
   );
 
   const setRow = (key: string, i: number, value: string) => {

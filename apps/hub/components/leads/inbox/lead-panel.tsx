@@ -22,7 +22,6 @@ import { useAgency } from "@/components/agency/use-agency";
 import { Button, IconButton } from "@/components/ds/ui/button";
 import { Field, Input } from "@/components/ds/ui/field";
 import { TemplateTextarea } from "@/components/templates/template-textarea";
-import { useProject } from "@/hooks/use-project";
 import { repoPath } from "@/lib/paths";
 
 type Lead = RouterOutputs["agency"]["leads"]["get"];
@@ -87,8 +86,7 @@ function PanelBody({ lead }: { lead: Lead }) {
 
   const templates = useQuery(trpc.agency.templates.list.queryOptions({ projectId }));
   const snippets = (templates.data ?? []).filter((t) => t.kind === "text");
-  const businessInfo = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
-  const websiteUrl = useProject()?.websiteUrl ?? null;
+  const business = useQuery(trpc.project.business.get.queryOptions({ projectId }));
   const myName = useCurrentUser().data?.user?.name ?? null;
 
   const onSaved = (updated: Lead) => {
@@ -247,7 +245,7 @@ function PanelBody({ lead }: { lead: Lead }) {
           aria-label="Notes"
           placeholder={snippets.length ? "Type / for a snippet" : "Only your team sees notes"}
           resolve={(text) =>
-            resolveTemplate(text, placeholderValues({ lead, businessInfo: businessInfo.data, websiteUrl, myName })).text
+            resolveTemplate(text, placeholderValues({ lead, business: business.data, myName })).text
           }
         />
         {canEdit && notesDirty && (

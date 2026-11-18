@@ -1,11 +1,12 @@
 // Feedback app: client-safe helpers shared by the hub, the tRPC router and
 // the public /api/review endpoint.
 
+import { writeReviewUrl } from "./project-business-shared";
+
 export const REVIEW_PAGE_BASE = "https://www.alisamadii.com/review";
 
 /** The Google "write a review" page for a place. */
-export const googleReviewUrl = (placeId: string) =>
-  `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
+export const googleReviewUrl = writeReviewUrl;
 
 export const reviewPageUrl = (linkId: string) => `${REVIEW_PAGE_BASE}/${linkId}`;
 
@@ -63,14 +64,6 @@ function randomBytes(n: number) {
 export const isReviewSlug = (value: string) =>
   value.length === SLUG_LENGTH && [...value].every((c) => SLUG_ALPHABET.includes(c));
 
-// Business info keys the review page reads ("website" is the Business name
-// field, a legacy key name).
-export const REVIEW_INFO_KEYS = {
-  name: "website",
-  address: "businessAddress",
-  phone: "businessPhone",
-} as const;
-
 export type ReviewInfoField = "name" | "address" | "logo" | "phone";
 
 export const REVIEW_FIELD_LABELS: Record<ReviewInfoField, string> = {
@@ -80,37 +73,26 @@ export const REVIEW_FIELD_LABELS: Record<ReviewInfoField, string> = {
   phone: "Phone",
 };
 
-const first = (info: Record<string, string[]> | null | undefined, key: string) =>
-  info?.[key]?.[0]?.trim() || null;
+const has = (value: string | null | undefined) => !!value?.trim();
 
 /**
- * Whether Business info has what the review page needs. Name and address are
- * required before a review link can be created; logo and phone are
- * recommended (the page works without them).
+ * Whether Settings has what the review page needs. Name and address are
+ * required before a review link goes live; logo and phone are recommended
+ * (the page works without them).
  */
-export function reviewInfoStatus(
-  info: Record<string, string[]> | null | undefined,
-  hasLogo: boolean
-): { ready: boolean; missing: ReviewInfoField[]; recommended: ReviewInfoField[] } {
+export function reviewInfoStatus(business: {
+  name: string | null;
+  address: string | null;
+  phone: string | null;
+  logoKey: string | null;
+}): { ready: boolean; missing: ReviewInfoField[]; recommended: ReviewInfoField[] } {
   const missing: ReviewInfoField[] = [];
-  if (!first(info, REVIEW_INFO_KEYS.name)) missing.push("name");
-  if (!first(info, REVIEW_INFO_KEYS.address)) missing.push("address");
+  if (!has(business.name)) missing.push("name");
+  if (!has(business.address)) missing.push("address");
   const recommended: ReviewInfoField[] = [];
-  if (!hasLogo) recommended.push("logo");
-  if (!first(info, REVIEW_INFO_KEYS.phone)) recommended.push("phone");
+  if (!has(business.logoKey)) recommended.push("logo");
+  if (!has(business.phone)) recommended.push("phone");
   return { ready: missing.length === 0, missing, recommended };
-}
-
-/** The review page's business details: Business info first, Google place as fallback. */
-export function reviewBusiness(
-  info: Record<string, string[]> | null | undefined,
-  place: { businessName: string; address: string | null }
-) {
-  return {
-    name: first(info, REVIEW_INFO_KEYS.name) ?? place.businessName,
-    address: first(info, REVIEW_INFO_KEYS.address) ?? place.address,
-    phone: first(info, REVIEW_INFO_KEYS.phone),
-  };
 }
 
 /** Ratings at or below this get the private feedback form first. */

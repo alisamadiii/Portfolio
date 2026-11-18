@@ -61,7 +61,11 @@ export function SidebarLink({
       ) : (
         <>
           {Logo ? (
-            <Logo className="size-4" />
+            <Logo className="size-[19px]" />
+          ) : item.tile && Icon ? (
+            <span className="flex size-[19px] shrink-0 items-center justify-center rounded-[5px] bg-coral text-white">
+              <Icon className="size-3.5" strokeWidth={2.2} aria-hidden />
+            </span>
           ) : (
             Icon && (
               <Icon

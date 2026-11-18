@@ -33,10 +33,15 @@ import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { deleteProjectLogos } from "@workspace/trpc/lib/logo";
 import { settleAndCancel } from "@workspace/trpc/lib/payment/settle-subscription";
 
+import { projectBusinessRouter } from "./project-business";
+
 /** Apps whose data lives on the project's agency_client row. */
 const AGENCY_APPS: readonly AppId[] = ["leads", "google-ads"];
 
 export const projectRouter = createTRPCRouter({
+  // Business details (name, phone, address, hours, Google listing).
+  business: projectBusinessRouter,
+
   /**
    * Delete everything about a project — both its data and its external
    * resources — and remove its hub_project row. Runs the same for GitHub and
@@ -197,35 +202,6 @@ export const projectRouter = createTRPCRouter({
           .set({ websiteUrl })
           .where(eq(hubProject.id, ctx.projectId));
         return { websiteUrl };
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw toTRPCError(error);
-      }
-    }),
-
-  // Display name from project Settings. Empty clears it (falls back to the
-  // website host, then the repo slug). Same rule as the website URL.
-  setName: cmsFullAccessProcedure
-    .input(z.object({ name: z.string().trim().max(80).nullable() }))
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const [project] = await db
-          .select({ ownerId: hubProject.githubConnectedUserId })
-          .from(hubProject)
-          .where(eq(hubProject.id, ctx.projectId))
-          .limit(1);
-        if (!project) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
-        }
-        if (!isAdminUser(ctx.user) && project.ownerId !== ctx.user.id) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Only the project owner or an admin can rename the site.",
-          });
-        }
-        const name = input.name?.replace(/\s+/g, " ").trim() || null;
-        await db.update(hubProject).set({ name }).where(eq(hubProject.id, ctx.projectId));
-        return { name };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
         throw toTRPCError(error);

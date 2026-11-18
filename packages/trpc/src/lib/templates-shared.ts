@@ -94,13 +94,14 @@ export const matchPlaceholders = (query: string) => {
 
 // ─── Values ──────────────────────────────────────────────────────
 
-/** Business info keys (agency_client.businessInfo) behind the business placeholders. */
-export const BUSINESS_CONTACT_KEYS = {
-  name: "website", // labelled "Business name" in Business info
-  phone: "businessPhone",
-  address: "businessAddress",
-  hours: "businessHours",
-} as const;
+/** The project's business details (hub_project, edited in Settings) behind the business placeholders. */
+export type PlaceholderBusiness = {
+  name?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  hours?: string | null;
+  websiteUrl?: string | null;
+};
 
 /**
  * Every placeholder's value for one lead + project (+ meeting time). Shared so
@@ -108,15 +109,14 @@ export const BUSINESS_CONTACT_KEYS = {
  */
 export function placeholderValues(input: {
   lead?: { name?: string | null; email?: string | null; phone?: string | null; message?: string | null } | null;
-  businessInfo?: Record<string, string[] | undefined> | null;
-  websiteUrl?: string | null;
+  business?: PlaceholderBusiness | null;
   myName?: string | null;
   meetingStart?: Date | null;
   /** IANA zone for the meeting date/time text (the booker's browser). */
   timeZone?: string;
 }): PlaceholderValues {
-  const info = input.businessInfo ?? {};
-  const one = (key: string) => info[key]?.find((v) => v?.trim())?.trim() ?? "";
+  const b = input.business ?? {};
+  const one = (value: string | null | undefined) => value?.trim() ?? "";
   const start = input.meetingStart;
   const fmt = (opts: Intl.DateTimeFormatOptions) =>
     start ? new Intl.DateTimeFormat("en-US", { ...opts, timeZone: input.timeZone }).format(start) : "";
@@ -126,11 +126,11 @@ export function placeholderValues(input: {
     "lead email": input.lead?.email ?? "",
     "lead phone": input.lead?.phone ?? "",
     "lead message": input.lead?.message ?? "",
-    "business name": one(BUSINESS_CONTACT_KEYS.name),
-    "business phone": one(BUSINESS_CONTACT_KEYS.phone),
-    "business address": one(BUSINESS_CONTACT_KEYS.address),
-    "business hours": one(BUSINESS_CONTACT_KEYS.hours),
-    website: input.websiteUrl ?? "",
+    "business name": one(b.name),
+    "business phone": one(b.phone),
+    "business address": one(b.address),
+    "business hours": one(b.hours),
+    website: one(b.websiteUrl),
     "meeting date": fmt({ weekday: "long", month: "long", day: "numeric" }),
     "meeting time": fmt({ hour: "numeric", minute: "2-digit" }),
     "my name": input.myName ?? "",

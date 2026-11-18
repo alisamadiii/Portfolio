@@ -145,7 +145,7 @@ export async function POST(
   )?.[1];
 
   const siteName =
-    hostOf(client.websiteUrl) ?? client.repo ?? client.origins?.[0] ?? "your site";
+    client.name?.trim() || hostOf(client.websiteUrl) || client.repo || client.origins?.[0] || "your site";
   const title = `New message from ${senderName ?? replyTo ?? siteName}`;
   const lines: [string, string][] = entries.map(([key, value]) => [
     // "full_name" → "Full name"

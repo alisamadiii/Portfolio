@@ -39,15 +39,19 @@ export function isRateLimited(
 
   if (current >= maxRequests) return true;
 
-  rateLimitCache.set(key, current + 1);
+  rateLimitCache.set(key, current + 1, { ttl: windowMs });
   return false;
 }
 
-export async function rateLimit(maxRequests = 10, windowMs = 60000) {
+/**
+ * Throws TOO_MANY_REQUESTS past `maxRequests` per IP in the window. `scope`
+ * gives a feature its own bucket (e.g. each scraper), so limits don't mix.
+ */
+export async function rateLimit(maxRequests = 10, windowMs = 60000, scope = "") {
   const ip = (await getIp()) || "unknown";
 
   const timeWindow = Math.floor(Date.now() / windowMs);
-  const key = `${ip}:${timeWindow}`;
+  const key = `${scope}:${ip}:${timeWindow}`;
 
   const current = rateLimitCache.get(key) || 0;
 
@@ -64,6 +68,6 @@ export async function rateLimit(maxRequests = 10, windowMs = 60000) {
     });
   }
 
-  rateLimitCache.set(key, current + 1);
+  rateLimitCache.set(key, current + 1, { ttl: windowMs });
   return true;
 }

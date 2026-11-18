@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
-import { ExternalLink, Eye, EyeOff, Link2, RefreshCw, Star } from "lucide-react";
+import { ExternalLink, Eye, EyeOff, MapPin, RefreshCw, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -11,18 +11,19 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { CopyBlock } from "@/components/agency/install-snippet";
+import { AiPromptBlock, CopyBlock } from "@/components/agency/install-snippet";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { Badge } from "@/components/ds/ui/badge";
-import { Button, ButtonAnchor } from "@/components/ds/ui/button";
+import { Button, ButtonAnchor, ButtonLink } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
-import { Input } from "@/components/ds/ui/field";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
+import { reviewsPrompt } from "@/lib/embed-prompts";
+import { repoPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Data = RouterOutputs["googleReviews"]["get"];
@@ -37,6 +38,9 @@ const RATING_TABS = [
 type RatingFilter = (typeof RATING_TABS)[number]["id"];
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");
+
+/** The listing lives in Settings; every "change" goes there. */
+const settingsHref = (projectId: string) => `${repoPath(projectId, "settings")}#google-listing`;
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -93,11 +97,13 @@ export function GoogleReviewsPage() {
   return (
     <div className="flex flex-col gap-6">
       {header}
-      {!data.source ? (
-        <ConnectCard suggestedPlaceId={data.suggestedPlaceId} />
+      {!data.placeId ? (
+        <ListingRequired projectId={projectId} />
+      ) : !data.source ? (
+        <ConnectCard data={data} />
       ) : (
         <>
-          <ListingCard source={data.source} />
+          <ListingCard data={data} source={data.source} />
           <KpiGrid
             items={[
               { label: "Google rating", value: data.source.rating != null ? `${data.source.rating.toFixed(1)} / 5` : "—" },
@@ -137,87 +143,73 @@ function useConnect(onDone?: () => void) {
   );
 }
 
-function ConnectForm({ onDone }: { onDone?: () => void }) {
-  const projectId = useRouteProjectId();
-  const [link, setLink] = useState("");
-  const connect = useConnect(onDone);
+/** No Google listing in Settings yet: nothing to sync. */
+function ListingRequired({ projectId }: { projectId: string }) {
   return (
-    <form
-      className="flex flex-wrap gap-2"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (link.trim()) connect.mutate({ projectId, link: link.trim() });
-      }}
-    >
-      <Input
-        value={link}
-        onChange={(e) => setLink(e.target.value)}
-        placeholder="https://maps.app.goo.gl/… or https://share.google/…"
-        className="min-w-[240px] flex-1"
-        aria-label="Google Maps link"
+    <Card>
+      <EmptyState
+        icon={<MapPin className="size-5" />}
+        title="Add your Google listing first"
+        text="We read reviews from your business on Google Maps. Find it under Google listing in Settings, then come back here."
+        action={
+          <ButtonLink variant="primary" href={settingsHref(projectId)}>
+            Open Settings
+          </ButtonLink>
+        }
       />
-      <Button
-        type="submit"
-        variant="dark"
-        icon={<Link2 className="size-4" />}
-        disabled={connect.isPending || !link.trim()}
-      >
-        {connect.isPending ? "Reading reviews…" : "Connect"}
-      </Button>
-    </form>
+    </Card>
   );
 }
 
-function ConnectCard({ suggestedPlaceId }: { suggestedPlaceId: string | null }) {
+/** The listing from Settings (name, address) with a way to change it there. */
+function Listing({ data }: { data: Data }) {
+  const projectId = useRouteProjectId();
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-inner border border-line px-4 py-3">
+      <MapPin className="size-4 shrink-0 text-dim" aria-hidden />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-sm font-medium text-ink">{data.businessName || "Your listing"}</span>
+        {data.address && <span className="truncate text-[13px] text-dim">{data.address}</span>}
+      </div>
+      <ButtonLink size="sm" variant="outline" href={settingsHref(projectId)}>
+        Change in Settings
+      </ButtonLink>
+    </div>
+  );
+}
+
+function ConnectCard({ data }: { data: Data }) {
   const projectId = useRouteProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const connect = useConnect();
 
-  if (!fullAccess) {
-    return (
-      <Card>
-        <EmptyState
-          icon={<Star className="size-5" />}
-          title="No Google listing connected"
-          text="Ask the site owner to connect the business's Google Maps listing."
-        />
-      </Card>
-    );
-  }
-
   return (
     <Card>
-      <CardHeader title="Connect your Google listing" divided />
+      <CardHeader title="Start syncing your reviews" divided />
       <div className="flex flex-col gap-4 p-6">
         <p className="text-sm text-dim">
-          Open your business on Google Maps, tap Share, copy the link and paste it here. We save your
-          50 newest reviews now, then add new ones every day.
+          We save the 50 newest reviews from your Google listing now, then add new ones every day.
         </p>
-        <ConnectForm />
-        {suggestedPlaceId && (
-          <p className="text-sm text-dim">
-            Or use the business already set up in Feedback:{" "}
-            <button
-              type="button"
-              className="font-medium text-coral-text hover:underline disabled:opacity-60"
-              disabled={connect.isPending}
-              onClick={() => connect.mutate({ projectId, link: suggestedPlaceId })}
-            >
-              {connect.isPending ? "Reading reviews…" : "Use that listing"}
-            </button>
-          </p>
+        <Listing data={data} />
+        {fullAccess ? (
+          <div>
+            <Button variant="primary" disabled={connect.isPending} onClick={() => connect.mutate({ projectId })}>
+              {connect.isPending ? "Reading reviews…" : "Start syncing"}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-dim">Ask the site owner to start syncing reviews.</p>
         )}
       </div>
     </Card>
   );
 }
 
-function ListingCard({ source }: { source: Source }) {
+function ListingCard({ data, source }: { data: Data; source: Source }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const projectId = useRouteProjectId();
   const fullAccess = useProject()?.role === "full-access";
-  const [changing, setChanging] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: trpc.googleReviews.pathKey() });
@@ -233,7 +225,7 @@ function ListingCard({ source }: { source: Source }) {
   const disconnect = useMutation(
     trpc.googleReviews.disconnect.mutationOptions({
       onSuccess: () => {
-        toast.success("Google listing removed.");
+        toast.success("Review syncing stopped.");
         void invalidate();
       },
       onError: (error) => toast.error(error.message),
@@ -243,65 +235,54 @@ function ListingCard({ source }: { source: Source }) {
   return (
     <Card>
       <CardHeader
-        title={source.businessName ?? "Your Google listing"}
+        title="Your Google listing"
         divided
         action={
           fullAccess && (
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => setChanging((v) => !v)}>
-                {changing ? "Cancel" : "Change listing"}
-              </Button>
-              <Button
-                size="sm"
-                icon={<RefreshCw className={cn("size-4", sync.isPending && "animate-spin")} />}
-                disabled={sync.isPending}
-                onClick={() => sync.mutate({ projectId })}
-              >
-                {sync.isPending ? "Syncing…" : "Sync now"}
-              </Button>
-            </div>
+            <Button
+              size="sm"
+              icon={<RefreshCw className={cn("size-4", sync.isPending && "animate-spin")} />}
+              disabled={sync.isPending}
+              onClick={() => sync.mutate({ projectId })}
+            >
+              {sync.isPending ? "Syncing…" : "Sync now"}
+            </Button>
           )
         }
       />
       <div className="flex flex-col gap-4 p-6 text-sm">
+        <Listing data={data} />
         {source.lastError && (
           <p className="rounded-inner border border-line bg-canvas px-4 py-3 text-dim">
             The last check didn&apos;t finish. We&apos;ll try again tomorrow, or press Sync now.
           </p>
         )}
-        {changing ? (
-          <>
-            <p className="text-dim">
-              Paste the new listing&apos;s Google Maps link. Reviews saved from the current listing are removed.
-            </p>
-            <ConnectForm onDone={() => setChanging(false)} />
-            <button
-              type="button"
-              className="self-start text-[13px] text-dim hover:text-ink hover:underline"
-              onClick={() => setDisconnecting(true)}
-            >
-              Disconnect and delete saved reviews
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <ButtonAnchor href={source.url} target="_blank" rel="noopener noreferrer" icon={<ExternalLink className="size-4" />}>
-              Open on Google Maps
+        <div className="flex flex-wrap gap-2">
+          <ButtonAnchor href={source.url} target="_blank" rel="noopener noreferrer" icon={<ExternalLink className="size-4" />}>
+            Open on Google Maps
+          </ButtonAnchor>
+          {source.writeReviewUrl && (
+            <ButtonAnchor href={source.writeReviewUrl} target="_blank" rel="noopener noreferrer" icon={<Star className="size-4" />}>
+              Review link
             </ButtonAnchor>
-            {source.writeReviewUrl && (
-              <ButtonAnchor href={source.writeReviewUrl} target="_blank" rel="noopener noreferrer" icon={<Star className="size-4" />}>
-                Review link
-              </ButtonAnchor>
-            )}
-          </div>
+          )}
+        </div>
+        {fullAccess && (
+          <button
+            type="button"
+            className="self-start text-[13px] text-dim hover:text-ink hover:underline"
+            onClick={() => setDisconnecting(true)}
+          >
+            Stop syncing and delete saved reviews
+          </button>
         )}
       </div>
       <ConfirmDialog
         open={disconnecting}
         onOpenChange={setDisconnecting}
-        title="Disconnect Google listing?"
-        description="Every saved review is deleted and your website stops showing them. This can't be undone."
-        confirmLabel="Disconnect"
+        title="Stop syncing reviews?"
+        description="Every saved review is deleted and your website stops showing them. Your Google listing stays in Settings. This can't be undone."
+        confirmLabel="Stop syncing"
         danger
         onConfirm={() => disconnect.mutate({ projectId })}
       />
@@ -501,6 +482,7 @@ function InstallCard() {
           an <code>&lt;a&gt;</code> to the review on Google. <code>data-limit=&quot;6&quot;</code> on the script
           loads fewer reviews.
         </p>
+        <AiPromptBlock prompt={reviewsPrompt({ apiUrl: API_URL, projectId })} />
       </div>
     </Card>
   );

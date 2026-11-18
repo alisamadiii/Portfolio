@@ -214,10 +214,20 @@ export const hubProject = pgTable(
     wixInstanceId: text("wix_instance_id"),
     wixSiteId: text("wix_site_id"),
     wixConnectedUserId: text("wix_connected_user_id"),
-    // The business logo (Business info › Your business): an R2 key in the
-    // public bucket, logos/<projectId>/<content-hash>.webp. One object per
-    // project; replacing it deletes the previous key.
+    // The business logo (Settings › Logo): an R2 key in the public bucket,
+    // logos/<projectId>/<content-hash>.webp. One object per project;
+    // replacing it deletes the previous key.
     logoKey: text("logo_key"),
+    // Business details, the one copy every app reads: edited in project
+    // Settings, auto-filled (empties only) by Feedback's place pick and the
+    // Google Reviews sync. Maps + write-review URLs derive from the place id.
+    phone: text("phone"),
+    address: text("address"),
+    // Multiline, as typed (one line per day works best).
+    hours: text("hours"),
+    googlePlaceId: text("google_place_id"),
+    // The Business Profile review link, normalized https://g.page/r/<code>/review.
+    googleReviewUrl: text("google_review_url"),
     // Hidden row: an upload reserved but not yet finalized (legacy: old
     // delete tombstones). Every project listing filters hidden=false.
     hidden: boolean("hidden").notNull().default(false),
@@ -318,14 +328,14 @@ export const hubReviewLink = pgTable("hub_review_link", {
   // links already handed out keep working.
   id: text("id").primaryKey(),
   projectId: uuid("project_id").notNull().unique(),
-  placeId: text("place_id").notNull(),
-  businessName: text("business_name").notNull(),
+  // Legacy: the place, name, address and review link now live on
+  // hub_project (googlePlaceId, name, address, googleReviewUrl) since
+  // migration 0070. Nothing reads or writes these; dropped in a follow-up
+  // migration once prod is backfilled.
+  placeId: text("place_id"),
+  businessName: text("business_name"),
   address: text("address"),
-  // Google place types, to tell a business from a bare street address
-  // (Google only opens the review popup for businesses).
   placeTypes: text("place_types").array(),
-  // Optional official g.page/r/<code>/review link pasted from the Business
-  // Profile; overrides the placeid link when set.
   googleReviewUrl: text("google_review_url"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -372,6 +382,9 @@ export const hubReviewsSource = pgTable(
     url: text("url").notNull(),
     // Provider's id for the listing (Google place id), filled by the first scrape.
     externalId: text("external_id"),
+    // Legacy: the business name comes from hub_project.name (Settings) since
+    // migration 0070. Nothing reads or writes this; dropped with the
+    // hub_review_link place columns in a follow-up migration.
     businessName: text("business_name"),
     rating: real("rating"),
     totalReviews: integer("total_reviews"),

@@ -205,6 +205,9 @@ const agencyWriteProcedure = agencyProcedure.use(async ({ next, ctx }) => {
 // Business info + planned ad campaigns are free on every plan and every
 // project: project access is enough (no agency plan, no Leads feature). The
 // agency_client row that holds them is created on the first save.
+// Business info keys that moved to hub_project; never written again.
+const LEGACY_BUSINESS_KEYS = new Set(["website", "businessPhone", "businessAddress", "businessHours"]);
+
 const businessProcedure = authenticatedProcedure
   .input(z.object({ projectId: z.string().uuid() }))
   .use(async ({ next, ctx, input }) => {
@@ -762,7 +765,13 @@ const leadsRouter = createTRPCRouter({
       }
       const token = await projectCalendarToken(ctx.client.projectId);
       const [project] = await db
-        .select({ websiteUrl: hubProject.websiteUrl })
+        .select({
+          name: hubProject.name,
+          phone: hubProject.phone,
+          address: hubProject.address,
+          hours: hubProject.hours,
+          websiteUrl: hubProject.websiteUrl,
+        })
         .from(hubProject)
         .where(eq(hubProject.id, ctx.client.projectId))
         .limit(1);
@@ -775,8 +784,7 @@ const leadsRouter = createTRPCRouter({
       }
       const values = placeholderValues({
         lead,
-        businessInfo: ctx.client.businessInfo,
-        websiteUrl: project?.websiteUrl,
+        business: project,
         myName: ctx.session.user.name,
         meetingStart: start,
         timeZone,
@@ -1862,6 +1870,7 @@ export const agencyRouter = createTRPCRouter({
   }),
 
   // Per-client brand assets: a map of resourceKey -> list of value options.
+  // (Business name/phone/address/hours live on hub_project: project.business.)
   // Keys/shape are driven by the hub's BUSINESS_RESOURCES config, so adding a
   // new list is a config change only — no schema or router change here.
   businessInfo: createTRPCRouter({
@@ -1882,6 +1891,8 @@ export const agencyRouter = createTRPCRouter({
         // content at all are dropped.
         const cleaned = Object.fromEntries(
           Object.entries(input.businessInfo)
+            // Name, phone, address and hours moved to hub_project (Settings).
+            .filter(([key]) => !LEGACY_BUSINESS_KEYS.has(key))
             .map(([key, values]) => {
               const trimmed = values.map((v) => v.trim());
               while (trimmed.length && !trimmed[trimmed.length - 1])

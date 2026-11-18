@@ -1,9 +1,13 @@
 import { TRPCError } from "@trpc/server";
+import { eq } from "drizzle-orm";
 import z from "zod";
 
+import { db } from "@workspace/drizzle/pool";
+import { hubProject } from "@workspace/drizzle/schema";
 import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 
 import { isAdminUser } from "../lib/authz-shared";
+import { projectDisplayName } from "../lib/partners-shared";
 
 import {
   cmsFullAccessProcedure,
@@ -144,7 +148,17 @@ const resolveFrom = async (mail: ProjectMail, input: z.infer<typeof fromInput>) 
   }
 };
 
-const businessName = (ctx: Ctx) => ctx.repo;
+/** The business from Settings (hub_project): name for the starter content, address for the footer. */
+const businessFor = async (ctx: Ctx) => {
+  const row = await db.query.hubProject.findFirst({
+    where: eq(hubProject.id, ctx.projectId),
+    columns: { name: true, repo: true, websiteUrl: true, address: true },
+  });
+  return {
+    name: row ? projectDisplayName(row) : ctx.repo,
+    address: row?.address ?? null,
+  };
+};
 
 const listId = id.optional();
 
@@ -186,7 +200,7 @@ const campaignsRouter = createTRPCRouter({
       const mail = await mailFor(ctx);
       const from = await resolveFrom(mail, input);
       const contactBookId = await resolveList(mail, input.listId);
-      let content = starterContent(businessName(ctx));
+      let content = starterContent(await businessFor(ctx));
       if (input.templateId) {
         const template = await teamFetch<{ content: string | null }>(
           mail,
@@ -455,7 +469,7 @@ const templatesRouter = createTRPCRouter({
       const mail = await mailFor(ctx);
       return teamFetch<TemplateRow>(mail, "/api/v1/templates", {
         method: "POST",
-        body: { ...input, content: starterContent(businessName(ctx)) },
+        body: { ...input, content: starterContent(await businessFor(ctx)) },
       });
     }),
 

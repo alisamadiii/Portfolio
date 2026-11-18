@@ -11,12 +11,14 @@ import { hubReview, hubReviewsSource } from "@workspace/drizzle/schema";
 import {
   type ApifyReviewItem,
   type ReviewsTarget,
+  googleMapsUrl,
   isShortGoogleLink,
   parseReviewsTarget,
   pickReviews,
   placeInfo,
 } from "./google-reviews-shared";
 import { getPlaceDetails } from "./places";
+import { setProjectBusiness } from "./project-business";
 
 const ACTOR = "compass~google-maps-reviews-scraper";
 // First sync saves the newest 50 reviews; daily syncs only read what was
@@ -79,10 +81,49 @@ export async function resolveReviewsLink(input: string): Promise<ReviewsTarget |
 }
 
 /** Target string as stored on the source row. */
+/**
+ * Point the project's Google source at a place id (the listing in Settings).
+ * A different listing starts over: its reviews aren't this business's, so
+ * they are deleted and the next sync is a first sync. No-op when unchanged.
+ */
+export async function bindGoogleSource(projectId: string, placeId: string) {
+  const existing = await db.query.hubReviewsSource.findFirst({
+    where: and(eq(hubReviewsSource.projectId, projectId), eq(hubReviewsSource.provider, "google")),
+    columns: { externalId: true },
+  });
+  if (existing?.externalId === placeId) return;
+  if (existing) {
+    await db
+      .delete(hubReview)
+      .where(and(eq(hubReview.projectId, projectId), eq(hubReview.provider, "google")));
+  }
+  const values = {
+    url: googleMapsUrl(placeId),
+    externalId: placeId,
+    rating: null,
+    totalReviews: null,
+    firstSyncedAt: null,
+    lastSyncedAt: null,
+    lastError: null,
+    updatedAt: new Date(),
+  };
+  await db
+    .insert(hubReviewsSource)
+    .values({ projectId, provider: "google", ...values })
+    .onConflictDoUpdate({ target: [hubReviewsSource.projectId, hubReviewsSource.provider], set: values });
+}
+
+/** Settings changed the listing: follow it if reviews are being synced. */
+export async function rebindGoogleSourceIfConnected(projectId: string, placeId: string) {
+  const existing = await db.query.hubReviewsSource.findFirst({
+    where: and(eq(hubReviewsSource.projectId, projectId), eq(hubReviewsSource.provider, "google")),
+    columns: { id: true },
+  });
+  if (existing) await bindGoogleSource(projectId, placeId);
+}
+
 export const targetToUrl = (target: ReviewsTarget) =>
-  "placeId" in target
-    ? `https://www.google.com/maps/place/?q=place_id:${target.placeId}`
-    : target.url;
+  "placeId" in target ? googleMapsUrl(target.placeId) : target.url;
 
 export type SyncResult = { ok: true; added: number } | { ok: false; error: string };
 
@@ -140,11 +181,19 @@ export async function syncGoogleReviews(projectId: string): Promise<SyncResult> 
       info.totalReviews ??= place?.userRatingCount ?? null;
     }
 
+    // The listing is the project's Google place: Settings learns the id, and
+    // the name/address where the owner left them empty.
+    if (placeId) await setProjectBusiness(projectId, { googlePlaceId: placeId }, { onlyIfEmpty: true });
+    await setProjectBusiness(
+      projectId,
+      { name: info.businessName, address: info.address },
+      { onlyIfEmpty: true }
+    );
+
     await db
       .update(hubReviewsSource)
       .set({
         externalId: placeId,
-        businessName: info.businessName ?? source.businessName,
         rating: info.rating ?? source.rating,
         totalReviews: info.totalReviews ?? source.totalReviews,
         firstSyncedAt: source.firstSyncedAt ?? startedAt,

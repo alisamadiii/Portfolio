@@ -47,7 +47,7 @@ export function ProjectSidebar({
               className="overflow-hidden"
             >
               <SidebarLink
-                item={{ id: a.id, label: a.name, icon: a.icon, logo: a.logo, path: a.path }}
+                item={{ id: a.id, label: a.name, icon: a.icon, logo: a.logo, tile: !a.logo, path: a.path }}
                 href={url(a.path)}
                 active={isActive(url(a.path))}
               />

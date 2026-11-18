@@ -170,7 +170,18 @@ describe("helpers", () => {
   it("placeInfo takes listing fields from the first item that has them", () => {
     expect(
       placeInfo([item(1), item(2, { placeId: "ChIJx", title: "Shop", totalScore: 4.9, reviewsCount: 263 })])
-    ).toEqual({ placeId: "ChIJx", businessName: "Shop", rating: 4.9, totalReviews: 263 });
-    expect(placeInfo([])).toEqual({ placeId: null, businessName: null, rating: null, totalReviews: null });
+    ).toEqual({ placeId: "ChIJx", businessName: "Shop", address: null, rating: 4.9, totalReviews: 263 });
+    expect(placeInfo([])).toEqual({
+      placeId: null,
+      businessName: null,
+      address: null,
+      rating: null,
+      totalReviews: null,
+    });
+  });
+
+  // The sync fills Settings' address from the listing when the owner left it empty.
+  it("placeInfo picks up the listing address", () => {
+    expect(placeInfo([item(1, { address: "1 Main St, Orlando, FL" })]).address).toBe("1 Main St, Orlando, FL");
   });
 });

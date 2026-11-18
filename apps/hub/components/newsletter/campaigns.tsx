@@ -191,6 +191,8 @@ export function NewCampaignDialog({
     ...trpc.newsletter.contacts.lists.queryOptions({ projectId }),
     enabled: open,
   });
+  // The From name defaults to the business name from Settings.
+  const business = useQuery({ ...trpc.project.business.get.queryOptions({ projectId }), enabled: open });
   const verified = domain.data?.status === "SUCCESS";
 
   const create = useMutation(
@@ -270,7 +272,12 @@ export function NewCampaignDialog({
               </Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="From name">
-                  <Input name="fromName" placeholder="Your business" />
+                  <Input
+                    name="fromName"
+                    key={business.data?.name ?? ""}
+                    defaultValue={business.data?.name ?? ""}
+                    placeholder="Your business"
+                  />
                 </Field>
                 <Field label="From address">
                   <div className="flex items-center gap-1.5">

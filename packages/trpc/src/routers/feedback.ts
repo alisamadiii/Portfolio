@@ -3,19 +3,12 @@ import { and, count, desc, eq, lt, lte, sql } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/pool";
-import {
-  agencyClient,
-  hubProject,
-  hubReviewFeedback,
-  hubReviewLink,
-} from "@workspace/drizzle/schema";
+import { hubReviewFeedback, hubReviewLink } from "@workspace/drizzle/schema";
 
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
 import { requireApp } from "../lib/payment/entitlements";
-import { getPlaceDetails, isAddressResult, searchPlacesLite } from "../lib/places";
+import { getProjectBusiness, setProjectBusiness } from "../lib/project-business";
 import {
-  REVIEW_FIELD_LABELS,
-  REVIEW_INFO_KEYS,
   businessSearchQuery,
   newReviewSlug,
   parseGoogleReviewUrl,
@@ -25,7 +18,9 @@ import {
 
 // Feedback app: one public review link per project. Customers rate 1 to 5;
 // 5 stars are sent to Google, lower ratings leave private feedback that shows
-// here. The public side is apps/api /api/review/[id].
+// here. The business and its Google place live on hub_project (Settings);
+// this router only owns the public slug and the ratings. The public side is
+// apps/api /api/review/[id].
 const appGate = <T extends { user: { email: string; role?: string | null }; projectId: string }>(ctx: T) =>
   requireApp(ctx.user, ctx.projectId, "feedback");
 const appCmsProcedure = cmsProcedure.use(async ({ ctx, next }) => {
@@ -37,122 +32,59 @@ const appCmsFullAccessProcedure = cmsFullAccessProcedure.use(async ({ ctx, next 
   return next();
 });
 
-/** Business info + logo, and whether they're enough for the review page. */
-async function businessFor(projectId: string) {
-  const [project, client] = await Promise.all([
-    db.query.hubProject.findFirst({
-      where: eq(hubProject.id, projectId),
-      columns: { logoKey: true },
-    }),
-    db.query.agencyClient.findFirst({
-      where: eq(agencyClient.projectId, projectId),
-      columns: { businessInfo: true },
-    }),
-  ]);
-  const info = client?.businessInfo ?? null;
-  return { info, status: reviewInfoStatus(info, !!project?.logoKey) };
-}
-
 const RATING_FILTERS = ["all", "5", "4", "3", "low"] as const;
 const PAGE_SIZE = 50;
 
 export const feedbackRouter = createTRPCRouter({
-  /** Setup state: is Business info ready, and the link if it exists. */
+  /** Setup state: the business from Settings, and the link if it exists. */
   status: appCmsProcedure.query(async ({ ctx }) => {
-    const [{ info, status }, link] = await Promise.all([
-      businessFor(ctx.projectId),
+    const [business, link] = await Promise.all([
+      getProjectBusiness(ctx.projectId),
       db.query.hubReviewLink.findFirst({
         where: eq(hubReviewLink.projectId, ctx.projectId),
+        columns: { id: true },
       }),
     ]);
-    const name = info?.[REVIEW_INFO_KEYS.name]?.[0]?.trim() ?? "";
-    const address = info?.[REVIEW_INFO_KEYS.address]?.[0]?.trim() ?? "";
+    if (!business) throw new TRPCError({ code: "NOT_FOUND" });
+    const status = reviewInfoStatus(business);
 
     return {
       ...status,
       // Prefills the Google Maps search (name + city, never the street).
-      defaultQuery: businessSearchQuery(name, address),
+      defaultQuery: businessSearchQuery(business.name ?? "", business.address ?? ""),
+      placeId: business.googlePlaceId,
+      businessName: business.name,
+      address: business.address,
       link: link
         ? {
             id: link.id,
             url: reviewPageUrl(link.id),
-            placeId: link.placeId,
-            businessName: link.businessName,
-            address: link.address,
             // Required before the link goes live (null = not pasted yet).
-            googleUrl: link.googleReviewUrl,
+            googleUrl: business.googleReviewUrl,
           }
         : null,
     };
   }),
 
-  /** Find the business on Google Maps. Runs on submit, never per keystroke. */
-  search: appCmsFullAccessProcedure
-    .input(z.object({ query: z.string().trim().min(2).max(200) }))
-    .mutation(async ({ input }) => {
-      const result = await searchPlacesLite(input.query);
-      if (result.error) {
-        console.error("[feedback] places search failed", result.error);
-        throw new TRPCError({
-          code: "BAD_GATEWAY",
-          message: "Google Maps search failed. Try again in a moment.",
-        });
-      }
-      // Only businesses: a street address has no Google reviews.
-      return result.places.filter((p) => !isAddressResult(p.types)).map((p) => ({
-        placeId: p.id,
-        name: p.displayName?.text ?? "",
-        address: p.formattedAddress ?? null,
-      }));
-    }),
-
-  /** Save the Google place. Keeps the existing slug so shared links keep working. */
-  setPlace: appCmsFullAccessProcedure
-    .input(z.object({ placeId: z.string().trim().min(1).max(300) }))
-    .mutation(async ({ ctx, input }) => {
-      const { status } = await businessFor(ctx.projectId);
-      if (!status.ready) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: `Add your ${status.missing
-            .map((f) => REVIEW_FIELD_LABELS[f].toLowerCase())
-            .join(" and ")} in Business info first.`,
-        });
-      }
-
-      let place;
-      try {
-        place = await getPlaceDetails(input.placeId);
-      } catch (error) {
-        console.error("[feedback] place details failed", error);
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "We couldn't find that business on Google Maps.",
-        });
-      }
-      if (isAddressResult(place.types)) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "That's an address, not a business listing. Pick your business from the results.",
-        });
-      }
-      const values = {
-        placeId: place.id,
-        placeTypes: place.types ?? [],
-        // A pasted review link belongs to the previous business.
-        googleReviewUrl: null,
-        businessName: place.displayName?.text ?? "",
-        address: place.formattedAddress ?? null,
-        updatedAt: new Date(),
-      };
-
-      const [row] = await db
-        .insert(hubReviewLink)
-        .values({ id: newReviewSlug(), projectId: ctx.projectId, ...values })
-        .onConflictDoUpdate({ target: hubReviewLink.projectId, set: values })
-        .returning();
-      return { id: row!.id, url: reviewPageUrl(row!.id) };
-    }),
+  /**
+   * Create the public link for the Google listing from Settings. Keeps the
+   * existing slug so shared links keep working.
+   */
+  createLink: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
+    const business = await getProjectBusiness(ctx.projectId);
+    if (!business?.googlePlaceId) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Set your Google listing in Settings first.",
+      });
+    }
+    const [row] = await db
+      .insert(hubReviewLink)
+      .values({ id: newReviewSlug(), projectId: ctx.projectId })
+      .onConflictDoUpdate({ target: hubReviewLink.projectId, set: { updatedAt: new Date() } })
+      .returning({ id: hubReviewLink.id });
+    return { id: row!.id, url: reviewPageUrl(row!.id) };
+  }),
 
   /** The Business Profile review link. Required: the review page is live only once it's set. */
   setGoogleUrl: appCmsFullAccessProcedure
@@ -165,14 +97,14 @@ export const feedbackRouter = createTRPCRouter({
           message: "Paste the review link from your Google Business Profile (g.page/r/.../review).",
         });
       }
-      const [row] = await db
-        .update(hubReviewLink)
-        .set({ googleReviewUrl: url, updatedAt: new Date() })
-        .where(eq(hubReviewLink.projectId, ctx.projectId))
-        .returning({ id: hubReviewLink.id });
-      if (!row) {
+      const link = await db.query.hubReviewLink.findFirst({
+        where: eq(hubReviewLink.projectId, ctx.projectId),
+        columns: { id: true },
+      });
+      if (!link) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Set up your review link first." });
       }
+      await setProjectBusiness(ctx.projectId, { googleReviewUrl: url });
       return { ok: true };
     }),
 

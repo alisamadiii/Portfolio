@@ -2,8 +2,7 @@
 
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
-import { useSearchParams } from "next/navigation";
-
+import { BusinessCard } from "@/components/settings/business-card";
 import { SiteLogoCard } from "@/components/settings/site-logo-card";
 import { StepShell } from "@/components/agency/business-info/step-shell";
 import { useBusinessInfo } from "@/components/agency/business-info/use-business-info";
@@ -11,16 +10,12 @@ import { NumberedList } from "@/components/ds/business-info/form-parts";
 import { TipCard, UsedIn } from "@/components/ds/business-info/side-cards";
 import { Card } from "@/components/ds/ui/card";
 import { Field, Input, Textarea } from "@/components/ds/ui/field";
+import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
-import { repoPath } from "@/lib/paths";
 
+// Name, phone, address and hours live on the project (Settings): the shared
+// BusinessCard above edits them. This step owns the marketing fields.
 const KEYS = [
-  { key: "website", initial: 1 },
-  // Contact details: [[business phone/address/hours]] in templates and the
-  // default location of appointments booked from Leads.
-  { key: "businessPhone", initial: 1 },
-  { key: "businessAddress", initial: 1 },
-  { key: "businessHours", initial: 1 },
   { key: "productDescription", initial: 1 },
   { key: "features", initial: 4 },
   { key: "goal", initial: 1 },
@@ -30,17 +25,15 @@ const USED_IN = [
   "The audience prompt in step 2",
   "Your tagline options in step 4",
   "Every search ad in step 7",
-  "Templates and appointments booked from Leads",
+  "Templates and appointments booked from Leads (name, phone, address, hours)",
   "Your Feedback review page (name, logo, address, phone)",
 ];
 
 export function StepBusiness() {
   const bi = useBusinessInfo(KEYS);
   const projectId = useRouteProjectId();
-  // Sent here from the Feedback app to finish setup: saving goes back there.
-  const fromFeedback = useSearchParams().get("from") === "feedback";
-  const saveAnd = (to?: string) =>
-    bi.saveAnd(fromFeedback ? repoPath(projectId, "feedback") : to);
+  const name = useProject()?.name ?? "";
+  const saveAnd = (to?: string) => bi.saveAnd(to);
   const description = bi.draft.productDescription?.[0] ?? "";
   const features = bi.draft.features ?? [];
 
@@ -63,41 +56,9 @@ export function StepBusiness() {
         <Skeleton className="h-96 w-full rounded-card" />
       ) : (
         <>
-        <SiteLogoCard name={bi.draft.website?.[0] ?? ""} />
+        <SiteLogoCard name={name} />
+        <BusinessCard projectId={projectId} />
         <Card className="flex flex-col gap-6 p-6">
-          <Field label="Business name" hint="The name customers know you by.">
-            <Input
-              value={bi.draft.website?.[0] ?? ""}
-              onChange={(e) => bi.setRow("website", 0, e.target.value)}
-            />
-          </Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Phone" optional>
-              <Input
-                type="tel"
-                value={bi.draft.businessPhone?.[0] ?? ""}
-                placeholder="(555) 123-4567"
-                onChange={(e) => bi.setRow("businessPhone", 0, e.target.value)}
-              />
-            </Field>
-            <Field label="Opening hours" optional>
-              <Input
-                value={bi.draft.businessHours?.[0] ?? ""}
-                placeholder="Mon to Fri, 9am to 5pm"
-                onChange={(e) => bi.setRow("businessHours", 0, e.target.value)}
-              />
-            </Field>
-          </div>
-
-          <Field label="Address" optional hint="Used for appointments you book from Leads and on your review page.">
-            <Input
-              value={bi.draft.businessAddress?.[0] ?? ""}
-              placeholder="123 Main St, Orlando, FL 32801"
-              onChange={(e) => bi.setRow("businessAddress", 0, e.target.value)}
-            />
-          </Field>
-
           <Field
             label="What you sell"
             hint="One or two sentences, the way you'd say it to a customer at the counter."

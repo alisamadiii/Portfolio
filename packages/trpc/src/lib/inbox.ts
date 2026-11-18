@@ -25,7 +25,7 @@ import {
   toE164,
 } from "./inbox-shared";
 import { putObject } from "./r2";
-import { BUSINESS_CONTACT_KEYS } from "./templates-shared";
+import { projectDisplayName } from "./partners-shared";
 import { sendSms, TelnyxError } from "./telnyx/client";
 
 // Leads inbox, server side: sending a text/email to a lead and taking in
@@ -54,20 +54,14 @@ export async function putInboxMedia(projectId: string, bytes: Uint8Array, conten
 export const INBOX_MEDIA_TYPES = Object.keys(MEDIA_TYPES);
 export const INBOX_MEDIA_MAX_BYTES = MEDIA_MAX_BYTES;
 
-/** The business name emails are signed with: Business info, else the site. */
+/** The business name emails are signed with: Settings, else the website host, else the repo. */
 async function businessName(client: Client) {
-  const fromInfo = client.businessInfo?.[BUSINESS_CONTACT_KEYS.name]?.find((v) => v?.trim())?.trim();
-  if (fromInfo) return fromInfo;
   const [project] = await db
-    .select({ repo: hubProject.repo, websiteUrl: hubProject.websiteUrl })
+    .select({ name: hubProject.name, repo: hubProject.repo, websiteUrl: hubProject.websiteUrl })
     .from(hubProject)
     .where(eq(hubProject.id, client.projectId))
     .limit(1);
-  return (
-    project?.websiteUrl?.replace(/^https?:\/\/(www\.)?/, "").replace(/\/.*$/, "") ||
-    project?.repo ||
-    "Our team"
-  );
+  return project ? projectDisplayName(project) : "Our team";
 }
 
 /** Replies to inbox emails go to the project's lead inbox, else the owner. */

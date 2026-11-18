@@ -26,6 +26,7 @@ import { Badge, type BadgeTone } from "@/components/ds/ui/badge";
 import { ButtonLink } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
 import { Progress } from "@/components/ds/ui/misc";
+import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 
 const BADGE_TONE: Record<StepStatus["tone"], BadgeTone> = {
@@ -116,6 +117,7 @@ const ANSWERS_GO = [
 export function BusinessInfoOverview() {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
+  const project = useProject();
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
 
@@ -143,7 +145,7 @@ export function BusinessInfoOverview() {
       </>
     );
 
-  const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? []);
+  const statuses = stepStatuses(info.data ?? {}, campaigns.data ?? [], project?.name);
   const done = doneCount(statuses);
   const total = BUSINESS_STEPS.length;
   const next = nextStep(statuses);

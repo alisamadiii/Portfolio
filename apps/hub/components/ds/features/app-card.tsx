@@ -38,7 +38,7 @@ export function AppCard({
   return (
     <div className="rounded-card border-line bg-surface hover:border-line-hover flex flex-col gap-3 border p-[18px]">
       <div className="flex items-center justify-between">
-        <IconTile tone={Logo ? "brand" : state === "locked" ? "neutral" : "coral"}>
+        <IconTile tone={Logo ? "brand" : state === "locked" ? "neutral" : "solid"}>
           {Logo ? (
             <Logo className="size-5" />
           ) : (
