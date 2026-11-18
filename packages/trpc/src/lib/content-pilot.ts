@@ -74,14 +74,19 @@ async function pilotError(res: Response): Promise<never> {
   const body = (await res.json().catch(() => null)) as {
     error?: string;
   } | null;
-  // 409/429 carry client-facing messages (capacity, busy repo) — pass them on.
+  // 409/422/429/502 carry client-facing messages (capacity, busy repo,
+  // unsupported framework, GitHub down). Pass them on.
   throw new TRPCError({
     code:
       res.status === 409
         ? "CONFLICT"
-        : res.status === 429
-          ? "TOO_MANY_REQUESTS"
-          : "INTERNAL_SERVER_ERROR",
+        : res.status === 422
+          ? "BAD_REQUEST"
+          : res.status === 429
+            ? "TOO_MANY_REQUESTS"
+            : res.status === 502
+              ? "BAD_GATEWAY"
+              : "INTERNAL_SERVER_ERROR",
     message: body?.error ?? `content-pilot ${res.status}`,
   });
 }
@@ -155,6 +160,25 @@ export async function pushBackup(projectId: string, repo: string): Promise<void>
     body: JSON.stringify({ repo }),
   });
   if (!res.ok) await pilotError(res);
+}
+
+/**
+ * Upload projects: make the workspace main the backup repo's latest commit
+ * ("GitHub" dialog, Pull latest commit). `sha` is the head the user saw;
+ * CONFLICT when GitHub moved on, BAD_REQUEST when the commit's framework is
+ * unsupported. The workspace is untouched on any error.
+ */
+export async function pullBackup(
+  projectId: string,
+  repo: string,
+  sha?: string
+): Promise<{ sha: string; message: string; framework: string }> {
+  const res = await pilotFetch(`/api/v1/imports/${projectId}/pull`, {
+    method: "POST",
+    body: JSON.stringify({ repo, sha }),
+  });
+  if (!res.ok) await pilotError(res);
+  return (await res.json()) as { sha: string; message: string; framework: string };
 }
 
 /**

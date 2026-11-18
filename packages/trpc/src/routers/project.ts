@@ -17,9 +17,10 @@ import { getEntitlement } from "@workspace/trpc/lib/payment/entitlements";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { assertProjectOwnerOrAdmin } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { deleteImport } from "@workspace/trpc/lib/content-pilot";
+import { deleteImport, getImport, pullBackup } from "@workspace/trpc/lib/content-pilot";
 import {
   archiveBackupRepo,
+  backupRepoInfo,
   hasWebsiteSetup,
   linkBackupRepo,
   linkedBackupRepo,
@@ -28,6 +29,7 @@ import {
   sourceFile,
   sourceTree,
 } from "@workspace/trpc/lib/github-backup";
+import { netlifyPlan } from "@workspace/trpc/lib/netlify";
 import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import { deleteProjectChildRows } from "@workspace/trpc/lib/cms/org-repos";
 import { deleteProjectLogos } from "@workspace/trpc/lib/logo";
@@ -254,6 +256,53 @@ export const projectRouter = createTRPCRouter({
       return sourceTree(input.projectId);
     }),
 
+  /**
+   * "GitHub" dialog on the project home (owner or admin, upload projects):
+   * the backup repo, its latest commit, and the sha the workspace was last
+   * backed up at, so the dialog can tell whether GitHub is ahead.
+   */
+  backupRepoInfo: authenticatedProcedure
+    .input(z.object({ projectId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      await assertUploadOwnerOrAdmin(ctx.session.user, input.projectId);
+      const [info, pilot] = await Promise.all([
+        backupRepoInfo(input.projectId),
+        getImport(input.projectId).catch(() => null),
+      ]);
+      return {
+        repo: info?.repo ?? null,
+        head: info?.head ?? null,
+        workspaceSha: pilot?.backup?.sha ?? null,
+        backupError: pilot?.backup?.error ?? null,
+      };
+    }),
+
+  /**
+   * Pull the backup repo's latest commit into the workspace: the pilot
+   * hard-resets main to it, so the workspace matches GitHub exactly. The live
+   * Netlify site keeps the old version until a redeploy, like Import.
+   */
+  pullFromBackup: cmsFullAccessProcedure
+    .input(z.object({ sha: z.string().regex(/^[0-9a-f]{40}$/) }))
+    .mutation(async ({ ctx, input }) => {
+      await assertProjectOwnerOrAdmin(ctx.session.user, ctx.projectId);
+      if (ctx.source !== "upload") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "GitHub projects update through GitHub." });
+      }
+      const repo = await linkedBackupRepo(ctx.projectId);
+      if (!repo) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "This project has no GitHub backup yet." });
+      }
+      const pulled = await pullBackup(ctx.projectId, repo.name, input.sha);
+      const [row] = await db
+        .update(hubProject)
+        .set({ githubUpdatedAt: new Date() })
+        .where(eq(hubProject.id, ctx.projectId))
+        .returning({ netlifySiteId: hubProject.netlifySiteId });
+      const plan = await netlifyPlan(ctx.projectId, ctx.user);
+      return { sha: pulled.sha, netlify: Boolean(row?.netlifySiteId) && plan.action === "deploy" };
+    }),
+
   /** Code browser: one file's contents (path only picks the image type). */
   sourceFile: authenticatedProcedure
     .input(
@@ -270,6 +319,19 @@ export const projectRouter = createTRPCRouter({
       return sourceFile(input.projectId, input.sha, input.path);
     }),
 });
+
+/** Owner or admin of an upload project; GitHub projects have no backup repo. */
+async function assertUploadOwnerOrAdmin(user: Parameters<typeof assertProjectOwnerOrAdmin>[0], projectId: string) {
+  await assertProjectOwnerOrAdmin(user, projectId);
+  const [project] = await db
+    .select({ source: hubProject.source })
+    .from(hubProject)
+    .where(eq(hubProject.id, projectId))
+    .limit(1);
+  if (project?.source !== "upload") {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "GitHub projects update through GitHub." });
+  }
+}
 
 async function canDownloadSource(user: Parameters<typeof assertProjectOwnerOrAdmin>[0], projectId: string) {
   await assertProjectOwnerOrAdmin(user, projectId);

@@ -114,6 +114,60 @@ export async function linkedBackupRepo(projectId: string): Promise<BackupRepo | 
   return toBackupRepo(repo);
 }
 
+export type BackupHead = {
+  sha: string;
+  message: string;
+  authorName: string | null;
+  authorLogin: string | null;
+  authorAvatar: string | null;
+  committedAt: string | null;
+  url: string;
+};
+
+type GithubCommit = {
+  sha: string;
+  html_url: string;
+  commit: { message: string; author: { name?: string; date?: string } | null };
+  author: { login: string; avatar_url: string } | null;
+};
+
+/**
+ * The backup repo plus its latest commit on the default branch ("GitHub"
+ * dialog on the project home). `head` is null for a repo nothing was pushed
+ * to yet; the whole thing is null when no repo is linked.
+ */
+export async function backupRepoInfo(projectId: string): Promise<{
+  repo: BackupRepo & { fullName: string; defaultBranch: string };
+  head: BackupHead | null;
+} | null> {
+  const { org, token } = config();
+  const linked = await linkedBackupRepo(projectId);
+  if (!linked) return null;
+  const full = await githubJson<GithubRepo>(`/repositories/${linked.id}`, token);
+  const defaultBranch = full?.default_branch ?? "main";
+  // 404 on an empty repo (no branch yet); 409 "Git Repository is empty" on some.
+  const res = await github(
+    `/repositories/${linked.id}/commits/${encodeURIComponent(defaultBranch)}`,
+    token
+  );
+  let head: BackupHead | null = null;
+  if (res.ok) {
+    const c = (await res.json()) as GithubCommit;
+    head = {
+      sha: c.sha,
+      message: c.commit.message,
+      authorName: c.commit.author?.name ?? null,
+      authorLogin: c.author?.login ?? null,
+      authorAvatar: c.author?.avatar_url ?? null,
+      committedAt: c.commit.author?.date ?? null,
+      url: c.html_url,
+    };
+  } else if (res.status !== 404 && res.status !== 409) {
+    throw new TRPCError({ code: "BAD_GATEWAY", message: `GitHub: ${res.status} ${res.statusText}` });
+  }
+  return { repo: { ...linked, fullName: `${org}/${linked.name}`, defaultBranch }, head };
+}
+
 /** Every repo in the backup org, most recently pushed first (admin linking). */
 export async function listBackupRepos(): Promise<BackupRepo[]> {
   const { org, token } = config();

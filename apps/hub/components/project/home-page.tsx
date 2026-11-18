@@ -24,6 +24,7 @@ import { useRouteProjectId } from "@/hooks/use-repo";
 import { APPS, appState } from "@/lib/apps";
 import { repoPath } from "@/lib/paths";
 
+import { GithubRepoDialog } from "./github-repo-dialog";
 import { LinkNetlifyDialog } from "./link-netlify-dialog";
 import { ReplaceSourceDialog } from "./replace-source-dialog";
 import { hostOf, SitePreview } from "./site-preview";
@@ -228,6 +229,9 @@ export function HomePage() {
               (project.role == null || project.role === "full-access") && (
                 <ReplaceSourceDialog projectId={projectId} />
               )}
+            {project?.source === "upload" && (isAdminUser(user) || project.ownerOrAdmin) && (
+              <GithubRepoDialog projectId={projectId} />
+            )}
           </div>
           {isAdminUser(user) && !netlifyLinked && (
             <div>
