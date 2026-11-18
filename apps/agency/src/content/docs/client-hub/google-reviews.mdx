@@ -1,0 +1,78 @@
+---
+title: "Google Reviews on your website"
+description: "Save your Google reviews every day and show the 5-star ones on your own website."
+order: 6
+updatedDate: 2026-11-17
+---
+
+The **Google Reviews** app keeps a copy of your Google reviews and puts the
+best ones on your website. Every review is saved, but your website only shows
+**5-star reviews with a written comment**, so every review your visitors see
+is a good one.
+
+## Setting it up
+
+1. Open your business on Google Maps, tap **Share** and copy the link.
+2. In Client Hub, go to **Apps**, add **Google Reviews**, paste the link and
+   press **Connect**.
+
+Right away we save your **50 newest reviews**. After that we check Google
+once a day and add any new ones. Reviews are never removed on their own.
+
+## Choosing what shows
+
+Reviews marked **On website** are the ones your site shows. Each has an eye
+button: press it to hide that review from your website. It stays in your
+list, so you can show it again later.
+
+**Sync now** checks Google straight away instead of waiting for the daily
+check. **Change listing** connects a different Google listing; reviews from the
+old one are removed.
+
+## Adding reviews to your website
+
+Whoever looks after your website's code adds one line to the page:
+
+```html
+<script src="https://api.alisamadii.com/reviews.js" data-key="YOUR_PROJECT_ID" defer></script>
+```
+
+Client Hub shows this line with your project already filled in. It only works
+on your own website's domains, so nobody can copy your reviews onto another
+site.
+
+Then they mark where the reviews go. Each review is a copy of the template,
+styled to match your site:
+
+```html
+<p><span data-reviews-rating></span> stars from <span data-reviews-count></span> Google reviews</p>
+<div class="reviews">
+  <template data-review-template>
+    <figure>
+      <span data-review="stars"></span>
+      <p data-review="text"></p>
+      <figcaption><span data-review="author"></span>, <time data-review="date"></time></figcaption>
+    </figure>
+  </template>
+</div>
+<a data-reviews-write>Leave us a review</a>
+```
+
+| Attribute | Fills in |
+| --- | --- |
+| `data-reviews-rating` | Your Google rating, like 4.9 |
+| `data-reviews-count` | How many reviews you have on Google |
+| `data-reviews-name` | Your business name |
+| `data-reviews-write` (on a link) | Google's "write a review" page |
+| `data-reviews-maps` (on a link) | Your Google listing |
+| `data-review="author"` | Reviewer's name |
+| `data-review="text"` | The review |
+| `data-review="stars"` | ★★★★★ |
+| `data-review="date"` | Month and year it was posted |
+| `data-review="photo"` (on an image) | Reviewer's Google photo |
+| `data-review="reply"` | Your reply on Google, if any |
+| `data-review="link"` (on a link) | The review on Google |
+
+Add `data-limit="6"` to the script tag to load fewer reviews (up to 50).
+Developers who build their own layout can listen for the `reviews:load` event
+on `document` instead; its `detail` holds the business info and the reviews.

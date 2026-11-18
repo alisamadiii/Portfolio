@@ -21,7 +21,7 @@ const EXAMPLE_FORM = `<form data-lead-form="Contact" data-success="Thanks! We'll
   <button type="submit">Send</button>
 </form>`;
 
-function CopyBlock({ code }: { code: string }) {
+export function CopyBlock({ code }: { code: string }) {
   return (
     <div className="flex items-start gap-2">
       <code className="flex-1 rounded-inner border border-divider bg-canvas p-3 text-[12.5px] break-all whitespace-pre-wrap text-ink-2">

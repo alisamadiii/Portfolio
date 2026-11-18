@@ -11,6 +11,7 @@ import { deployRouter } from "./deploy";
 import { emailsRouter } from "./emails";
 import { newsletterRouter } from "./newsletter";
 import { feedbackRouter } from "./feedback";
+import { googleReviewsRouter } from "./google-reviews";
 import { gcalRouter } from "./gcal";
 import { inspirationRouter } from "./inspiration";
 import { integrationsRouter } from "./integrations/index";
@@ -59,6 +60,7 @@ export const appRouter = createTRPCRouter({
   inspiration: inspirationRouter,
   gcal: gcalRouter,
   feedback: feedbackRouter,
+  googleReviews: googleReviewsRouter,
 });
 
 // export type definition of API

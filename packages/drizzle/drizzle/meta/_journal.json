@@ -477,6 +477,20 @@
       "when": 1794913646356,
       "tag": "0067_panoramic_masked_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1794960864217,
+      "tag": "0068_low_shinobi_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1794961362167,
+      "tag": "0069_amusing_silver_sable",
+      "breakpoints": true
     }
   ]
 }

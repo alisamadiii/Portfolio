@@ -75,6 +75,17 @@ describe("Wix app", () => {
   });
 });
 
+describe("Google Reviews app", () => {
+  it("needs a paid plan, no feature, and opens /google-reviews", () => {
+    const app = appById("google-reviews")!;
+    expect(app.path).toBe("google-reviews");
+    expect(app.feature).toBeUndefined();
+    expect(appState(app, [], FREE)).toBe("locked");
+    expect(appState(app, [], WEBSITE)).toBe("included");
+    expect(APP_IDS).toContain("google-reviews");
+  });
+});
+
 describe("custom client plans (2026-11-15)", () => {
   it("the custom monthly plan unlocks every app", () => {
     for (const id of APP_IDS) expect(planAllowsApp(id, CUSTOM)).toBe(true);

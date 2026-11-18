@@ -1,0 +1,1 @@
+ALTER TABLE "hub_review" ALTER COLUMN "text" DROP NOT NULL;

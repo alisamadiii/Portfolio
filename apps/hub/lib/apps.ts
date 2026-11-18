@@ -35,6 +35,7 @@ import {
   GoogleAdsLogo,
   GoogleAnalyticsLogo,
   GoogleCalendarLogo,
+  GoogleLogo,
   NeonLogo,
   NetlifyLogo,
   ResendLogo,
@@ -113,6 +114,14 @@ export const APPS: AppDef[] = [
     icon: Star,
     path: "feedback",
     feature: "feedback",
+  },
+  {
+    id: "google-reviews",
+    name: "Google Reviews",
+    description: "Save your Google reviews every day and show the 5-star ones on your website.",
+    icon: Star,
+    logo: GoogleLogo,
+    path: "google-reviews",
   },
   {
     id: "resend",

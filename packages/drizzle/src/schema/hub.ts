@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  real,
   serial,
   smallint,
   text,
@@ -349,6 +350,76 @@ export const hubReviewFeedback = pgTable(
     idxProjectCreated: index("hub_review_feedback_project_created_idx").on(
       table.projectId,
       table.createdAt
+    ),
+  })
+);
+
+// ─── Reviews app ────────────────────────────────────────────────
+// Review sources per project. provider = where reviews come from ("google"
+// today via Apify, more later). Google is scraped daily by apps/api
+// /api/cron/google-reviews. firstSyncedAt null = the first run (the newest
+// 50 reviews) hasn't happened yet; later runs only add new ones.
+export const REVIEW_PROVIDERS = ["google"] as const;
+export type ReviewProvider = (typeof REVIEW_PROVIDERS)[number];
+
+export const hubReviewsSource = pgTable(
+  "hub_reviews_source",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull(),
+    provider: text("provider").$type<ReviewProvider>().notNull(),
+    // Normalized listing URL the scraper starts from.
+    url: text("url").notNull(),
+    // Provider's id for the listing (Google place id), filled by the first scrape.
+    externalId: text("external_id"),
+    businessName: text("business_name"),
+    rating: real("rating"),
+    totalReviews: integer("total_reviews"),
+    firstSyncedAt: timestamp("first_synced_at"),
+    lastSyncedAt: timestamp("last_synced_at"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqProjectProvider: uniqueIndex("uq_hub_reviews_source_project_provider").on(
+      table.projectId,
+      table.provider
+    ),
+  })
+);
+
+// Every scraped review, any rating. Never replaced: each sync only inserts
+// reviews it hasn't seen (unique project + provider + review id). The public
+// website feed picks from these (5 stars with text); hidden = left out of it.
+export const hubReview = pgTable(
+  "hub_review",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull(),
+    provider: text("provider").$type<ReviewProvider>().notNull(),
+    reviewId: text("review_id").notNull(),
+    authorName: text("author_name").notNull(),
+    authorPhotoUrl: text("author_photo_url"),
+    rating: smallint("rating").notNull(),
+    // Null for rating-only reviews.
+    text: text("text"),
+    publishedAt: timestamp("published_at").notNull(),
+    ownerReply: text("owner_reply"),
+    ownerReplyAt: timestamp("owner_reply_at"),
+    reviewUrl: text("review_url"),
+    hidden: boolean("hidden").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqProjectReview: uniqueIndex("uq_hub_review_project_provider_review").on(
+      table.projectId,
+      table.provider,
+      table.reviewId
+    ),
+    idxProjectPublished: index("hub_review_project_published_idx").on(
+      table.projectId,
+      table.publishedAt
     ),
   })
 );

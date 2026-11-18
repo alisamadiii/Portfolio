@@ -10,8 +10,10 @@ import {
   hubCacheFileMeta,
   hubCollaborator,
   hubCollaboratorInvite,
+  hubReview,
   hubReviewFeedback,
   hubReviewLink,
+  hubReviewsSource,
   hubConfig,
   hubProject,
   subscriptions,
@@ -46,6 +48,10 @@ const deleteProjectChildRows = async (
   await db
     .delete(hubReviewLink)
     .where(inArray(hubReviewLink.projectId, projectIds));
+  await db.delete(hubReview).where(inArray(hubReview.projectId, projectIds));
+  await db
+    .delete(hubReviewsSource)
+    .where(inArray(hubReviewsSource.projectId, projectIds));
 
   // Config + content cache are keyed owner/repo/branch — drop all branches for
   // each project's slug, unless another project still uses the same repo.
