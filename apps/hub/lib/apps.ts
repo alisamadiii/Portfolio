@@ -40,6 +40,7 @@ import {
   NeonLogo,
   NetlifyLogo,
   ResendLogo,
+  DoorDashLogo,
   UberEatsLogo,
   WixLogo,
 } from "@/components/ds/brand-logos";
@@ -132,6 +133,14 @@ export const APPS: AppDef[] = [
     icon: UtensilsCrossed,
     logo: UberEatsLogo,
     path: "uber-eats",
+  },
+  {
+    id: "doordash",
+    name: "DoorDash",
+    description: "Connect your DoorDash store to Client Hub and follow the integration from sign-in to live.",
+    icon: UtensilsCrossed,
+    logo: DoorDashLogo,
+    path: "doordash",
   },
   {
     id: "resend",

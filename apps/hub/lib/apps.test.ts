@@ -183,3 +183,16 @@ describe("Uber Eats app", () => {
     expect(APP_IDS).toContain("uber-eats");
   });
 });
+
+describe("DoorDash app", () => {
+  it("needs a paid plan, no feature, and opens /doordash", () => {
+    const app = appById("doordash")!;
+    expect(app.path).toBe("doordash");
+    expect(app.feature).toBeUndefined();
+    expect(app.logo).toBeDefined();
+    expect(appState(app, [], FREE)).toBe("locked");
+    expect(appState(app, [], WEBSITE)).toBe("included");
+    expect(appState(app, ["doordash"], WEBSITE)).toBe("installed");
+    expect(APP_IDS).toContain("doordash");
+  });
+});

@@ -11,13 +11,11 @@ import {
   activateUberStore,
   bindUberStore,
   exchangeUberCode,
-  getUberStore,
-  getUberStoreStatus,
   isUberEatsConfigured,
   listUberStores,
-  uberTokenFor,
+  readUberStore,
 } from "@workspace/trpc/lib/uber-eats";
-import { STORE_SCOPES, storeAddress, verifyUberState } from "@workspace/trpc/lib/uber-eats-shared";
+import { storeAddress, verifyUberState } from "@workspace/trpc/lib/uber-eats-shared";
 import { urls } from "@workspace/ui/lib/company";
 
 // ─── Uber Eats connect callback ─────────────────────────────────
@@ -77,11 +75,7 @@ export async function GET(req: Request) {
       const taken = await db.query.hubUberStore.findFirst({ where: eq(hubUberStore.storeId, storeId) });
       if (taken && taken.projectId !== project.id) return back(state.projectId, "taken");
       await activateUberStore(merchantToken, storeId, project.id);
-      const token = await uberTokenFor(STORE_SCOPES);
-      const [store, status] = await Promise.all([
-        getUberStore(token, storeId).catch(() => stores[0]!),
-        getUberStoreStatus(token, storeId).catch(() => null),
-      ]);
+      const { store, status } = await readUberStore(storeId).catch(() => ({ store: stores[0]!, status: null }));
       await bindUberStore(project.id, caller.id, store, status);
       await db.delete(hubUberProvision).where(eq(hubUberProvision.projectId, project.id));
       return back(state.projectId, "connected");

@@ -150,3 +150,21 @@ export function UberEatsLogo({ className }: LogoProps) {
     </svg>
   );
 }
+
+/** DoorDash: red tile, white "D" with the arrow cut (drawn, not the trademark file). */
+export function DoorDashLogo({ className }: LogoProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <rect width="24" height="24" rx="4" fill="#FF3008" />
+      <path
+        d="M5 8.4h7.6a3.6 3.6 0 0 1 0 7.2H9.2"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M5 15.6h4.2" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" />
+    </svg>
+  );
+}

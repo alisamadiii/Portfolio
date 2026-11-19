@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
-import { BarChart3, ChevronDown, FileText, Globe } from "lucide-react";
+import { BarChart3, ChevronDown, FileText, Globe, MousePointerClick } from "lucide-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { Area, AreaChart, Bar, BarChart, Cell, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
@@ -48,7 +48,7 @@ const RANGES = [
 ] as const;
 type RangeValue = (typeof RANGES)[number]["value"];
 
-const TABS = ["overview", "pages", "sources"] as const;
+const TABS = ["overview", "pages", "events", "sources"] as const;
 type Tab = (typeof TABS)[number];
 
 const trafficConfig = {
@@ -190,6 +190,16 @@ export function AnalyticsPage() {
     />
   );
 
+  const events = report.data?.events ?? [];
+  const totalEvents = events.reduce((n, e) => n + e.count, 0);
+  const topEvent = events[0];
+  const eventColumns: Column<{ name: string; count: number; users: number }>[] = [
+    { key: "name", header: "Event name", width: "minmax(220px, 3fr)", cell: (e) => <span className="truncate text-ink">{e.name}</span> },
+    { key: "count", header: "Event count", width: "minmax(110px, 1fr)", align: "end", cell: (e) => <span className="tabular-nums">{e.count}</span> },
+    { key: "users", header: "Users", width: "minmax(90px, 1fr)", align: "end", cell: (e) => <span className="tabular-nums">{e.users}</span> },
+    { key: "share", header: "Share", width: "minmax(90px, 1fr)", align: "end", cell: (e) => <span className="tabular-nums text-dim">{share(e.count, totalEvents)}</span> },
+  ];
+
   const rangeMenu = connected && (
     <div className="flex gap-2">
       <DropdownMenu>
@@ -227,7 +237,7 @@ export function AnalyticsPage() {
     <>
       <PageHeader
         title="Analytics"
-        description="Visitors, sessions and your most-viewed pages from Google Analytics."
+        description="Visitors, sessions, pages, events and traffic sources from Google Analytics."
         docs="client-hub/apps#analytics"
         actions={rangeMenu || undefined}
         tabs={
@@ -238,6 +248,7 @@ export function AnalyticsPage() {
             items={[
               { id: "overview", label: "Overview" },
               { id: "pages", label: "Pages" },
+              { id: "events", label: "Events" },
               { id: "sources", label: "Sources" },
             ]}
           />
@@ -376,6 +387,39 @@ export function AnalyticsPage() {
           <CardHeader title="All pages" divided />
           {pagesTable(topPages)}
         </Card>
+      )}
+
+      {tab === "events" && (
+        <div className={cn("flex flex-col gap-5 transition-opacity", report.isPlaceholderData && "opacity-60")}>
+          <KpiGrid
+            dim={dim || !topEvent}
+            items={[
+              {
+                label: "Top event",
+                value: topEvent ? String(topEvent.count) : "—",
+                sub: topEvent ? `${topEvent.name} · ${share(topEvent.count, totalEvents)} of all events` : undefined,
+              },
+              { label: "All events", value: events.length ? String(totalEvents) : "—" },
+              { label: "Distinct event names", value: events.length ? String(events.length) : "—" },
+            ]}
+          />
+          <Card>
+            <CardHeader title="Event count by event name" divided />
+            <DataTable
+              columns={eventColumns}
+              rows={events}
+              rowKey={(e) => e.name}
+              minWidth={520}
+              empty={
+                <EmptyState
+                  icon={<MousePointerClick className="size-5" />}
+                  title="No events yet"
+                  text={connected ? "No events were recorded in this period." : "Every event Google Analytics records shows up here once a property is connected."}
+                />
+              }
+            />
+          </Card>
+        </div>
       )}
 
       {tab === "sources" && (

@@ -116,6 +116,8 @@ type Ga4Report = {
   /** code = ISO 3166-1 alpha-2 (countryId dimension) — drives the flag emoji. */
   countries: { country: string; code: string; users: number }[];
   newVsReturning: { type: string; users: number }[];
+  /** Every event GA4 recorded in the range, busiest first (page_view, session_start, custom events…). */
+  events: { name: string; count: number; users: number }[];
 };
 
 const num = (v: string | undefined) => {
@@ -133,7 +135,7 @@ type RunReportResp = {
 
 /**
  * Run every report the dashboard needs and return a narrowed public shape.
- * batchRunReports takes up to 5 requests per call — 8 reports → 2 calls.
+ * batchRunReports takes up to 5 requests per call — 9 reports → 2 calls.
  */
 async function runGa4Report(
   accessToken: string,
@@ -201,6 +203,14 @@ async function runGa4Report(
       metrics: [{ name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
     },
+    // Whole event list, not a top-N: a site rarely has more than a few dozen names.
+    {
+      dateRanges,
+      dimensions: [{ name: "eventName" }],
+      metrics: [{ name: "eventCount" }, { name: "totalUsers" }],
+      orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+      limit: 250,
+    },
   ];
 
   type BatchResp = { reports?: RunReportResp[] };
@@ -217,7 +227,7 @@ async function runGa4Report(
   const empty: RunReportResp = {};
   const [totals = empty, series = empty, pages = empty, channels = empty, devices = empty] =
     batchA.reports ?? [];
-  const [sources = empty, countries = empty, newVsReturning = empty] =
+  const [sources = empty, countries = empty, newVsReturning = empty, events = empty] =
     batchB.reports ?? [];
 
   const totalRow = totals.rows?.[0]?.metricValues ?? [];
@@ -264,6 +274,11 @@ async function runGa4Report(
       }))
       // GA emits an occasional blank/"(not set)" bucket — noise in a donut.
       .filter((row) => row.type === "new" || row.type === "returning"),
+    events: (events.rows ?? []).map((row) => ({
+      name: row.dimensionValues?.[0]?.value ?? "",
+      count: num(row.metricValues?.[0]?.value),
+      users: num(row.metricValues?.[1]?.value),
+    })),
   };
 }
 

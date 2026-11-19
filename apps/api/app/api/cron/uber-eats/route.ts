@@ -4,6 +4,7 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@workspace/drizzle/pool";
 import { hubProject, hubUberStore } from "@workspace/drizzle/schema";
+import { sweepDoorDashProvisions } from "@workspace/trpc/lib/doordash";
 import { mapLimit } from "@workspace/trpc/lib/places";
 import {
   isUberEatsConfigured,
@@ -49,6 +50,8 @@ export async function GET(request: NextRequest) {
     result: await reconcileUberStore(store),
   }));
   await sweepUberProvisions();
+  // DoorDash has no cron of its own yet; its unfinished store picks are swept here.
+  await sweepDoorDashProvisions();
 
   return NextResponse.json({
     stores: results.length,

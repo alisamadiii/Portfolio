@@ -38,7 +38,12 @@ import {
 export const isUberEatsConfigured = () =>
   Boolean(process.env.UBER_EATS_CLIENT_ID && process.env.UBER_EATS_CLIENT_SECRET);
 
-const hosts = () => uberHosts(process.env.UBER_EATS_ENV);
+// UBER_EATS_AUTH_URL / UBER_EATS_API_URL: local only, point at the mock server.
+const hosts = () =>
+  uberHosts(process.env.UBER_EATS_ENV, {
+    auth: process.env.UBER_EATS_AUTH_URL,
+    api: process.env.UBER_EATS_API_URL,
+  });
 
 const clientId = () => process.env.UBER_EATS_CLIENT_ID ?? "";
 const clientSecret = () => process.env.UBER_EATS_CLIENT_SECRET ?? "";
@@ -116,6 +121,21 @@ export async function uberTokenFor(scopes: string): Promise<string> {
 }
 
 export const forgetUberTokens = () => cache.clear();
+
+/**
+ * Runs `fn` with the app token for `scopes`; on a 401 the cached token is
+ * dropped and the call retried once with a fresh one. Uber invalidates the
+ * oldest token when an app mints its 101st, so a cached token can die early.
+ */
+export async function withAppToken<T>(scopes: string, fn: (token: string) => Promise<T>): Promise<T> {
+  try {
+    return await fn(await uberTokenFor(scopes));
+  } catch (error) {
+    if (!(error instanceof UberApiError) || error.status !== 401) throw error;
+    cache.delete(scopes);
+    return fn(await uberTokenFor(scopes));
+  }
+}
 
 async function uber<T>(token: string, path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${hosts().api}${path}`, {
@@ -199,16 +219,64 @@ export function activateUberStore(merchantToken: string, storeId: string, projec
 }
 
 /** Turns the integration off on Uber's side (the app token may do that much). */
-export async function disableUberIntegration(storeId: string) {
-  const token = await uberTokenFor(STORE_SCOPES);
-  return uber<void>(token, `/v1/eats/stores/${encodeURIComponent(storeId)}/pos_data`, {
-    method: "PATCH",
-    body: JSON.stringify({ integration_enabled: false }),
-  });
+export function disableUberIntegration(storeId: string) {
+  return withAppToken(STORE_SCOPES, (token) =>
+    uber<void>(token, `/v1/eats/stores/${encodeURIComponent(storeId)}/pos_data`, {
+      method: "PATCH",
+      body: JSON.stringify({ integration_enabled: false }),
+    })
+  );
 }
+
+/** Store details + online status with the app token (status failures don't hide the store). */
+export const readUberStore = (storeId: string) =>
+  withAppToken(STORE_SCOPES, async (token) => {
+    const [store, status] = await Promise.all([
+      getUberStore(token, storeId),
+      getUberStoreStatus(token, storeId).catch(() => null),
+    ]);
+    return { store, status };
+  });
 
 export const getUberOrder = (token: string, orderId: string) =>
   uber<UberOrderV2>(token, `/v2/eats/order/${encodeURIComponent(orderId)}`);
+
+/**
+ * Accept on Uber (the hub must be the store's order manager). fields_relayed
+ * tells Uber the hub shows instructions and promos, so it won't strip them.
+ */
+export const acceptUberOrder = (orderId: string, reason = "Accepted in Client Hub") =>
+  withAppToken(ORDER_SCOPES, (token) =>
+    uber<void>(token, `/v1/eats/orders/${encodeURIComponent(orderId)}/accept_pos_order`, {
+      method: "POST",
+      body: JSON.stringify({
+        reason,
+        fields_relayed: {
+          order_special_instructions: true,
+          item_special_instructions: true,
+          item_special_requests: true,
+          promotions: true,
+        },
+      }),
+    })
+  );
+
+export const denyUberOrder = (orderId: string, code: string, explanation: string) =>
+  withAppToken(ORDER_SCOPES, (token) =>
+    uber<void>(token, `/v1/eats/orders/${encodeURIComponent(orderId)}/deny_pos_order`, {
+      method: "POST",
+      body: JSON.stringify({ reason: { code, explanation } }),
+    })
+  );
+
+/** Nominate (or un-nominate) the hub as the store's order manager on Uber. */
+export const setUberOrderManager = (storeId: string, enabled: boolean) =>
+  withAppToken(STORE_SCOPES, (token) =>
+    uber<void>(token, `/v1/eats/stores/${encodeURIComponent(storeId)}/pos_data`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_order_manager: enabled, require_manual_acceptance: enabled }),
+    })
+  );
 
 // ─── Hub side ────────────────────────────────────────────────────
 
@@ -256,11 +324,7 @@ export async function bindUberStore(
 /** Store details + online status from Uber with the app token; never throws. */
 export async function syncUberStore(row: { id: string; storeId: string }) {
   try {
-    const token = await uberTokenFor(STORE_SCOPES);
-    const [store, status] = await Promise.all([
-      getUberStore(token, row.storeId),
-      getUberStoreStatus(token, row.storeId).catch(() => null),
-    ]);
+    const { store, status } = await readUberStore(row.storeId);
     await db
       .update(hubUberStore)
       .set({
@@ -282,10 +346,9 @@ export async function syncUberStore(row: { id: string; storeId: string }) {
   }
 }
 
-/** Reads one order from Uber and saves it. Safe to run twice. */
+/** Reads one order from Uber and saves it. Safe to run twice. Returns Uber's raw answer too (the detail dialog). */
 export async function syncUberOrder(projectId: string, storeId: string, orderId: string) {
-  const token = await uberTokenFor(ORDER_SCOPES);
-  const order = await getUberOrder(token, orderId);
+  const order = await withAppToken(ORDER_SCOPES, (token) => getUberOrder(token, orderId));
   const mapped = mapOrder(order);
   const values = {
     ...mapped,
@@ -310,10 +373,15 @@ export async function syncUberOrder(projectId: string, storeId: string, orderId:
         taxCents: values.taxCents,
         totalCents: values.totalCents,
         currency: values.currency,
+        merchantPromoCents: values.merchantPromoCents,
+        merchantFeeCents: values.merchantFeeCents,
+        tipCents: values.tipCents,
+        uberFeeCents: values.uberFeeCents,
+        taxMerchantCents: values.taxMerchantCents,
         updatedAt: values.updatedAt,
       },
     });
-  return mapped;
+  return { mapped, raw: order };
 }
 
 /**
@@ -347,6 +415,11 @@ export async function handleUberEvent(event: UberEvent) {
       .update(hubUberStore)
       .set({ integrationEnabled: false, deprovisionedAt: new Date(), onlineStatus: null, updatedAt: new Date() })
       .where(eq(hubUberStore.id, store.id));
+    return { handled: true as const };
+  }
+  // Paused or resumed on the tablet (needs eats.store.status.notification in prod).
+  if (event.event_type === "store.status.changed") {
+    await syncUberStore(store);
     return { handled: true as const };
   }
   return { handled: false as const, reason: "ignored" };

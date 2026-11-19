@@ -480,6 +480,12 @@ export const hubUberStore = pgTable(
     provisionedAt: timestamp("provisioned_at"),
     deprovisionedAt: timestamp("deprovisioned_at"),
     connectedUserId: text("connected_user_id"),
+    // Owner-entered Uber commission in basis points (3000 = 30%). Uber's
+    // order feed doesn't carry the commission, so payouts are estimates.
+    commissionBps: integer("commission_bps"),
+    // The hub is the store's nominated order manager on Uber: orders can be
+    // accepted / denied here, and auto-cancel after 11.5 min if nobody does.
+    isOrderManager: boolean("is_order_manager").notNull().default(false),
     lastSyncedAt: timestamp("last_synced_at"),
     lastError: text("last_error"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -514,6 +520,13 @@ export const hubUberOrder = pgTable(
     taxCents: integer("tax_cents"),
     totalCents: integer("total_cents"),
     currency: text("currency"),
+    // The restaurant's side of the money, as far as Uber reports it per
+    // order (null when Uber omits the field).
+    merchantPromoCents: integer("merchant_promo_cents"),
+    merchantFeeCents: integer("merchant_fee_cents"),
+    tipCents: integer("tip_cents"),
+    uberFeeCents: integer("uber_fee_cents"),
+    taxMerchantCents: integer("tax_merchant_cents"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -530,6 +543,77 @@ export const hubUberProvision = pgTable("hub_uber_provision", {
   userId: text("user_id").notNull(),
   tokenEnc: text("token_enc").notNull(),
   stores: jsonb("stores").$type<UberPendingStore[]>().notNull().default([]),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── DoorDash app ───────────────────────────────────────────────
+// One DoorDash store per project, connected through DoorDash's Self-Serve
+// Integration Onboarding (SSIO): the owner signs in at identity.doordash.com,
+// picks a store, and the hub asks DoorDash to onboard it as a POS integration.
+// Phase 1 stops there: no menu, no orders, no activation. DoorDash reports the
+// onboarding job's progress by webhook (apps/api /api/webhook/doordash).
+
+export type DoorDashOnboardingStatus =
+  | "PENDING"
+  | "MENU_REQUESTED"
+  | "INTEGRATION_REQUESTED"
+  | "MENU_BLOCK"
+  | "ACTIVATION_BLOCK"
+  | "MENU_QUALIFIED"
+  | "INTEGRATION_ACTIVATED"
+  | "ABANDONED";
+export type DoorDashCandidate = {
+  storeId: string;
+  name: string;
+  address: string | null;
+  eligible: boolean;
+  businessId: string | null;
+  businessName: string | null;
+};
+
+export const hubDoorDashStore = pgTable(
+  "hub_doordash_store",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull(),
+    // DoorDash's store uuid. A store belongs to one project.
+    storeId: text("store_id").notNull(),
+    businessId: text("business_id"),
+    businessName: text("business_name"),
+    name: text("name").notNull(),
+    address: text("address"),
+    // The current SSIO job. DoorDash may issue a newer id for the same
+    // location (restart, retry); older ids move to pastOnboardingIds so a late
+    // webhook for one of them is ignored.
+    onboardingId: text("onboarding_id"),
+    pastOnboardingIds: text("past_onboarding_ids").array().notNull().default(sql`'{}'::text[]`),
+    // PENDING = we asked, no webhook yet; the rest are DoorDash's statuses.
+    onboardingStatus: text("onboarding_status").$type<DoorDashOnboardingStatus>().notNull().default("PENDING"),
+    exclusionCode: text("exclusion_code"),
+    statusDetails: text("status_details"),
+    menuPreviewUrl: text("menu_preview_url"),
+    decisionMakerEmail: text("decision_maker_email"),
+    connectedUserId: text("connected_user_id"),
+    lastEventAt: timestamp("last_event_at"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqProject: uniqueIndex("uq_hub_doordash_store_project").on(table.projectId),
+    uqStore: uniqueIndex("uq_hub_doordash_store_store").on(table.storeId),
+  })
+);
+
+// The merchant's one-hour token between DoorDash's OAuth callback and the
+// owner picking which store to onboard. Encrypted at rest, deleted when the
+// pick is made, on disconnect or after 30 minutes.
+export const hubDoorDashProvision = pgTable("hub_doordash_provision", {
+  projectId: uuid("project_id").primaryKey(),
+  userId: text("user_id").notNull(),
+  tokenEnc: text("token_enc").notNull(),
+  stores: jsonb("stores").$type<DoorDashCandidate[]>().notNull().default([]),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -1,0 +1,1 @@
+ALTER TABLE "hub_uber_store" ADD COLUMN "is_order_manager" boolean DEFAULT false NOT NULL;

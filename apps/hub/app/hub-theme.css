@@ -151,3 +151,31 @@
   color: transparent;
   animation: cms-text-shimmer 1.4s linear infinite;
 }
+
+/* Receipt printing (Uber Eats order dialog): only the receipt leaves the printer. */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible !important;
+  }
+  [data-print-root] {
+    position: fixed !important;
+    inset: 0 auto auto 0 !important;
+    width: 80mm !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 4mm !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  [data-print-hide] {
+    display: none !important;
+  }
+}

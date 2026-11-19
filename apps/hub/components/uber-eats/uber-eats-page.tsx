@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
-import { ExternalLink, MapPin, Pause, Play, RefreshCw, UtensilsCrossed } from "lucide-react";
+import { Check, ExternalLink, MapPin, Pause, Percent, Play, RefreshCw, UtensilsCrossed } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { toast } from "sonner";
 
@@ -35,6 +35,8 @@ import { useProject } from "@/hooks/use-project";
 import { useRouteProjectId } from "@/hooks/use-repo";
 import { isAdminUser } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
+
+import { OrderDialog } from "./order-dialog";
 
 type Data = RouterOutputs["uberEats"]["get"];
 type Store = NonNullable<Data["store"]>;
@@ -152,7 +154,7 @@ export function UberEatsPage() {
         <>
           <StoreCard store={data.store} env={data.env} fullAccess={fullAccess} />
           <Stats />
-          <OrdersTable timezone={data.store.timezone} />
+          <OrdersTable store={data.store} />
         </>
       ) : data.pending ? (
         <StorePicker stores={data.pending} fullAccess={fullAccess} />
@@ -438,6 +440,8 @@ function StoreCard({ store, env, fullAccess }: { store: Store; env: Data["env"];
             {env === "sandbox" && " · test mode"}
           </span>
         </div>
+        <OrderManagerLine store={store} fullAccess={fullAccess} />
+        <CommissionLine store={store} fullAccess={fullAccess} />
         {fullAccess && (
           <button
             type="button"
@@ -522,6 +526,110 @@ function PauseDialogContent({ store, onClose }: { store: Store; onClose: () => v
   );
 }
 
+/**
+ * "Accept orders in Client Hub": nominates the hub as the store's order
+ * manager on Uber. Off = read-only, the tablet accepts.
+ */
+function OrderManagerLine({ store, fullAccess }: { store: Store; fullAccess: boolean }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const projectId = useRouteProjectId();
+  const [confirming, setConfirming] = useState(false);
+  const toggle = useMutation(
+    trpc.uberEats.setOrderManager.mutationOptions({
+      onSuccess: (_, vars) => {
+        toast.success(vars.enabled ? "Orders can now be accepted here." : "Back to accepting on the tablet only.");
+        void queryClient.invalidateQueries({ queryKey: trpc.uberEats.pathKey() });
+      },
+      onError: (error) => toast.error(handleCmsError(error, "Uber Eats didn't accept the change.")),
+    })
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-[13px]">
+      <Check className="size-3.5 text-dim" aria-hidden />
+      <span className="text-dim">Accept orders in Client Hub:</span>
+      <span className="font-medium text-ink">{store.isOrderManager ? "on" : "off"}</span>
+      {fullAccess && store.integrationEnabled && (
+        <button
+          type="button"
+          className="text-coral-text hover:underline disabled:opacity-50"
+          disabled={toggle.isPending}
+          onClick={() => (store.isOrderManager ? toggle.mutate({ projectId, enabled: false }) : setConfirming(true))}
+        >
+          {toggle.isPending ? "Saving…" : store.isOrderManager ? "Turn off" : "Turn on"}
+        </button>
+      )}
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Accept orders in Client Hub?"
+        description="Client Hub becomes this store's order manager on Uber Eats. New orders can be accepted or denied here, and Uber cancels any order nobody accepts within 11 minutes. Keep the tablet nearby; you can turn this off anytime."
+        confirmLabel="Turn on"
+        onConfirm={() => toggle.mutate({ projectId, enabled: true })}
+      />
+    </div>
+  );
+}
+
+/** The owner's Uber commission rate: Uber's feed doesn't carry it, so payouts are estimated from this. */
+function CommissionLine({ store, fullAccess }: { store: Store; fullAccess: boolean }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const projectId = useRouteProjectId();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(store.commissionBps != null ? String(store.commissionBps / 100) : "");
+  const save = useMutation(
+    trpc.uberEats.setCommission.mutationOptions({
+      onSuccess: () => {
+        toast.success("Commission rate saved.");
+        setEditing(false);
+        void queryClient.invalidateQueries({ queryKey: trpc.uberEats.pathKey() });
+      },
+      onError: (error) => toast.error(handleCmsError(error, "Couldn't save the rate.")),
+    })
+  );
+  const percent = store.commissionBps != null ? store.commissionBps / 100 : null;
+
+  if (editing) {
+    const parsed = Number(value);
+    const valid = value.trim() !== "" && Number.isFinite(parsed) && parsed >= 0 && parsed <= 100;
+    return (
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (valid) save.mutate({ projectId, percent: parsed });
+        }}
+      >
+        <Field label="Uber commission" hint="The marketplace fee from your Uber Eats contract. Only used for the payout estimates." className="w-full sm:w-[320px]">
+          <div className="flex items-center gap-2">
+            <Input type="number" inputMode="decimal" min={0} max={100} step={0.5} value={value} onChange={(e) => setValue(e.target.value)} className="w-28" />
+            <span className="text-sm text-dim">%</span>
+          </div>
+        </Field>
+        <Button type="submit" size="sm" variant="primary" disabled={!valid || save.isPending}>
+          {save.isPending ? "Saving…" : "Save"}
+        </Button>
+        <Button type="button" size="sm" onClick={() => setEditing(false)}>
+          Cancel
+        </Button>
+      </form>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-[13px]">
+      <Percent className="size-3.5 text-dim" aria-hidden />
+      <span className="text-dim">Uber commission:</span>
+      <span className="font-medium text-ink">{percent != null ? `${percent}%` : "not set"}</span>
+      {fullAccess && (
+        <button type="button" className="text-coral-text hover:underline" onClick={() => setEditing(true)}>
+          {percent != null ? "Change" : "Add your rate for payout estimates"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Stats() {
   const trpc = useTRPC();
   const projectId = useRouteProjectId();
@@ -530,6 +638,7 @@ function Stats() {
   const s = stats.data;
   const none = !s || s.total === 0;
   const avg = s && s.month > 0 ? Math.round(s.salesMonthCents / s.month) : null;
+  const rated = !!s && s.commissionBps != null;
   return (
     <KpiGrid
       dim={none}
@@ -538,20 +647,46 @@ function Stats() {
         { label: "Orders, 7 days", value: none ? "—" : String(s.week) },
         { label: "Sales, 30 days", value: none ? "—" : money(s.salesMonthCents, s.currency), sub: none ? undefined : `${s.month} orders` },
         { label: "Average order", value: none || avg == null ? "—" : money(avg, s.currency) },
+        {
+          label: "Est. Uber fees, 30 days",
+          value: none || !rated || s.estCommissionMonthCents == null ? "—" : money(s.estCommissionMonthCents, s.currency),
+          sub: !rated ? "Add your commission rate" : `at ${s.commissionBps! / 100}%`,
+        },
+        {
+          label: "Est. payout, 30 days",
+          value: none || !rated || s.estPayoutMonthCents == null ? "—" : money(s.estPayoutMonthCents, s.currency),
+          sub: !rated ? "Add your commission rate" : "estimate",
+        },
       ]}
     />
   );
 }
 
-function OrdersTable({ timezone }: { timezone: string | null }) {
+function OrdersTable({ store }: { store: Store }) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const projectId = useRouteProjectId();
+  const role = useProject()?.role;
+  const canAccept = store.isOrderManager && (role === "full-access" || role === "content-editor");
+  const timezone = store.timezone;
   const [cursors, setCursors] = useState<string[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const accept = useMutation(
+    trpc.uberEats.acceptOrder.mutationOptions({
+      onSuccess: () => {
+        toast.success("Order accepted.");
+        void queryClient.invalidateQueries({ queryKey: trpc.uberEats.pathKey() });
+      },
+      onError: (error) => toast.error(handleCmsError(error, "Couldn't accept the order.")),
+    })
+  );
   const cursor = cursors.at(-1);
   const list = useQuery({
     ...trpc.uberEats.orders.queryOptions({ projectId, cursor }),
     placeholderData: keepPreviousData,
-    refetchInterval: 60_000,
+    // Faster while something is cooking; Uber sends no webhook for accept / finish.
+    refetchInterval: (q) =>
+      q.state.data?.items.some((o) => o.state === "CREATED" || o.state === "ACCEPTED") ? 30_000 : 60_000,
   });
 
   const columns: Column<Order>[] = [
@@ -597,15 +732,31 @@ function OrdersTable({ timezone }: { timezone: string | null }) {
     {
       key: "state",
       header: "Status",
-      width: "120px",
+      width: canAccept ? "170px" : "120px",
       align: "end",
-      cell: (o) => <Badge tone={STATE_LABELS[o.state].tone}>{STATE_LABELS[o.state].label}</Badge>,
+      cell: (o) =>
+        canAccept && o.state === "CREATED" ? (
+          <Button
+            size="sm"
+            variant="primary"
+            icon={<Check className="size-4" />}
+            disabled={accept.isPending}
+            onClick={(e) => {
+              e.stopPropagation();
+              accept.mutate({ projectId, id: o.id });
+            }}
+          >
+            Accept
+          </Button>
+        ) : (
+          <Badge tone={STATE_LABELS[o.state].tone}>{STATE_LABELS[o.state].label}</Badge>
+        ),
     },
   ];
 
   return (
     <Card>
-      <CardHeader title="Orders" divided />
+      <CardHeader title="Orders" divided action={<span className="text-[13px] text-dim">Click an order for details, courier and receipt</span>} />
       {list.isPending ? (
         <div className="p-6">
           <Skeleton className="h-[180px] rounded-card" />
@@ -616,6 +767,7 @@ function OrdersTable({ timezone }: { timezone: string | null }) {
           rows={list.data?.items ?? []}
           rowKey={(o) => o.id}
           minWidth={720}
+          onRowClick={(o) => setOpenId(o.id)}
           empty={
             <EmptyState
               icon={<UtensilsCrossed className="size-5" />}
@@ -639,6 +791,7 @@ function OrdersTable({ timezone }: { timezone: string | null }) {
           </Button>
         </div>
       )}
+      <OrderDialog orderId={openId} timezone={timezone} canAccept={canAccept} onClose={() => setOpenId(null)} />
     </Card>
   );
 }

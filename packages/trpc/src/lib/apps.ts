@@ -14,6 +14,7 @@ export const APP_IDS = [
   "feedback",
   "google-reviews",
   "uber-eats",
+  "doordash",
 ] as const;
 export type AppId = (typeof APP_IDS)[number];
 

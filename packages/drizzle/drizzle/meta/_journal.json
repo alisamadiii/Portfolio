@@ -505,6 +505,20 @@
       "when": 1795050379851,
       "tag": "0071_lumpy_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1795053745865,
+      "tag": "0072_blue_thunderbolts",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1795054446725,
+      "tag": "0073_ordinary_taskmaster",
+      "breakpoints": true
     }
   ]
 }

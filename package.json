@@ -25,6 +25,7 @@
     "android": "expo run:android",
     "api:key": "pnpm --filter api admin:key",
     "sync:plans": "tsx packages/auth/scripts/sync-plans.ts",
+    "uber:mock": "tsx apps/api/scripts/uber-mock.ts",
     "webhooks:check": "tsx packages/auth/scripts/check-webhooks.ts"
   },
   "devDependencies": {
