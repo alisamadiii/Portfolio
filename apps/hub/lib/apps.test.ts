@@ -170,3 +170,16 @@ describe("legacy Website plan", () => {
     for (const id of APP_IDS) expect(planAllowsApp(id, entitlement)).toBe(true);
   });
 });
+
+describe("Uber Eats app", () => {
+  it("needs a paid plan, no feature, and opens /uber-eats", () => {
+    const app = appById("uber-eats")!;
+    expect(app.path).toBe("uber-eats");
+    expect(app.feature).toBeUndefined();
+    expect(app.logo).toBeDefined();
+    expect(appState(app, [], FREE)).toBe("locked");
+    expect(appState(app, [], WEBSITE)).toBe("included");
+    expect(appState(app, ["uber-eats"], WEBSITE)).toBe("installed");
+    expect(APP_IDS).toContain("uber-eats");
+  });
+});

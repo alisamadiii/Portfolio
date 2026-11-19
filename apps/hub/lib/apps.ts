@@ -20,6 +20,7 @@ import {
   LayoutGrid,
   Settings,
   Mail,
+  UtensilsCrossed,
   Megaphone,
   MonitorSmartphone,
   Plug,
@@ -39,6 +40,7 @@ import {
   NeonLogo,
   NetlifyLogo,
   ResendLogo,
+  UberEatsLogo,
   WixLogo,
 } from "@/components/ds/brand-logos";
 import { docsUrl } from "@/lib/docs-links";
@@ -122,6 +124,14 @@ export const APPS: AppDef[] = [
     icon: Star,
     logo: GoogleLogo,
     path: "google-reviews",
+  },
+  {
+    id: "uber-eats",
+    name: "Uber Eats",
+    description: "Your Uber Eats orders and sales in one place, and a Pause button for busy nights.",
+    icon: UtensilsCrossed,
+    logo: UberEatsLogo,
+    path: "uber-eats",
   },
   {
     id: "resend",

@@ -436,3 +436,100 @@ export const hubReview = pgTable(
     ),
   })
 );
+
+// ─── Uber Eats app ──────────────────────────────────────────────
+// One Uber Eats store per project. The owner connects it through Uber's
+// OAuth (eats.pos_provisioning), the hub activates the integration on the
+// store, and from then on the agency app's own client-credentials token reads
+// the store, its online status and its orders. Orders arrive by webhook
+// (apps/api /api/webhook/uber-eats) and are reconciled hourly by the cron.
+
+export type UberOrderState = "CREATED" | "ACCEPTED" | "DENIED" | "FINISHED" | "CANCELED" | "UNKNOWN";
+export type UberOrderType = "PICK_UP" | "DINE_IN" | "DELIVERY_BY_UBER" | "DELIVERY_BY_RESTAURANT" | "UNKNOWN";
+export type UberOnlineStatus = "ONLINE" | "PAUSED";
+export type UberOrderItem = { title: string; quantity: number };
+export type UberPendingStore = {
+  storeId: string;
+  name: string;
+  address: string | null;
+};
+
+export const hubUberStore = pgTable(
+  "hub_uber_store",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull(),
+    // Uber's store id (uuid). A store belongs to one project.
+    storeId: text("store_id").notNull(),
+    name: text("name").notNull(),
+    address: text("address"),
+    city: text("city"),
+    state: text("state"),
+    postalCode: text("postal_code"),
+    // IANA, from Uber; KPIs are computed in it.
+    timezone: text("timezone"),
+    webUrl: text("web_url"),
+    // Uber's listing status: active | pending_review | deleted | rejected.
+    listingStatus: text("listing_status"),
+    // From GET /status: null until read.
+    onlineStatus: text("online_status").$type<UberOnlineStatus>(),
+    pausedUntil: timestamp("paused_until"),
+    offlineReason: text("offline_reason"),
+    // Integration flag as Uber reports it (store.provisioned / deprovisioned).
+    integrationEnabled: boolean("integration_enabled").notNull().default(true),
+    provisionedAt: timestamp("provisioned_at"),
+    deprovisionedAt: timestamp("deprovisioned_at"),
+    connectedUserId: text("connected_user_id"),
+    lastSyncedAt: timestamp("last_synced_at"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqProject: uniqueIndex("uq_hub_uber_store_project").on(table.projectId),
+    uqStore: uniqueIndex("uq_hub_uber_store_store").on(table.storeId),
+  })
+);
+
+// Every order Uber told us about, upserted by id. Kept lean on purpose: the
+// eater's first name, what was ordered and the totals. No phone, no address,
+// no raw payload. Never deleted by a sync; disconnect removes them.
+export const hubUberOrder = pgTable(
+  "hub_uber_order",
+  {
+    // Uber's order uuid.
+    id: text("id").primaryKey(),
+    projectId: uuid("project_id").notNull(),
+    storeId: text("store_id").notNull(),
+    // Last 5 characters of the id, what the restaurant sees on the tablet.
+    displayId: text("display_id").notNull(),
+    state: text("state").$type<UberOrderState>().notNull(),
+    type: text("type").$type<UberOrderType>().notNull(),
+    placedAt: timestamp("placed_at").notNull(),
+    readyAt: timestamp("ready_at"),
+    eaterFirstName: text("eater_first_name"),
+    items: jsonb("items").$type<UberOrderItem[]>().notNull().default([]),
+    itemCount: integer("item_count").notNull().default(0),
+    subtotalCents: integer("subtotal_cents"),
+    taxCents: integer("tax_cents"),
+    totalCents: integer("total_cents"),
+    currency: text("currency"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    idxProjectPlaced: index("hub_uber_order_project_placed_idx").on(table.projectId, table.placedAt),
+  })
+);
+
+// The merchant's short-lived token between Uber's OAuth callback and the
+// owner picking which store to connect (only needed when they have more than
+// one). Encrypted at rest, deleted on activate, disconnect or expiry.
+export const hubUberProvision = pgTable("hub_uber_provision", {
+  projectId: uuid("project_id").primaryKey(),
+  userId: text("user_id").notNull(),
+  tokenEnc: text("token_enc").notNull(),
+  stores: jsonb("stores").$type<UberPendingStore[]>().notNull().default([]),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

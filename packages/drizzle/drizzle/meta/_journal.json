@@ -498,6 +498,13 @@
       "when": 1795001199311,
       "tag": "0070_broken_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1795050379851,
+      "tag": "0071_lumpy_spot",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { symmetricDecrypt } from "better-auth/crypto";
+import { symmetricDecrypt, symmetricEncrypt } from "better-auth/crypto";
 
 import { auth } from "./auth";
 
@@ -15,4 +15,13 @@ export async function readAccountToken(token: string | null | undefined) {
   } catch {
     return token;
   }
+}
+
+/**
+ * Encrypts a third-party token the hub stores itself (outside Better Auth's
+ * account table) with the same key, so readAccountToken reads it back.
+ */
+export async function sealAccountToken(token: string) {
+  const { secretConfig } = await auth.$context;
+  return symmetricEncrypt({ key: secretConfig, data: token });
 }

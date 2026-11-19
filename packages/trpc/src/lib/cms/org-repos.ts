@@ -19,6 +19,8 @@ import {
   subscriptions,
 } from "@workspace/drizzle/schema";
 
+import { deleteUberRows } from "../uber-eats";
+
 /**
  * Delete every project-scoped row for the given projects — but NOT the
  * hub_project rows themselves (those are tombstoned to block re-sync).
@@ -52,6 +54,7 @@ const deleteProjectChildRows = async (
   await db
     .delete(hubReviewsSource)
     .where(inArray(hubReviewsSource.projectId, projectIds));
+  await deleteUberRows(projectIds);
 
   // Config + content cache are keyed owner/repo/branch — drop all branches for
   // each project's slug, unless another project still uses the same repo.

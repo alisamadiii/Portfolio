@@ -13,6 +13,7 @@ export const APP_IDS = [
   "wix",
   "feedback",
   "google-reviews",
+  "uber-eats",
 ] as const;
 export type AppId = (typeof APP_IDS)[number];
 

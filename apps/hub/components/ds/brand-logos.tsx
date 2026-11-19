@@ -117,3 +117,36 @@ export function GoogleCalendarLogo({ className }: LogoProps) {
     </svg>
   );
 }
+
+/** Uber Eats: black tile, white "Uber", green "Eats" (set in type, not the trademark drawing). */
+export function UberEatsLogo({ className }: LogoProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <rect width="24" height="24" rx="4" fill="#000000" />
+      <text
+        x="12"
+        y="11.2"
+        textAnchor="middle"
+        fill="#FFFFFF"
+        fontFamily="ui-sans-serif, system-ui, -apple-system, Helvetica, Arial, sans-serif"
+        fontSize="7.2"
+        fontWeight="700"
+        letterSpacing="-0.2"
+      >
+        Uber
+      </text>
+      <text
+        x="12"
+        y="18.6"
+        textAnchor="middle"
+        fill="#06C167"
+        fontFamily="ui-sans-serif, system-ui, -apple-system, Helvetica, Arial, sans-serif"
+        fontSize="7.2"
+        fontWeight="700"
+        letterSpacing="-0.2"
+      >
+        Eats
+      </text>
+    </svg>
+  );
+}

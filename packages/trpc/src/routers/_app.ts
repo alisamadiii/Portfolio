@@ -24,6 +24,7 @@ import { productsRouter } from "./products";
 import { projectRouter } from "./project";
 import { neonRouter } from "./neon";
 import { resendRouter } from "./resend";
+import { uberEatsRouter } from "./uber-eats";
 import { wixRouter } from "./wix";
 import { sourcesRouter } from "./sources";
 import { statsRouter } from "./stats";
@@ -61,6 +62,7 @@ export const appRouter = createTRPCRouter({
   gcal: gcalRouter,
   feedback: feedbackRouter,
   googleReviews: googleReviewsRouter,
+  uberEats: uberEatsRouter,
 });
 
 // export type definition of API
