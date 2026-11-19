@@ -53,7 +53,7 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 import { Button, ButtonAnchor, ButtonLink, IconButton } from "@/components/ds/ui/button";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 import { darken, EVENT_COLORS, useEventColors } from "./event-colors";
 import { NewEventDialog, writableCalendars } from "./new-event-dialog";
@@ -638,7 +638,7 @@ export function CalendarWeek({
                   <ButtonLink
                     size="sm"
                     variant="primary"
-                    href={repoPath(projectId, `leads/${selected.leadId}`)}
+                    href={appPath(`leads/${selected.leadId}`)}
                     icon={<UserRound className="size-3.5" />}
                   >
                     Open lead

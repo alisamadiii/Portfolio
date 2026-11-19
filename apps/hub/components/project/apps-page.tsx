@@ -17,9 +17,9 @@ import { ButtonLink, IconButton } from "@/components/ds/ui/button";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { useEntitlement } from "@/hooks/use-plans";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { APPS, appState, type AppDef, type AppState } from "@/lib/apps";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 type Filter = "all" | "installed" | "included" | "locked";
 
@@ -32,7 +32,7 @@ const planLabel = (label?: string) =>
 
 /** Add tools to a site. Apps included in the plan are free to add. */
 export function AppsPage() {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const { entitlement } = useEntitlement(projectId || undefined);
   const { installed, install, uninstall, isPending } = useInstalledApps(projectId);
   const router = useRouter();
@@ -41,7 +41,7 @@ export function AppsPage() {
   // Adding is instant (optimistic), so it feels like nothing happened: hold a
   // short "Adding…" beat (0.8–2s) before the install lands.
   const [adding, setAdding] = useState<string[]>([]);
-  const base = repoPath(projectId);
+  const base = "";
 
   const add = (app: AppDef) => {
     if (adding.includes(app.id)) return;

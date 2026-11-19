@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowUpRight,
@@ -29,6 +28,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import { FREE_PLAN } from "@workspace/trpc/lib/payment/plans";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 
+import { selectProject } from "@/app/actions/workspace";
 import { DeployButton } from "@/components/deploy/deploy-dialog";
 import { Badge, StatusText } from "@/components/ds/ui/badge";
 import { Button, ButtonLink, IconButton } from "@/components/ds/ui/button";
@@ -42,7 +42,6 @@ import { hostOf } from "@/components/project/site-preview";
 import { ReferralDialog } from "@/components/sites/referral-dialog";
 import { usePlans } from "@/hooks/use-plans";
 import { handleCmsError } from "@/lib/trpc-errors";
-import { repoPath } from "@/lib/paths";
 
 type Filter = "all" | "paid" | "free";
 
@@ -65,7 +64,6 @@ type Row = {
 export function SitesPage() {
   const user = useCurrentUser().data?.user ?? null;
   const trpc = useTRPC();
-  const router = useRouter();
   const plans = usePlans();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
@@ -220,11 +218,11 @@ export function SitesPage() {
               }
             />
             <DropdownMenuContent align="end" className="min-w-48">
-              <DropdownMenuItem render={<Link href={repoPath(r.projectId, "website")} />}>
+              <DropdownMenuItem onClick={() => void selectProject(r.projectId, "/website")}>
                 <Sparkles className="size-4" />
                 Edit with AI
               </DropdownMenuItem>
-              <DropdownMenuItem render={<Link href={repoPath(r.projectId, "domain")} />}>
+              <DropdownMenuItem onClick={() => void selectProject(r.projectId, "/settings")}>
                 <Link2 className="size-4" />
                 Domain settings
               </DropdownMenuItem>
@@ -320,7 +318,7 @@ export function SitesPage() {
           columns={columns}
           rows={visible}
           rowKey={(r) => r.projectId}
-          onRowClick={(r) => router.push(repoPath(r.projectId))}
+          onRowClick={(r) => void selectProject(r.projectId)}
           empty={
             loading ? (
               <div className="px-6 py-12 text-center text-[13px] text-dim">Loading your sites…</div>

@@ -14,7 +14,7 @@ import {
 import { AiHelper as DsAiHelper } from "@/components/ds/business-info/side-cards";
 import { Button } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 function useCopy(text: string) {
   const [copied, setCopied] = useState(false);
@@ -44,7 +44,7 @@ export function AiHelper({
   /** Per-section href overrides (e.g. deep-link to the selected category). */
   links?: Record<string, string>;
 }) {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const { text } = resolvePrompt(prompt, values);
   const missing = Object.values(prompt.fills)
     .filter((fill) => !fillText(values, fill))
@@ -53,7 +53,7 @@ export function AiHelper({
   const hrefFor = (step: number) => {
     const m = missing.find((x) => x.step === step);
     const section = m?.section ?? BUSINESS_STEP_KEY_BY_NUMBER[step] ?? "";
-    return links?.[section] ?? sectionUrl(projectId, section);
+    return links?.[section] ?? sectionUrl(section);
   };
   return (
     <DsAiHelper

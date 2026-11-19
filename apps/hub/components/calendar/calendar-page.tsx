@@ -17,7 +17,7 @@ import { Card } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { connectErrorURL } from "@/lib/connect-errors";
 import { handleCmsError } from "@/lib/trpc-errors";
 
@@ -43,7 +43,7 @@ function Padded({ children }: { children: ReactNode }) {
 export function CalendarPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [returned, setReturned] = useQueryState("gcal", parseAsString);
   // Calendars unticked in the picker (empty = show them all), kept in the URL.

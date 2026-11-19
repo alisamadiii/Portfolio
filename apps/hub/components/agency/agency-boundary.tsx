@@ -9,7 +9,7 @@ import { Spinner } from "@workspace/ui/components/spinner";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 
 import { useEntitlement } from "@/hooks/use-plans";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 import { buttonClass } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
@@ -41,7 +41,7 @@ export function AgencyBoundary({
   /** Wraps the loading / paywall / empty states (full-bleed pages pad them). */
   frame?: (node: ReactNode) => ReactNode;
 }) {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const { can, isLoading } = useEntitlement(projectId || undefined);
   const agency = useAgencyOptional();
 

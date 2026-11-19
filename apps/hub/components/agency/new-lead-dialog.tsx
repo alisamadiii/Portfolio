@@ -17,7 +17,7 @@ import {
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { useAgency, useAgencyHref } from "@/components/agency/use-agency";
+import { useAgency } from "@/components/agency/use-agency";
 import { Plus } from "@/components/icon";
 import { Button as DsButton } from "@/components/ds/ui/button";
 import { Field, Input, Textarea } from "@/components/ds/ui/field";
@@ -29,7 +29,6 @@ export function NewLeadDialog() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { projectId } = useAgency();
-  const href = useAgencyHref();
   const [open, setOpen] = useState(false);
 
   const create = useMutation(
@@ -37,7 +36,7 @@ export function NewLeadDialog() {
       onSuccess: (lead) => {
         queryClient.invalidateQueries({ queryKey: trpc.agency.leads.pathKey() });
         setOpen(false);
-        router.push(href(`/leads?tab=conversations&lead=${lead.id}`));
+        router.push(`/leads?tab=conversations&lead=${lead.id}`);
       },
       onError: (error) => toast.error(error.message),
     })

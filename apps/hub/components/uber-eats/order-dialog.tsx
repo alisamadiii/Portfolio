@@ -24,7 +24,7 @@ import { Badge, type BadgeTone } from "@/components/ds/ui/badge";
 import { Button } from "@/components/ds/ui/button";
 import { Field, Input, Select } from "@/components/ds/ui/field";
 import { LetterTile } from "@/components/ds/ui/misc";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Detail = RouterOutputs["uberEats"]["order"];
@@ -96,7 +96,7 @@ function Content({
   onClose: () => void;
 }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const detail = useQuery({
     ...trpc.uberEats.order.queryOptions({ projectId, id: orderId }),
     // The courier card changes while the order is open; Uber has no webhook for it.
@@ -266,7 +266,7 @@ function useCountdown(placedAt: string) {
 function AcceptBar({ order, canAccept }: { order: Detail; canAccept: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [denying, setDenying] = useState(false);
   const [code, setCode] = useState<DenyCode>("ITEM_AVAILABILITY");
   const [explanation, setExplanation] = useState("");

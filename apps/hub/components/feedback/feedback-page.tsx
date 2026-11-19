@@ -24,8 +24,8 @@ import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { GoogleLinkForm, GoogleLinkRow } from "@/components/settings/google-business-card";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
-import { repoPath } from "@/lib/paths";
+import { useProjectId } from "@/hooks/use-repo";
+import { appPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Status = RouterOutputs["feedback"]["status"];
@@ -57,7 +57,7 @@ function Stars({ rating }: { rating: number }) {
 /** Feedback app: one review link, 5 stars to Google, the rest private feedback. */
 export function FeedbackPage() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
 
   // Always refetch: the user may have just changed Settings.
   const status = useQuery({
@@ -130,7 +130,7 @@ function SettingsRequired({ projectId, missing }: { projectId: string; missing: 
           .map((f) => REVIEW_FIELD_LABELS[f].toLowerCase())
           .join(" and ")} in Settings, then come back here.`}
         action={
-          <ButtonLink variant="primary" href={repoPath(projectId, "settings")}>
+          <ButtonLink variant="primary" href={appPath("settings")}>
             Open Settings
           </ButtonLink>
         }
@@ -140,7 +140,7 @@ function SettingsRequired({ projectId, missing }: { projectId: string; missing: 
 }
 
 /** Where the Google listing lives: Settings. */
-const settingsHref = (projectId: string) => `${repoPath(projectId, "settings")}#google-listing`;
+const settingsHref = `${appPath("settings")}#google-listing`;
 
 /** No Google listing in Settings yet: nothing to link to. */
 function ListingRequired({ projectId }: { projectId: string }) {
@@ -151,7 +151,7 @@ function ListingRequired({ projectId }: { projectId: string }) {
         title="Add your Google listing first"
         text="Happy customers are sent to your Google review page, so we need your business on Google Maps. Find it under Google listing in Settings, then come back here."
         action={
-          <ButtonLink variant="primary" href={settingsHref(projectId)}>
+          <ButtonLink variant="primary" href={settingsHref}>
             Open Settings
           </ButtonLink>
         }
@@ -164,7 +164,7 @@ function ListingRequired({ projectId }: { projectId: string }) {
 function CreateLinkCard({ status }: { status: Status }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
 
   const createLink = useMutation(
@@ -202,7 +202,7 @@ function CreateLinkCard({ status }: { status: Status }) {
 
 /** The listing from Settings, with a way to change it there. */
 function Listing({ status }: { status: Status }) {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-inner border border-line px-4 py-3">
       <MapPin className="size-4 shrink-0 text-dim" aria-hidden />
@@ -210,7 +210,7 @@ function Listing({ status }: { status: Status }) {
         <span className="truncate text-sm font-medium text-ink">{status.businessName || "Your listing"}</span>
         {status.address && <span className="truncate text-[13px] text-dim">{status.address}</span>}
       </div>
-      <ButtonLink size="sm" variant="outline" href={settingsHref(projectId)}>
+      <ButtonLink size="sm" variant="outline" href={settingsHref}>
         Change in Settings
       </ButtonLink>
     </div>
@@ -220,7 +220,7 @@ function Listing({ status }: { status: Status }) {
 function LinkCard({ status, link }: { status: Status; link: NonNullable<Status["link"]> }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [copied, setCopied] = useState(false);
 
@@ -285,7 +285,7 @@ function LinkCard({ status, link }: { status: Status; link: NonNullable<Status["
           {status.recommended.length > 0 && (
             <p className="text-[13px] text-dim">
               Tip: add your {status.recommended.map((f) => REVIEW_FIELD_LABELS[f].toLowerCase()).join(" and ")} in{" "}
-              <Link href={repoPath(projectId, "settings")} className="text-coral-text underline-offset-2 hover:underline">
+              <Link href={appPath("settings")} className="text-coral-text underline-offset-2 hover:underline">
                 Settings
               </Link>{" "}
               so customers recognize you.
@@ -301,7 +301,7 @@ function LinkCard({ status, link }: { status: Status; link: NonNullable<Status["
 function GoogleLinkRequired({ status, link }: { status: Status; link: NonNullable<Status["link"]> }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
 
   const setGoogleUrl = useMutation(
@@ -341,7 +341,7 @@ function GoogleLinkRequired({ status, link }: { status: Status; link: NonNullabl
 
 function Stats() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const stats = useQuery(trpc.feedback.stats.queryOptions({ projectId }));
   const s = stats.data;
   const value = (n: number | undefined) => (s && s.total > 0 && n !== undefined ? String(n) : "—");
@@ -363,7 +363,7 @@ function Stats() {
 function FeedbackTable() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [rating, setRating] = useState<RatingFilter>("all");
   const [cursors, setCursors] = useState<string[]>([]);

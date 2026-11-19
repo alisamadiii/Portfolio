@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronDown, CircleHelp, Menu, Sparkles } from "lucide-react";
+import { Check, ChevronDown, CircleHelp, GitBranch, Menu, Plus, Sparkles } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -17,16 +19,17 @@ import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { useTRPC } from "@workspace/trpc/client";
 import { cn } from "@workspace/ui/lib/utils";
 
+import { selectProject } from "@/app/actions/workspace";
+import { DeployButton } from "@/components/deploy/deploy-dialog";
 import { User } from "@/components/user";
-import { repoPath } from "@/lib/paths";
 
 import { buttonClass, IconButton } from "../ui/button";
 import { useNavDrawer } from "./app-shell";
 import { LetterTile } from "../ui/misc";
 
 /**
- * 56px white bar, bottom line. Left: coral "A" logo (→ all sites) | divider | project switcher.
- * Right: "Edit with AI" (project only), help, avatar. One UI for every client: no mode toggle.
+ * 56px white bar, bottom line. Left: coral "A" logo (→ Home) | divider | project switcher
+ * (every page: the workspace is one project at a time). Right: "Edit with AI", help, avatar.
  */
 export function TopBar({
   project,
@@ -43,7 +46,7 @@ export function TopBar({
           <Menu className="size-[18px]" />
         </IconButton>
       )}
-      <Link href="/" aria-label="Client Hub, all sites" className="flex shrink-0 items-center gap-2.5 text-ink">
+      <Link href="/" aria-label="Client Hub, home" className="flex shrink-0 items-center gap-2.5 text-ink">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/agency-icon.png" alt="" width={28} height={28} className="size-7 rounded-[7px]" />
         {!project && <span className="text-[15px] font-semibold tracking-[-0.01em]">Client Hub</span>}
@@ -79,22 +82,43 @@ export function TopBar({
   );
 }
 
+/** Detail pages (/leads/12) don't exist on another project: switching from one lands on Home. */
+const switchDestination = (pathname: string) =>
+  pathname.split("/").filter(Boolean).length > 1 ? "/" : pathname || "/";
+
 function ProjectSwitcher({
   current,
 }: {
   current: { projectId: string; name: string; plan?: string };
 }) {
   const trpc = useTRPC();
+  const pathname = usePathname() ?? "/";
   const projects = useQuery(trpc.cms.repos.listMine.queryOptions());
   const currentLogo =
     projects.data?.find((p) => p.projectId === current.projectId)?.logoUrl ?? null;
+  const [pending, startTransition] = useTransition();
+  const [importOpen, setImportOpen] = useState(false);
+  const [filter, setFilter] = useState("");
+  const all = projects.data ?? [];
+  const showFilter = all.length > 8;
+  const needle = filter.trim().toLowerCase();
+  const listed = needle
+    ? all.filter((p) => `${p.name ?? ""} ${p.websiteUrl ?? ""} ${p.repo}`.toLowerCase().includes(needle))
+    : all;
+  const switchTo = (projectId: string) =>
+    startTransition(() => selectProject(projectId, switchDestination(pathname)));
   return (
-    <DropdownMenu>
+    <>
+    <DeployButton open={importOpen} onOpenChange={setImportOpen} />
+    <DropdownMenu onOpenChange={(open) => !open && setFilter("")}>
       <DropdownMenuTrigger
         render={
           <button
             type="button"
-            className="inline-flex h-9 min-w-0 max-w-[360px] items-center gap-2 rounded-control bg-subtle pl-1.5 pr-2.5 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral"
+            className={cn(
+              "inline-flex h-9 min-w-0 max-w-[360px] items-center gap-2 rounded-control bg-subtle pl-1.5 pr-2.5 text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral",
+              pending && "opacity-60"
+            )}
           >
             <LetterTile name={current.name} size={24} tone="ink" src={currentLogo} />
             <span className="truncate text-sm font-medium">{current.name}</span>
@@ -107,25 +131,52 @@ function ProjectSwitcher({
         <DropdownMenuGroup>
           <DropdownMenuLabel className="text-xs font-medium text-dim">Switch site</DropdownMenuLabel>
         </DropdownMenuGroup>
-        {(projects.data ?? []).map((p) => {
-          const name = p.name?.trim() || siteName(p.websiteUrl) || p.repo;
-          const active = p.projectId === current.projectId;
-          return (
-            <DropdownMenuItem
-              key={p.projectId}
-              render={<Link href={repoPath(p.projectId)} />}
-              className={cn("gap-2.5", active && "bg-selected")}
-            >
-              <LetterTile name={name} size={24} src={p.logoUrl} />
-              <span className="min-w-0 flex-1 truncate">{name}</span>
-              {active && <Check className="size-4 text-coral" aria-hidden />}
-            </DropdownMenuItem>
-          );
-        })}
+        {showFilter && (
+          <div className="px-2 pb-1">
+            <input
+              type="search"
+              aria-label="Filter sites"
+              placeholder="Filter sites"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="h-8 w-full rounded-control border border-line-strong bg-surface px-2.5 text-sm text-ink outline-none placeholder:text-faint focus:border-coral"
+            />
+          </div>
+        )}
+        <div className="max-h-[60vh] overflow-y-auto">
+          {listed.map((p) => {
+            const name = p.name?.trim() || siteName(p.websiteUrl) || p.repo;
+            const active = p.projectId === current.projectId;
+            return (
+              <DropdownMenuItem
+                key={p.projectId}
+                onClick={() => !active && switchTo(p.projectId)}
+                className={cn("gap-2.5", active && "bg-selected")}
+              >
+                <LetterTile name={name} size={24} src={p.logoUrl} />
+                <span className="min-w-0 flex-1 truncate">{name}</span>
+                {active && <Check className="size-4 text-coral" aria-hidden />}
+              </DropdownMenuItem>
+            );
+          })}
+          {listed.length === 0 && (
+            <p className="px-3 py-2 text-[13px] text-faint">No sites match.</p>
+          )}
+        </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link href="/" />}>All sites</DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/integrations" />} className="gap-2.5">
+          <GitBranch className="size-4" />
+          GitHub access
+        </DropdownMenuItem>
+        {/* The menu must close before the dialog takes focus. */}
+        <DropdownMenuItem onClick={() => setTimeout(() => setImportOpen(true), 100)} className="gap-2.5">
+          <Plus className="size-4" />
+          Import site
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }
 

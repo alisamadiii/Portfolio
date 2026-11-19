@@ -28,6 +28,7 @@ import {
 import { SUBSCRIPTION_REQUIRED_EVENT } from "@/lib/trpc-errors";
 import { PlanOfferPanel } from "@/components/billing/plan-offer-panel";
 import { usePlans } from "@/hooks/use-plans";
+import { useProjectId } from "@/hooks/use-repo";
 
 /**
  * App-wide purchase dialog for plan-gated features. Any mutation that comes
@@ -51,11 +52,10 @@ export function SubscriptionGateProvider({
   const [feature, setFeature] = useState<Feature | null>(null);
   const verifiedOnReturnRef = useRef(false);
 
-  // The plan is per-project: every 402 fires from inside /p/[projectId], so the
-  // current path identifies which project the checkout must bind to (the
-  // webhook keys the subscription on metadata.projectId).
-  const projectIdMatch = pathname?.match(/^\/p\/([0-9a-f-]{36})(?:\/|$)/i);
-  const projectId = projectIdMatch?.[1];
+  // The plan is per-project: every 402 fires for the focused project, which is
+  // the one the checkout must bind to (the webhook keys the subscription on
+  // metadata.projectId).
+  const projectId = useProjectId() || undefined;
 
   // Fresh read of this project's plan (the webhook may have just landed),
   // then refresh the cached plans so every gate in the hub updates.

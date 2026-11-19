@@ -16,6 +16,7 @@ import { fireCelebration } from "@workspace/ui/lib/confetti";
 
 import { useTRPC } from "@workspace/trpc/client";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
+import { projectLink } from "@/lib/paths";
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -182,7 +183,7 @@ export const AgencyWelcome = () => {
   const subtotal = formatAmount(data.amountSubtotal, data.currency);
   const discount = formatAmount(data.amountDiscount, data.currency);
   // Where the new agency lives once they sign in: its project, or the gallery.
-  const home = data.metadata.projectId ? `/p/${data.metadata.projectId}` : "/";
+  const home = data.metadata.projectId ? projectLink(data.metadata.projectId) : "/";
   const firstName = data.metadata.name.trim().split(/\s+/)[0] ?? "";
   const hasRecurring = data.lineItems.some((li) => li.interval);
   const boughtCms =
@@ -193,12 +194,12 @@ export const AgencyWelcome = () => {
     {
       title: "Billing",
       body: "Track your project, invoices, and subscription.",
-      href: "/billing",
+      href: "/account/billing",
     },
     {
       title: "Support",
       body: "Questions or change requests — we're one message away.",
-      href: "/billing/support",
+      href: "/account/billing/support",
     },
     ...(boughtCms
       ? [

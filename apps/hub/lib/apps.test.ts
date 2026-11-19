@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { APP_IDS, planAllowsApp } from "@workspace/trpc/lib/apps";
 import { entitlementFor } from "@workspace/trpc/lib/payment/plans";
 
-import { APPS, appById, appState } from "./apps";
+import { ACCOUNT_PRODUCTS, accountNav, APPS, appById, appState } from "./apps";
 
 // DELIBERATE CHANGE (2026-11-15, plans priced per client): free projects can
 // add NO app, feature-less ones (Resend, Calendar, Neon, Wix) included, and
@@ -194,5 +194,24 @@ describe("DoorDash app", () => {
     expect(appState(app, [], WEBSITE)).toBe("included");
     expect(appState(app, ["doordash"], WEBSITE)).toBe("installed");
     expect(APP_IDS).toContain("doordash");
+  });
+});
+
+describe("workspace sidebar account group (2026-11-19)", () => {
+  it("lists Sites at /sites, never at /, and keeps account billing under /account", () => {
+    const nav = accountNav({ isAdmin: false });
+    expect(nav[0]).toMatchObject({ id: "sites", path: "/sites" });
+    expect(nav.some((i) => i.path === "/")).toBe(false);
+    expect(nav.find((i) => i.id === "billing")?.path).toBe("/account/billing");
+    expect(nav.some((i) => i.adminOnly)).toBe(false);
+  });
+
+  it("adds the locked admin pages for admins only", () => {
+    const admin = accountNav({ isAdmin: true });
+    expect(admin.filter((i) => i.adminOnly).map((i) => i.path)).toEqual(["/client-websites", "/inspirations"]);
+  });
+
+  it("points Purchases at the account billing tab", () => {
+    expect(ACCOUNT_PRODUCTS.find((i) => i.id === "purchases")?.path).toBe("/account/billing?tab=purchases");
   });
 });

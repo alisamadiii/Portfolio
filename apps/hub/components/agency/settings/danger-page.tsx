@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { clearProject } from "@/app/actions/workspace";
+
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -63,7 +65,8 @@ export const DeleteSiteCard = () => {
         );
         void queryClient.invalidateQueries({ queryKey });
         toast.success("Project deleted.");
-        router.push("/");
+        // Forget the deleted project so Home picks the next one.
+        void clearProject();
       },
       onError: (error) => toast.error(error.message),
     })

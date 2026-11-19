@@ -26,7 +26,7 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Select } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 import { conversationHref } from "./inbox/conversation-href";
 
@@ -88,7 +88,7 @@ export function LeadNameCell({ lead, href }: { lead: LeadRow; href?: string }) {
 export function LeadsTable() {
   const router = useRouter();
   const { projectId } = useAgency();
-  const base = repoPath(projectId, "leads");
+  const base = appPath("leads");
 
   const [status, setStatus] = useState<AgencyLeadStatus | undefined>();
   const [channel, setChannel] = useState<AgencyLeadChannel | typeof ALL_SOURCES>(ALL_SOURCES);

@@ -21,9 +21,9 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { reviewsPrompt } from "@/lib/embed-prompts";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Data = RouterOutputs["googleReviews"]["get"];
@@ -40,7 +40,7 @@ type RatingFilter = (typeof RATING_TABS)[number]["id"];
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.alisamadii.com").replace(/\/$/, "");
 
 /** The listing lives in Settings; every "change" goes there. */
-const settingsHref = (projectId: string) => `${repoPath(projectId, "settings")}#google-listing`;
+const settingsHref = `${appPath("settings")}#google-listing`;
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -59,7 +59,7 @@ function Stars({ rating }: { rating: number }) {
 /** Google Reviews app: every Google review saved daily; the 5-star ones show on the website. */
 export function GoogleReviewsPage() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const status = useQuery(trpc.googleReviews.get.queryOptions({ projectId }));
 
   const header = (
@@ -152,7 +152,7 @@ function ListingRequired({ projectId }: { projectId: string }) {
         title="Add your Google listing first"
         text="We read reviews from your business on Google Maps. Find it under Google listing in Settings, then come back here."
         action={
-          <ButtonLink variant="primary" href={settingsHref(projectId)}>
+          <ButtonLink variant="primary" href={settingsHref}>
             Open Settings
           </ButtonLink>
         }
@@ -163,7 +163,7 @@ function ListingRequired({ projectId }: { projectId: string }) {
 
 /** The listing from Settings (name, address) with a way to change it there. */
 function Listing({ data }: { data: Data }) {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-inner border border-line px-4 py-3">
       <MapPin className="size-4 shrink-0 text-dim" aria-hidden />
@@ -171,7 +171,7 @@ function Listing({ data }: { data: Data }) {
         <span className="truncate text-sm font-medium text-ink">{data.businessName || "Your listing"}</span>
         {data.address && <span className="truncate text-[13px] text-dim">{data.address}</span>}
       </div>
-      <ButtonLink size="sm" variant="outline" href={settingsHref(projectId)}>
+      <ButtonLink size="sm" variant="outline" href={settingsHref}>
         Change in Settings
       </ButtonLink>
     </div>
@@ -179,7 +179,7 @@ function Listing({ data }: { data: Data }) {
 }
 
 function ConnectCard({ data }: { data: Data }) {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const connect = useConnect();
 
@@ -208,7 +208,7 @@ function ConnectCard({ data }: { data: Data }) {
 function ListingCard({ data, source }: { data: Data; source: Source }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [disconnecting, setDisconnecting] = useState(false);
 
@@ -293,7 +293,7 @@ function ListingCard({ data, source }: { data: Data; source: Source }) {
 function ReviewsTable() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [rating, setRating] = useState<RatingFilter>("all");
   const [cursors, setCursors] = useState<string[]>([]);
@@ -460,7 +460,7 @@ const EXAMPLE_MARKUP = `<p><span data-reviews-rating></span> stars from <span da
 
 // For whoever maintains the site's code: one tag + plain markup, no keys.
 function InstallCard() {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const snippet = `<script src="${API_URL}/reviews.js" data-key="${projectId}" defer></script>`;
   return (
     <Card className="text-sm">

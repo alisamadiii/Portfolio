@@ -26,7 +26,7 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Field, Input, Textarea } from "@/components/ds/ui/field";
 import { useProject } from "@/hooks/use-project";
 import { roleAtLeast } from "@/lib/authz-shared";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Post = RouterOutputs["wix"]["blog"]["list"][number];
@@ -38,7 +38,7 @@ const ago = (iso: string | null) =>
 export function WixBlog() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const role = useProject()?.role ?? null;
   const canEdit = !!role && roleAtLeast(role, "content-editor");
   const posts = useQuery(trpc.wix.blog.list.queryOptions({ projectId }, { retry: false }));
@@ -186,7 +186,7 @@ function PostEditor({
   onSaved: () => void;
 }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const post = useQuery(
     trpc.wix.blog.get.queryOptions({ projectId, id: id ?? "" }, { enabled: !!id, retry: false })
   );
@@ -231,7 +231,7 @@ function PostForm({
   onSaved: () => void;
 }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [markdown, setMarkdown] = useState(initial?.markdown ?? "");

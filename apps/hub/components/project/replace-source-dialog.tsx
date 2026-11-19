@@ -25,7 +25,7 @@ import {
   uploadZip,
   zipForUpload,
 } from "@/components/deploy/upload-dropzone";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 /**
  * "Import" inside an uploaded project: replace the whole source with a new
@@ -82,7 +82,7 @@ export function ReplaceSourceDialog({ projectId }: { projectId: string }) {
         action: netlify
           ? {
               label: "Redeploy",
-              onClick: () => router.push(`${repoPath(projectId)}/netlify`),
+              onClick: () => router.push("/netlify"),
             }
           : undefined,
       });

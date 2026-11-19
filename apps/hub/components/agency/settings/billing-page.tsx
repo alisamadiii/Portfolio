@@ -16,7 +16,7 @@ import {
 } from "@/components/billing/project-billing";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { PanelError } from "@/components/settings/panel-error";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 /**
  * Billing: this site's plan and invoices (reusing the picker / manage
@@ -25,7 +25,7 @@ import { useRouteProjectId } from "@/hooks/use-repo";
  */
 export function AgencyBillingPage() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const { refresh: refreshPlans } = useEntitlement(projectId);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery(

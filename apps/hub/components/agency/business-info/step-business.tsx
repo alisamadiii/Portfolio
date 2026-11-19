@@ -11,7 +11,7 @@ import { TipCard, UsedIn } from "@/components/ds/business-info/side-cards";
 import { Card } from "@/components/ds/ui/card";
 import { Field, Input, Textarea } from "@/components/ds/ui/field";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 // Name, phone, address and hours live on the project (Settings): the shared
 // BusinessCard above edits them. This step owns the marketing fields.
@@ -31,7 +31,7 @@ const USED_IN = [
 
 export function StepBusiness() {
   const bi = useBusinessInfo(KEYS);
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const name = useProject()?.name ?? "";
   const saveAnd = (to?: string) => bi.saveAnd(to);
   const description = bi.draft.productDescription?.[0] ?? "";

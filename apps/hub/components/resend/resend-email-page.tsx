@@ -16,8 +16,8 @@ import { ButtonAnchor } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
-import { useRouteProjectId } from "@/hooks/use-repo";
-import { repoPath } from "@/lib/paths";
+import { useProjectId } from "@/hooks/use-repo";
+import { appPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 import { emailBadge } from "./resend-page";
@@ -56,7 +56,7 @@ const TABS = [
 /** One email sent from the client's Resend account: details + content. */
 export function ResendEmailPage() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const { emailId } = useParams<{ emailId: string }>();
   const email = useQuery(
     trpc.resend.email.queryOptions({ projectId, emailId }, { enabled: !!emailId, retry: false })
@@ -65,7 +65,7 @@ export function ResendEmailPage() {
 
   const back = (
     <Link
-      href={repoPath(projectId, "resend")}
+      href={appPath("resend")}
       className="flex w-fit items-center gap-1 text-[13px] text-dim hover:text-ink"
     >
       <ChevronLeft className="size-4" />

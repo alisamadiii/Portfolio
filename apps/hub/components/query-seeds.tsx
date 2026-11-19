@@ -29,7 +29,7 @@ export function SessionSeed({
   return children;
 }
 
-/** agency.project({ projectId }), from the /p/[projectId] layout when it picks the agency UI. */
+/** agency.project({ projectId }), from the (main) layout when the focused project has agency data. */
 export function AgencySeed({
   agency,
   children,
@@ -48,7 +48,7 @@ export function AgencySeed({
   return children;
 }
 
-/** cms.repos.listMine, from the /p/[projectId] layout: every page in the shell reads the project's row from it. */
+/** cms.repos.listMine, from the (main) layout: every page reads the focused project's row from it. */
 export function ProjectsSeed({
   projects,
   children,

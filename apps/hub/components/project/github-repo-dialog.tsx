@@ -21,7 +21,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { useTRPC } from "@workspace/trpc/client";
 
 import { Button } from "@/components/ds/ui/button";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 /**
  * "GitHub" on an uploaded project's home (owner or admin): the private repo
@@ -51,7 +51,7 @@ export function GithubRepoDialog({ projectId }: { projectId: string }) {
             ? "Your live site still shows the old version until you redeploy."
             : undefined,
           action: netlify
-            ? { label: "Redeploy", onClick: () => router.push(`${repoPath(projectId)}/netlify`) }
+            ? { label: "Redeploy", onClick: () => router.push("/netlify") }
             : undefined,
         });
       },

@@ -1,7 +1,9 @@
 import { cache } from "react";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 import { createHttpCaller } from "@workspace/trpc/http-caller";
+
+import { pickWorkspaceProject, WORKSPACE_COOKIE } from "@/lib/workspace";
 
 // tRPC's authenticatedProcedure throws UNAUTHORIZED (never null) when signed out.
 const isUnauthorized = (error: unknown) =>
@@ -28,6 +30,17 @@ const getServerSession = cache(async () => {
   return user ? { user } : null;
 });
 
+/** Every project the caller can open (cms.repos.listMine), once per request. */
+const getServerProjects = cache(async () =>
+  createHttpCaller(await headers()).cms.repos.listMine.query()
+);
+
+/** The project the workspace is focused on: the cookie's, else the first, else null. */
+const getWorkspaceProject = cache(async () => {
+  const [projects, cookieStore] = await Promise.all([getServerProjects(), cookies()]);
+  return pickWorkspaceProject(cookieStore.get(WORKSPACE_COOKIE)?.value, projects);
+});
+
 const requireApiUserSession = async () => {
   const user = await getServerUser();
   if (!user) {
@@ -40,6 +53,8 @@ const requireApiUserSession = async () => {
 export {
   getServerUser,
   getServerSession,
+  getServerProjects,
+  getWorkspaceProject,
   requireApiUserSession,
   resolveUserFromHeaders,
 };

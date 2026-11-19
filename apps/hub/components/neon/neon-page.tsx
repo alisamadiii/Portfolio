@@ -30,7 +30,7 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { connectErrorURL } from "@/lib/connect-errors";
 import { handleCmsError } from "@/lib/trpc-errors";
 
@@ -61,7 +61,7 @@ const computeBadge = (state: string | null): { tone: BadgeTone; label: string } 
 export function NeonPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const project = useProject();
   const fullAccess = project?.role === "full-access";
   const [returned, setReturned] = useQueryState("neon", parseAsString);
@@ -242,7 +242,7 @@ function LoadError({ error, onReconnect }: { error: unknown; onReconnect: () => 
 function ProjectPicker({ onReconnect }: { onReconnect: () => void }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const projectName = useProject()?.repo ?? "website";
   const orgs = useQuery(trpc.neon.orgs.queryOptions({ projectId }, { retry: false }));
   const [orgPick, setOrgPick] = useState("");
@@ -374,7 +374,7 @@ function CreateProjectDialog({
   onDone: () => void;
 }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [name, setName] = useState(defaultName.slice(0, 64));
   const [regionId, setRegionId] = useState<string>(NEON_REGIONS[0].id);
   const create = useMutation(
@@ -437,7 +437,7 @@ function CreateProjectDialog({
 /** Bound: project summary, branches, databases and the connection string. */
 function BoundProject({ fullAccess, onReconnect }: { fullAccess: boolean; onReconnect: () => void }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const overview = useQuery(trpc.neon.overview.queryOptions({ projectId }, { retry: false }));
   const [branchPick, setBranchPick] = useState("");
 
@@ -532,7 +532,7 @@ function DatabasesCard({
   fullAccess: boolean;
 }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const dbs = useQuery(trpc.neon.databases.queryOptions({ projectId, branchId }, { retry: false }));
   const [dbPick, setDbPick] = useState("");
   const [rolePick, setRolePick] = useState("");

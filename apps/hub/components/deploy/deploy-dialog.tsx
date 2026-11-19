@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   useMutation,
   useQueries,
@@ -27,24 +26,33 @@ import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
 import { FolderUp, LockKeyhole, Plus } from "@/components/icon";
+import { selectProject } from "@/app/actions/workspace";
 import { UploadImport } from "@/components/deploy/upload-import";
-import { repoPath } from "@/lib/paths";
 
 type Repo = RouterOutputs["deploy"]["installationRepos"][number];
 
 /**
- * Opens the import wizard. `trigger` renders the opening control (the Sites
- * page passes its own primary button); without it, a default button renders.
+ * Opens the import wizard. `trigger` renders the opening control (the Welcome
+ * card passes its own primary button); without it, a default button renders.
+ * Pass `open` + `onOpenChange` to drive it from elsewhere (the project
+ * switcher menu): then no trigger renders at all.
  */
 export const DeployButton = ({
   trigger,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   trigger?: (open: () => void) => React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) => {
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : ownOpen;
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setOwnOpen(next));
   return (
     <>
-      {trigger ? (
+      {controlled ? null : trigger ? (
         trigger(() => setOpen(true))
       ) : (
         <Button size="sm" onClick={() => setOpen(true)}>
@@ -272,7 +280,6 @@ const RepoPicker = ({
 
 const GithubImport = ({ onClose }: { onClose: () => void }) => {
   const trpc = useTRPC();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [repo, setRepo] = useState<Repo | null>(null);
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -283,7 +290,8 @@ const GithubImport = ({ onClose }: { onClose: () => void }) => {
         toast.success("Project imported.");
         await queryClient.invalidateQueries();
         onClose();
-        router.push(repoPath(res.projectId));
+        // Focus the workspace on the new site and open its Home.
+        await selectProject(res.projectId);
       },
       onError: (err) => toast.error(err.message),
     })

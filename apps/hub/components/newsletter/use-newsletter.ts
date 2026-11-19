@@ -1,16 +1,16 @@
 "use client";
 
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
-import { repoPath } from "@/lib/paths";
+import { useProjectId } from "@/hooks/use-repo";
+import { appPath } from "@/lib/paths";
 
 /** Project + permissions for the Newsletter app (the server enforces the same). */
 export function useNewsletter() {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const role = useProject()?.role ?? null;
   return {
     projectId,
-    base: repoPath(projectId, "newsletter"),
+    base: appPath("newsletter"),
     /** Campaigns, templates, contacts: content editors and up. */
     canWrite: role !== "view-only",
     /** Domain and suppressions: full access only. */

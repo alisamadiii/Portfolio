@@ -64,7 +64,7 @@ export type AppDef = {
   icon: LucideIcon;
   /** Brand mark for third-party apps (shown on a white tile instead of `icon`). */
   logo?: ComponentType<{ className?: string }>;
-  /** Route segment under the project, e.g. /p/[projectId]/leads */
+  /** Route segment under the project, e.g. /leads */
   path: string;
   /** Plan feature that unlocks the app's data. Unset = free on every plan. */
   feature?: Feature;
@@ -247,12 +247,12 @@ export const SOURCE_CODE_NAV: NavItem = { id: "source-code", label: "Source Code
 /** Project Settings (name, logo, website, domains, delete). Owner and admins only. */
 export const SETTINGS_NAV: NavItem = { id: "settings", label: "Settings", icon: Settings, path: "settings" };
 
-/** Account-level sidebar (no project selected). Client websites: admins only. */
+/** Account group of the workspace sidebar (below the project pages). Client websites, Inspirations: admins only. */
 export const accountNav = ({ isAdmin }: { isAdmin: boolean }): NavItem[] => [
-  { id: "sites", label: "Sites", icon: LayoutGrid, path: "/" },
+  { id: "sites", label: "Sites", icon: LayoutGrid, path: "/sites" },
   { id: "account", label: "Account", icon: User, path: "/account" },
   { id: "integrations", label: "Integrations", icon: Plug, path: "/integrations" },
-  { id: "billing", label: "Billing", icon: CreditCard, path: "/billing" },
+  { id: "billing", label: "Billing", icon: CreditCard, path: "/account/billing" },
   { id: "partner", label: "Partner Program", icon: Handshake, path: "/partner" },
   // The Client Hub docs live on the agency site only.
   { id: "guide", label: "Guide", icon: BookOpen, path: docsUrl("client-hub/getting-started"), external: true },
@@ -266,5 +266,5 @@ export const accountNav = ({ isAdmin }: { isAdmin: boolean }): NavItem[] => [
 
 export const ACCOUNT_PRODUCTS: NavItem[] = [
   { id: "motion", label: "Motion", path: urls.motion, external: true },
-  { id: "purchases", label: "Purchases", path: "/billing?tab=purchases" },
+  { id: "purchases", label: "Purchases", path: "/account/billing?tab=purchases" },
 ];

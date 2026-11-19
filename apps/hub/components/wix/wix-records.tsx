@@ -12,7 +12,7 @@ import { Badge } from "@/components/ds/ui/badge";
 import { Button } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 // Read-only Wix records: contacts, store orders, upcoming bookings.
@@ -35,7 +35,7 @@ const PAGE = 50;
 
 export function WixContacts() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [pages, setPages] = useState(1);
   const results = useQueries({
     queries: Array.from({ length: pages }, (_, i) =>
@@ -82,7 +82,7 @@ export function WixContacts() {
 
 export function WixOrders() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const orders = useQuery(trpc.wix.orders.queryOptions({ projectId }, { retry: false }));
   const columns: Column<Order>[] = [
     {
@@ -120,7 +120,7 @@ export function WixOrders() {
 
 export function WixBookings() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const bookings = useQuery(trpc.wix.bookings.queryOptions({ projectId }, { retry: false }));
   const columns: Column<Booking>[] = [
     {

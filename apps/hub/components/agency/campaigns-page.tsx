@@ -20,7 +20,7 @@ import type { AdCampaign, AdCampaignKeyword } from "@workspace/drizzle/schema";
 
 import { sectionUrl } from "@/components/agency/business-info-config";
 import { StepShell } from "@/components/agency/business-info/step-shell";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { SideNote } from "@/components/ds/business-info/side-cards";
 import { Button, IconButton } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
@@ -90,7 +90,7 @@ export function CampaignsIndex() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
 
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
   const [name, setName] = useState("");
@@ -102,7 +102,7 @@ export function CampaignsIndex() {
         void queryClient.invalidateQueries({ queryKey: trpc.agency.campaigns.pathKey() });
         setOpen(false);
         setName("");
-        router.push(`${sectionUrl(projectId, "keywords")}/${campaign.id}`);
+        router.push(`${sectionUrl("keywords")}/${campaign.id}`);
       },
       onError: (error) => toast.error(error.message),
     })
@@ -133,7 +133,7 @@ export function CampaignsIndex() {
             campaigns.data.map((campaign) => (
               <Link
                 key={campaign.id}
-                href={`${sectionUrl(projectId, "keywords")}/${campaign.id}`}
+                href={`${sectionUrl("keywords")}/${campaign.id}`}
                 className="flex items-center gap-4 border-b border-divider px-6 py-4 last:border-b-0 hover:bg-sidebar"
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -185,7 +185,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
 
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
   const campaign = campaigns.data?.find((c) => c.id === campaignId);
@@ -222,7 +222,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
     trpc.agency.campaigns.remove.mutationOptions({
       onSuccess: () => {
         void invalidate();
-        router.push(sectionUrl(projectId, "keywords"));
+        router.push(sectionUrl("keywords"));
       },
       onError: (error) => toast.error(error.message),
     })
@@ -274,7 +274,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
         <Card className="flex flex-col items-start gap-3 p-6">
           <p className="text-sm text-dim">Keyword group not found.</p>
           <Link
-            href={sectionUrl(projectId, "keywords")}
+            href={sectionUrl("keywords")}
             className="inline-flex items-center gap-1.5 text-[13px] font-medium text-coral-text"
           >
             <ChevronLeft className="size-3.5" /> Keywords
@@ -283,7 +283,7 @@ export function CampaignDetail({ campaignId }: { campaignId: string }) {
       ) : (
         <Card className="flex flex-col gap-6 p-6">
           <Link
-            href={sectionUrl(projectId, "keywords")}
+            href={sectionUrl("keywords")}
             className="inline-flex items-center gap-1.5 self-start text-[13px] font-medium text-ink-3 hover:text-ink"
           >
             <ChevronLeft className="size-3.5" /> All keyword groups

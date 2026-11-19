@@ -13,7 +13,7 @@ import { NotifyEmailCard } from "@/components/settings/notify-email-card";
 import { SiteLogoCard } from "@/components/settings/site-logo-card";
 import { WebsiteUrlCard } from "@/components/settings/website-url-card";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 /**
  * Project Settings, owner and admins only: the business details every app
@@ -22,7 +22,7 @@ import { useRouteProjectId } from "@/hooks/use-repo";
  * may run on, and deleting the site.
  */
 export function ProjectSettingsPage() {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const project = useProject();
   const agency = useAgencyOptional();
 

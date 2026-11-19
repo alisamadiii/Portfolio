@@ -16,7 +16,7 @@ import { sectionUrl, stepFor } from "@/components/agency/business-info-config";
 import { AiHelper } from "@/components/agency/business-info/ai-helper";
 import { StepShell } from "@/components/agency/business-info/step-shell";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { Button, IconButton } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ds/ui/field";
@@ -118,7 +118,7 @@ export function StepSearchAd() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const websiteUrl = useProject()?.websiteUrl ?? null;
 
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
@@ -292,8 +292,8 @@ export function StepSearchAd() {
             values={values}
             links={{
               keywords: campaign
-                ? `${sectionUrl(projectId, "keywords")}/${campaign.id}`
-                : sectionUrl(projectId, "keywords"),
+                ? `${sectionUrl("keywords")}/${campaign.id}`
+                : sectionUrl("keywords"),
             }}
           />
         </>
@@ -307,7 +307,7 @@ export function StepSearchAd() {
         <Card className="p-6">
           <p className="text-sm leading-relaxed text-dim">
             No keyword groups yet. Add one on the{" "}
-            <Link href={sectionUrl(projectId, "keywords")} className="font-medium text-coral-text">
+            <Link href={sectionUrl("keywords")} className="font-medium text-coral-text">
               Keywords
             </Link>{" "}
             step first; the prompt and the ad text are saved per group.

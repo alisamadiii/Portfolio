@@ -28,14 +28,13 @@ const nextConfig = {
       { source: "/login", has: PORTAL_HOST, destination: `${HUB}/sign-in`, permanent: false },
       { source: "/signup", has: PORTAL_HOST, destination: `${HUB}/sign-up`, permanent: false },
       { source: "/reset-password", has: PORTAL_HOST, destination: `${HUB}/reset-password`, permanent: false },
-      { source: "/billing", has: PORTAL_HOST, destination: `${HUB}/billing?tab=purchases`, permanent: false },
+      { source: "/billing", has: PORTAL_HOST, destination: `${HUB}/account/billing?tab=purchases`, permanent: false },
       { source: "/", has: PORTAL_HOST, destination: `${HUB}/account`, permanent: false },
       { source: "/:path*", has: PORTAL_HOST, destination: `${HUB}/:path*`, permanent: false },
-      // One UI per project (2026-11): the editor moved to /website, leads to
-      // /leads, site settings to top-level pages, and booking / calls /
-      // marketing / reports left the hub (GoHighLevel). The /website list
-      // merged into the Sites page at /.
-      { source: "/website", destination: "/", permanent: false },
+      // Workspace (2026-11-19): pages lost their /p/<projectId> prefix. Old
+      // project links are normalized here, then app/p/[projectId]/[[...rest]]
+      // focuses the workspace and strips the prefix. Account billing moved
+      // under /account so the project's /billing keeps its Stripe return URL.
       { source: "/p/:projectId/agency", destination: "/p/:projectId/leads", permanent: false },
       { source: "/p/:projectId/agency/:leadId(\\d+)", destination: "/p/:projectId/leads/:leadId", permanent: false },
       { source: "/p/:projectId/agency/:path*", destination: "/p/:projectId", permanent: false },
@@ -43,14 +42,20 @@ const nextConfig = {
       { source: "/p/:projectId/reports", destination: "/p/:projectId", permanent: false },
       { source: "/p/:projectId/settings/danger", destination: "/p/:projectId/billing", permanent: false },
       { source: "/p/:projectId/settings/:section(billing|domain|speed)", destination: "/p/:projectId/:section", permanent: false },
-      // Agency pages moved inside their project (/p/[projectId]/...). Old
-      // bookmarks and emailed links land on the Sites page.
-      ...["/agency", "/marketing", "/business-info", "/reports", "/analytics", "/origins", "/newsletter"].flatMap(
-        (source) => [
-          { source, destination: "/", permanent: false },
-          { source: `${source}/:path*`, destination: "/", permanent: false },
-        ]
-      ),
+      { source: "/billing/support", destination: "/account/billing/support", permanent: false },
+      {
+        source: "/billing",
+        has: [{ type: "query", key: "tab", value: "purchases" }],
+        destination: "/account/billing?tab=purchases",
+        permanent: false,
+      },
+      // Pages that left the hub (GoHighLevel handles booking / calls /
+      // marketing / reports). /agency/:path* is NOT here: /agency/success is
+      // the agency checkout landing page.
+      ...["/marketing", "/reports", "/origins"].flatMap((source) => [
+        { source, destination: "/", permanent: false },
+        { source: `${source}/:path*`, destination: "/", permanent: false },
+      ]),
     ];
   },
 };

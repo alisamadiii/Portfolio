@@ -14,7 +14,7 @@ import { Button, ButtonAnchor } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { Field, Input, Select, Textarea } from "@/components/ds/ui/field";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Snippet = RouterOutputs["netlify"]["settings"]["snippets"][number];
@@ -23,7 +23,7 @@ type Snippet = RouterOutputs["netlify"]["settings"]["snippets"][number];
 export function NetlifySettings({ canEdit }: { canEdit: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const settings = useQuery(trpc.netlify.settings.queryOptions({ projectId }, { retry: false }));
   const [title, setTitle] = useState("");
   const [html, setHtml] = useState("");

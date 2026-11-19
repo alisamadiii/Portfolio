@@ -16,7 +16,7 @@ import { Input } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { CodeBrowser } from "@/components/source-code/code-browser";
 import { Skeleton } from "@workspace/ui/components/skeleton";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 /**
@@ -26,7 +26,7 @@ import { handleCmsError } from "@/lib/trpc-errors";
  */
 export function SourceCodePage() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const status = useQuery(trpc.project.sourceCodeRepo.queryOptions({ projectId }, { retry: false }));
   const [changing, setChanging] = useState(false);
 

@@ -1,23 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTRPC } from "@workspace/trpc/client";
 
 import { AppShell } from "@/components/ds/layout/app-shell";
-import { ProjectSidebar } from "@/components/ds/layout/project-sidebar";
 import { siteName, TopBar } from "@/components/ds/layout/top-bar";
+import { WorkspaceSidebar } from "@/components/ds/layout/workspace-sidebar";
 import { useEntitlement } from "@/hooks/use-plans";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
-import { repoPath } from "@/lib/paths";
+import { useProjectId } from "@/hooks/use-repo";
 
-/** Shell for every project page except the editor: top bar + project sidebar. */
-export default function ProjectShellLayout({ children }: { children: React.ReactNode }) {
-  const projectId = useRouteProjectId();
+/** Top bar with the project switcher + the one sidebar, around every page except the editor. */
+export function WorkspaceShell({
+  children,
+  wide,
+  bleed,
+}: {
+  children: React.ReactNode;
+  wide?: boolean;
+  bleed?: boolean;
+}) {
+  const projectId = useProjectId();
   const project = useProject();
   const { entitlement } = useEntitlement(projectId || undefined);
   // The plan cache can be present on the client's first render but never on
@@ -27,18 +33,8 @@ export default function ProjectShellLayout({ children }: { children: React.React
   const { installed, netlify } = useInstalledApps(projectId);
   const trpc = useTRPC();
   const sourceCode = useQuery(
-    trpc.project.sourceCode.queryOptions({ projectId }, { enabled: Boolean(project?.ownerOrAdmin), staleTime: 60_000 })
+    trpc.project.sourceCode.queryOptions({ projectId }, { enabled: Boolean(projectId && project?.ownerOrAdmin), staleTime: 60_000 })
   );
-  const pathname = usePathname() ?? "";
-  const wide = pathname.includes("/business-info/");
-  // Edge to edge, scrolling inside: the calendar week, the Leads inbox, the
-  // Source Code browser and the Newsletter app (including its campaign and
-  // template editors).
-  const bleed =
-    pathname.endsWith("/calendar") ||
-    pathname.endsWith("/leads") ||
-    pathname.endsWith("/source-code") ||
-    /\/newsletter(\/|$)/.test(pathname);
 
   const name = project?.name?.trim() || siteName(project?.websiteUrl) || project?.repo || "Site";
   return (
@@ -47,13 +43,13 @@ export default function ProjectShellLayout({ children }: { children: React.React
       bleed={bleed}
       topBar={
         <TopBar
-          project={{ projectId, name, plan: mounted ? entitlement?.label : undefined }}
-          editorHref={repoPath(projectId, "website")}
+          project={projectId ? { projectId, name, plan: mounted ? entitlement?.label : undefined } : undefined}
+          editorHref={projectId ? "/website" : undefined}
         />
       }
       sidebar={
-        <ProjectSidebar
-          base={repoPath(projectId)}
+        <WorkspaceSidebar
+          hasProject={Boolean(projectId)}
           installed={installed}
           netlify={netlify}
           showSettings={project?.role == null || project.role === "full-access"}

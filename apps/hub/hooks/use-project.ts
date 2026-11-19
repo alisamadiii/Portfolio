@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@workspace/trpc/client";
 import type { CollaboratorRole } from "@workspace/drizzle/schema";
 
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 export type Project = {
   projectId: string;
@@ -25,32 +25,32 @@ export type Project = {
 };
 
 /**
- * The project the current /p/[projectId] screen is about. Reads, in order:
+ * The project the workspace is focused on (WorkspaceProvider). Reads, in order:
  * the editor's seeded snapshot, the agency row, then the listMine row the
  * project layout seeds for every page. All cache reads: nothing here calls
  * GitHub, so shell pages render for projects without the App installed.
  */
 export const useProject = (): Project | null => {
   const trpc = useTRPC();
-  const routeProjectId = useRouteProjectId();
+  const projectId = useProjectId();
 
   const agency = useQuery(
-    trpc.agency.project.queryOptions({ projectId: routeProjectId }, { enabled: false })
+    trpc.agency.project.queryOptions({ projectId: projectId }, { enabled: false })
   );
   const snapshot = useQuery(
-    trpc.cms.repos.getSnapshot.queryOptions({ projectId: routeProjectId }, { enabled: false })
+    trpc.cms.repos.getSnapshot.queryOptions({ projectId: projectId }, { enabled: false })
   );
   const projects = useQuery(
-    trpc.cms.repos.listMine.queryOptions(undefined, { enabled: !!routeProjectId })
+    trpc.cms.repos.listMine.queryOptions(undefined, { enabled: !!projectId })
   );
 
-  if (!routeProjectId) return null;
+  if (!projectId) return null;
 
-  const row = projects.data?.find((p) => p.projectId === routeProjectId);
+  const row = projects.data?.find((p) => p.projectId === projectId);
   const repo = snapshot.data;
   if (repo) {
     return {
-      projectId: routeProjectId,
+      projectId: projectId,
       owner: repo.owner.toLowerCase(),
       repo: repo.repo.toLowerCase(),
       branch: repo.defaultBranch ?? "",
@@ -64,7 +64,7 @@ export const useProject = (): Project | null => {
 
   if (row) {
     return {
-      projectId: routeProjectId,
+      projectId: projectId,
       owner: row.owner.toLowerCase(),
       repo: row.repo.toLowerCase(),
       branch: row.defaultBranch,

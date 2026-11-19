@@ -22,7 +22,7 @@ import {
   postChrome,
   postPickMode,
 } from "@/lib/bridge-messages";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 import { useSessionHeartbeat } from "@/hooks/use-session-heartbeat";
 import { useEntitlement } from "@/hooks/use-plans";
 
@@ -192,7 +192,7 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const repo = project?.repo ?? "";
   const branch = project?.branch ?? "";
   const projectId = project?.projectId ?? "";
-  const repoBase = repoPath(projectId);
+  const repoBase = "";
 
   const pagesQuery = useQuery(
     trpc.cms.pages.list.queryOptions(

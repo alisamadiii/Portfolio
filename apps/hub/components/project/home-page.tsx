@@ -20,9 +20,9 @@ import { IconTile, InfoStrip } from "@/components/ds/ui/misc";
 import { useEntitlement } from "@/hooks/use-plans";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { APPS, appState } from "@/lib/apps";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 import { GithubRepoDialog } from "./github-repo-dialog";
 import { LinkNetlifyDialog } from "./link-netlify-dialog";
@@ -36,7 +36,7 @@ function greeting() {
 
 export function HomePage() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const project = useProject();
   const agency = useAgencyOptional();
   const user = useCurrentUser().data?.user ?? null;
@@ -67,7 +67,7 @@ export function HomePage() {
     )
   );
 
-  const base = repoPath(projectId);
+  const base = "";
   const firstName = user?.name?.split(" ")[0];
 
   const live = site?.status.up === true;

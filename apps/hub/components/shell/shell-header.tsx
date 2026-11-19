@@ -15,7 +15,6 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 
-import { repoPath } from "@/lib/paths";
 import { useRepo } from "@/hooks/use-repo";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
@@ -43,7 +42,7 @@ export function ShellHeader({
   const { projectId } = useCanvasEditor();
   const { myRole } = useRepo();
   const canManage = (myRole ?? "full-access") === "full-access";
-  const leaveHref = repoPath(projectId);
+  const leaveHref = "/";
 
   return (
     <header className="bg-background relative flex h-11 shrink-0 items-center gap-2 border-b px-2.5">

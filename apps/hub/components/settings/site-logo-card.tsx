@@ -13,7 +13,7 @@ import { Button } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
 import { LetterTile } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { roleAtLeast } from "@/lib/authz-shared";
 import { shrinkImage } from "@/lib/shrink-image";
 
@@ -43,7 +43,7 @@ const toBase64 = async (blob: Blob) => {
 export function SiteLogoCard({ name }: { name: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const role = useProject()?.role ?? null;
   const canEdit = !!role && roleAtLeast(role, "content-editor");
   const input = useRef<HTMLInputElement>(null);

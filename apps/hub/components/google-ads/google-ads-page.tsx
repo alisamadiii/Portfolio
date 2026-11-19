@@ -58,7 +58,7 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Input } from "@/components/ds/ui/field";
 import { EmptyState, IconTile, KpiGrid, Progress } from "@/components/ds/ui/misc";
 import { UnderlineTabs } from "@/components/ds/ui/tabs";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 const TABS = ["overview", "budget", "search-terms", "conversions", "lsa"] as const;
@@ -872,7 +872,7 @@ function LsaTab({ range }: { range: { from: string; to: string } }) {
       </Card>
       <p className="text-xs text-faint">
         Local Services leads stay in Google.{" "}
-        <Link href={repoPath(projectId, "leads")} className="text-coral-text">
+        <Link href={appPath("leads")} className="text-coral-text">
           Leads
         </Link>{" "}
         covers your website form leads.

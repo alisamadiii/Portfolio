@@ -19,7 +19,7 @@ import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { UnderlineTabs } from "@/components/ds/ui/tabs";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 import { WixBlog } from "./wix-blog";
@@ -38,7 +38,7 @@ const RETURN_TOASTS: Record<string, () => void> = {
 export function WixPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [returned, setReturned] = useQueryState("wix", parseAsString);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);

@@ -10,7 +10,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { ButtonAnchor } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { Progress } from "@/components/ds/ui/misc";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 type Usage = { used: number | null; included: number | null } | null;
 
@@ -25,7 +25,7 @@ const fraction = (u: Usage, unit = "") =>
  */
 export function NetlifyPlan() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const account = useQuery(trpc.netlify.account.queryOptions({ projectId }, { retry: false }));
 
   if (account.isPending) return <Skeleton className="h-[260px] rounded-card" />;

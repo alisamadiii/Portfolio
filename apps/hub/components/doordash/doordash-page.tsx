@@ -31,7 +31,7 @@ import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { Field, Input } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { isAdminUser } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
 
@@ -62,7 +62,7 @@ const exclusionText = (code: string | null) =>
 export function DoorDashPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [returned, setReturned] = useQueryState("doordash", parseAsString);
   const status = useQuery({
@@ -136,7 +136,7 @@ export function DoorDashPage() {
 
 function ConnectCard({ fullAccess, env }: { fullAccess: boolean; env: Data["env"] }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const connect = useMutation(
     trpc.doordash.connectUrl.mutationOptions({
       onSuccess: ({ url }) => window.location.assign(url),
@@ -186,7 +186,7 @@ type PickerValues = z.infer<typeof pickerSchema>;
 function StorePicker({ stores, fullAccess }: { stores: NonNullable<Data["pending"]>; fullAccess: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [picked, setPicked] = useState<string | null>(null);
   const {
     control,
@@ -288,7 +288,7 @@ function StorePicker({ stores, fullAccess }: { stores: NonNullable<Data["pending
 function StatusCard({ store, env, fullAccess }: { store: Store; env: Data["env"]; fullAccess: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const admin = isAdminUser(useCurrentUser().data?.user);
   const [disconnecting, setDisconnecting] = useState(false);
   const [resetting, setResetting] = useState(false);

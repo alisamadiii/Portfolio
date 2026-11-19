@@ -17,9 +17,9 @@ import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { roleAtLeast } from "@/lib/authz-shared";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Submission = RouterOutputs["wix"]["forms"]["list"][number];
@@ -56,7 +56,7 @@ const columns: Column<Submission>[] = [
 export function WixLeads() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const role = useProject()?.role ?? null;
   const canEdit = !!role && roleAtLeast(role, "content-editor");
   const { isInstalled, install, isPending: installing } = useInstalledApps(projectId);
@@ -86,7 +86,7 @@ export function WixLeads() {
           canEdit &&
           (leadsInstalled ? (
             <div className="flex gap-2">
-              <ButtonLink size="sm" href={repoPath(projectId, "leads")}>
+              <ButtonLink size="sm" href={appPath("leads")}>
                 Open Leads
               </ButtonLink>
               <Button

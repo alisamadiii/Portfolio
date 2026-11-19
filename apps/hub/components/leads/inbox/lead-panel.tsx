@@ -22,7 +22,7 @@ import { useAgency } from "@/components/agency/use-agency";
 import { Button, IconButton } from "@/components/ds/ui/button";
 import { Field, Input } from "@/components/ds/ui/field";
 import { TemplateTextarea } from "@/components/templates/template-textarea";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 type Lead = RouterOutputs["agency"]["leads"]["get"];
 
@@ -263,7 +263,7 @@ function PanelBody({ lead }: { lead: Lead }) {
 
       <div className="px-4 py-4">
         <a
-          href={repoPath(projectId, `leads/${lead.id}`)}
+          href={appPath(`leads/${lead.id}`)}
           className="inline-flex items-center gap-1.5 text-[13px] font-medium text-coral-text hover:text-coral-deep"
         >
           Full record

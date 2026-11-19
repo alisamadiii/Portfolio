@@ -36,7 +36,7 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Field, Select } from "@/components/ds/ui/field";
 import { EmptyState, IconTile, KpiGrid } from "@/components/ds/ui/misc";
 import { UnderlineTabs } from "@/components/ds/ui/tabs";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { connectErrorURL } from "@/lib/connect-errors";
 
 const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
@@ -100,7 +100,7 @@ const flagEmoji = (code: string) =>
 export function AnalyticsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(TABS).withDefault("overview"));
   const [range, setRange] = useState<RangeValue>("28d");
   const [pickedProperty, setPickedProperty] = useState("");

@@ -32,7 +32,7 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { isAdminUser } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
 
@@ -93,7 +93,7 @@ const localTime = (iso: string, timezone: string | null) =>
 export function UberEatsPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const fullAccess = useProject()?.role === "full-access";
   const [returned, setReturned] = useQueryState("uber", parseAsString);
   const status = useQuery(trpc.uberEats.get.queryOptions({ projectId }));
@@ -167,7 +167,7 @@ export function UberEatsPage() {
 
 function ConnectCard({ fullAccess, env }: { fullAccess: boolean; env: Data["env"] }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const admin = isAdminUser(useCurrentUser().data?.user);
   const connect = useMutation(
     trpc.uberEats.connectUrl.mutationOptions({
@@ -210,7 +210,7 @@ function ConnectCard({ fullAccess, env }: { fullAccess: boolean; env: Data["env"
 function AdminAttachCard() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const stores = useQuery(trpc.uberEats.appStores.queryOptions({ projectId }, { retry: false }));
   const attach = useMutation(
     trpc.uberEats.attachStore.mutationOptions({
@@ -267,7 +267,7 @@ function AdminAttachCard() {
 function StorePicker({ stores, fullAccess }: { stores: NonNullable<Data["pending"]>; fullAccess: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [picked, setPicked] = useState<string | null>(null);
   const activate = useMutation(
     trpc.uberEats.activate.mutationOptions({
@@ -323,7 +323,7 @@ function StorePicker({ stores, fullAccess }: { stores: NonNullable<Data["pending
 function StoreCard({ store, env, fullAccess }: { store: Store; env: Data["env"]; fullAccess: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [pausing, setPausing] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
 
@@ -473,7 +473,7 @@ function StoreCard({ store, env, fullAccess }: { store: Store; env: Data["env"];
 function PauseDialogContent({ store, onClose }: { store: Store; onClose: () => void }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [duration, setDuration] = useState<PauseChoice>("30m");
   const [reason, setReason] = useState("");
   const pause = useMutation(
@@ -533,7 +533,7 @@ function PauseDialogContent({ store, onClose }: { store: Store; onClose: () => v
 function OrderManagerLine({ store, fullAccess }: { store: Store; fullAccess: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [confirming, setConfirming] = useState(false);
   const toggle = useMutation(
     trpc.uberEats.setOrderManager.mutationOptions({
@@ -575,7 +575,7 @@ function OrderManagerLine({ store, fullAccess }: { store: Store; fullAccess: boo
 function CommissionLine({ store, fullAccess }: { store: Store; fullAccess: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(store.commissionBps != null ? String(store.commissionBps / 100) : "");
   const save = useMutation(
@@ -632,7 +632,7 @@ function CommissionLine({ store, fullAccess }: { store: Store; fullAccess: boole
 
 function Stats() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const stats = useQuery(trpc.uberEats.stats.queryOptions({ projectId }));
   if (stats.isPending) return <Skeleton className="h-[88px] rounded-card" />;
   const s = stats.data;
@@ -665,7 +665,7 @@ function Stats() {
 function OrdersTable({ store }: { store: Store }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const role = useProject()?.role;
   const canAccept = store.isOrderManager && (role === "full-access" || role === "content-editor");
   const timezone = store.timezone;

@@ -5,15 +5,17 @@ export const PROJECT_ID_RE =
 export const isProjectId = (value: unknown): value is string =>
   typeof value === "string" && PROJECT_ID_RE.test(value);
 
-/** Internal hub route base for a project, keyed by its uuid (hub_project.id).
- *  Owner + branch are resolved server-side and never appear in the URL. */
-export const repoPath = (projectId: string, ...segments: string[]) =>
+/**
+ * A hub page of the focused project: appPath("leads", id) → "/leads/<id>",
+ * appPath() → "/". The project never appears in the URL; the workspace cookie
+ * (lib/workspace.ts) says which one every page is about.
+ */
+export const appPath = (...segments: string[]) => `/${segments.filter(Boolean).join("/")}`;
+
+/**
+ * A link that FOCUSES another project before opening a page (emails, the Sites
+ * table, other projects' sessions). app/p/[projectId]/[[...rest]]/route.ts sets
+ * the workspace cookie and redirects to the id-less page.
+ */
+export const projectLink = (projectId: string, ...segments: string[]) =>
   ["", "p", projectId, ...segments].join("/");
-
-/** A /p/[projectId] pathname without its project prefix ("/p/<id>/marketing" → "/marketing", "/p/<id>" → "/"). */
-export const projectSubpath = (pathname: string) =>
-  pathname.replace(/^\/p\/[0-9a-f-]{36}/i, "") || "/";
-
-/** An agency page under its project: ("/agency/booking") → "/p/<id>/agency/booking", "/" → "/p/<id>". */
-export const agencyHref = (projectId: string, path: string) =>
-  repoPath(projectId) + (path === "/" ? "" : path);

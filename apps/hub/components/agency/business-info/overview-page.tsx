@@ -27,7 +27,7 @@ import { ButtonLink } from "@/components/ds/ui/button";
 import { Card } from "@/components/ds/ui/card";
 import { Progress } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 const BADGE_TONE: Record<StepStatus["tone"], BadgeTone> = {
   success: "success",
@@ -37,11 +37,11 @@ const BADGE_TONE: Record<StepStatus["tone"], BadgeTone> = {
 };
 
 function StepRow({ step, status }: { step: BusinessStep; status: StepStatus }) {
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const next = status.state === "next";
   return (
     <Link
-      href={sectionUrl(projectId, step.key)}
+      href={sectionUrl(step.key)}
       className={cn(
         "flex items-center gap-4 border-b border-divider px-5 py-4 last:border-b-0 hover:bg-sidebar",
         next && "bg-next-row hover:bg-next-row"
@@ -116,7 +116,7 @@ const ANSWERS_GO = [
 
 export function BusinessInfoOverview() {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const project = useProject();
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId }));
   const campaigns = useQuery(trpc.agency.campaigns.list.queryOptions({ projectId }));
@@ -186,7 +186,7 @@ export function BusinessInfoOverview() {
         </div>
         <ButtonLink
           variant="primary"
-          href={sectionUrl(projectId, next.key)}
+          href={sectionUrl(next.key)}
           trailingIcon={<ArrowRight className="size-3.5" />}
         >
           {done === total ? "Review answers" : "Continue setup"}

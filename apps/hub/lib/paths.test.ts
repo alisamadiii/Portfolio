@@ -1,56 +1,44 @@
 import { describe, expect, it } from "vitest";
 
-import { agencyHref, isProjectId, projectSubpath, repoPath } from "@/lib/paths";
+import { appPath, isProjectId, projectLink } from "@/lib/paths";
 import { businessInfoUrl, sectionUrl } from "@/components/agency/business-info-config";
 
 // DELIBERATE CHANGE (2026-10-29): project ids are uuids (hub_project.id), not
 // numeric GitHub repo ids; assertions below were rewritten with uuids.
+// DELIBERATE CHANGE (2026-11-19): the workspace focuses on one project at a
+// time, so pages lost their /p/<projectId> prefix. repoPath, projectSubpath and
+// agencyHref are gone; appPath builds id-less pages and projectLink builds the
+// cross-project links the /p/[projectId] route handler resolves.
 const A = "3f2b6c1e-8d4a-4b7e-9c2d-1a5e6f7b8c9d";
 const B = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d";
 
-describe("repoPath", () => {
-  it("builds the project root and nested pages", () => {
-    expect(repoPath(A)).toBe(`/p/${A}`);
-    expect(repoPath(A, "agency", "booking")).toBe(`/p/${A}/agency/booking`);
+describe("appPath", () => {
+  it("builds Home and nested pages without a project prefix", () => {
+    expect(appPath()).toBe("/");
+    expect(appPath("leads")).toBe("/leads");
+    expect(appPath("resend", "em_1")).toBe("/resend/em_1");
+  });
+
+  it("drops empty segments", () => {
+    expect(appPath("", "settings")).toBe("/settings");
   });
 });
 
-describe("projectSubpath", () => {
-  it("strips the project prefix", () => {
-    expect(projectSubpath(`/p/${A}/marketing/budget`)).toBe("/marketing/budget");
-    expect(projectSubpath(`/p/${B}/business-info`)).toBe("/business-info");
+describe("projectLink", () => {
+  it("keeps the project id for cross-project links", () => {
+    expect(projectLink(A)).toBe(`/p/${A}`);
+    expect(projectLink(A, "billing")).toBe(`/p/${A}/billing`);
   });
 
-  it("maps the project root to /", () => {
-    expect(projectSubpath(`/p/${A}`)).toBe("/");
-  });
-
-  it("leaves hub-wide paths alone", () => {
-    expect(projectSubpath("/account")).toBe("/account");
-    expect(projectSubpath("/")).toBe("/");
-  });
-});
-
-describe("agencyHref", () => {
-  it("scopes agency pages to their project", () => {
-    expect(agencyHref(A, "/agency/booking")).toBe(`/p/${A}/agency/booking`);
-    expect(agencyHref(A, "/marketing/search-terms")).toBe(`/p/${A}/marketing/search-terms`);
-  });
-
-  it("maps / to the project home (no trailing slash)", () => {
-    expect(agencyHref(A, "/")).toBe(`/p/${A}`);
-  });
-
-  // Two agency projects of the same owner never share URLs.
   it("keeps projects apart", () => {
-    expect(agencyHref(A, "/agency")).not.toBe(agencyHref(B, "/agency"));
+    expect(projectLink(A)).not.toBe(projectLink(B));
   });
 });
 
 describe("business info urls", () => {
-  it("lives under the project", () => {
-    expect(businessInfoUrl(A)).toBe(`/p/${A}/business-info`);
-    expect(sectionUrl(A, "keywords")).toBe(`/p/${A}/business-info/keywords`);
+  it("lives at the top level of the workspace", () => {
+    expect(businessInfoUrl()).toBe("/business-info");
+    expect(sectionUrl("keywords")).toBe("/business-info/keywords");
   });
 });
 
@@ -60,11 +48,5 @@ describe("isProjectId", () => {
     expect(isProjectId("1290180826")).toBe(false);
     expect(isProjectId("")).toBe(false);
     expect(isProjectId(undefined)).toBe(false);
-  });
-});
-
-describe("projectSubpath (legacy numeric)", () => {
-  it("leaves an old numeric /p/<repoId> path untouched", () => {
-    expect(projectSubpath("/p/42/marketing")).toBe("/p/42/marketing");
   });
 });

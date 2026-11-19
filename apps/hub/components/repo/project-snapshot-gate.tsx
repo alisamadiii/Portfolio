@@ -26,7 +26,7 @@ export function ErrorCard({
   description: string;
   action?: { href: string; label: string };
 }) {
-  const { href, label } = action ?? { href: "/", label: "Choose another repository" };
+  const { href, label } = action ?? { href: "/", label: "Go to Home" };
   return (
     <Empty className="absolute inset-0 rounded-none border-0">
       <EmptyHeader>

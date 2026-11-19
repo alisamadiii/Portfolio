@@ -15,7 +15,7 @@ import { Button } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { Field, Input } from "@/components/ds/ui/field";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Pending =
@@ -47,7 +47,7 @@ function CopyButton({ value }: { value: string }) {
 export function NetlifyDomains({ canEdit }: { canEdit: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const domains = useQuery(trpc.netlify.domains.queryOptions({ projectId }, { retry: false }));
   const [primary, setPrimary] = useState("");
   const [alias, setAlias] = useState("");

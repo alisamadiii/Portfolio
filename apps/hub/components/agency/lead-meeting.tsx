@@ -22,7 +22,7 @@ import {
 import { GoogleCalendarLogo } from "@/components/ds/brand-logos";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 import { ScheduleMeetingDialog } from "./schedule-meeting-dialog";
@@ -104,7 +104,7 @@ function CalendarSetupDialog({
 }) {
   const router = useRouter();
   const { install, isPending } = useInstalledApps(projectId);
-  const calendarPage = repoPath(projectId, "calendar");
+  const calendarPage = appPath("calendar");
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>

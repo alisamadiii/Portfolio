@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -16,7 +15,7 @@ import { Label } from "@workspace/ui/components/label";
 
 import { useTRPC } from "@workspace/trpc/client";
 
-import { repoPath } from "@/lib/paths";
+import { selectProject } from "@/app/actions/workspace";
 
 import {
   pilotUrl,
@@ -42,7 +41,6 @@ export const UploadImport = ({
   onClose: () => void;
 }) => {
   const trpc = useTRPC();
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -88,7 +86,7 @@ export const UploadImport = ({
       toast.success("Project imported.");
       await queryClient.invalidateQueries();
       onClose();
-      router.push(repoPath(reserved.projectId));
+      await selectProject(reserved.projectId);
     } catch (error) {
       if (projectId !== null) {
         cancelMutation.mutate({ projectId });

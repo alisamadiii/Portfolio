@@ -58,8 +58,8 @@ export function User({
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link href="/">Sites</Link>} />
-        <DropdownMenuItem render={<Link href="/billing">Billing</Link>} />
+        <DropdownMenuItem render={<Link href="/sites">Sites</Link>} />
+        <DropdownMenuItem render={<Link href="/account/billing">Billing</Link>} />
         <DropdownMenuItem render={<Link href="/account">Account</Link>} />
         <DropdownMenuSeparator />
         <DropdownMenuItem

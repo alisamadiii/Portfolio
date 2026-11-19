@@ -10,9 +10,12 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import type { NavItem } from "@/lib/apps";
 
+// Every row: same 34px box, same 20px icon slot, same hover. shrink-0 because
+// the nav is a fixed-height flex column: without it rows squash before the
+// nav scrolls.
 const linkClass = (active?: boolean, muted?: boolean) =>
   cn(
-    "flex h-[34px] w-full items-center gap-2.5 rounded-control px-2.5 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral",
+    "flex h-[34px] w-full shrink-0 items-center gap-2.5 rounded-control px-2.5 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral",
     active
       ? "bg-selected font-medium text-ink"
       : muted
@@ -45,43 +48,27 @@ export function SidebarLink({
       target={item.external ? "_blank" : undefined}
       rel={item.external ? "noopener noreferrer" : undefined}
       aria-current={active ? "page" : undefined}
-      className={cn(
-        linkClass(active, muted),
-        item.external && "justify-between"
-      )}
+      className={linkClass(active, muted)}
     >
-      {item.external ? (
-        <>
-          <span className="flex items-center gap-2.5">
-            {Icon && <Icon className="size-4" strokeWidth={1.8} aria-hidden />}
-            {item.label}
+      <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden>
+        {Logo ? (
+          <Logo className="size-[19px]" />
+        ) : item.tile && Icon ? (
+          <span className="flex size-[19px] items-center justify-center rounded-[5px] bg-coral text-white">
+            <Icon className="size-3.5" strokeWidth={2.2} />
           </span>
-          <ArrowUpRight className="size-3.5" aria-hidden />
-        </>
-      ) : (
-        <>
-          {Logo ? (
-            <Logo className="size-[19px]" />
-          ) : item.tile && Icon ? (
-            <span className="flex size-[19px] shrink-0 items-center justify-center rounded-[5px] bg-coral text-white">
-              <Icon className="size-3.5" strokeWidth={2.2} aria-hidden />
-            </span>
-          ) : (
-            Icon && (
-              <Icon
-                className={cn("size-4", active && "text-coral")}
-                strokeWidth={active ? 2 : 1.8}
-                aria-hidden
-              />
-            )
-          )}
-          {item.label}
-          {item.adminOnly && (
-            <Lock className="ml-auto size-3.5 text-faint" aria-label="Admins only">
-              <title>Admins only</title>
-            </Lock>
-          )}
-        </>
+        ) : (
+          Icon && (
+            <Icon className={cn("size-4", active && "text-coral")} strokeWidth={active ? 2 : 1.8} />
+          )
+        )}
+      </span>
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      {item.external && <ArrowUpRight className="size-3.5 shrink-0" aria-hidden />}
+      {item.adminOnly && (
+        <Lock className="size-3.5 shrink-0 text-faint" aria-label="Admins only">
+          <title>Admins only</title>
+        </Lock>
       )}
     </Link>
   );
@@ -97,7 +84,7 @@ export function SidebarSection({
   return (
     <>
       {label && (
-        <div className="text-dim px-2.5 pt-4 pb-1.5 text-xs font-medium">
+        <div className="shrink-0 px-2.5 pt-4 pb-1.5 text-xs font-medium text-dim">
           {label}
         </div>
       )}
@@ -107,7 +94,7 @@ export function SidebarSection({
 }
 
 export const SidebarDivider = () => (
-  <div className="bg-line mx-2.5 my-3 h-px" />
+  <div className="mx-2.5 my-3 h-px shrink-0 bg-line" />
 );
 
 /** Bottom "Contact support" row: opens the support request dialog (which renders the <button>). */
@@ -115,8 +102,10 @@ function SupportLink() {
   return (
     <RequestDialog>
       <span className={linkClass()}>
-        <CircleHelp className="size-4" strokeWidth={1.8} aria-hidden />
-        Contact support
+        <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden>
+          <CircleHelp className="size-4" strokeWidth={1.8} />
+        </span>
+        <span className="min-w-0 flex-1 truncate">Contact support</span>
       </span>
     </RequestDialog>
   );

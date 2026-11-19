@@ -31,7 +31,7 @@ import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import type { CollaboratorRole } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
 import { getInitialsFromName } from "@/lib/utils/avatar";
@@ -80,7 +80,7 @@ const looksLikeEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 export function MembersPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const me = useCurrentUser().data?.user ?? null;
 
   const membersKey = trpc.cms.collaborators.members.queryKey({ projectId });

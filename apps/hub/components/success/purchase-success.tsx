@@ -188,7 +188,7 @@ export const PurchaseSuccess = () => {
         <Button
           variant="outline"
           size="lg"
-          render={<Link href="/billing?tab=purchases" />}
+          render={<Link href="/account/billing?tab=purchases" />}
         >
           View billing
         </Button>

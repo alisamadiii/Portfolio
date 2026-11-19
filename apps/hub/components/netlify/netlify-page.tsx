@@ -19,7 +19,7 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, InfoStrip } from "@/components/ds/ui/misc";
 import { UnderlineTabs } from "@/components/ds/ui/tabs";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 import { NetlifyDomains } from "./netlify-domains";
@@ -109,7 +109,7 @@ const columns: Column<Deploy>[] = [
 export function NetlifyPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const project = useProject();
   const canDeploy = project?.role === "full-access";
 

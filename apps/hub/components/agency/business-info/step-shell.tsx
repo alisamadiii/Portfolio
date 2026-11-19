@@ -19,7 +19,7 @@ import { WithSide } from "@/components/ds/layout/app-shell";
 import { PageHeader } from "@/components/ds/layout/page-header";
 import { ButtonLink } from "@/components/ds/ui/button";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 
 function savedLabel(savedAt: Date): string {
   const minutes = Math.floor((Date.now() - savedAt.getTime()) / 60000);
@@ -53,7 +53,7 @@ export function StepShell({
   children: React.ReactNode;
 }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const project = useProject();
   const role = project?.role ?? null;
   const info = useQuery(trpc.agency.businessInfo.get.queryOptions({ projectId: projectId }));
@@ -66,7 +66,7 @@ export function StepShell({
   const prev = BUSINESS_STEPS[index - 1];
   const next = BUSINESS_STEPS[index + 1];
   const last = !next;
-  const overview = businessInfoUrl(projectId);
+  const overview = businessInfoUrl();
   const readOnly = role === "view-only";
 
   return (
@@ -78,7 +78,7 @@ export function StepShell({
         >
           <ChevronLeft className="size-3.5" /> Business info
         </Link>
-        <StepPills base={businessInfoUrl(projectId)} current={step.step} done={done} />
+        <StepPills base={businessInfoUrl()} current={step.step} done={done} />
       </div>
 
       <PageHeader
@@ -98,26 +98,26 @@ export function StepShell({
               </span>
             )}
             <StepFooter
-              backHref={prev ? sectionUrl(projectId, prev.key) : overview}
+              backHref={prev ? sectionUrl(prev.key) : overview}
               backLabel={prev ? prev.title : "Overview"}
               nextLabel={footer.saving ? "Saving…" : last ? "Save ad text" : "Save and continue"}
               saving={footer.saving}
               readOnly={readOnly}
               onSaveExit={() => footer.saveAnd(overview)}
-              onNext={() => footer.saveAnd(last ? overview : sectionUrl(projectId, next.key))}
+              onNext={() => footer.saveAnd(last ? overview : sectionUrl(next.key))}
             />
           </div>
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
             <Link
-              href={prev ? sectionUrl(projectId, prev.key) : overview}
+              href={prev ? sectionUrl(prev.key) : overview}
               className="flex items-center gap-1.5 text-[13px] font-medium text-ink-3"
             >
               <ChevronLeft className="size-3.5" />
               {prev ? prev.title : "Overview"}
             </Link>
             {next && (
-              <ButtonLink variant="primary" href={sectionUrl(projectId, next.key)}>
+              <ButtonLink variant="primary" href={sectionUrl(next.key)}>
                 Continue to {next.title.toLowerCase()}
               </ButtonLink>
             )}

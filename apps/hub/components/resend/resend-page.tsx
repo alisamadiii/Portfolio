@@ -22,9 +22,9 @@ import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { Field, Input, Select } from "@/components/ds/ui/field";
 import { EmptyState } from "@/components/ds/ui/misc";
 import { useProject } from "@/hooks/use-project";
-import { useRouteProjectId } from "@/hooks/use-repo";
+import { useProjectId } from "@/hooks/use-repo";
 import { connectErrorURL } from "@/lib/connect-errors";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Overview = RouterOutputs["resend"]["overview"];
@@ -87,7 +87,7 @@ const emailColumns: Column<Email>[] = [
 export function ResendPage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const project = useProject();
   const fullAccess = project?.role === "full-access";
   const [returned, setReturned] = useQueryState("resend", parseAsString);
@@ -272,7 +272,7 @@ export function ResendPage() {
             columns={emailColumns}
             rows={overview.data.emails}
             rowKey={(e) => e.id}
-            onRowClick={(e) => router.push(repoPath(projectId, "resend", e.id))}
+            onRowClick={(e) => router.push(appPath("resend", e.id))}
             empty={<p className="px-6 py-8 text-center text-[13px] text-dim">No emails sent yet.</p>}
           />
         )}
@@ -283,7 +283,7 @@ export function ResendPage() {
 
 function DomainsCard({ domains }: { domains: Domain[] }) {
   const trpc = useTRPC();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const [openId, setOpenId] = useState<string | null>(null);
   const records = useQuery(
     trpc.resend.domain.queryOptions(
@@ -362,7 +362,7 @@ function DomainsCard({ domains }: { domains: Domain[] }) {
 function ApiKeyCard({ domains, onNetlify }: { domains: Domain[]; onNetlify: boolean }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const projectId = useRouteProjectId();
+  const projectId = useProjectId();
   const keysKey = trpc.resend.apiKeys.queryKey({ projectId });
   const keys = useQuery(trpc.resend.apiKeys.queryOptions({ projectId }, { retry: false }));
   const [deleting, setDeleting] = useState<ApiKey | null>(null);

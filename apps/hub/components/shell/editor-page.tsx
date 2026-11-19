@@ -8,7 +8,7 @@ import {
 } from "@/components/document-title";
 import { EditorShell } from "@/components/shell/editor-shell";
 
-/** The canvas editor page body, mounted at /p/[projectId]/website. */
+/** The canvas editor page body, mounted at /website. */
 export function EditorPage() {
   const project = useProject();
 

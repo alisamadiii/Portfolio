@@ -26,7 +26,7 @@ import { Card, CardHeader, TextLink } from "@/components/ds/ui/card";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, InfoStrip, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
-import { repoPath } from "@/lib/paths";
+import { appPath } from "@/lib/paths";
 
 import { conversationHref } from "./inbox/conversation-href";
 import { LeadsInbox } from "./inbox/inbox";
@@ -47,7 +47,7 @@ type Tab = (typeof TABS)[number];
 export function LeadsPage() {
   const trpc = useTRPC();
   const { projectId, role } = useAgency();
-  const base = repoPath(projectId, "leads");
+  const base = appPath("leads");
   const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(TABS).withDefault("conversations"));
   const [days, setDays] = useState<RangeValue>("30");
 
@@ -74,7 +74,7 @@ export function LeadsPage() {
                 settings.
               </p>
             </div>
-            <ButtonLink href={repoPath(projectId, "domain")}>Open Domain settings</ButtonLink>
+            <ButtonLink href={appPath("domain")}>Open Domain settings</ButtonLink>
           </Card>
         </>
       )}

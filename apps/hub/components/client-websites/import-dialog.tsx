@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
+
+import { selectProject } from "@/app/actions/workspace";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,6 @@ export function ImportDialog({
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const router = useRouter();
   const [name, setName] = useState(defaultName);
   const [email, setEmail] = useState("");
 
@@ -47,7 +47,7 @@ export function ImportDialog({
         onOpenChange(false);
         if (project.mine) {
           toast.success(`Imported as ${project.name}.`);
-          router.push(`/p/${project.projectId}`);
+          void selectProject(project.projectId);
         } else {
           toast.success(`Imported as ${project.name} for ${project.ownerEmail}.`);
         }
