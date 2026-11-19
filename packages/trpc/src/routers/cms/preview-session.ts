@@ -7,6 +7,7 @@ import {
   isValidBranchName,
 } from "@workspace/trpc/lib/cms/branch-name";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
+import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
 import { installationCommitAuthor } from "@workspace/trpc/lib/github-app";
 import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 import { getBranchHeadSha } from "@workspace/trpc/lib/cms/github-cache-file";
@@ -20,10 +21,13 @@ import {
   cancelPreviewMessage,
   closePreviewSession,
   createPreviewSession,
+  getPreviewEnv,
   getPreviewSession,
   listLivePreviewSessions,
   publishPreviewSession,
   resetPreviewSession,
+  restartPreviewSession,
+  savePreviewEnv,
   type PreviewSession,
 } from "@workspace/trpc/lib/content-pilot";
 import { backupRepoForPublish } from "@workspace/trpc/lib/github-backup";
@@ -62,6 +66,42 @@ const sessionForRepo = async (projectId: string, sessionId: string) => {
   }
   return session;
 };
+
+/**
+ * Env values are secrets: only the project owner (who imported it) or an
+ * admin may read or change them. Same rule as project.setWebsiteUrl.
+ */
+const assertEnvAccess = async (
+  user: { id: string; role?: string | null; isAdmin?: boolean },
+  projectId: string
+) => {
+  const [project] = await db
+    .select({ ownerId: hubProject.githubConnectedUserId })
+    .from(hubProject)
+    .where(eq(hubProject.id, projectId))
+    .limit(1);
+  if (!project) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
+  }
+  if (!isAdminUser(user) && project.ownerId !== user.id) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "Only the project owner or an admin can change environment variables.",
+    });
+  }
+};
+
+// .env keys as dotenv writes them; values are single-line.
+const envValuesSchema = z
+  .record(
+    z.string().regex(/^[A-Z_][A-Z0-9_]*$/, "Invalid variable name."),
+    z
+      .string()
+      .max(8192)
+      .refine((value) => !/[\r\n]/.test(value), "Values can't contain line breaks.")
+  )
+  .refine((values) => Object.keys(values).length <= 100, "Too many variables.");
 
 const deleteBranchRef = async (
   token: string,
@@ -403,6 +443,41 @@ export const previewSessionRouter = createTRPCRouter({
       const session = await sessionForRepo(ctx.projectId, input.sessionId);
       await resetPreviewSession(session.id);
       return { reset: true };
+    }),
+
+  /**
+   * Restarts the session from scratch: content-pilot stops the AI run,
+   * discards the unpublished changes + transcript (like reset) and restarts
+   * the dev server.
+   */
+  restart: cmsWriteProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await sessionForRepo(ctx.projectId, input.sessionId);
+      await restartPreviewSession(session.id);
+      return { restart: true };
+    }),
+
+  /** The repo's `.env.example` keys with their saved values (owner/admin). */
+  getEnv: cmsFullAccessProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      await assertEnvAccess(ctx.user, ctx.projectId);
+      const session = await sessionForRepo(ctx.projectId, input.sessionId);
+      return { variables: await getPreviewEnv(session.id) };
+    }),
+
+  /**
+   * Saves env values for the preview ('' removes a key). content-pilot
+   * restarts the dev server with them, keeping the changes and chat.
+   */
+  saveEnv: cmsFullAccessProcedure
+    .input(z.object({ sessionId: z.string(), values: envValuesSchema }))
+    .mutation(async ({ ctx, input }) => {
+      await assertEnvAccess(ctx.user, ctx.projectId);
+      const session = await sessionForRepo(ctx.projectId, input.sessionId);
+      await savePreviewEnv(session.id, input.values);
+      return { ok: true };
     }),
 
   /** Pauses the in-flight AI run for this session; the partial edit is reverted. */

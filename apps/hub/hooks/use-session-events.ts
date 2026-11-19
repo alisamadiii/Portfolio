@@ -178,6 +178,13 @@ export function useSessionEvents(params: {
     });
     source.addEventListener("session-idle-warning", track);
     source.addEventListener("reset", track);
+    // Restart cleared the transcript and is rebooting the dev server: refetch
+    // both (the canvas remounts the iframe once the session is ready again).
+    source.addEventListener("restarted", (event) => {
+      track(event);
+      onMessageDoneRef.current();
+      onSessionChangeRef.current();
+    });
     source.addEventListener("session-ended", (event) => {
       let status: string | null = null;
       try {

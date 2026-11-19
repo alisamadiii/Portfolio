@@ -36,10 +36,11 @@ import { SessionChangesDialog } from "@/components/canvas/session-changes-dialog
 import { Loader2, UploadCloud } from "@/components/icon";
 
 /**
- * Header Publish / Discard for the live AI session (moved out of the chat
- * panel). Publish squash-merges the preview branch onto the site; Discard
- * resets the preview back to the live production site (throwing away this
- * session's changes + chat) while keeping the session open.
+ * Header Publish / Discard / Restart for the live AI session (moved out of
+ * the chat panel). Publish squash-merges the preview branch onto the site;
+ * Discard resets the preview back to the live production site (throwing away
+ * this session's changes + chat) while keeping the session open. Restart does
+ * the same, stops the AI and restarts the dev server too.
  */
 export function SessionActions() {
   const { projectId, session, editToken, noteSessionEnded, onDefaultBranch } =
@@ -103,6 +104,20 @@ export function SessionActions() {
     })
   );
 
+  const restartMutation = useMutation(
+    trpc.cms.previewSession.restart.mutationOptions({
+      onSuccess: () => {
+        invalidateSession();
+        // The transcript was cleared server-side — refetch the (empty) log.
+        queryClient.invalidateQueries({
+          queryKey: ["preview-session-transcript", session?.id],
+        });
+        toast.success("Restarting the preview…");
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  );
+
   // Same query key as the chat panel's transcript — shared cache, no extra
   // fetch. Publishing mid-run would merge a half-applied change.
   const transcriptQuery = useSessionTranscript(session?.id, editToken);
@@ -139,6 +154,7 @@ export function SessionActions() {
   }, [source, canPublish, session?.id]);
 
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [confirmRestart, setConfirmRestart] = useState(false);
 
   const TERMINAL_STATUSES = [
     "failed",
@@ -158,13 +174,29 @@ export function SessionActions() {
       <Button
         size="sm"
         variant="outline"
-        disabled={busy || resetMutation.isPending}
+        disabled={busy || resetMutation.isPending || restartMutation.isPending}
         onClick={() => setConfirmDiscard(true)}
       >
         {resetMutation.isPending ? (
           <Loader2 className="size-4 animate-spin" />
         ) : null}
         Discard
+      </Button>
+      {/* Allowed while the AI is busy: restarting stops it. */}
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={
+          resetMutation.isPending ||
+          restartMutation.isPending ||
+          publishMutation.isPending
+        }
+        onClick={() => setConfirmRestart(true)}
+      >
+        {restartMutation.isPending ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : null}
+        Restart
       </Button>
       {canPublish && (
         <Button
@@ -247,6 +279,29 @@ export function SessionActions() {
               }}
             >
               Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmRestart} onOpenChange={setConfirmRestart}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restart the preview?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This stops the AI, clears the chat and throws away changes you
+              haven&apos;t published. The preview reloads from your live site.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmRestart(false);
+                restartMutation.mutate({ projectId, sessionId: session.id });
+              }}
+            >
+              Restart
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

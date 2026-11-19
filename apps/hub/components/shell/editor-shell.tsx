@@ -22,6 +22,7 @@ import { type CanvasDevice } from "@/components/canvas/canvas-toolbar";
 import { ShellHeader } from "@/components/shell/shell-header";
 import { DocsPanel } from "@/components/shell/docs-panel";
 import { ProjectSettingsDialog } from "@/components/shell/project-settings-dialog";
+import { EnvDialog } from "@/components/shell/env-dialog";
 import { useRepo } from "@/hooks/use-repo";
 import { roleAtLeast } from "@/lib/authz-shared";
 
@@ -55,6 +56,7 @@ function ShellBody() {
   const canEdit = roleAtLeast(myRole ?? "full-access", "content-editor");
   const [docsOpen, setDocsOpen] = useState(false);
   const [projectSettingsOpen, setProjectSettingsOpen] = useState(false);
+  const [envOpen, setEnvOpen] = useState(false);
   const [device, setDevice] = useState<CanvasDevice>("desktop");
   const [reloadNonce, setReloadNonce] = useState(0);
   // Splitter drag: a transparent shield keeps the iframe from swallowing
@@ -127,6 +129,7 @@ function ShellBody() {
       <ShellHeader
         onToggleDocs={() => setDocsOpen((open) => !open)}
         onOpenProjectSettings={() => setProjectSettingsOpen(true)}
+        onOpenEnv={() => setEnvOpen(true)}
       />
 
       <div className="min-h-0 flex-1">
@@ -204,6 +207,7 @@ function ShellBody() {
         open={projectSettingsOpen}
         onOpenChange={setProjectSettingsOpen}
       />
+      <EnvDialog projectId={projectId} open={envOpen} onOpenChange={setEnvOpen} />
 
       {/* Client guide — opened from the header's info button. */}
       <Sheet open={docsOpen} onOpenChange={setDocsOpen}>

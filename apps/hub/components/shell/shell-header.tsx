@@ -14,17 +14,23 @@ import {
   AlertDialogTitle,
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
 
 import { useRepo } from "@/hooks/use-repo";
 
 import { useCanvasEditor } from "@/components/canvas/canvas-editor-context";
 import { SessionActions } from "@/components/canvas/session-actions";
-import { ArrowLeft, Info, Settings } from "@/components/icon";
+import { ArrowLeft, Info, KeyRound, Settings } from "@/components/icon";
 import { User } from "@/components/user";
 
 /**
  * Docked top bar. Left: back arrow (to the project's Home) + brand mark.
- * Right: guide, project settings (website URL, full access), user menu,
+ * Right: guide, project settings (website URL, full access), preview env
+ * variables (full access), user menu,
  * Invite (full access), Publish (content editor+). Images are attached in
  * the chat. Site settings (Domain / Speed / Billing) are routed pages under
  * the project, so there is no Settings tab here.
@@ -32,10 +38,13 @@ import { User } from "@/components/user";
 export function ShellHeader({
   onToggleDocs,
   onOpenProjectSettings,
+  onOpenEnv,
 }: {
   onToggleDocs: () => void;
   /** Opens the website project settings dialog (website URL). */
   onOpenProjectSettings: () => void;
+  /** Opens the preview's environment variables dialog. */
+  onOpenEnv: () => void;
 }) {
   const router = useRouter();
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -107,6 +116,24 @@ export function ShellHeader({
           >
             <Settings className="size-5" />
           </Button>
+        )}
+        {canManage && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onOpenEnv}
+                  aria-label="Environment"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <KeyRound className="size-5" />
+                </Button>
+              }
+            />
+            <TooltipContent side="bottom">Environment</TooltipContent>
+          </Tooltip>
         )}
         <User align="end" />
         <SessionActions />

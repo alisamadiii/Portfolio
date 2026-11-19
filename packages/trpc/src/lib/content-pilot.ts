@@ -267,6 +267,18 @@ export async function resetPreviewSession(sessionId: string): Promise<void> {
   if (!res.ok && res.status !== 404) await pilotError(res);
 }
 
+/**
+ * Restarts a session from scratch: stops the AI run, discards the session's
+ * unpublished changes + transcript (like reset) and restarts the dev server.
+ */
+export async function restartPreviewSession(sessionId: string): Promise<void> {
+  const res = await pilotFetch(`/api/v1/sessions/${sessionId}`, {
+    method: "POST",
+    body: JSON.stringify({ action: "restart" }),
+  });
+  if (!res.ok && res.status !== 404) await pilotError(res);
+}
+
 /** Pauses a session's in-flight AI run; the supervisor aborts + reverts it. */
 export async function cancelPreviewMessage(sessionId: string): Promise<void> {
   const res = await pilotFetch(`/api/v1/sessions/${sessionId}`, {
@@ -274,6 +286,53 @@ export async function cancelPreviewMessage(sessionId: string): Promise<void> {
     body: JSON.stringify({ action: "cancel" }),
   });
   if (!res.ok && res.status !== 404) await pilotError(res);
+}
+
+// ---------------------------------------------------------------------------
+// Preview env variables (the repo's .env.example, values stored by the pilot)
+// ---------------------------------------------------------------------------
+
+export type PreviewEnvVariable = {
+  key: string;
+  description: string;
+  example: string;
+  /** Saved value, or '' when unset. */
+  value: string;
+};
+
+/** The session repo's `.env.example` keys with their saved values. */
+export async function getPreviewEnv(
+  sessionId: string
+): Promise<PreviewEnvVariable[]> {
+  const res = await pilotFetch(`/api/v1/sessions/${sessionId}/env`);
+  if (!res.ok) await pilotError(res);
+  const data = (await res.json()) as { variables?: PreviewEnvVariable[] };
+  return data.variables ?? [];
+}
+
+/**
+ * Saves env values ('' removes a key). The pilot restarts the preview's dev
+ * server with them, keeping the session's changes and chat.
+ */
+export async function savePreviewEnv(
+  sessionId: string,
+  values: Record<string, string>
+): Promise<void> {
+  const res = await pilotFetch(`/api/v1/sessions/${sessionId}/env`, {
+    method: "PUT",
+    body: JSON.stringify({ values }),
+  });
+  // 400 carries a plain message about the bad input.
+  if (res.status === 400) {
+    const body = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: body?.error ?? "Those values couldn't be saved.",
+    });
+  }
+  if (!res.ok) await pilotError(res);
 }
 
 // ---------------------------------------------------------------------------
