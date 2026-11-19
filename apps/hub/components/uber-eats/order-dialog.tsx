@@ -20,41 +20,16 @@ import {
 import { Skeleton } from "@workspace/ui/components/skeleton";
 import { cn } from "@workspace/ui/lib/utils";
 
-import { Badge, type BadgeTone } from "@/components/ds/ui/badge";
+import { Badge } from "@/components/ds/ui/badge";
 import { Button } from "@/components/ds/ui/button";
 import { Field, Input, Select } from "@/components/ds/ui/field";
 import { LetterTile } from "@/components/ds/ui/misc";
 import { useProjectId } from "@/hooks/use-repo";
 import { handleCmsError } from "@/lib/trpc-errors";
 
+import { localTime, money, STATE_LABELS, TYPE_LABELS } from "./format";
+
 type Detail = RouterOutputs["uberEats"]["order"];
-
-const STATE_LABELS: Record<Detail["state"], { label: string; tone: BadgeTone }> = {
-  CREATED: { label: "New", tone: "coral" },
-  ACCEPTED: { label: "In progress", tone: "info" },
-  FINISHED: { label: "Completed", tone: "success" },
-  CANCELED: { label: "Canceled", tone: "neutral" },
-  DENIED: { label: "Denied", tone: "neutral" },
-  UNKNOWN: { label: "Unknown", tone: "neutral" },
-};
-
-const TYPE_LABELS: Record<Detail["type"], string> = {
-  PICK_UP: "Pickup",
-  DINE_IN: "Dine in",
-  DELIVERY_BY_UBER: "Uber delivery",
-  DELIVERY_BY_RESTAURANT: "Own delivery",
-  UNKNOWN: "Order",
-};
-
-const money = (cents: number | null | undefined, currency: string | null) =>
-  cents == null
-    ? "—"
-    : new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" }).format(cents / 100);
-
-const localTime = (iso: string, timezone: string | null) =>
-  new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: timezone || undefined }).format(
-    parseISO(iso)
-  );
 
 const OPEN_STATES: Detail["state"][] = ["CREATED", "ACCEPTED"];
 

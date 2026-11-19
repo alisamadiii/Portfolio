@@ -28,6 +28,7 @@ export function WorkspaceSidebar({
   hasProject,
   installed,
   netlify = false,
+  orders = false,
   showSettings = true,
   showProjectSettings = false,
   showSourceCode = false,
@@ -35,6 +36,8 @@ export function WorkspaceSidebar({
   hasProject: boolean;
   installed: readonly AppId[];
   netlify?: boolean;
+  /** A delivery app is installed: the Orders page. */
+  orders?: boolean;
   showSettings?: boolean;
   /** Owner or admin: the project Settings page. */
   showProjectSettings?: boolean;
@@ -48,7 +51,7 @@ export function WorkspaceSidebar({
     <Sidebar label="Workspace">
       {hasProject && (
         <>
-          {projectCoreNav({ netlify, members: showSettings }).map((i) => (
+          {projectCoreNav({ netlify, members: showSettings, orders }).map((i) => (
             <SidebarLink key={i.id} item={i} href={url(i.path)} active={isActive(url(i.path), i.path === "")} />
           ))}
           <SidebarSection label="Apps">

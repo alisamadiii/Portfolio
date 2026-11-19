@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "@workspace/drizzle/pool";
@@ -32,14 +32,16 @@ import {
 } from "../lib/uber-eats";
 import {
   DENY_CODES,
+  ORDER_STATUS_GROUPS,
   PAUSE_CHOICES,
   SOLD_ORDER_STATES,
   STORE_SCOPES,
   estimatePayout,
+  localDateIn,
+  localDayStart,
   mapOrderDetail,
   mapStore,
   mapStoreStatus,
-  nextMidnightIn,
   pauseUntil,
   percentToBps,
   signUberState,
@@ -50,8 +52,29 @@ import { rateLimit } from "../middleware/rate-limit";
 
 // Uber Eats app: the owner connects their store through Uber's OAuth
 // (apps/api /api/uber-eats/callback finishes it), orders arrive by webhook,
-// and this router shows them and pauses/resumes the store. Read-only on
-// orders: the restaurant still accepts them on Uber's tablet.
+// and this router shows them, pauses/resumes the store and, when the store
+// made Client Hub its order manager, accepts or denies new orders.
+const rangeDays = z.union([z.literal(7), z.literal(28), z.literal(90)]);
+
+/** Local midnight `days - 1` days ago in the store's timezone: the first instant the range covers. */
+const rangeStart = (timezone: string | null, days: number, now = new Date()) =>
+  localDayStart(timezone, days - 1, now);
+
+/**
+ * Per-order payout SQL, same formula as estimatePayout: base = subtotal − promo;
+ * commission = base × rate; payout = base − commission + merchant tax + merchant fees + tip − Uber fee.
+ * Both are SQL NULL until the owner enters a commission rate.
+ */
+const payoutSql = (bps: number | null) => {
+  const base = sql`greatest(0, coalesce(${hubUberOrder.subtotalCents}, 0) - coalesce(${hubUberOrder.merchantPromoCents}, 0))`;
+  const commission = bps == null ? sql`null` : sql`round(${base} * ${bps} / 10000.0)`;
+  const payout =
+    bps == null
+      ? sql`null`
+      : sql`${base} - ${commission} + coalesce(${hubUberOrder.taxMerchantCents}, 0) + coalesce(${hubUberOrder.merchantFeeCents}, 0) + coalesce(${hubUberOrder.tipCents}, 0) - coalesce(${hubUberOrder.uberFeeCents}, 0)`;
+  return { commission, payout };
+};
+
 const appGate = <T extends { user: { email: string; role?: string | null }; projectId: string }>(ctx: T) =>
   requireApp(ctx.user, ctx.projectId, "uber-eats");
 const appCmsProcedure = cmsProcedure.use(async ({ ctx, next }) => {
@@ -135,20 +158,13 @@ export const uberEatsRouter = createTRPCRouter({
     const store = await uberStoreFor(ctx.projectId);
     if (!store) return null;
     const now = new Date();
-    const today = new Date(nextMidnightIn(store.timezone, now).getTime() - DAY_MS);
+    const today = localDayStart(store.timezone, 0, now);
     const week = new Date(now.getTime() - 7 * DAY_MS);
     const month = new Date(now.getTime() - 30 * DAY_MS);
     const sold = inArray(hubUberOrder.state, SOLD_ORDER_STATES);
     const inMonth = sql`${hubUberOrder.placedAt} >= ${month} and ${sold}`;
-    // Same formula as estimatePayout, per order, summed: base = subtotal − promo;
-    // commission = base × rate; payout = base − commission + merchant tax + merchant fees + tip − Uber fee.
     const bps = store.commissionBps;
-    const base = sql`greatest(0, coalesce(${hubUberOrder.subtotalCents}, 0) - coalesce(${hubUberOrder.merchantPromoCents}, 0))`;
-    const commission = bps == null ? sql`null` : sql`round(${base} * ${bps} / 10000.0)`;
-    const payout =
-      bps == null
-        ? sql`null`
-        : sql`${base} - ${commission} + coalesce(${hubUberOrder.taxMerchantCents}, 0) + coalesce(${hubUberOrder.merchantFeeCents}, 0) + coalesce(${hubUberOrder.tipCents}, 0) - coalesce(${hubUberOrder.uberFeeCents}, 0)`;
+    const { commission, payout } = payoutSql(bps);
     const [row] = await db
       .select({
         today: sql<number>`count(*) filter (where ${hubUberOrder.placedAt} >= ${today} and ${sold})::int`,
@@ -174,6 +190,62 @@ export const uberEatsRouter = createTRPCRouter({
       commissionBps: bps,
       total: row?.total ?? 0,
       currency: row?.currency ?? null,
+    };
+  }),
+
+  /**
+   * One window for Home and the Orders page: sold orders since the store's
+   * local midnight `days - 1` days ago, with a per-day series in the store's
+   * timezone. `estPayoutCents` is null until the owner enters a commission rate.
+   */
+  summary: appCmsProcedure.input(z.object({ days: rangeDays })).query(async ({ ctx, input }) => {
+    const store = await uberStoreFor(ctx.projectId);
+    if (!store) return null;
+    const start = rangeStart(store.timezone, input.days);
+    const tz = store.timezone || "UTC";
+    const where = and(
+      eq(hubUberOrder.projectId, ctx.projectId),
+      inArray(hubUberOrder.state, SOLD_ORDER_STATES),
+      gte(hubUberOrder.placedAt, start)
+    );
+    const { payout } = payoutSql(store.commissionBps);
+    // placed_at is stored without a zone (UTC); re-read it in the store's zone before bucketing.
+    const day = sql<string>`to_char((${hubUberOrder.placedAt} at time zone 'UTC') at time zone ${tz}::text, 'YYYY-MM-DD')`;
+    const [[totals], byDay] = await Promise.all([
+      db
+        .select({
+          orders: sql<number>`count(*)::int`,
+          salesCents: sql<number>`coalesce(sum(${hubUberOrder.totalCents}), 0)::int`,
+          estPayoutCents: sql<number | null>`(sum(${payout}))::int`,
+          currency: sql<string | null>`max(${hubUberOrder.currency})`,
+        })
+        .from(hubUberOrder)
+        .where(where),
+      db
+        .select({
+          date: day,
+          orders: sql<number>`count(*)::int`,
+          salesCents: sql<number>`coalesce(sum(${hubUberOrder.totalCents}), 0)::int`,
+        })
+        .from(hubUberOrder)
+        .where(where)
+        .groupBy(day)
+        .orderBy(day),
+    ]);
+    const orders = totals?.orders ?? 0;
+    const salesCents = totals?.salesCents ?? 0;
+    return {
+      orders,
+      salesCents,
+      avgOrderCents: orders > 0 ? Math.round(salesCents / orders) : null,
+      estPayoutCents: store.commissionBps == null ? null : (totals?.estPayoutCents ?? 0),
+      commissionBps: store.commissionBps,
+      currency: totals?.currency ?? null,
+      timezone: store.timezone,
+      /** Store-local calendar bounds of the range, for zero-filling byDay. */
+      from: localDateIn(store.timezone, start),
+      to: localDateIn(store.timezone),
+      byDay,
     };
   }),
 
@@ -329,21 +401,34 @@ export const uberEatsRouter = createTRPCRouter({
       return { ok: true };
     }),
 
+  /** Newest first, keyset on placedAt. Filters compose with the cursor; `days` counts from the store's local midnight. */
   orders: appCmsProcedure
-    .input(z.object({ cursor: z.string().datetime().optional() }))
+    .input(
+      z.object({
+        cursor: z.string().datetime().optional(),
+        days: rangeDays.optional(),
+        status: z.enum(["open", "completed", "canceled"]).optional(),
+        type: z.enum(["PICK_UP", "DINE_IN", "DELIVERY_BY_UBER", "DELIVERY_BY_RESTAURANT", "UNKNOWN"]).optional(),
+        limit: z.union([z.literal(5), z.literal(50)]).default(PAGE_SIZE),
+      })
+    )
     .query(async ({ ctx, input }) => {
+      const store = input.days ? await uberStoreFor(ctx.projectId) : null;
       const rows = await db
         .select()
         .from(hubUberOrder)
         .where(
           and(
             eq(hubUberOrder.projectId, ctx.projectId),
-            input.cursor ? lt(hubUberOrder.placedAt, new Date(input.cursor)) : undefined
+            input.cursor ? lt(hubUberOrder.placedAt, new Date(input.cursor)) : undefined,
+            input.days ? gte(hubUberOrder.placedAt, rangeStart(store?.timezone ?? null, input.days)) : undefined,
+            input.status ? inArray(hubUberOrder.state, ORDER_STATUS_GROUPS[input.status]) : undefined,
+            input.type ? eq(hubUberOrder.type, input.type) : undefined
           )
         )
         .orderBy(desc(hubUberOrder.placedAt))
-        .limit(PAGE_SIZE + 1);
-      const page = rows.slice(0, PAGE_SIZE);
+        .limit(input.limit + 1);
+      const page = rows.slice(0, input.limit);
       return {
         items: page.map((o) => ({
           id: o.id,
@@ -355,10 +440,12 @@ export const uberEatsRouter = createTRPCRouter({
           eaterFirstName: o.eaterFirstName,
           items: o.items,
           itemCount: o.itemCount,
+          subtotalCents: o.subtotalCents,
+          tipCents: o.tipCents,
           totalCents: o.totalCents,
           currency: o.currency,
         })),
-        nextCursor: rows.length > PAGE_SIZE ? page[page.length - 1]!.placedAt.toISOString() : null,
+        nextCursor: rows.length > input.limit ? page[page.length - 1]!.placedAt.toISOString() : null,
       };
     }),
 

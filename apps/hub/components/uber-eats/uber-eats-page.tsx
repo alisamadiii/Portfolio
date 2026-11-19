@@ -24,7 +24,7 @@ import { cn } from "@workspace/ui/lib/utils";
 
 import { UberEatsLogo } from "@/components/ds/brand-logos";
 import { PageHeader } from "@/components/ds/layout/page-header";
-import { Badge, StatusText, type BadgeTone } from "@/components/ds/ui/badge";
+import { Badge, StatusText } from "@/components/ds/ui/badge";
 import { Button, ButtonAnchor } from "@/components/ds/ui/button";
 import { Card, CardHeader } from "@/components/ds/ui/card";
 import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
@@ -36,6 +36,7 @@ import { useProjectId } from "@/hooks/use-repo";
 import { isAdminUser } from "@/lib/authz-shared";
 import { handleCmsError } from "@/lib/trpc-errors";
 
+import { localTime, money, STATE_LABELS, TYPE_LABELS } from "./format";
 import { OrderDialog } from "./order-dialog";
 
 type Data = RouterOutputs["uberEats"]["get"];
@@ -58,36 +59,6 @@ const PAUSE_LABELS: Record<PauseChoice, string> = {
   today: "Rest of today",
   indefinite: "Until I resume",
 };
-
-const STATE_LABELS: Record<Order["state"], { label: string; tone: BadgeTone }> = {
-  CREATED: { label: "New", tone: "coral" },
-  ACCEPTED: { label: "In progress", tone: "info" },
-  FINISHED: { label: "Completed", tone: "success" },
-  CANCELED: { label: "Canceled", tone: "neutral" },
-  DENIED: { label: "Denied", tone: "neutral" },
-  UNKNOWN: { label: "Unknown", tone: "neutral" },
-};
-
-const TYPE_LABELS: Record<Order["type"], string> = {
-  PICK_UP: "Pickup",
-  DINE_IN: "Dine in",
-  DELIVERY_BY_UBER: "Uber delivery",
-  DELIVERY_BY_RESTAURANT: "Own delivery",
-  UNKNOWN: "—",
-};
-
-const money = (cents: number | null, currency: string | null) =>
-  cents == null
-    ? "—"
-    : new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "USD" }).format(cents / 100);
-
-/** A time in the store's own timezone, e.g. "3:30 PM". */
-const localTime = (iso: string, timezone: string | null) =>
-  new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: timezone || undefined,
-  }).format(parseISO(iso));
 
 /** Uber Eats app: the store's orders and sales, plus Pause / Resume. */
 export function UberEatsPage() {

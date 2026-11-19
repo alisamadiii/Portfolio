@@ -2,6 +2,10 @@ import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import {
+  ORDER_STATUS_GROUPS,
+  localDateIn,
+  localDayStart,
+  orderStatusGroup,
   eventIds,
   isOrderEvent,
   mapOrder,
@@ -519,5 +523,34 @@ describe("acceptDeadline", () => {
     expect(DENY_CODES).toContain("ITEM_AVAILABILITY");
     expect(DENY_CODES).toContain("OTHER");
     for (const r of DENY_REASONS) expect(r.label.length).toBeGreaterThan(3);
+  });
+});
+
+describe("order status groups (2026-11-19, Orders page)", () => {
+  it("every state lands in exactly one bucket", () => {
+    const states = ["CREATED", "ACCEPTED", "DENIED", "FINISHED", "CANCELED", "UNKNOWN"] as const;
+    const all = Object.values(ORDER_STATUS_GROUPS).flat();
+    for (const s of states) {
+      expect(all.filter((x) => x === s)).toHaveLength(1);
+      expect(ORDER_STATUS_GROUPS[orderStatusGroup(s)]).toContain(s);
+    }
+    expect(orderStatusGroup("FINISHED")).toBe("completed");
+    expect(orderStatusGroup("DENIED")).toBe("canceled");
+    expect(orderStatusGroup("UNKNOWN")).toBe("open");
+  });
+});
+
+describe("localDayStart (2026-11-19, dashboard ranges)", () => {
+  const now = new Date("2026-11-19T20:00:00Z"); // noon PST
+  it("today's local midnight", () => {
+    expect(localDayStart("America/Los_Angeles", 0, now).toISOString()).toBe("2026-11-19T08:00:00.000Z");
+  });
+  it("crosses the DST change without drifting an hour", () => {
+    // Oct 23 was still PDT (UTC-7): midnight = 07:00Z, not 08:00Z.
+    expect(localDayStart("America/Los_Angeles", 27, now).toISOString()).toBe("2026-10-23T07:00:00.000Z");
+  });
+  it("falls back to UTC", () => {
+    expect(localDayStart(null, 6, now).toISOString()).toBe("2026-11-13T00:00:00.000Z");
+    expect(localDateIn("America/Los_Angeles", new Date("2026-11-20T06:30:00Z"))).toBe("2026-11-19");
   });
 });

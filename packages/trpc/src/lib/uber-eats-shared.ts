@@ -284,6 +284,16 @@ export const OPEN_ORDER_STATES: UberOrderState[] = ["CREATED", "ACCEPTED", "UNKN
 /** Orders that count as sales (a denied or canceled order sold nothing). */
 export const SOLD_ORDER_STATES: UberOrderState[] = ["CREATED", "ACCEPTED", "FINISHED"];
 
+/** The three buckets the Orders page filters by; every state lands in exactly one. */
+export type OrderStatusGroup = "open" | "completed" | "canceled";
+export const ORDER_STATUS_GROUPS: Record<OrderStatusGroup, UberOrderState[]> = {
+  open: OPEN_ORDER_STATES,
+  completed: ["FINISHED"],
+  canceled: ["CANCELED", "DENIED"],
+};
+export const orderStatusGroup = (state: UberOrderState): OrderStatusGroup =>
+  state === "FINISHED" ? "completed" : state === "CANCELED" || state === "DENIED" ? "canceled" : "open";
+
 /**
  * Uber's money `amount` is in the currency's minor unit (1234 = $12.34). A
  * fractional amount can only mean major units, so it's converted.
@@ -530,6 +540,23 @@ export function nextMidnightIn(timeZone: string | null, now = new Date()): Date 
   );
   return new Date(midnightLocal - offset);
 }
+
+/**
+ * Local midnight `daysAgo` days before today in `timeZone` (0 = today's
+ * midnight). Two passes so a DST change inside the range doesn't shift the
+ * boundary by an hour, which `nextMidnightIn(...) - n * DAY_MS` would.
+ */
+export function localDayStart(timeZone: string | null, daysAgo: number, now = new Date()): Date {
+  const tz = timeZone || "UTC";
+  const wall = new Date(now.getTime() + tzOffsetMs(tz, now));
+  const targetWall = Date.UTC(wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate() - daysAgo);
+  const guess = new Date(targetWall - tzOffsetMs(tz, now));
+  return new Date(targetWall - tzOffsetMs(tz, guess));
+}
+
+/** "YYYY-MM-DD" of an instant as seen in `timeZone`. */
+export const localDateIn = (timeZone: string | null, at = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: timeZone || "UTC", year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
 
 /** When a pause ends, or null for "until I resume". */
 export function pauseUntil(choice: PauseChoice, timeZone: string | null, now = new Date()): Date | null {

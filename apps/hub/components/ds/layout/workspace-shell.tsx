@@ -12,6 +12,7 @@ import { useEntitlement } from "@/hooks/use-plans";
 import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useProject } from "@/hooks/use-project";
 import { useProjectId } from "@/hooks/use-repo";
+import { hasDeliveryApp } from "@/components/orders/providers";
 
 /** Top bar with the project switcher + the one sidebar, around every page except the editor. */
 export function WorkspaceShell({
@@ -52,6 +53,7 @@ export function WorkspaceShell({
           hasProject={Boolean(projectId)}
           installed={installed}
           netlify={netlify}
+          orders={hasDeliveryApp(installed)}
           showSettings={project?.role == null || project.role === "full-access"}
           showProjectSettings={project?.ownerOrAdmin ?? false}
           showSourceCode={sourceCode.data?.available ?? false}

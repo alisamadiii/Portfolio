@@ -22,9 +22,15 @@ import { useInstalledApps } from "@/hooks/use-installed-apps";
 import { useProject } from "@/hooks/use-project";
 import { useProjectId } from "@/hooks/use-repo";
 import { APPS, appState } from "@/lib/apps";
-import { appPath } from "@/lib/paths";
+import { installedDeliveryApps } from "@/components/orders/providers";
 
 import { GithubRepoDialog } from "./github-repo-dialog";
+import { AnalyticsSection } from "./home/analytics-section";
+import { LeadsSection } from "./home/leads-section";
+import { OrdersSection } from "./home/orders-section";
+import { RangeMenu } from "./home/range-menu";
+import { ReviewsSection } from "./home/reviews-section";
+import { useHomeRange } from "./home/use-home-range";
 import { LinkNetlifyDialog } from "./link-netlify-dialog";
 import { ReplaceSourceDialog } from "./replace-source-dialog";
 import { hostOf, SitePreview } from "./site-preview";
@@ -40,7 +46,7 @@ export function HomePage() {
   const project = useProject();
   const agency = useAgencyOptional();
   const user = useCurrentUser().data?.user ?? null;
-  const { entitlement, can } = useEntitlement(projectId || undefined);
+  const { entitlement } = useEntitlement(projectId || undefined);
   const { installed, install, isPending } = useInstalledApps(projectId);
   const router = useRouter();
   // Admins can pin an existing Netlify site while none is linked yet.
@@ -133,17 +139,29 @@ export function HomePage() {
     }
   }
 
+  // Dashboard sections, one per installed app that has numbers to show.
+  const { range, setRange, days, leadsRange } = useHomeRange();
+  const has = (id: (typeof installed)[number]) => installed.includes(id);
+  const deliveryApps = installedDeliveryApps(installed);
+  const showLeads = has("leads") && agency != null;
+  const showReviews = has("feedback") || has("google-reviews");
+  const hasDashboard = showLeads || has("analytics") || deliveryApps.length > 0 || showReviews;
+  const allDone = items.every((i) => i.state === "done");
+
   const recommended = APPS.filter((a) => !installed.includes(a.id));
   const appsLabel = `${installed.length} ${installed.length === 1 ? "app" : "apps"} installed`;
 
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[13px] text-dim">{format(new Date(), "EEEE, MMMM d")}</span>
-        <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em]">
-          {greeting()}
-          {firstName ? `, ${firstName}` : ""}
-        </h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] text-dim">{format(new Date(), "EEEE, MMMM d")}</span>
+          <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.02em]">
+            {greeting()}
+            {firstName ? `, ${firstName}` : ""}
+          </h1>
+        </div>
+        {hasDashboard && <RangeMenu range={range} onChange={setRange} />}
       </div>
 
       <InfoStrip
@@ -198,7 +216,7 @@ export function HomePage() {
         }
       />
 
-      <Card className="grid gap-6 p-6 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:items-center">
+      <Card className="grid gap-6 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center xl:grid-cols-[minmax(0,480px)_minmax(0,1fr)]">
         <SitePreview projectId={projectId} websiteUrl={websiteUrl} />
         <div className="flex flex-col gap-3">
           <span className="text-[13px] text-dim">Your website</span>
@@ -241,7 +259,18 @@ export function HomePage() {
         </div>
       </Card>
 
-      <SetupChecklist title="Getting started" items={items} />
+      {hasDashboard && (
+        <div className="grid gap-5 xl:grid-cols-2">
+          {showLeads && <LeadsSection projectId={projectId} days={days} leadsRange={leadsRange} />}
+          {has("analytics") && <AnalyticsSection projectId={projectId} range={range} />}
+          {deliveryApps.length > 0 && <OrdersSection projectId={projectId} days={days} providers={deliveryApps} />}
+          {showReviews && (
+            <ReviewsSection projectId={projectId} feedback={has("feedback")} googleReviews={has("google-reviews")} />
+          )}
+        </div>
+      )}
+
+      {!allDone && <SetupChecklist title="Getting started" items={items} />}
 
       {recommended.length > 0 && (
         <section className="flex flex-col gap-3">
@@ -249,7 +278,7 @@ export function HomePage() {
             <h2 className="text-base font-semibold">Recommended for your business</h2>
             <TextLink href={`${base}/apps`}>See all apps</TextLink>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {recommended.map((app) => {
               const state = appState(app, installed, entitlement);
               const Icon = app.icon;

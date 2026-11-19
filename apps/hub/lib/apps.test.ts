@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { APP_IDS, planAllowsApp } from "@workspace/trpc/lib/apps";
 import { entitlementFor } from "@workspace/trpc/lib/payment/plans";
 
-import { ACCOUNT_PRODUCTS, accountNav, APPS, appById, appState } from "./apps";
+import { ACCOUNT_PRODUCTS, accountNav, APPS, appById, appState, projectCoreNav } from "./apps";
 
 // DELIBERATE CHANGE (2026-11-15, plans priced per client): free projects can
 // add NO app, feature-less ones (Resend, Calendar, Neon, Wix) included, and
@@ -213,5 +213,15 @@ describe("workspace sidebar account group (2026-11-19)", () => {
 
   it("points Purchases at the account billing tab", () => {
     expect(ACCOUNT_PRODUCTS.find((i) => i.id === "purchases")?.path).toBe("/account/billing?tab=purchases");
+  });
+});
+
+describe("Orders in the core nav (2026-11-19)", () => {
+  it("sits right after Netlify when a delivery app is installed, else absent", () => {
+    const ids = (nav: { id: string }[]) => nav.map((i) => i.id);
+    expect(ids(projectCoreNav({ netlify: true, members: true, orders: true })).slice(-3)).toEqual(["members", "netlify", "orders"]);
+    expect(ids(projectCoreNav({ netlify: false, members: false, orders: true })).at(-1)).toBe("orders");
+    expect(ids(projectCoreNav({ netlify: true, members: true }))).not.toContain("orders");
+    expect(projectCoreNav({ netlify: false, members: false, orders: true }).at(-1)?.path).toBe("orders");
   });
 });

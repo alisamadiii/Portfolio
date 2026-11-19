@@ -24,6 +24,7 @@ import {
   Megaphone,
   MonitorSmartphone,
   Plug,
+  ReceiptText,
   User,
   Users,
 } from "lucide-react";
@@ -221,18 +222,23 @@ export const NETLIFY_NAV: NavItem = { id: "netlify", label: "Netlify", logo: Net
 
 /** Who has access to the project. Full-access only (the server 403s anyone else). */
 export const MEMBERS_NAV: NavItem = { id: "members", label: "Members", icon: Users, path: "members" };
+/** Every delivery order in one list; shown once a delivery app (Uber Eats, DoorDash) is installed. */
+export const ORDERS_NAV: NavItem = { id: "orders", label: "Orders", icon: ReceiptText, path: "orders" };
 
-/** Top sidebar group: core, Members (managers only) below Business info, then Netlify. */
+/** Top sidebar group: core, then Members (managers only), Netlify (linked upload sites), Orders (delivery apps). */
 export const projectCoreNav = ({
   netlify,
   members,
+  orders = false,
 }: {
   netlify: boolean;
   members: boolean;
+  orders?: boolean;
 }): NavItem[] => [
   ...PROJECT_CORE,
   ...(members ? [MEMBERS_NAV] : []),
   ...(netlify ? [NETLIFY_NAV] : []),
+  ...(orders ? [ORDERS_NAV] : []),
 ];
 
 /** Project sidebar, bottom group. Full-access collaborators only. */
