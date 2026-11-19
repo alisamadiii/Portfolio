@@ -63,3 +63,83 @@ describe("fromUberOrder (2026-11-19)", () => {
     expect(fromUberOrder({ ...order, items: [] }, null).itemsSummary).toBe("—");
   });
 });
+
+// ─── Grubhub joins the Orders page (2026-11-19) ───────────────────
+
+import { fromGrubhubOrder, orderKey, orderProviders, parseOrderKey, sortRows } from "@/components/orders/providers";
+
+const grubhubOrder = {
+  id: "JylzkoC0Ee2zk-PUFdlLqg",
+  orderNumber: "604721063804098",
+  status: "RESTAURANT_CONFIRMABLE" as const,
+  fulfillment: "PICKUP" as const,
+  scheduling: "ASAP" as const,
+  isTest: false,
+  placedAt: "2026-11-19T18:05:00.000Z",
+  whenFor: null,
+  dinerName: "John",
+  items: [{ title: "Margherita", quantity: 1 }],
+  itemCount: 1,
+  merchantTotalCents: 1920,
+  grandTotalCents: 2020,
+  tipCents: 300,
+  waitTimeMinutes: null,
+  cancelRequestStatus: null,
+};
+
+describe("Grubhub as a delivery provider (2026-11-19)", () => {
+  it("is a delivery app that stores orders", () => {
+    expect(DELIVERY_APP_IDS).toContain("grubhub");
+    expect(DELIVERY_PROVIDERS.grubhub.hasOrders).toBe(true);
+    expect(hasDeliveryApp(["grubhub"])).toBe(true);
+    expect(orderProviders(["doordash", "grubhub", "uber-eats"])).toEqual(["uber-eats", "grubhub"]);
+    expect(orderProviders(["doordash"])).toEqual([]);
+  });
+
+  it("maps a new pickup order with Grubhub's merchant total as the row total", () => {
+    expect(fromGrubhubOrder(grubhubOrder, "America/New_York")).toMatchObject({
+      provider: "grubhub",
+      displayId: "604721063804098",
+      customer: "John",
+      itemsSummary: "1× Margherita",
+      totalCents: 1920,
+      currency: "USD",
+      status: "open",
+      stateLabel: "New",
+      tone: "coral",
+      typeLabel: "Pickup",
+      awaitingAccept: true,
+      timezone: "America/New_York",
+    });
+  });
+
+  it("buckets completed, rejected, stale and test orders", () => {
+    expect(fromGrubhubOrder({ ...grubhubOrder, status: "FULFILLED", dinerName: null }, null)).toMatchObject({
+      status: "completed",
+      customer: "Customer",
+      awaitingAccept: false,
+    });
+    expect(fromGrubhubOrder({ ...grubhubOrder, status: "REJECTED" }, null).status).toBe("canceled");
+    expect(fromGrubhubOrder({ ...grubhubOrder, status: "STALE" }, null)).toMatchObject({ status: "canceled", stateLabel: "Missed" });
+    expect(fromGrubhubOrder({ ...grubhubOrder, status: "CONFIRMED", fulfillment: "SELF_DELIVERY" }, null)).toMatchObject({
+      status: "open",
+      awaitingAccept: false,
+      typeLabel: "Own delivery",
+    });
+    expect(fromGrubhubOrder({ ...grubhubOrder, isTest: true }, null).stateLabel).toBe("New (test)");
+  });
+
+  it("one ?order= key for every provider, old bare Uber ids still open", () => {
+    expect(orderKey("grubhub", "abc")).toBe("grubhub:abc");
+    expect(parseOrderKey("grubhub:abc")).toEqual({ provider: "grubhub", id: "abc" });
+    expect(parseOrderKey("uber-eats:x:y")).toEqual({ provider: "uber-eats", id: "x:y" });
+    expect(parseOrderKey("legacy-uber-id")).toEqual({ provider: "uber-eats", id: "legacy-uber-id" });
+    expect(parseOrderKey(null)).toBeNull();
+  });
+
+  it("merges providers newest first", () => {
+    const a = fromGrubhubOrder(grubhubOrder, null);
+    const b = fromUberOrder(order, null);
+    expect(sortRows([b, a]).map((r) => r.provider)).toEqual(["grubhub", "uber-eats"]);
+  });
+});

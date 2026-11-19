@@ -42,6 +42,7 @@ import {
   NetlifyLogo,
   ResendLogo,
   DoorDashLogo,
+  GrubhubLogo,
   UberEatsLogo,
   WixLogo,
 } from "@/components/ds/brand-logos";
@@ -69,6 +70,8 @@ export type AppDef = {
   path: string;
   /** Plan feature that unlocks the app's data. Unset = free on every plan. */
   feature?: Feature;
+  /** Still waiting on the platform's partner approval: the card shows a "Coming soon" badge. */
+  comingSoon?: boolean;
 };
 
 export const APPS: AppDef[] = [
@@ -142,6 +145,16 @@ export const APPS: AppDef[] = [
     icon: UtensilsCrossed,
     logo: DoorDashLogo,
     path: "doordash",
+    comingSoon: true,
+  },
+  {
+    id: "grubhub",
+    name: "Grubhub",
+    description: "Grubhub orders in one place: confirm, reject, mark ready, and pause the store on busy nights.",
+    icon: UtensilsCrossed,
+    logo: GrubhubLogo,
+    path: "grubhub",
+    comingSoon: true,
   },
   {
     id: "resend",
@@ -222,7 +235,7 @@ export const NETLIFY_NAV: NavItem = { id: "netlify", label: "Netlify", logo: Net
 
 /** Who has access to the project. Full-access only (the server 403s anyone else). */
 export const MEMBERS_NAV: NavItem = { id: "members", label: "Members", icon: Users, path: "members" };
-/** Every delivery order in one list; shown once a delivery app (Uber Eats, DoorDash) is installed. */
+/** Every delivery order in one list; shown once a delivery app (Uber Eats, DoorDash, Grubhub) is installed. */
 export const ORDERS_NAV: NavItem = { id: "orders", label: "Orders", icon: ReceiptText, path: "orders" };
 
 /** Top sidebar group: core, then Members (managers only), Netlify (linked upload sites), Orders (delivery apps). */

@@ -20,6 +20,7 @@ import {
 } from "@workspace/drizzle/schema";
 
 import { deleteDoorDashRows } from "../doordash";
+import { deleteGrubhubRows } from "../grubhub";
 import { deleteUberRows } from "../uber-eats";
 
 /**
@@ -57,6 +58,7 @@ const deleteProjectChildRows = async (
     .where(inArray(hubReviewsSource.projectId, projectIds));
   await deleteUberRows(projectIds);
   await deleteDoorDashRows(projectIds);
+  await deleteGrubhubRows(projectIds);
 
   // Config + content cache are keyed owner/repo/branch — drop all branches for
   // each project's slug, unless another project still uses the same repo.

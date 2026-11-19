@@ -519,6 +519,13 @@
       "when": 1795054446725,
       "tag": "0073_ordinary_taskmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1795105767963,
+      "tag": "0074_jazzy_nightcrawler",
+      "breakpoints": true
     }
   ]
 }

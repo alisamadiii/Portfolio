@@ -26,6 +26,7 @@
     "api:key": "pnpm --filter api admin:key",
     "sync:plans": "tsx packages/auth/scripts/sync-plans.ts",
     "uber:mock": "tsx apps/api/scripts/uber-mock.ts",
+    "grubhub:mock": "tsx apps/api/scripts/grubhub-mock.ts",
     "webhooks:check": "tsx packages/auth/scripts/check-webhooks.ts"
   },
   "devDependencies": {

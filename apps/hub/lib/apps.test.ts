@@ -197,6 +197,19 @@ describe("DoorDash app", () => {
   });
 });
 
+describe("Grubhub app (2026-11-19)", () => {
+  it("needs a paid plan, no feature, and opens /grubhub", () => {
+    const app = appById("grubhub")!;
+    expect(app.path).toBe("grubhub");
+    expect(app.feature).toBeUndefined();
+    expect(app.logo).toBeDefined();
+    expect(appState(app, [], FREE)).toBe("locked");
+    expect(appState(app, [], WEBSITE)).toBe("included");
+    expect(appState(app, ["grubhub"], WEBSITE)).toBe("installed");
+    expect(APP_IDS).toContain("grubhub");
+  });
+});
+
 describe("workspace sidebar account group (2026-11-19)", () => {
   it("lists Sites at /sites, never at /, and keeps account billing under /account", () => {
     const nav = accountNav({ isAdmin: false });
@@ -223,5 +236,19 @@ describe("Orders in the core nav (2026-11-19)", () => {
     expect(ids(projectCoreNav({ netlify: false, members: false, orders: true })).at(-1)).toBe("orders");
     expect(ids(projectCoreNav({ netlify: true, members: true }))).not.toContain("orders");
     expect(projectCoreNav({ netlify: false, members: false, orders: true }).at(-1)?.path).toBe("orders");
+  });
+});
+
+describe("Coming soon badge (2026-11-19)", () => {
+  it("flags DoorDash and Grubhub while their partner approvals are pending", () => {
+    expect(appById("doordash")!.comingSoon).toBe(true);
+    expect(appById("grubhub")!.comingSoon).toBe(true);
+  });
+
+  it("leaves every other app without the flag", () => {
+    for (const app of APPS) {
+      if (app.id === "doordash" || app.id === "grubhub") continue;
+      expect(app.comingSoon, app.id).toBeUndefined();
+    }
   });
 });

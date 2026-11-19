@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Check, Loader2, Lock } from "lucide-react";
+import { Check, Clock, Loader2, Lock } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 import type { AppDef, AppState } from "@/lib/apps";
@@ -13,6 +13,7 @@ import { IconTile } from "../ui/misc";
  * App card (Apps page grid: repeat(auto-fill, minmax(260px,1fr)), gap 12).
  * installed → "Installed" badge + Open + menu slot ; included → coral "Add to site" ;
  * locked → lock + the locked action (dark "Upgrade to add" or "Ask us to add").
+ * `app.comingSoon` adds a "Coming soon" badge next to the state (platform approval pending).
  */
 export function AppCard({
   app,
@@ -45,40 +46,47 @@ export function AppCard({
             <Icon className="size-5" strokeWidth={1.8} />
           )}
         </IconTile>
-        <AnimatePresence mode="popLayout" initial={false}>
-          {state === "installed" && (
-            <motion.span
-              key="installed"
-              initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-            >
-              <Badge
-                tone="success"
-                icon={<Check className="size-3" strokeWidth={2.6} />}
+        <div className="flex items-center gap-1.5">
+          {app.comingSoon && (
+            <Badge tone="info" icon={<Clock className="size-3" strokeWidth={2.4} />}>
+              Coming soon
+            </Badge>
+          )}
+          <AnimatePresence mode="popLayout" initial={false}>
+            {state === "installed" && (
+              <motion.span
+                key="installed"
+                initial={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                transition={{ type: "spring", duration: 0.4, bounce: 0 }}
               >
-                Installed
-              </Badge>
-            </motion.span>
+                <Badge
+                  tone="success"
+                  icon={<Check className="size-3" strokeWidth={2.6} />}
+                >
+                  Installed
+                </Badge>
+              </motion.span>
+            )}
+            {state === "included" && (
+              <motion.span
+                key="included"
+                exit={{ opacity: 0, filter: "blur(4px)" }}
+                transition={{ duration: 0.15 }}
+                className="text-dim text-xs"
+              >
+                {adding ? "Adding…" : "Included"}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          {state === "locked" && (
+            <span className="text-dim inline-flex items-center gap-1 text-xs">
+              <Lock className="size-3" />
+              Not in your plan
+            </span>
           )}
-          {state === "included" && (
-            <motion.span
-              key="included"
-              exit={{ opacity: 0, filter: "blur(4px)" }}
-              transition={{ duration: 0.15 }}
-              className="text-dim text-xs"
-            >
-              {adding ? "Adding…" : "Included"}
-            </motion.span>
-          )}
-        </AnimatePresence>
-        {state === "locked" && (
-          <span className="text-dim inline-flex items-center gap-1 text-xs">
-            <Lock className="size-3" />
-            Not in your plan
-          </span>
-        )}
-      </div>
+          </div>
+        </div>
       <div className="flex flex-col gap-1">
         <span className="text-[15px] font-semibold">{app.name}</span>
         <p className="text-dim text-[13px] leading-normal">{app.description}</p>

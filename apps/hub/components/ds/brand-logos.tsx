@@ -168,3 +168,20 @@ export function DoorDashLogo({ className }: LogoProps) {
     </svg>
   );
 }
+
+/** Grubhub orange tile with a drawn "G" (not the trademark file). */
+export function GrubhubLogo({ className }: LogoProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <rect width="24" height="24" rx="4" fill="#FF8000" />
+      <path
+        d="M16.4 8.6a5 5 0 1 0 1.1 3.9h-4.6"
+        fill="none"
+        stroke="#FFFFFF"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

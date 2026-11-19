@@ -617,3 +617,127 @@ export const hubDoorDashProvision = pgTable("hub_doordash_provision", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// ─── Grubhub app ────────────────────────────────────────────────
+// One Grubhub merchant per project. Grubhub has no partner-usable OAuth, so
+// the owner types the merchant ID and the hub verifies it with the agency's
+// partner credentials (GET /pos/v1/merchant/{id}). The store stays PENDING
+// until Grubhub switches the POS integration on (activation webhook, the
+// first real order, or an admin). Orders arrive only by webhook
+// (apps/api /api/webhook/grubhub) and are reconciled hourly by the food cron.
+// No provision table: there is no merchant token to hold.
+
+export type GrubhubIntegrationStatus = "PENDING" | "LIVE" | "DEACTIVATED";
+export type GrubhubPosStatus = "ONLINE" | "OFFLINE";
+export type GrubhubOrderStatus =
+  | "ANTICIPATED"
+  | "RESTAURANT_CONFIRMABLE"
+  | "CONFIRMED"
+  | "PICKUP_READY"
+  | "OUT_FOR_DELIVERY"
+  | "FULFILLED"
+  | "CANCELLED"
+  | "REJECTED"
+  | "STALE"
+  | "UNKNOWN";
+export type GrubhubFulfillment = "PICKUP" | "GRUBHUB_DELIVERY" | "SELF_DELIVERY" | "UNKNOWN";
+export type GrubhubScheduling = "ASAP" | "FUTURE" | "UNKNOWN";
+export type GrubhubOrderItem = { title: string; quantity: number };
+
+export const hubGrubhubStore = pgTable(
+  "hub_grubhub_store",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull(),
+    // Grubhub's merchant id (the "long id" every /pos/v1/merchant call takes). One project per merchant.
+    merchantId: text("merchant_id").notNull(),
+    merchantUuid: text("merchant_uuid"),
+    name: text("name").notNull(),
+    address: text("address"),
+    city: text("city"),
+    state: text("state"),
+    postalCode: text("postal_code"),
+    // IANA. Grubhub's merchant record has none; filled from the first order's restaurant_timezone_id.
+    timezone: text("timezone"),
+    // account_status.merchant_status and accepting_online_orders as Grubhub reports them.
+    accountStatus: text("account_status"),
+    acceptingOnlineOrders: boolean("accepting_online_orders"),
+    integrationStatus: text("integration_status").$type<GrubhubIntegrationStatus>().notNull().default("PENDING"),
+    liveAt: timestamp("live_at"),
+    deactivatedAt: timestamp("deactivated_at"),
+    // Menu ingestion job id an admin sent to partner/activate (phase 2 fills it for real).
+    activationJobId: text("activation_job_id"),
+    // Hard pause (PUT pos-status): the last state we set or Grubhub reported; null until known.
+    posStatus: text("pos_status").$type<GrubhubPosStatus>(),
+    posStatusReason: text("pos_status_reason"),
+    posStatusChangedAt: timestamp("pos_status_changed_at"),
+    // Soft pause (POST closenow): closed until the store's next opening; reset by opennow or the cron after local midnight.
+    closedToday: boolean("closed_today").notNull().default(false),
+    closedTodayAt: timestamp("closed_today_at"),
+    // The last Merchant Availability webhook, shown as Grubhub said it: ONLINE / OFFLINE, until when, why.
+    availability: text("availability"),
+    availabilityEndTime: timestamp("availability_end_time"),
+    availabilityReason: text("availability_reason"),
+    availabilityAt: timestamp("availability_at"),
+    connectedUserId: text("connected_user_id"),
+    lastSyncedAt: timestamp("last_synced_at"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqProject: uniqueIndex("uq_hub_grubhub_store_project").on(table.projectId),
+    uqMerchant: uniqueIndex("uq_hub_grubhub_store_merchant").on(table.merchantId),
+  })
+);
+
+// Every order Grubhub sent, upserted by uuid. Denormalized columns drive the
+// lists and KPIs; `payload` keeps Grubhub's full order so the dialog and the
+// receipt need no live call. Our own columns (wait time, reject reason, cancel
+// request) are never overwritten by a later webhook.
+export const hubGrubhubOrder = pgTable(
+  "hub_grubhub_order",
+  {
+    // Grubhub's order uuid.
+    id: text("id").primaryKey(),
+    projectId: uuid("project_id").notNull(),
+    merchantId: text("merchant_id").notNull(),
+    // What the customer and Grubhub call the order.
+    orderNumber: text("order_number").notNull(),
+    status: text("status").$type<GrubhubOrderStatus>().notNull(),
+    fulfillment: text("fulfillment").$type<GrubhubFulfillment>().notNull(),
+    scheduling: text("scheduling").$type<GrubhubScheduling>().notNull().default("UNKNOWN"),
+    isTest: boolean("is_test").notNull().default(false),
+    placedAt: timestamp("placed_at").notNull(),
+    whenFor: timestamp("when_for"),
+    dinerName: text("diner_name"),
+    items: jsonb("items").$type<GrubhubOrderItem[]>().notNull().default([]),
+    itemCount: integer("item_count").notNull().default(0),
+    // charges.* in US cents. merchant_total is what Grubhub pays the restaurant before commission.
+    merchantSubtotalCents: integer("merchant_subtotal_cents"),
+    taxCents: integer("tax_cents"),
+    tipCents: integer("tip_cents"),
+    feesCents: integer("fees_cents"),
+    merchantTotalCents: integer("merchant_total_cents"),
+    grandTotalCents: integer("grand_total_cents"),
+    dinerGrandTotalCents: integer("diner_grand_total_cents"),
+    confirmedAt: timestamp("confirmed_at"),
+    readyAt: timestamp("ready_at"),
+    fulfilledAt: timestamp("fulfilled_at"),
+    closedAt: timestamp("closed_at"),
+    waitTimeMinutes: integer("wait_time_minutes"),
+    rejectReasonCode: text("reject_reason_code"),
+    rejectMessage: text("reject_message"),
+    cancelRequestId: text("cancel_request_id"),
+    cancelRequestStatus: text("cancel_request_status"),
+    externalOrderId: text("external_order_id"),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    receivedAt: timestamp("received_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    idxProjectPlaced: index("hub_grubhub_order_project_placed_idx").on(table.projectId, table.placedAt),
+    idxProjectStatus: index("hub_grubhub_order_project_status_idx").on(table.projectId, table.status),
+  })
+);

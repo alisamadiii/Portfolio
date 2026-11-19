@@ -26,6 +26,7 @@ import { neonRouter } from "./neon";
 import { resendRouter } from "./resend";
 import { uberEatsRouter } from "./uber-eats";
 import { doordashRouter } from "./doordash";
+import { grubhubRouter } from "./grubhub";
 import { wixRouter } from "./wix";
 import { sourcesRouter } from "./sources";
 import { statsRouter } from "./stats";
@@ -65,6 +66,7 @@ export const appRouter = createTRPCRouter({
   googleReviews: googleReviewsRouter,
   uberEats: uberEatsRouter,
   doordash: doordashRouter,
+  grubhub: grubhubRouter,
 });
 
 // export type definition of API
