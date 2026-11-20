@@ -6,7 +6,8 @@ import { AwsClient } from "aws4fetch";
 // only preview.mp4, preview.jpg, presentation.html (speaker notes stripped)
 // and a whitelisted subset of _meta.json.
 
-export const SLUG = /^[a-z0-9][a-z0-9-]*$/;
+// folders are "<name>--<Google Place ID>": mixed case and underscores
+export const SLUG = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 export const MEDIA_FILES = {
   "preview.mp4": "video/mp4",
   "preview.jpg": "image/jpeg",
