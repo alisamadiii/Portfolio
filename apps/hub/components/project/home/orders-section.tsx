@@ -12,6 +12,7 @@ import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import {
   DELIVERY_PROVIDERS,
   fromGrubhubOrder,
+  fromShopifyOrder,
   fromUberOrder,
   orderKey,
   sortRows,
@@ -28,8 +29,8 @@ const SERIES = [{ key: "orders", label: "Orders", color: "var(--chart-3)" }] as 
 const hot = (any: boolean | undefined) => (any ? 30_000 : 60_000);
 
 /**
- * Delivery orders on Home, across every connected delivery app. Uber Eats and
- * Grubhub store orders; DoorDash is connection-only for now.
+ * Orders on Home, across every connected orders app. Uber Eats and Grubhub
+ * store orders, Shopify's are read live; DoorDash is connection-only for now.
  */
 export function OrdersSection({
   projectId,
@@ -43,6 +44,7 @@ export function OrdersSection({
   const trpc = useTRPC();
   const uber = providers.includes("uber-eats");
   const grubhub = providers.includes("grubhub");
+  const shopify = providers.includes("shopify");
   const q = { retry: false, staleTime: 60_000 } as const;
 
   const uberStore = useQuery(trpc.uberEats.get.queryOptions({ projectId }, { ...q, enabled: uber }));
@@ -70,25 +72,46 @@ export function OrdersSection({
     refetchInterval: (s) => hot(s.state.data?.items.some((o) => o.status === "RESTAURANT_CONFIRMABLE" || o.status === "CONFIRMED")),
   });
 
+  const shopifyStore = useQuery(trpc.shopify.get.queryOptions({ projectId }, { ...q, enabled: shopify }));
+  const hasShopify = Boolean(shopifyStore.data?.store) && !shopifyStore.data?.store?.needsReconnect;
+  const shopifySummary = useQuery(
+    trpc.shopify.summary.queryOptions({ projectId, days }, { ...q, enabled: hasShopify, placeholderData: keepPreviousData })
+  );
+  const shopifyLatest = useQuery({
+    ...trpc.shopify.orders.queryOptions({ projectId, limit: 5 }),
+    enabled: hasShopify,
+    retry: false,
+    staleTime: 60_000,
+  });
+
   const rows = sortRows([
     ...(uberLatest.data?.items ?? []).map((o) => fromUberOrder(o, uberStore.data?.store?.timezone ?? null)),
     ...(grubhubLatest.data?.items ?? []).map((o) => fromGrubhubOrder(o, grubhubStore.data?.store?.timezone ?? null)),
+    ...(shopifyLatest.data?.items ?? []).map((o) => fromShopifyOrder(o, shopifyStore.data?.store?.timezone ?? null)),
   ]).slice(0, 5);
 
   const u = hasUber ? uberSummary.data : null;
   const g = hasGrubhub ? grubhubSummary.data : null;
-  const orders = (u?.orders ?? 0) + (g?.orders ?? 0);
-  const salesCents = (u?.salesCents ?? 0) + (g?.salesCents ?? 0);
-  const currency = u?.currency ?? g?.currency ?? null;
-  const none = (!u && !g) || orders === 0;
-  // Buckets are store-local days; merge both apps' days by date.
-  const byDay = mergeDays([u?.byDay ?? [], g?.byDay ?? []]);
-  const bounds = u || g ? { from: minDate(u?.from, g?.from), to: maxDate(u?.to, g?.to) } : days;
+  const sh = hasShopify ? shopifySummary.data : null;
+  const orders = (u?.orders ?? 0) + (g?.orders ?? 0) + (sh?.orders ?? 0);
+  const salesCents = (u?.salesCents ?? 0) + (g?.salesCents ?? 0) + (sh?.salesCents ?? 0);
+  const currency = u?.currency ?? g?.currency ?? sh?.currency ?? null;
+  const none = (!u && !g && !sh) || orders === 0;
+  // Buckets are store-local days; merge every app's days by date.
+  const byDay = mergeDays([u?.byDay ?? [], g?.byDay ?? [], sh?.byDay ?? []]);
+  const bounds =
+    u || g || sh
+      ? {
+          from: [u?.from, g?.from, sh?.from].reduce(minDate, undefined) ?? "",
+          to: [u?.to, g?.to, sh?.to].reduce(maxDate, undefined) ?? "",
+        }
+      : days;
   const chart = fillDays(bounds, byDay, ["orders"]);
 
-  const connectable = uber || grubhub;
-  const loading = (uber && uberStore.isPending) || (grubhub && grubhubStore.isPending);
-  const nothingConnected = connectable && !loading && !hasUber && !hasGrubhub;
+  const connectable = uber || grubhub || shopify;
+  const loading = (uber && uberStore.isPending) || (grubhub && grubhubStore.isPending) || (shopify && shopifyStore.isPending);
+  const nothingConnected = connectable && !loading && !hasUber && !hasGrubhub && !hasShopify;
+  const connectNames = [uber && "Uber Eats", grubhub && "Grubhub", shopify && "Shopify"].filter(Boolean);
   const onlyOthers = !connectable && providers.length > 0;
 
   return (
@@ -98,13 +121,13 @@ export function OrdersSection({
       href="/orders"
       linkLabel="All orders"
       loading={loading}
-      stale={uberSummary.isPlaceholderData || grubhubSummary.isPlaceholderData}
+      stale={uberSummary.isPlaceholderData || grubhubSummary.isPlaceholderData || shopifySummary.isPlaceholderData}
       className="xl:col-span-2"
     >
       {onlyOthers || nothingConnected ? (
         <EmptyState
           icon={<ReceiptText className="size-5" />}
-          title={onlyOthers ? "DoorDash orders arrive in a later update" : `Connect your ${uber && grubhub ? "delivery" : uber ? "Uber Eats" : "Grubhub"} store`}
+          title={onlyOthers ? "DoorDash orders arrive in a later update" : `Connect your ${connectNames.length === 1 ? connectNames[0] : "orders"} store`}
           text={
             onlyOthers
               ? "Your DoorDash connection is in place. Orders come to Client Hub once DoorDash turns on order sharing."
@@ -124,7 +147,15 @@ export function OrdersSection({
                 {
                   label: "Est. payout",
                   value: none || !u || u.estPayoutCents == null ? "—" : money(u.estPayoutCents, u.currency),
-                  sub: !hasUber ? "Grubhub payouts are in Grubhub for Restaurants" : u && u.commissionBps == null ? "Add your commission rate" : hasGrubhub ? "Uber Eats only" : undefined,
+                  sub: !hasUber
+                    ? hasGrubhub
+                      ? "Grubhub payouts are in Grubhub for Restaurants"
+                      : "Shopify payouts are in Shopify"
+                    : u && u.commissionBps == null
+                      ? "Add your commission rate"
+                      : hasGrubhub || hasShopify
+                        ? "Uber Eats only"
+                        : undefined,
                 },
               ]}
             />
@@ -193,5 +224,5 @@ export function mergeDays(lists: DayBucket[][]): DayBucket[] {
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
-const minDate = (a: string | undefined, b: string | undefined) => (a && b ? (a < b ? a : b) : (a ?? b ?? ""));
-const maxDate = (a: string | undefined, b: string | undefined) => (a && b ? (a > b ? a : b) : (a ?? b ?? ""));
+const minDate = (a: string | undefined, b: string | undefined) => (a && b ? (a < b ? a : b) : (a || b || undefined));
+const maxDate = (a: string | undefined, b: string | undefined) => (a && b ? (a > b ? a : b) : (a || b || undefined));

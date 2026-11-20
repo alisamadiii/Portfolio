@@ -741,3 +741,40 @@ export const hubGrubhubOrder = pgTable(
     idxProjectStatus: index("hub_grubhub_order_project_status_idx").on(table.projectId, table.status),
   })
 );
+
+// ─── Shopify app ────────────────────────────────────────────────
+// One connected Shopify store per project, through the agency's one public
+// Shopify app (authorization code grant, expiring offline tokens). Orders and
+// products are read live from Shopify's Admin GraphQL API, never copied here,
+// so this row is the only Shopify data the hub keeps.
+
+export const hubShopifyStore = pgTable(
+  "hub_shopify_store",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id").notNull(),
+    // "<handle>.myshopify.com", lowercased. One project per shop.
+    shopDomain: text("shop_domain").notNull(),
+    name: text("name").notNull(),
+    currency: text("currency"),
+    // IANA, from the shop.
+    timezone: text("timezone"),
+    planName: text("plan_name"),
+    // Scopes the merchant actually granted (comma-separated).
+    scope: text("scope"),
+    // Encrypted with sealAccountToken. The access token lives an hour, the
+    // refresh token 90 days and rotates on every refresh. accessTokenEnc null
+    // = Shopify refused the refresh: the owner has to reconnect.
+    accessTokenEnc: text("access_token_enc"),
+    accessExpiresAt: timestamp("access_expires_at"),
+    refreshTokenEnc: text("refresh_token_enc"),
+    refreshExpiresAt: timestamp("refresh_expires_at"),
+    connectedUserId: text("connected_user_id"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uqProject: uniqueIndex("uq_hub_shopify_store_project").on(table.projectId),
+    uqShop: uniqueIndex("uq_hub_shopify_store_shop").on(table.shopDomain),
+  })
+);

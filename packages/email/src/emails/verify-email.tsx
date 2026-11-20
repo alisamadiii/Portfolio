@@ -30,17 +30,17 @@ export default function VerifyEmail({ verificationCode }: VerifyEmailProps) {
   return (
     <Html>
       <Head />
-      <Preview>Dream Website Email Verification</Preview>
+      <Preview>Your Ali Samadii Client Hub verification code</Preview>
       <Body style={main}>
         <Container style={container}>
           <EmailHeader />
 
           <Heading style={heading}>Verify your email address</Heading>
-          <Text style={subheading}>Complete your account setup</Text>
+          <Text style={subheading}>Finish setting up your Client Hub account</Text>
 
           <Text style={paragraph}>
-            Welcome to Dream Website! To complete your account setup, please
-            use the verification code below.
+            Welcome to Ali Samadii Client Hub. Enter the code below to verify
+            your email address.
           </Text>
 
           <Section style={codeBox}>
@@ -54,13 +54,7 @@ export default function VerifyEmail({ verificationCode }: VerifyEmailProps) {
           </Section>
 
           <Text style={mutedText}>
-            If you didn&apos;t create an account, you can safely ignore this
-            email.
-          </Text>
-
-          <Text style={{ ...mutedText, margin: 0 }}>
-            For your security, we will never ask you to verify your password,
-            credit card, or banking information via email.
+            If you didn&apos;t create an account, you can ignore this email.
           </Text>
 
           <EmailFooter />

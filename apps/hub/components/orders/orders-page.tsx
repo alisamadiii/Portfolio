@@ -20,6 +20,7 @@ import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { OrderDialog as GrubhubOrderDialog } from "@/components/grubhub/order-dialog";
 import { RangeMenu } from "@/components/project/home/range-menu";
+import { OrderDialog as ShopifyOrderDialog } from "@/components/shopify/order-dialog";
 import { useHomeRange } from "@/components/project/home/use-home-range";
 import { localTime, money } from "@/components/uber-eats/format";
 import { OrderDialog as UberOrderDialog } from "@/components/uber-eats/order-dialog";
@@ -31,6 +32,7 @@ import { handleCmsError } from "@/lib/trpc-errors";
 import {
   DELIVERY_PROVIDERS,
   fromGrubhubOrder,
+  fromShopifyOrder,
   fromUberOrder,
   installedDeliveryApps,
   orderKey,
@@ -46,7 +48,7 @@ type StatusFilter = (typeof STATUSES)[number];
 const STATUS_LABELS: Record<StatusFilter, string> = { all: "All", open: "Open", completed: "Completed", canceled: "Canceled" };
 type Days = 7 | 28 | 90;
 
-/** Every delivery order from every connected app, newest first, with each app's own detail dialog on click. */
+/** Every order from every connected orders app, newest first, with each app's own detail dialog on click. */
 export function OrdersPage() {
   const projectId = useProjectId();
   const { installed, isLoaded } = useInstalledApps(projectId);
@@ -60,12 +62,12 @@ export function OrdersPage() {
   if (isLoaded && providers.length === 0) {
     return (
       <>
-        <PageHeader title="Orders" description="Every delivery order from your connected apps, in one list." docs="client-hub/orders" />
+        <PageHeader title="Orders" description="Every order from your connected apps, in one list." docs="client-hub/orders" />
         <Card>
           <EmptyState
             icon={<ReceiptText className="size-5" />}
-            title="No delivery app yet"
-            text="Add Uber Eats, DoorDash or Grubhub and their orders show up here, with every detail and a printable receipt."
+            title="No orders app yet"
+            text="Add Shopify, Uber Eats, DoorDash or Grubhub and their orders show up here, with every detail."
             action={<ButtonLink variant="primary" size="sm" href="/apps">Browse apps</ButtonLink>}
           />
         </Card>
@@ -89,7 +91,7 @@ export function OrdersPage() {
     <>
       <PageHeader
         title="Orders"
-        description="Every delivery order from your connected apps, in one list."
+        description="Every order from your connected apps, in one list."
         docs="client-hub/orders"
         actions={<RangeMenu range={range} onChange={setRange} />}
       />
@@ -156,6 +158,9 @@ function Toolbar({
     </div>
   );
 }
+
+/** Apps with an order feed (DoorDash has none yet). */
+type FeedApp = "uber-eats" | "grubhub" | "shopify";
 
 type FeedArgs = { projectId: string; enabled: boolean; days: Days; status: StatusFilter; cursor: string | undefined };
 
@@ -257,6 +262,36 @@ function useGrubhubFeed({ projectId, enabled, days, status, cursor }: FeedArgs):
   };
 }
 
+function useShopifyFeed({ projectId, enabled, days, status, cursor }: FeedArgs): ProviderFeed {
+  const trpc = useTRPC();
+  const store = useQuery(trpc.shopify.get.queryOptions({ projectId }, { enabled, retry: false }));
+  const live = enabled && Boolean(store.data?.store) && !store.data?.store?.needsReconnect;
+  const timezone = store.data?.store?.timezone ?? null;
+  const summary = useQuery(
+    trpc.shopify.summary.queryOptions({ projectId, days }, { enabled: live, retry: false, placeholderData: keepPreviousData })
+  );
+  const list = useQuery({
+    ...trpc.shopify.orders.queryOptions({ projectId, cursor, days, status: status === "all" ? undefined : status }),
+    enabled: live,
+    retry: false,
+    placeholderData: keepPreviousData,
+    refetchInterval: 60_000,
+  });
+  return {
+    rows: (list.data?.items ?? []).map((o) => fromShopifyOrder(o, timezone)),
+    nextCursor: list.data?.nextCursor ?? null,
+    isPending: enabled && (store.isPending || (live && list.isPending)),
+    isPlaceholder: list.isPlaceholderData,
+    summary: summary.data ?? null,
+    summaryPending: enabled && (store.isPending || (live && summary.isPending)),
+    timezone,
+    // Shopify orders have nothing to accept; ship / cancel / refund live in the dialog.
+    canAct: false,
+    act: () => {},
+    acting: false,
+  };
+}
+
 function Feed({
   projectId,
   providers,
@@ -282,8 +317,9 @@ function Feed({
   const cursor = single ? cursors.at(-1) : undefined;
   const uber = useUberFeed({ projectId, enabled: providers.includes("uber-eats"), days, status, cursor });
   const grubhub = useGrubhubFeed({ projectId, enabled: providers.includes("grubhub"), days, status, cursor });
-  const feeds: Record<"uber-eats" | "grubhub", ProviderFeed> = { "uber-eats": uber, grubhub };
-  const activeFeeds = providers.filter((p): p is "uber-eats" | "grubhub" => p in feeds).map((p) => feeds[p]);
+  const shopify = useShopifyFeed({ projectId, enabled: providers.includes("shopify"), days, status, cursor });
+  const feeds: Record<FeedApp, ProviderFeed> = { "uber-eats": uber, grubhub, shopify };
+  const activeFeeds = providers.filter((p): p is FeedApp => p in feeds).map((p) => feeds[p]);
 
   const rows = sortRows(activeFeeds.flatMap((f) => f.rows));
   const anyPending = activeFeeds.some((f) => f.isPending);
@@ -296,7 +332,7 @@ function Feed({
   const currency = summaries.find((s) => s.currency)?.currency ?? null;
   const uberSummary = providers.includes("uber-eats") ? uber.summary : null;
   const canActAny = activeFeeds.some((f) => f.canAct);
-  const nextCursor = single ? feeds[single as "uber-eats" | "grubhub"]?.nextCursor ?? null : null;
+  const nextCursor = single ? feeds[single as FeedApp]?.nextCursor ?? null : null;
   const moreElsewhere = !single && activeFeeds.some((f) => f.nextCursor);
   const open = parseOrderKey(openKey);
 
@@ -344,7 +380,7 @@ function Feed({
       width: canActAny ? "170px" : "120px",
       align: "end",
       cell: (o) => {
-        const feed = o.provider in feeds ? feeds[o.provider as "uber-eats" | "grubhub"] : null;
+        const feed = o.provider in feeds ? feeds[o.provider as FeedApp] : null;
         return feed?.canAct && o.awaitingAccept ? (
           <Button
             size="sm"
@@ -380,10 +416,12 @@ function Feed({
               label: "Est. payout",
               value: none || !uberSummary || uberSummary.estPayoutCents == null ? "—" : money(uberSummary.estPayoutCents, uberSummary.currency),
               sub: !providers.includes("uber-eats")
-                ? "Grubhub payouts are in Grubhub for Restaurants"
+                ? providers.includes("grubhub")
+                  ? "Grubhub payouts are in Grubhub for Restaurants"
+                  : "Shopify payouts are in Shopify"
                 : uberSummary && uberSummary.commissionBps == null
                   ? "Add your commission rate in Uber Eats"
-                  : providers.includes("grubhub")
+                  : providers.includes("grubhub") || providers.includes("shopify")
                     ? "Uber Eats only"
                     : undefined,
             },
@@ -436,6 +474,12 @@ function Feed({
         orderId={open?.provider === "grubhub" ? open.id : null}
         timezone={grubhub.timezone}
         canAct={grubhub.canAct}
+        fullAccess={fullAccess}
+        onClose={() => setOpenKey(null)}
+      />
+      <ShopifyOrderDialog
+        orderId={open?.provider === "shopify" ? open.id : null}
+        timezone={shopify.timezone}
         fullAccess={fullAccess}
         onClose={() => setOpenKey(null)}
       />

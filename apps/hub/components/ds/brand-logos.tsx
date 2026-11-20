@@ -185,3 +185,21 @@ export function GrubhubLogo({ className }: LogoProps) {
     </svg>
   );
 }
+
+/** Shopify green tile with a drawn white shopping bag (not the trademark file). */
+export function ShopifyLogo({ className }: LogoProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden>
+      <rect width="24" height="24" rx="4" fill="#95BF47" />
+      <path d="M6.2 8.6h11.6l-.9 10.4H7.1z" fill="#FFFFFF" />
+      <path d="M9.4 9.4V7.6a2.6 2.6 0 0 1 5.2 0v1.8" fill="none" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M13.6 12.1c-.4-.3-.9-.4-1.4-.4-.8 0-1.4.4-1.4 1s.5.8 1.2 1c.8.2 1.4.5 1.4 1.2 0 .7-.7 1.1-1.5 1.1-.6 0-1.1-.2-1.5-.5"
+        fill="none"
+        stroke="#5E8E3E"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

@@ -145,7 +145,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url, token }) => {
       await emailService.send({
         to: user.email,
-        subject: "Reset your password",
+        subject: "Reset your Ali Samadii Client Hub password",
         react: ResetPassword({ resetPasswordLink: `${url}?token=${token}` }),
       });
     },
@@ -225,7 +225,7 @@ export const auth = betterAuth({
       sendMagicLink: async ({ email, url }) => {
         const { error: sendError } = await emailService.send({
           to: email,
-          subject: "Sign in to your account",
+          subject: "Your Ali Samadii Client Hub sign-in link",
           react: MagicLink({ magicLinkUrl: url }),
         });
         if (sendError) {
@@ -241,7 +241,7 @@ export const auth = betterAuth({
         } else if (type === "email-verification") {
           const { error: sendError } = await emailService.send({
             to: email,
-            subject: "Verify your email",
+            subject: `${otp} is your Ali Samadii Client Hub code`,
             react: VerifyEmail({ verificationCode: otp }),
           });
 

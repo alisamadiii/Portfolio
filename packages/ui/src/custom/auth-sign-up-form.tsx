@@ -51,7 +51,7 @@ export function SignUpForm({
   defaultEmail,
 }: SignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<"magic" | "password">("magic");
+  const [mode, setMode] = useState<"magic" | "password">("password");
   const [magicSent, setMagicSent] = useState(false);
 
   const form = useForm<z.infer<typeof signupSchema>>({

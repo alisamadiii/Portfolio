@@ -4,17 +4,19 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { orderStatusGroup as grubhubStatusGroup } from "@workspace/trpc/lib/grubhub-constants";
 import { orderStatusGroup, type OrderStatusGroup } from "@workspace/trpc/lib/uber-eats-shared";
 
-import { DoorDashLogo, GrubhubLogo, UberEatsLogo } from "@/components/ds/brand-logos";
+import { DoorDashLogo, GrubhubLogo, ShopifyLogo, UberEatsLogo } from "@/components/ds/brand-logos";
 import type { BadgeTone } from "@/components/ds/ui/badge";
 import { FULFILLMENT_LABELS, STATUS_META } from "@/components/grubhub/format";
+import { orderBadge } from "@/components/shopify/format";
 import { itemsSummary, STATE_LABELS, TYPE_LABELS } from "@/components/uber-eats/format";
 import type { AppId } from "@/lib/apps";
 
-// Delivery apps share one Orders page and one Home section. Each provider
-// maps its own rows into DeliveryOrderRow; the UI never looks at a provider's
-// raw shape. Uber Eats and Grubhub store orders; DoorDash is onboarding-only.
+// Orders apps (delivery marketplaces + Shopify) share one Orders page and one
+// Home section. Each provider maps its own rows into DeliveryOrderRow; the UI
+// never looks at a provider's raw shape. Uber Eats and Grubhub store orders,
+// Shopify's are read live; DoorDash is onboarding-only.
 
-export const DELIVERY_APP_IDS = ["uber-eats", "doordash", "grubhub"] as const;
+export const DELIVERY_APP_IDS = ["uber-eats", "doordash", "grubhub", "shopify"] as const;
 export type DeliveryAppId = (typeof DELIVERY_APP_IDS)[number];
 
 export const hasDeliveryApp = (installed: readonly AppId[]) =>
@@ -34,6 +36,7 @@ export const DELIVERY_PROVIDERS: Record<
   "uber-eats": { name: "Uber Eats", Logo: UberEatsLogo, hasOrders: true },
   doordash: { name: "DoorDash", Logo: DoorDashLogo, hasOrders: false },
   grubhub: { name: "Grubhub", Logo: GrubhubLogo, hasOrders: true },
+  shopify: { name: "Shopify", Logo: ShopifyLogo, hasOrders: true },
 };
 
 export type DeliveryOrderRow = {
@@ -108,6 +111,30 @@ export const fromGrubhubOrder = (o: GrubhubOrder, timezone: string | null): Deli
   typeLabel: FULFILLMENT_LABELS[o.fulfillment],
   awaitingAccept: o.status === "RESTAURANT_CONFIRMABLE",
 });
+
+type ShopifyOrder = RouterOutputs["shopify"]["orders"]["items"][number];
+
+/** Shopify rows: no customer name (the app holds no protected customer data), total after refunds. */
+export const fromShopifyOrder = (o: ShopifyOrder, timezone: string | null): DeliveryOrderRow => {
+  const badge = orderBadge(o);
+  return {
+    provider: "shopify",
+    id: o.id,
+    displayId: o.name.replace(/^#/, ""),
+    customer: "Online order",
+    placedAt: o.placedAt,
+    timezone,
+    itemsSummary: itemsSummary(o.items),
+    itemCount: o.itemCount,
+    totalCents: o.totalCents,
+    currency: o.currency,
+    status: o.status,
+    stateLabel: badge.label,
+    tone: badge.tone,
+    typeLabel: "Online store",
+    awaitingAccept: false,
+  };
+};
 
 /** Newest first across providers. */
 export const sortRows = (rows: DeliveryOrderRow[]) =>

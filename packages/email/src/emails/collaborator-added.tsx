@@ -59,7 +59,7 @@ export default function CollaboratorAddedEmail({
               {invitedByName}
             </Link>{" "}
             added you to the <span style={strong}>&quot;{repoName}&quot;</span>{" "}
-            project on Client Hub. You already have access — there&apos;s
+            project on Client Hub. You already have access, so there&apos;s
             nothing to accept.
           </Text>
 

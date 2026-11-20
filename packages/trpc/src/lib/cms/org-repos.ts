@@ -21,6 +21,7 @@ import {
 
 import { deleteDoorDashRows } from "../doordash";
 import { deleteGrubhubRows } from "../grubhub";
+import { deleteShopifyRows } from "../shopify";
 import { deleteUberRows } from "../uber-eats";
 
 /**
@@ -59,6 +60,7 @@ const deleteProjectChildRows = async (
   await deleteUberRows(projectIds);
   await deleteDoorDashRows(projectIds);
   await deleteGrubhubRows(projectIds);
+  await deleteShopifyRows(projectIds);
 
   // Config + content cache are keyed owner/repo/branch — drop all branches for
   // each project's slug, unless another project still uses the same repo.

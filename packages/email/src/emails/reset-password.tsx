@@ -34,7 +34,7 @@ export default function ResetPassword({
   return (
     <Html>
       <Head />
-      <Preview>Dream Website Password Reset</Preview>
+      <Preview>Reset your Ali Samadii Client Hub password</Preview>
       <Body style={main}>
         <Container style={container}>
           <EmailHeader />
@@ -43,9 +43,9 @@ export default function ResetPassword({
           <Text style={subheading}>Create a new password for your account</Text>
 
           <Text style={paragraph}>
-            We received a request to reset your password for your Dream Website
-            account. Click the button below to create a new password. If you
-            didn&apos;t request this, you can safely ignore this email.
+            We received a request to reset the password for your Ali Samadii
+            Client Hub account. Use the button below to choose a new one. If you
+            didn&apos;t request this, you can ignore this email.
           </Text>
 
           <Section style={buttonSection}>
@@ -55,7 +55,7 @@ export default function ResetPassword({
           </Section>
 
           <Text style={mutedText}>
-            This link will expire in 1 hour for your security.
+            This link expires in 1 hour.
           </Text>
 
           <Text style={mutedText}>
@@ -63,11 +63,6 @@ export default function ResetPassword({
           </Text>
 
           <Text style={urlBox}>{resetPasswordLink}</Text>
-
-          <Text style={{ ...mutedText, margin: "24px 0 0" }}>
-            For your security, we will never ask you to verify your password,
-            credit card, or banking information via email.
-          </Text>
 
           <EmailFooter />
         </Container>
@@ -77,5 +72,5 @@ export default function ResetPassword({
 }
 
 ResetPassword.PreviewProps = {
-  resetPasswordLink: "https://dreamwebsite.com/reset-password?token=abc123",
+  resetPasswordLink: "https://api.alisamadii.com/api/auth/reset-password/abc123",
 } satisfies ResetPasswordProps;

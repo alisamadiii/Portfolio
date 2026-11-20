@@ -122,7 +122,7 @@ export default function ContactFormEmail({
           </Text>
 
           <Text style={label}>Source</Text>
-          <Text style={value}>{clientName} — Contact Form</Text>
+          <Text style={value}>{clientName}: Contact Form</Text>
 
           <Text style={label}>Device</Text>
           <Text style={value}>{userAgent}</Text>

@@ -134,7 +134,10 @@ export function EnvDialog({
         ) : (
           <form
             id="env-variables"
-            className="max-h-[60vh] space-y-4 overflow-y-auto"
+            // Scrolls when there are many variables. Spans the dialog's full width
+            // (-mx-6/px-6) with a little vertical padding, so the inputs' focus
+            // rings aren't clipped by the scroll edge.
+            className="-mx-6 max-h-[60vh] space-y-4 overflow-y-auto px-6 py-1.5"
             onSubmit={(event) => {
               event.preventDefault();
               if (!canEdit || !dirty || !sessionId) return;

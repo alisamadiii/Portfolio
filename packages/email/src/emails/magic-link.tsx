@@ -32,17 +32,17 @@ export default function MagicLink({ magicLinkUrl }: MagicLinkProps) {
   return (
     <Html>
       <Head />
-      <Preview>Sign in to your account</Preview>
+      <Preview>Your sign-in link for Ali Samadii Client Hub</Preview>
       <Body style={main}>
         <Container style={container}>
           <EmailHeader />
 
-          <Heading style={heading}>Sign in to your account</Heading>
-          <Text style={subheading}>Your secure sign-in link is ready</Text>
+          <Heading style={heading}>Sign in to Client Hub</Heading>
+          <Text style={subheading}>Your sign-in link from Ali Samadii</Text>
 
           <Text style={paragraph}>
-            Click the button below to sign in to your Dream Website account. No
-            password needed — this link will log you in securely.
+            Use the button below to sign in to your Ali Samadii Client Hub
+            account. The link works once.
           </Text>
 
           <Section style={buttonSection}>
@@ -52,7 +52,7 @@ export default function MagicLink({ magicLinkUrl }: MagicLinkProps) {
           </Section>
 
           <Text style={mutedText}>
-            This link will expire in 5 minutes for your security.
+            This link expires in 5 minutes.
           </Text>
 
           <Text style={mutedText}>
@@ -62,8 +62,7 @@ export default function MagicLink({ magicLinkUrl }: MagicLinkProps) {
           <Text style={urlBox}>{magicLinkUrl}</Text>
 
           <Text style={{ ...mutedText, margin: "24px 0 0" }}>
-            If you didn&apos;t request this sign-in link, you can safely ignore
-            this email.
+            If you didn&apos;t request this link, you can ignore this email.
           </Text>
 
           <EmailFooter />
@@ -75,5 +74,5 @@ export default function MagicLink({ magicLinkUrl }: MagicLinkProps) {
 
 MagicLink.PreviewProps = {
   magicLinkUrl:
-    "https://dreamwebsite.com/api/auth/magic-link/verify?token=abc123",
+    "https://api.alisamadii.com/api/auth/magic-link/verify?token=abc123",
 } satisfies MagicLinkProps;

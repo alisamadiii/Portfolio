@@ -24,6 +24,7 @@ import { productsRouter } from "./products";
 import { projectRouter } from "./project";
 import { neonRouter } from "./neon";
 import { resendRouter } from "./resend";
+import { shopifyRouter } from "./shopify";
 import { uberEatsRouter } from "./uber-eats";
 import { doordashRouter } from "./doordash";
 import { grubhubRouter } from "./grubhub";
@@ -65,6 +66,7 @@ export const appRouter = createTRPCRouter({
   feedback: feedbackRouter,
   googleReviews: googleReviewsRouter,
   uberEats: uberEatsRouter,
+  shopify: shopifyRouter,
   doordash: doordashRouter,
   grubhub: grubhubRouter,
 });

@@ -16,6 +16,7 @@ export const APP_IDS = [
   "uber-eats",
   "doordash",
   "grubhub",
+  "shopify",
 ] as const;
 export type AppId = (typeof APP_IDS)[number];
 

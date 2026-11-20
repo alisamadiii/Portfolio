@@ -16,6 +16,7 @@ import {
   Images,
   Inbox,
   Send,
+  ShoppingBag,
   Star,
   LayoutGrid,
   Settings,
@@ -43,6 +44,7 @@ import {
   ResendLogo,
   DoorDashLogo,
   GrubhubLogo,
+  ShopifyLogo,
   UberEatsLogo,
   WixLogo,
 } from "@/components/ds/brand-logos";
@@ -157,6 +159,14 @@ export const APPS: AppDef[] = [
     comingSoon: true,
   },
   {
+    id: "shopify",
+    name: "Shopify",
+    description: "Your Shopify orders and products in one place: ship, cancel, refund, and change prices and stock.",
+    icon: ShoppingBag,
+    logo: ShopifyLogo,
+    path: "shopify",
+  },
+  {
     id: "resend",
     name: "Resend",
     description:
@@ -235,10 +245,10 @@ export const NETLIFY_NAV: NavItem = { id: "netlify", label: "Netlify", logo: Net
 
 /** Who has access to the project. Full-access only (the server 403s anyone else). */
 export const MEMBERS_NAV: NavItem = { id: "members", label: "Members", icon: Users, path: "members" };
-/** Every delivery order in one list; shown once a delivery app (Uber Eats, DoorDash, Grubhub) is installed. */
+/** Every order in one list; shown once an orders app (Uber Eats, DoorDash, Grubhub, Shopify) is installed. */
 export const ORDERS_NAV: NavItem = { id: "orders", label: "Orders", icon: ReceiptText, path: "orders" };
 
-/** Top sidebar group: core, then Members (managers only), Netlify (linked upload sites), Orders (delivery apps). */
+/** Top sidebar group: core, then Members (managers only), Netlify (linked upload sites), Orders (orders apps). */
 export const projectCoreNav = ({
   netlify,
   members,
