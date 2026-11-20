@@ -6,7 +6,6 @@ import { db } from "@workspace/drizzle/index";
 import { account, hubProject } from "@workspace/drizzle/schema";
 
 import { cmsFullAccessProcedure, cmsProcedure, createTRPCRouter } from "../init";
-import { assertProjectOwnerOrAdmin } from "../lib/cms/authz";
 import { GCAL_SCOPES, scopeSatisfied } from "../lib/integrations";
 import {
   createEvent,
@@ -92,10 +91,9 @@ export const gcalRouter = createTRPCRouter({
   // Runs right after Google's consent screen: binds the Google account the
   // caller just linked with the calendar scope (their most recently written
   // Google account row that has it).
-  // Owner or admin only: the calendar is the connecting user's own Google
-  // account, so a collaborator can't swap theirs in for the owner's.
+  // Any full-access member, like Resend, Neon and Analytics: the binding
+  // lives on the project row (gcalConnectedUserId + gcalAccountId).
   connect: appCmsFullAccessProcedure.mutation(async ({ ctx }) => {
-    await assertProjectOwnerOrAdmin(ctx.user, ctx.projectId);
     const rows = await db
       .select({ accountId: account.accountId, scope: account.scope })
       .from(account)

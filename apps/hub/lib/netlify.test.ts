@@ -54,43 +54,55 @@ describe("dnsRecordFor", () => {
 // Who hosts a publish (2026-11-15): clients on their own Netlify, the agency
 // account only when an admin publishes.
 describe("planNetlifyHost", () => {
+  // Project-scoped since 2026-11-20: the caller's own Netlify connection no
+  // longer matters; only the project row (site, pinned account, owner's
+  // connection) decides. callerIsAdmin only unlocks creating a site on the
+  // agency account.
   const base = {
     siteExists: false,
     pinnedUserId: null as string | null,
-    callerId: "client",
+    ownerConnectedUserId: null as string | null,
     callerIsAdmin: false,
-    callerConnected: false,
-    ownerId: "client" as string | null,
-    ownerConnected: false,
   };
 
   it("existing site pinned to a user deploys with that user's token", () => {
+    // STALE (deliberate): host was "own" for the pinned user and "owner" for an
+    // admin; the host no longer depends on who clicks.
     expect(planNetlifyHost({ ...base, siteExists: true, pinnedUserId: "client" })).toEqual({
       action: "deploy",
-      host: "own",
+      host: "owner",
       tokenUserId: "client",
       createSite: false,
     });
     expect(
-      planNetlifyHost({ ...base, siteExists: true, pinnedUserId: "client", callerId: "admin", callerIsAdmin: true })
+      planNetlifyHost({ ...base, siteExists: true, pinnedUserId: "client", callerIsAdmin: true })
     ).toMatchObject({ action: "deploy", host: "owner", tokenUserId: "client" });
   });
 
   it("agency-owned site: admin deploys with the agency token", () => {
-    expect(
-      planNetlifyHost({ ...base, siteExists: true, callerId: "admin", callerIsAdmin: true })
-    ).toEqual({ action: "deploy", host: "agency", tokenUserId: null, createSite: false });
+    expect(planNetlifyHost({ ...base, siteExists: true, callerIsAdmin: true })).toEqual({
+      action: "deploy",
+      host: "agency",
+      tokenUserId: null,
+      createSite: false,
+    });
   });
 
-  it("agency-owned site: a client never deploys it, even with Netlify connected", () => {
-    expect(planNetlifyHost({ ...base, siteExists: true, callerConnected: true })).toEqual({
-      action: "agency_managed",
+  it("agency-owned site: a client publish deploys it too (was agency_managed)", () => {
+    // STALE (deliberate): used to return { action: "agency_managed" } and skip
+    // the deploy. That was the reported bug: the owner clicked Publish and
+    // nothing reached Netlify.
+    expect(planNetlifyHost({ ...base, siteExists: true })).toEqual({
+      action: "deploy",
+      host: "agency",
+      tokenUserId: null,
+      createSite: false,
     });
   });
 
   it("no site, admin: owner's Netlify when connected, else agency", () => {
-    const admin = { ...base, callerId: "admin", callerIsAdmin: true };
-    expect(planNetlifyHost({ ...admin, ownerConnected: true })).toEqual({
+    const admin = { ...base, callerIsAdmin: true };
+    expect(planNetlifyHost({ ...admin, ownerConnectedUserId: "client" })).toEqual({
       action: "deploy",
       host: "owner",
       tokenUserId: "client",
@@ -102,23 +114,53 @@ describe("planNetlifyHost", () => {
       tokenUserId: null,
       createSite: true,
     });
-    expect(planNetlifyHost({ ...admin, ownerId: null })).toMatchObject({ host: "agency" });
   });
 
-  it("no site, client connected: created on the client's own Netlify", () => {
-    expect(planNetlifyHost({ ...base, callerConnected: true })).toEqual({
+  it("no site, owner connected: created on the owner's Netlify", () => {
+    // STALE (deliberate): was "client connected → own Netlify" keyed on the
+    // caller's connection.
+    expect(planNetlifyHost({ ...base, ownerConnectedUserId: "client" })).toEqual({
       action: "deploy",
-      host: "own",
+      host: "owner",
       tokenUserId: "client",
       createSite: true,
     });
   });
 
-  it("no site, client not connected: needs Netlify, never falls back to the agency", () => {
+  it("no site, no owner Netlify, non-admin: needs Netlify, never falls back to the agency", () => {
+    // STALE (deliberate): a collaborator with the owner connected used to get
+    // needs_netlify; that case now deploys to the owner (see next tests).
     expect(planNetlifyHost(base)).toEqual({ action: "needs_netlify" });
-    // Even when the owner (someone else) connected theirs.
-    expect(planNetlifyHost({ ...base, callerId: "collab", ownerConnected: true })).toEqual({
-      action: "needs_netlify",
+  });
+
+  it("site on agency Netlify, client publishes: deploys with agency token", () => {
+    expect(planNetlifyHost({ ...base, siteExists: true, pinnedUserId: null })).toMatchObject({
+      action: "deploy",
+      tokenUserId: null,
     });
+  });
+
+  it("site pinned to owner, collaborator publishes: deploys with owner token", () => {
+    expect(planNetlifyHost({ ...base, siteExists: true, pinnedUserId: "owner" })).toEqual({
+      action: "deploy",
+      host: "owner",
+      tokenUserId: "owner",
+      createSite: false,
+    });
+  });
+
+  it("no site, owner connected, collaborator publishes: created on owner's Netlify", () => {
+    expect(planNetlifyHost({ ...base, ownerConnectedUserId: "owner" })).toEqual({
+      action: "deploy",
+      host: "owner",
+      tokenUserId: "owner",
+      createSite: true,
+    });
+  });
+
+  it("linked site ignores the owner's connection: pinned token wins", () => {
+    expect(
+      planNetlifyHost({ ...base, siteExists: true, pinnedUserId: null, ownerConnectedUserId: "owner" })
+    ).toMatchObject({ host: "agency", tokenUserId: null, createSite: false });
   });
 });

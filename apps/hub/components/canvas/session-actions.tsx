@@ -69,10 +69,6 @@ export function SessionActions() {
           });
           if (result.netlify === "deploying") {
             toast.success("Published. Deploying to Netlify…");
-          } else if (result.netlify === "agency_managed") {
-            toast.success("Saved.", {
-              description: "Your site is managed by our team. We'll put these changes live.",
-            });
           } else {
             toast.success("Published.", {
               description: "The Netlify deploy didn't start. Try Redeploy on the Netlify page.",
@@ -229,15 +225,11 @@ export function SessionActions() {
           </AlertDialogHeader>
           {source === "upload" && netlifyTarget.data && (
             <p className="text-sm text-muted-foreground">
-              {netlifyTarget.data.action === "agency_managed"
-                ? "Your site is managed by our team. Your changes are saved and we'll put them live."
+              {netlifyTarget.data.siteUrl
+                ? "Deploys to the project's Netlify site."
                 : netlifyTarget.data.host === "agency"
-                  ? "Deploys to the agency Netlify account."
-                  : netlifyTarget.data.host === "owner"
-                    ? "Deploys to the client's own Netlify account."
-                    : netlifyTarget.data.siteUrl
-                      ? "Deploys to your Netlify account."
-                      : "Your website will be created on your own Netlify account."}
+                  ? "Your website will be created on the agency Netlify account."
+                  : "Your website will be created on the project owner's Netlify account."}
             </p>
           )}
           <AlertDialogFooter>

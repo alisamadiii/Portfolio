@@ -58,7 +58,7 @@ export const useProject = (): Project | null => {
       name: repo.name ?? row?.name ?? null,
       source: repo.source,
       role: repo.myRole ?? row?.role ?? null,
-      ownerOrAdmin: row?.ownerOrAdmin ?? repo.isOwner ?? false,
+      ownerOrAdmin: row?.ownerOrAdmin || repo.isOwner || false,
     };
   }
 

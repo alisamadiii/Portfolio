@@ -15,7 +15,7 @@ import { agencyClient, hubProject } from "@workspace/drizzle/schema";
 import { APP_IDS, planAllowsApp, type AppId } from "@workspace/trpc/lib/apps";
 import { getEntitlement } from "@workspace/trpc/lib/payment/entitlements";
 import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
-import { assertProjectOwnerOrAdmin } from "@workspace/trpc/lib/cms/authz";
+import { assertProjectOwnerOrAdmin, isProjectOwnerOrAdmin } from "@workspace/trpc/lib/cms/authz";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
 import { deleteImport, getImport, pullBackup } from "@workspace/trpc/lib/content-pilot";
 import {
@@ -171,16 +171,8 @@ export const projectRouter = createTRPCRouter({
     .input(z.object({ websiteUrl: z.string().trim().max(255).nullable() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        const [project] = await db
-          .select({ ownerId: hubProject.githubConnectedUserId })
-          .from(hubProject)
-          .where(eq(hubProject.id, ctx.projectId))
-          .limit(1);
-        if (!project) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
-        }
-        // The project owner (who imported it) or an admin; collaborators can't.
-        if (!isAdminUser(ctx.user) && project.ownerId !== ctx.user.id) {
+        // A project owner (importer or agency owner) or an admin; collaborators can't.
+        if (!(await isProjectOwnerOrAdmin(ctx.user, ctx.projectId))) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message:

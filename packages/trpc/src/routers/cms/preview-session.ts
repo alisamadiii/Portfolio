@@ -7,7 +7,7 @@ import {
   isValidBranchName,
 } from "@workspace/trpc/lib/cms/branch-name";
 import { toTRPCError } from "@workspace/trpc/lib/cms/errors";
-import { isAdminUser } from "@workspace/trpc/lib/authz-shared";
+import { isProjectOwnerOrAdmin } from "@workspace/trpc/lib/cms/authz";
 import { installationCommitAuthor } from "@workspace/trpc/lib/github-app";
 import { requireFeature } from "@workspace/trpc/lib/payment/entitlements";
 import { getBranchHeadSha } from "@workspace/trpc/lib/cms/github-cache-file";
@@ -68,22 +68,14 @@ const sessionForRepo = async (projectId: string, sessionId: string) => {
 };
 
 /**
- * Env values are secrets: only the project owner (who imported it) or an
+ * Env values are secrets: only a project owner (importer or agency owner) or an
  * admin may read or change them. Same rule as project.setWebsiteUrl.
  */
 const assertEnvAccess = async (
-  user: { id: string; role?: string | null; isAdmin?: boolean },
+  user: { id: string; email: string; role?: string | null; isAdmin?: boolean },
   projectId: string
 ) => {
-  const [project] = await db
-    .select({ ownerId: hubProject.githubConnectedUserId })
-    .from(hubProject)
-    .where(eq(hubProject.id, projectId))
-    .limit(1);
-  if (!project) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Project not found." });
-  }
-  if (!isAdminUser(user) && project.ownerId !== user.id) {
+  if (!(await isProjectOwnerOrAdmin(user, projectId))) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message:
@@ -503,8 +495,9 @@ export const previewSessionRouter = createTRPCRouter({
       await requireFeature(ctx.user, ctx.projectId, "ai-chat");
       const session = await sessionForRepo(ctx.projectId, input.sessionId);
 
-      // Uploads host on the client's own Netlify. A first publish without it
-      // is refused BEFORE the squash, so the edits stay in the editor.
+      // Uploads deploy to the project's linked Netlify site. With no site and
+      // no owner Netlify to create one on, the publish is refused BEFORE the
+      // squash, so the edits stay in the editor.
       if (ctx.source === "upload") {
         const plan = await netlifyPlan(ctx.projectId, ctx.user);
         if (plan.action === "needs_netlify") {
@@ -524,8 +517,8 @@ export const previewSessionRouter = createTRPCRouter({
       const { sha, changed } = await publishPreviewSession(session.id, { backupRepo });
 
       await closePreviewSession(session.id, "published");
-      // Upload projects only: "deploying", or "agency_managed" when the site
-      // lives on the agency's Netlify and only an admin puts it live.
+      // Upload projects only: "deploying" to the project's Netlify site,
+      // whoever publishes (project-scoped, see planNetlifyHost).
       let netlify: NetlifyDeployStatus | "failed" | null = null;
       if (ctx.source === "upload") {
         // Local-only publish: no GitHub refs to clean up. Bump the activity

@@ -1,7 +1,7 @@
 // ─── Leads inbox (shared, browser-safe) ──────────────────────────
-// A lead's conversation: texts through the project's Telnyx number when the
-// lead has a phone, email when they only left an address. Server side:
-// lib/telnyx.ts + routers/agency.ts (agency.inbox / agency.sms).
+// A lead's conversation: texts through the project's number (lib/sms, any
+// provider) when the lead has a phone, email when they only left an address.
+// Server side: lib/inbox.ts + routers/agency.ts (agency.inbox / agency.sms).
 
 export type InboxChannel = "sms" | "email";
 
@@ -134,25 +134,6 @@ export function threadItems<M extends InboxMessage>(
   return out;
 }
 
-/**
- * Telnyx per-recipient status -> our message status. Unknown ones keep the
- * row as sent, which is what the carrier last confirmed.
- */
-export function telnyxStatus(status: string | undefined): "queued" | "sent" | "delivered" | "failed" {
-  switch (status) {
-    case "queued":
-    case "sending":
-      return "queued";
-    case "delivered":
-      return "delivered";
-    case "sending_failed":
-    case "delivery_failed":
-      return "failed";
-    default:
-      return "sent";
-  }
-}
-
 // ─── Email replies ───────────────────────────────────────────────
 // Inbox emails go out with Reply-To "r+<leadId>.<sig>@<reply domain>"; SES
 // receives the reply there (lib/inbound-email.ts). sig = HMAC of the lead id,
@@ -207,7 +188,7 @@ export function stripQuotedReply(text: string): string {
 
 /**
  * Outbound messages a project may send from the inbox: every send is one
- * click, but the channels are the agency's (Telnyx number, alisamadii.com
+ * click, but the channels are the agency's (texting number, alisamadii.com
  * mail), so a hijacked or scripted account can't turn them into a bulk relay.
  */
 export const OUTBOUND_LIMITS = { perHour: 60, perDay: 300 } as const;

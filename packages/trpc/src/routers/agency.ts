@@ -122,17 +122,7 @@ import {
   sendLeadMessage,
 } from "../lib/inbox";
 import { placeholderValues, resolveTemplate } from "../lib/templates-shared";
-import {
-  assignNumberProfile,
-  createMessagingProfile,
-  isTelnyxConfigured,
-  listOwnedNumbers,
-  orderNumber,
-  releaseNumber,
-  searchNumbers,
-  setProfileWebhook,
-  TelnyxError,
-} from "../lib/telnyx/client";
+import { smsProvider, type SmsNumberLink } from "../lib/sms";
 import { planForPrice, pricesFor } from "../lib/payment/plans";
 import { ensureStripeCustomer } from "./payments";
 
@@ -857,9 +847,9 @@ const leadsRouter = createTRPCRouter({
 });
 
 // ─── Leads inbox ─────────────────────────────────────────────────
-// One conversation per lead: texts through the project's Telnyx number,
-// emails through useSend (lib/inbox.ts). Telnyx events come back through
-// apps/api /api/webhook/telnyx.
+// One conversation per lead: texts through the project's number (lib/sms,
+// provider from SMS_PROVIDER), emails through useSend (lib/inbox.ts). Texting
+// events come back through apps/api /api/webhook/<provider>.
 
 const unreadExpr = sql<number>`(
   select count(*)::int from ${agencyMessage} m
@@ -1060,7 +1050,8 @@ const inboxRouter = createTRPCRouter({
 });
 
 // The project's texting number. Buying and releasing are admin only: numbers
-// sit on the agency's Telnyx account, which the agency pays and bills for.
+// sit on the agency's provider account, which the agency pays and bills for.
+// Every call goes through smsProvider(), so switching providers never touches this.
 const smsAdminProcedure = agencyProcedure.use(({ next, ctx }) => {
   if (!isAdminUser(ctx.session.user)) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Only the agency can manage texting numbers." });
@@ -1068,27 +1059,42 @@ const smsAdminProcedure = agencyProcedure.use(({ next, ctx }) => {
   return next({ ctx });
 });
 
-const telnyxMessage = (error: unknown) =>
-  error instanceof TelnyxError || error instanceof Error ? error.message : "Telnyx request failed.";
+/** Runs a provider call; its errors reach the hub as BAD_GATEWAY with the provider's message. */
+async function viaProvider<T>(run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    if (error instanceof TRPCError) throw error;
+    throw new TRPCError({
+      code: "BAD_GATEWAY",
+      message: error instanceof Error ? error.message : `${smsProvider().name} request failed.`,
+    });
+  }
+}
+
+const saveNumber = (clientId: number, link: SmsNumberLink) =>
+  db
+    .update(agencyClient)
+    .set({ smsNumber: link.phoneNumber, smsNumberId: link.numberId, smsProfileId: link.profileId })
+    .where(eq(agencyClient.id, clientId));
 
 const smsRouter = createTRPCRouter({
-  status: agencyProcedure.query(({ ctx }) => ({
-    number: ctx.client.smsNumber,
-    configured: isTelnyxConfigured(),
-    canManage: isAdminUser(ctx.session.user),
-    // Email replies come back into the thread (SES inbound wired).
-    emailReplies: emailRepliesEnabled(),
-  })),
+  status: agencyProcedure.query(({ ctx }) => {
+    const provider = smsProvider();
+    return {
+      number: ctx.client.smsNumber,
+      configured: provider.isConfigured(),
+      // Copy in the hub names the provider; nothing else there depends on it.
+      provider: { id: provider.id, name: provider.name, envHint: provider.envHint },
+      canManage: isAdminUser(ctx.session.user),
+      // Email replies come back into the thread (SES inbound wired).
+      emailReplies: emailRepliesEnabled(),
+    };
+  }),
 
   searchNumbers: smsAdminProcedure
     .input(z.object({ areaCode: z.string().regex(/^[2-9]\d{2}$/).optional() }))
-    .query(async ({ input }) => {
-      try {
-        return await searchNumbers(input.areaCode);
-      } catch (error) {
-        throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
-      }
-    }),
+    .query(({ input }) => viaProvider(() => smsProvider().searchNumbers(input.areaCode))),
 
   buyNumber: smsAdminProcedure
     .input(z.object({ phoneNumber: z.string().regex(/^\+1[2-9]\d{2}[2-9]\d{6}$/) }))
@@ -1096,36 +1102,20 @@ const smsRouter = createTRPCRouter({
       if (ctx.client.smsNumber) {
         throw new TRPCError({ code: "CONFLICT", message: "This project already has a number. Release it first." });
       }
-      try {
-        // One profile per project, kept across number changes.
-        const profileId =
-          ctx.client.smsProfileId ?? (await createMessagingProfile(`Hub ${ctx.client.projectId}`));
-        if (!ctx.client.smsProfileId) {
-          await db
-            .update(agencyClient)
-            .set({ smsProfileId: profileId })
-            .where(eq(agencyClient.id, ctx.client.id));
-        }
-        const order = await orderNumber(input.phoneNumber, profileId);
-        await db
-          .update(agencyClient)
-          .set({ smsNumber: input.phoneNumber, smsNumberId: order.orderId })
-          .where(eq(agencyClient.id, ctx.client.id));
-        return { number: input.phoneNumber, status: order.status };
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
-      }
+      const link = await viaProvider(() =>
+        smsProvider().buyNumber({
+          phoneNumber: input.phoneNumber,
+          projectId: ctx.client.projectId,
+          profileId: ctx.client.smsProfileId,
+        })
+      );
+      await saveNumber(ctx.client.id, link);
+      return { number: link.phoneNumber };
     }),
 
-  // Numbers already on the Telnyx account, and which project (if any) uses each.
+  // Numbers already on the provider account, and which project (if any) uses each.
   ownedNumbers: smsAdminProcedure.query(async () => {
-    let numbers;
-    try {
-      numbers = await listOwnedNumbers();
-    } catch (error) {
-      throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
-    }
+    const numbers = await viaProvider(() => smsProvider().listOwnedNumbers());
     const used = await db
       .select({ number: agencyClient.smsNumber, projectId: agencyClient.projectId, repo: hubProject.repo })
       .from(agencyClient)
@@ -1137,8 +1127,7 @@ const smsRouter = createTRPCRouter({
     });
   }),
 
-  // Use a number bought outside the hub. Keeps its messaging profile (or puts
-  // it on this project's) and points that profile's webhook at the hub.
+  // Use a number bought outside the hub; the provider routes its replies here.
   linkNumber: smsAdminProcedure
     .input(z.object({ phoneNumber: z.string().regex(/^\+1[2-9]\d{2}[2-9]\d{6}$/) }))
     .mutation(async ({ ctx, input }) => {
@@ -1150,28 +1139,19 @@ const smsRouter = createTRPCRouter({
         columns: { id: true },
       });
       if (taken) throw new TRPCError({ code: "CONFLICT", message: "Another project already uses this number." });
-      try {
-        const number = (await listOwnedNumbers()).find((n) => n.phoneNumber === input.phoneNumber);
-        if (!number) throw new TRPCError({ code: "NOT_FOUND", message: "That number isn't on the Telnyx account." });
-        let profileId = number.profileId;
-        if (profileId) {
-          await setProfileWebhook(profileId);
-        } else {
-          profileId = ctx.client.smsProfileId ?? (await createMessagingProfile(`Hub ${ctx.client.projectId}`));
-          await assignNumberProfile(number.id, profileId);
+      const provider = smsProvider();
+      const link = await viaProvider(async () => {
+        const number = (await provider.listOwnedNumbers()).find((n) => n.phoneNumber === input.phoneNumber);
+        if (!number) {
+          throw new TRPCError({ code: "NOT_FOUND", message: `That number isn't on the ${provider.name} account.` });
         }
-        await db
-          .update(agencyClient)
-          .set({ smsNumber: number.phoneNumber, smsNumberId: number.id, smsProfileId: profileId })
-          .where(eq(agencyClient.id, ctx.client.id));
-        return { number: number.phoneNumber };
-      } catch (error) {
-        if (error instanceof TRPCError) throw error;
-        throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
-      }
+        return provider.linkNumber({ number, projectId: ctx.client.projectId, profileId: ctx.client.smsProfileId });
+      });
+      await saveNumber(ctx.client.id, link);
+      return { number: link.phoneNumber };
     }),
 
-  // Stops using the number here but keeps it on the Telnyx account.
+  // Stops using the number here but keeps it on the provider account.
   disconnectNumber: smsAdminProcedure.mutation(async ({ ctx }) => {
     await db
       .update(agencyClient)
@@ -1181,12 +1161,9 @@ const smsRouter = createTRPCRouter({
   }),
 
   releaseNumber: smsAdminProcedure.mutation(async ({ ctx }) => {
-    if (!ctx.client.smsNumber) return { ok: true };
-    try {
-      await releaseNumber(ctx.client.smsNumber);
-    } catch (error) {
-      throw new TRPCError({ code: "BAD_GATEWAY", message: telnyxMessage(error) });
-    }
+    const { smsNumber, smsNumberId } = ctx.client;
+    if (!smsNumber) return { ok: true };
+    await viaProvider(() => smsProvider().releaseNumber({ phoneNumber: smsNumber, numberId: smsNumberId }));
     await db
       .update(agencyClient)
       .set({ smsNumber: null, smsNumberId: null })

@@ -20,4 +20,4 @@ Read all context files before starting any task.
 - One UI for every client: no Website/Agency toggle. Sidebar apps come from `lib/apps.ts` APPS + the project's installed apps (`hub_project.apps`).
 - `RequestDialog` renders its own `<button>` trigger: pass a styled `<span>`, never a Button.
 - Never invent metrics. Unknown/not-connected values render as "—".
-- Do not change the AI Canvas page. Do not build Booking/Calls/Marketing/Reports pages (GoHighLevel handles them). Conversations live in the Leads app (Telnyx SMS + email), not GoHighLevel.
+- Do not change the AI Canvas page. Do not build Booking/Calls/Marketing/Reports pages (GoHighLevel handles them). Conversations live in the Leads app (SMS via lib/sms providers, Zernio by default, + email), not GoHighLevel.

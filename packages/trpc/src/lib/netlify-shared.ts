@@ -46,11 +46,13 @@ export function dnsRecordFor(domain: string, netlifyHost: string): DnsRecord {
 }
 
 // ─── Who hosts a publish ─────────────────────────────────────────
-// The agency's Netlify (NETLIFY_AGENCY_TOKEN) is reachable only when an admin
-// publishes. Clients host on their own Netlify; without it a first publish is
-// blocked, and an agency-hosted site only deploys when an admin publishes.
+// Project-scoped: the hub_project row decides, never the caller's account. A
+// linked site always deploys with the token it was linked with (the pinned
+// user's OAuth, else the agency PAT), whoever publishes. A new site is created
+// on the project owner's Netlify when they connected it; otherwise only an
+// admin can create it, on the agency account.
 
-export type NetlifyHost = "own" | "owner" | "agency";
+export type NetlifyHost = "owner" | "agency";
 
 export type NetlifyPlan =
   | {
@@ -61,46 +63,34 @@ export type NetlifyPlan =
       /** True when the site doesn't exist yet and will be created. */
       createSite: boolean;
     }
-  | { action: "needs_netlify" }
-  | { action: "agency_managed" };
+  | { action: "needs_netlify" };
 
 export function planNetlifyHost(input: {
   siteExists: boolean;
   /** hub_project.netlifyConnectedUserId; null = agency-owned site. */
   pinnedUserId: string | null;
-  callerId: string;
+  /** A project owner with Netlify connected, or null when none has. */
+  ownerConnectedUserId: string | null;
   callerIsAdmin: boolean;
-  callerConnected: boolean;
-  /** The project's owner (hub_project.githubConnectedUserId). */
-  ownerId: string | null;
-  ownerConnected: boolean;
 }): NetlifyPlan {
   if (input.siteExists) {
-    if (input.pinnedUserId) {
-      return {
-        action: "deploy",
-        host: input.pinnedUserId === input.callerId ? "own" : "owner",
-        tokenUserId: input.pinnedUserId,
-        createSite: false,
-      };
-    }
-    return input.callerIsAdmin
-      ? { action: "deploy", host: "agency", tokenUserId: null, createSite: false }
-      : { action: "agency_managed" };
+    return {
+      action: "deploy",
+      host: input.pinnedUserId ? "owner" : "agency",
+      tokenUserId: input.pinnedUserId,
+      createSite: false,
+    };
+  }
+  if (input.ownerConnectedUserId) {
+    return {
+      action: "deploy",
+      host: "owner",
+      tokenUserId: input.ownerConnectedUserId,
+      createSite: true,
+    };
   }
   if (input.callerIsAdmin) {
-    if (input.ownerId && input.ownerConnected) {
-      return {
-        action: "deploy",
-        host: input.ownerId === input.callerId ? "own" : "owner",
-        tokenUserId: input.ownerId,
-        createSite: true,
-      };
-    }
     return { action: "deploy", host: "agency", tokenUserId: null, createSite: true };
-  }
-  if (input.callerConnected) {
-    return { action: "deploy", host: "own", tokenUserId: input.callerId, createSite: true };
   }
   return { action: "needs_netlify" };
 }

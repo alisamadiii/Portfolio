@@ -18,18 +18,13 @@ import { sendEmail } from "@workspace/email/usesend";
 import { renderEmailParts } from "@workspace/email/utils";
 
 import { leadReplyTo } from "./inbound/reply-address";
-import {
-  OUTBOUND_LIMITS,
-  senderDisplayName,
-  telnyxStatus,
-  toE164,
-} from "./inbox-shared";
+import { OUTBOUND_LIMITS, senderDisplayName, toE164 } from "./inbox-shared";
 import { putObject } from "./r2";
 import { projectDisplayName } from "./partners-shared";
-import { sendSms, TelnyxError } from "./telnyx/client";
+import { smsProvider, type SmsEvent, type SmsMedia, type SmsProvider, type SmsProviderId } from "./sms";
 
 // Leads inbox, server side: sending a text/email to a lead and taking in
-// Telnyx message events. Email replies come in through inbound-email.ts. Shared types + helpers: inbox-shared.ts.
+// texting webhooks (any provider, see lib/sms). Email replies come in through inbound-email.ts. Shared types + helpers: inbox-shared.ts.
 
 type Client = typeof agencyClient.$inferSelect;
 type Lead = typeof agencyLead.$inferSelect;
@@ -76,8 +71,7 @@ async function replyToFor(client: Client) {
   return row?.notifyEmail || row?.ownerEmail || undefined;
 }
 
-const errorText = (error: unknown) =>
-  error instanceof TelnyxError || error instanceof Error ? error.message : "Send failed.";
+const errorText = (error: unknown) => (error instanceof Error ? error.message : "Send failed.");
 
 /** Throws TOO_MANY_REQUESTS once the project hit its outbound limits. */
 export async function assertOutboundQuota(projectId: string) {
@@ -139,14 +133,15 @@ export async function sendLeadMessage(input: {
       const to = toE164(lead.phone);
       if (!to) throw new Error("This lead's phone number can't receive texts.");
       if (!client.smsNumber) throw new Error("Texting isn't set up for this project yet.");
-      const sent = await sendSms({
+      const sent = await smsProvider().send({
         from: client.smsNumber,
         to,
         text: input.body,
         mediaUrls: input.mediaUrls,
-        messagingProfileId: client.smsProfileId,
+        profileId: client.smsProfileId,
+        idempotencyKey: `agency-message-${row!.id}`,
       });
-      update = { providerId: sent.id, status: telnyxStatus(sent.status) };
+      update = { providerId: sent.id, status: sent.status };
     } else {
       if (!lead.email) throw new Error("This lead has no email address.");
       const name = await businessName(client);
@@ -204,30 +199,15 @@ export async function sendLeadMessage(input: {
   return saved!;
 }
 
-// ─── Telnyx events ────────────────────────────────────────────────
+// ─── Texting webhooks ─────────────────────────────────────────────
 
-export type TelnyxEvent = {
-  data?: {
-    event_type?: string;
-    payload?: {
-      id?: string;
-      from?: { phone_number?: string };
-      to?: { phone_number?: string; status?: string }[];
-      text?: string;
-      media?: { url?: string; content_type?: string }[];
-      errors?: { title?: string; detail?: string }[];
-    };
-  };
-};
-
-/** Copies carrier media into R2 (Telnyx links expire); skips what fails. */
-async function keepMedia(projectId: string, media: { url?: string; content_type?: string }[]) {
+/** Copies carrier media into R2 (provider links expire); skips what fails. */
+async function keepMedia(provider: SmsProvider, projectId: string, media: SmsMedia[]) {
   const urls: string[] = [];
   for (const item of media.slice(0, 10)) {
-    if (!item.url) continue;
     try {
-      const res = await fetch(item.url, { signal: AbortSignal.timeout(15_000) });
-      const type = (item.content_type || res.headers.get("content-type") || "").split(";")[0]!.trim();
+      const res = await provider.fetchMedia(item.url);
+      const type = (item.contentType || res.headers.get("content-type") || "").split(";")[0]!.trim();
       if (!res.ok || !MEDIA_TYPES[type]) continue;
       urls.push(await putInboxMedia(projectId, new Uint8Array(await res.arrayBuffer()), type));
     } catch (error) {
@@ -254,27 +234,20 @@ async function leadByPhone(projectId: string, e164: string) {
   return lead ?? null;
 }
 
-/** Applies one verified Telnyx webhook event. Safe to receive twice. */
-export async function handleTelnyxEvent(event: TelnyxEvent) {
-  const type = event.data?.event_type;
-  const payload = event.data?.payload;
-  if (!type || !payload?.id) return;
-
-  if (type === "message.received") {
-    const to = payload.to?.[0]?.phone_number;
-    const from = toE164(payload.from?.phone_number);
-    if (!to || !from) return;
-    const client = await db.query.agencyClient.findFirst({ where: eq(agencyClient.smsNumber, to) });
+/** Applies one verified texting event. Safe to receive twice. */
+export async function handleSmsEvent(event: SmsEvent, provider: SmsProvider = smsProvider()) {
+  if (event.type === "inbound") {
+    const client = await db.query.agencyClient.findFirst({ where: eq(agencyClient.smsNumber, event.to) });
     if (!client) return;
 
     const seen = await db.query.agencyMessage.findFirst({
-      where: eq(agencyMessage.providerId, payload.id),
+      where: eq(agencyMessage.providerId, event.messageId),
       columns: { id: true },
     });
     if (seen) return;
 
     const lead =
-      (await leadByPhone(client.projectId, from)) ??
+      (await leadByPhone(client.projectId, event.from)) ??
       (
         await db
           .insert(agencyLead)
@@ -282,13 +255,13 @@ export async function handleTelnyxEvent(event: TelnyxEvent) {
             projectId: client.projectId,
             source: "sms",
             channel: "direct",
-            phone: from,
-            message: payload.text || null,
+            phone: event.from,
+            message: event.text || null,
           })
           .returning()
       )[0]!;
 
-    const mediaUrls = payload.media?.length ? await keepMedia(client.projectId, payload.media) : [];
+    const mediaUrls = event.media.length ? await keepMedia(provider, client.projectId, event.media) : [];
     const now = new Date();
     await db
       .insert(agencyMessage)
@@ -297,34 +270,49 @@ export async function handleTelnyxEvent(event: TelnyxEvent) {
         leadId: lead.id,
         channel: "sms",
         direction: "in",
-        body: payload.text ?? "",
+        body: event.text,
         mediaUrls: mediaUrls.length ? mediaUrls : null,
         status: "received",
-        providerId: payload.id,
+        providerId: event.messageId,
       })
       .onConflictDoNothing();
     await db.update(agencyLead).set({ lastMessageAt: now }).where(eq(agencyLead.id, lead.id));
     return;
   }
 
-  if (type === "message.sent" || type === "message.finalized") {
-    const status = telnyxStatus(payload.to?.[0]?.status);
-    const error = payload.errors?.[0];
-    await db
-      .update(agencyMessage)
-      .set({
-        status,
-        error: status === "failed" ? error?.detail || error?.title || "The carrier didn't deliver this text." : null,
-      })
-      .where(
-        and(
-          eq(agencyMessage.providerId, payload.id),
-          eq(agencyMessage.direction, "out"),
-          // Events can arrive out of order: never step back from a final state.
-          status === "delivered" || status === "failed"
-            ? undefined
-            : sql`${agencyMessage.status} in ('queued', 'sent')`
-        )
-      );
+  const { status } = event;
+  await db
+    .update(agencyMessage)
+    .set({ status, error: status === "failed" ? event.error : null })
+    .where(
+      and(
+        eq(agencyMessage.providerId, event.messageId),
+        eq(agencyMessage.direction, "out"),
+        // Events can arrive out of order: never step back from a final state.
+        status === "delivered" || status === "failed"
+          ? undefined
+          : sql`${agencyMessage.status} in ('queued', 'sent')`
+      )
+    );
+}
+
+/**
+ * One provider webhook delivery: verify, normalize, apply. Each provider's
+ * apps/api route is just this. 500 makes the provider retry (handler is idempotent).
+ */
+export async function handleSmsWebhook(id: SmsProviderId, request: Request) {
+  const provider = smsProvider(id);
+  const rawBody = await request.text();
+  const parsed = provider.parseWebhook(rawBody, request.headers);
+  if (!parsed.ok) {
+    if (parsed.status === 503) console.error(`[sms:${id}]`, parsed.reason);
+    return new Response(parsed.reason, { status: parsed.status });
   }
+  try {
+    for (const event of parsed.events) await handleSmsEvent(event, provider);
+  } catch (error) {
+    console.error(`[sms:${id}] event failed`, error);
+    return new Response("Error", { status: 500 });
+  }
+  return new Response(null, { status: 204 });
 }

@@ -18,7 +18,7 @@ apps/
   admin/       — internal admin panel
   agency/      — Ali's agency website
   docs/        — documentation site
-  hub/         — Client Hub (app.alisamadii.com): CMS + billing + account + auth UI (absorbed the old portal app, 2026-08); admin-only /client-websites (absorbed apps/client-websites, see context/client-websites.md) and /inspirations (absorbed apps/inspiration; images + prompts in the media bucket under inspiration/). Leads app opens on Conversations: each lead is a thread, texts via the project's Telnyx number (bought in the hub by an admin, webhook api /api/webhook/telnyx), email via useSend; email replies come back through SES receiving on reply.alisamadii.com (S3 + SNS -> api /api/webhook/ses-inbound) and the owner gets a notice
+  hub/         — Client Hub (app.alisamadii.com): CMS + billing + account + auth UI (absorbed the old portal app, 2026-08); admin-only /client-websites (absorbed apps/client-websites, see context/client-websites.md) and /inspirations (absorbed apps/inspiration; images + prompts in the media bucket under inspiration/). Leads app opens on Conversations: each lead is a thread, texts via the project's number on the SMS provider (packages/trpc/src/lib/sms, SMS_PROVIDER=zernio|telnyx; bought in the hub by an admin, webhook api /api/webhook/<provider>), email via useSend; email replies come back through SES receiving on reply.alisamadii.com (S3 + SNS -> api /api/webhook/ses-inbound) and the owner gets a notice
   motion/      — motion/animation showcase
   portfolio/   — Ali's personal portfolio
   template/    — reusable client template (for new client deployments)

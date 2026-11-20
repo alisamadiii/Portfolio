@@ -1,4 +1,4 @@
-import { createSign, generateKeyPairSync, generateKeyPairSync as rsaKeys, sign } from "node:crypto";
+import { createHmac, createSign, generateKeyPairSync, generateKeyPairSync as rsaKeys, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -8,13 +8,13 @@ import {
   replyAddress,
   stripQuotedReply,
   smsSegments,
-  telnyxStatus,
   threadItems,
   toE164,
   type InboxMessage,
 } from "@workspace/trpc/lib/inbox-shared";
 import { isSnsCertUrl, snsStringToSign, verifySnsSignature, type SnsMessage } from "@workspace/trpc/lib/inbound/sns";
-import { verifyTelnyxSignature } from "@workspace/trpc/lib/telnyx/signature";
+import { parseTelnyxWebhook, telnyxStatus, verifyTelnyxSignature } from "@workspace/trpc/lib/sms/telnyx/webhook";
+import { parseZernioWebhook, verifyZernioSignature, zernioEvents } from "@workspace/trpc/lib/sms/zernio/webhook";
 
 describe("toE164", () => {
   it("formats a typed US number", () => {
@@ -163,6 +163,125 @@ describe("verifyTelnyxSignature", () => {
     expect(
       verifyTelnyxSignature({ rawBody: body, signature: signed(now), timestamp: String(now), publicKey: "short", nowSeconds: now })
     ).toBe(false);
+  });
+});
+
+describe("parseTelnyxWebhook", () => {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const rawPublic = publicKey.export({ format: "der", type: "spki" }).subarray(-32).toString("base64");
+  const now = 1_800_000_000;
+  const parse = (event: unknown) => {
+    const rawBody = JSON.stringify(event);
+    const signature = sign(null, Buffer.from(`${now}|${rawBody}`), privateKey).toString("base64");
+    return parseTelnyxWebhook({ rawBody, signature, timestamp: String(now), publicKey: rawPublic, nowSeconds: now });
+  };
+
+  it("maps an inbound text to an inbound event", () => {
+    expect(
+      parse({
+        data: {
+          event_type: "message.received",
+          payload: {
+            id: "tx1",
+            from: { phone_number: "+13105551234" },
+            to: [{ phone_number: "+14155550100" }],
+            text: "Hi",
+            media: [{ url: "https://m.example/1.jpg", content_type: "image/jpeg" }],
+          },
+        },
+      })
+    ).toEqual([
+      {
+        type: "inbound",
+        messageId: "tx1",
+        to: "+14155550100",
+        from: "+13105551234",
+        text: "Hi",
+        media: [{ url: "https://m.example/1.jpg", contentType: "image/jpeg" }],
+      },
+    ]);
+  });
+  it("maps a failed receipt with the carrier's reason", () => {
+    expect(
+      parse({
+        data: {
+          event_type: "message.finalized",
+          payload: { id: "tx2", to: [{ status: "delivery_failed" }], errors: [{ detail: "Blocked" }] },
+        },
+      })
+    ).toEqual([{ type: "status", messageId: "tx2", status: "failed", error: "Blocked" }]);
+  });
+  it("returns null for a bad signature", () => {
+    expect(
+      parseTelnyxWebhook({ rawBody: "{}", signature: "x", timestamp: String(now), publicKey: rawPublic, nowSeconds: now })
+    ).toBeNull();
+  });
+});
+
+describe("Zernio webhooks", () => {
+  const secret = "test-secret";
+  const signed = (body: string, key = secret) => createHmac("sha256", key).update(body).digest("hex");
+  const inbound = {
+    id: "evt1",
+    event: "message.received",
+    message: {
+      id: "zm1",
+      platform: "sms",
+      direction: "incoming",
+      text: "Can I change the delivery address?",
+      attachments: [{ type: "image", url: "https://zernio.com/media/1" }],
+      sender: { id: "+13105551234" },
+    },
+    account: { platform: "sms", username: "+14155550100" },
+  };
+
+  it("accepts a valid signature", () => {
+    const body = JSON.stringify(inbound);
+    expect(verifyZernioSignature({ rawBody: body, signature: signed(body), secret })).toBe(true);
+  });
+  it("accepts an upper-case hex signature", () => {
+    const body = JSON.stringify(inbound);
+    expect(verifyZernioSignature({ rawBody: body, signature: signed(body).toUpperCase(), secret })).toBe(true);
+  });
+  it("rejects a tampered body, a wrong secret, and a missing or malformed header", () => {
+    const body = JSON.stringify(inbound);
+    expect(verifyZernioSignature({ rawBody: body.replace("address", "addr"), signature: signed(body), secret })).toBe(false);
+    expect(verifyZernioSignature({ rawBody: body, signature: signed(body, "other"), secret })).toBe(false);
+    expect(verifyZernioSignature({ rawBody: body, signature: null, secret })).toBe(false);
+    expect(verifyZernioSignature({ rawBody: body, signature: "abc", secret })).toBe(false);
+  });
+  it("maps an inbound SMS to an inbound event", () => {
+    const body = JSON.stringify(inbound);
+    expect(parseZernioWebhook({ rawBody: body, signature: signed(body), secret })).toEqual([
+      {
+        type: "inbound",
+        messageId: "zm1",
+        to: "+14155550100",
+        from: "+13105551234",
+        text: "Can I change the delivery address?",
+        media: [{ url: "https://zernio.com/media/1" }],
+      },
+    ]);
+  });
+  it("ignores DMs from other platforms, outgoing echoes and test events", () => {
+    expect(zernioEvents({ ...inbound, message: { ...inbound.message, platform: "instagram" } })).toEqual([]);
+    expect(zernioEvents({ ...inbound, message: { ...inbound.message, direction: "outgoing" } })).toEqual([]);
+    expect(zernioEvents({ ...inbound, test: true })).toEqual([]);
+  });
+  it("maps delivered and failed receipts", () => {
+    const message = { id: "zm2", platform: "sms" };
+    expect(zernioEvents({ event: "message.delivered", message })).toEqual([
+      { type: "status", messageId: "zm2", status: "delivered", error: null },
+    ]);
+    expect(zernioEvents({ event: "message.failed", message, error: { code: 30007, message: "Carrier filtered" } })).toEqual([
+      { type: "status", messageId: "zm2", status: "failed", error: "Carrier filtered" },
+    ]);
+    expect(zernioEvents({ event: "message.failed", message, error: null })).toEqual([
+      { type: "status", messageId: "zm2", status: "failed", error: "The carrier didn't deliver this text." },
+    ]);
+  });
+  it("returns null for bad JSON even with a valid signature", () => {
+    expect(parseZernioWebhook({ rawBody: "not json", signature: signed("not json"), secret })).toBeNull();
   });
 });
 

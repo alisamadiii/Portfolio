@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import z from "zod";
 
 import {
@@ -24,7 +24,7 @@ import { normalizeWebsiteUrl } from "@workspace/trpc/lib/website-url";
 import type { AppId } from "@workspace/trpc/lib/apps";
 import { publicObjectUrl } from "@workspace/trpc/lib/r2";
 import { db } from "@workspace/drizzle/index";
-import { hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
+import { agencyClient, hubProject, type CollaboratorRole } from "@workspace/drizzle/schema";
 
 export const reposRouter = createTRPCRouter({
   // Every project the caller can access — derived entirely from the session.
@@ -55,6 +55,18 @@ export const reposRouter = createTRPCRouter({
           .orderBy(desc(hubProject.githubUpdatedAt));
 
         const userId = ctx.session.user.id;
+        // Projects the caller owns through their agency account: owners too,
+        // same as isProjectOwner.
+        const agencyOwned = new Set(
+          (
+            await db
+              .select({ projectId: agencyClient.projectId })
+              .from(agencyClient)
+              .where(eq(agencyClient.userId, userId))
+          ).map((r) => r.projectId)
+        );
+        const isOwner = (row: { projectId: string; githubConnectedUserId: string | null }) =>
+          row.githubConnectedUserId === userId || agencyOwned.has(row.projectId);
         return rows.map((row) => ({
           owner: row.owner,
           repo: row.repo,
@@ -73,9 +85,9 @@ export const reposRouter = createTRPCRouter({
           // (settings group only for full access). The importer and admins own
           // the project; otherwise the collaborator invite's role, else
           // view-only (agency-owned sites reach here through ownedAgency).
-          // Owner (importer) or admin: the project Settings page.
-          ownerOrAdmin: ctx.isAdmin || row.githubConnectedUserId === userId,
-          role: (ctx.isAdmin || row.githubConnectedUserId === userId
+          // Owner (importer or agency owner) or admin: the project Settings page.
+          ownerOrAdmin: ctx.isAdmin || isOwner(row),
+          role: (ctx.isAdmin || isOwner(row)
             ? "full-access"
             : (ctx.collaborations?.find((c) => c.projectId === row.projectId)
                 ?.role ?? "view-only")) as CollaboratorRole,

@@ -12,7 +12,7 @@ import {
   createTRPCRouter,
 } from "../init";
 import { latestNetlifyDeploy } from "../lib/content-pilot";
-import { getConnectedAccount, getIntegrationAccessToken } from "../lib/integrations";
+import { getIntegrationAccessToken } from "../lib/integrations";
 import { isAdminUser } from "../lib/authz-shared";
 import {
   createNetlifySnippet,
@@ -28,6 +28,7 @@ import {
   listNetlifyDeploys,
   listNetlifySnippets,
   netlifyPlan,
+  projectOwnerNetlifyUserId,
   netlifyTokenFor,
   netlifyWriteTokenFor,
   provisionNetlifySsl,
@@ -99,15 +100,6 @@ const capability = (c?: { included?: number | null; used?: number | null }) =>
 
 type LinkAccount = "agency" | "owner";
 
-const projectOwnerId = async (projectId: string) => {
-  const [row] = await db
-    .select({ ownerId: hubProject.githubConnectedUserId })
-    .from(hubProject)
-    .where(eq(hubProject.id, projectId))
-    .limit(1);
-  return row?.ownerId ?? null;
-};
-
 /** Token for a link source: the agency PAT, or the owner's connected Netlify. */
 const linkToken = async (projectId: string, account: LinkAccount) => {
   if (account === "agency") {
@@ -120,8 +112,8 @@ const linkToken = async (projectId: string, account: LinkAccount) => {
     }
     return { token, userId: null };
   }
-  const ownerId = await projectOwnerId(projectId);
-  if (!ownerId || !(await getConnectedAccount(ownerId, "netlify"))) {
+  const ownerId = await projectOwnerNetlifyUserId(projectId);
+  if (!ownerId) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
       message: "The project owner hasn't connected Netlify.",
@@ -229,8 +221,6 @@ export const netlifyRouter = createTRPCRouter({
       },
       // Agency-owned sites live in Ali's Netlify: the link is useless to clients.
       ownedByAgency: !project.netlifyConnectedUserId,
-      // Agency-hosted sites only deploy when an admin asks.
-      canRedeploy: !!project.netlifyConnectedUserId || isAdminUser(ctx.user),
       job,
       deploys: deploys.map((d) => ({
         id: d.id,
@@ -254,12 +244,6 @@ export const netlifyRouter = createTRPCRouter({
       });
     }
     const status = await deployProjectToNetlify(ctx.projectId, ctx.user);
-    if (status === "agency_managed") {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Your site is managed by our team. We'll put changes live.",
-      });
-    }
     if (status === "needs_netlify") {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",

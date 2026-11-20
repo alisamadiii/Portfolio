@@ -21,13 +21,14 @@ import { ConfirmDialog } from "@/components/ds/ui/confirm-dialog";
 import { Input } from "@/components/ds/ui/field";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 
-/** "PONTE VEDRA BEACH" -> "Ponte Vedra Beach" (Telnyx rate centers are upper case). */
+/** "PONTE VEDRA BEACH" -> "Ponte Vedra Beach" (carrier rate centers are upper case). */
 const titleCase = (value: string) =>
   value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 /**
- * Admin only: link a number already on the agency Telnyx account, or buy one
+ * Admin only: link a number already on the agency texting account, or buy one
  * (search by area code). The current one can be disconnected or released.
+ * Provider-neutral: the provider's name comes from agency.sms.status.
  */
 export function SmsNumberDialog({
   open,
@@ -40,6 +41,7 @@ export function SmsNumberDialog({
   const queryClient = useQueryClient();
   const { projectId } = useAgency();
   const status = useQuery(trpc.agency.sms.status.queryOptions({ projectId }));
+  const providerName = status.data?.provider.name ?? "texting provider";
   const [areaCode, setAreaCode] = useState("");
   const [searched, setSearched] = useState<string | null>(null);
   const [confirmBuy, setConfirmBuy] = useState<string | null>(null);
@@ -102,7 +104,9 @@ export function SmsNumberDialog({
   const disconnect = useMutation(
     trpc.agency.sms.disconnectNumber.mutationOptions({
       onSuccess: () => {
-        toast.success("Number disconnected. It stays on the Telnyx account.");
+        toast.success(
+          `Number disconnected. It stays on the ${providerName} account.`
+        );
         refresh();
       },
       onError: (e) => toast.error(e.message),
@@ -126,15 +130,16 @@ export function SmsNumberDialog({
         <DialogHeader>
           <DialogTitle>Texting number</DialogTitle>
           <DialogDescription>
-            A number on the agency Telnyx account. US carriers only deliver
-            texts once the business has a 10DLC brand and campaign registered in
-            Telnyx.
+            A number on the agency {providerName} account. US carriers only
+            deliver texts once a 10DLC brand and campaign are registered in{" "}
+            {providerName}.
           </DialogDescription>
         </DialogHeader>
 
         {!status.data?.configured ? (
           <p className="text-dim text-[13px]">
-            Set TELNYX_API_KEY on the api service first.
+            Set {status.data?.provider.envHint ?? "the texting provider keys"}{" "}
+            on the api service first.
           </p>
         ) : current ? (
           <div className="rounded-inner border-line flex items-center justify-between gap-3 border px-4 py-3">
@@ -187,7 +192,8 @@ export function SmsNumberDialog({
                 )}
                 {owned.data && owned.data.length === 0 && (
                   <p className="text-dim text-[13px]">
-                    No numbers on the Telnyx account yet. Buy one instead.
+                    No numbers on the {providerName} account yet. Buy one
+                    instead.
                   </p>
                 )}
                 {owned.data && owned.data.length > 0 && (
@@ -206,7 +212,7 @@ export function SmsNumberDialog({
                               ? `Used by ${n.usedBy.name || "another project"}`
                               : n.profileName
                                 ? `Profile: ${n.profileName}`
-                                : "No messaging profile"}
+                                : "Not used yet"}
                           </span>
                         </span>
                         <Button
@@ -304,7 +310,7 @@ export function SmsNumberDialog({
           open={confirmLink !== null}
           onOpenChange={(o) => !o && setConfirmLink(null)}
           title={`Use ${formatPhone(confirmLink)}?`}
-          description="Its messaging profile's webhook will point at the Client Hub, so replies land in Conversations."
+          description="Replies to this number will land in this project's Conversations."
           confirmLabel="Use number"
           onConfirm={() =>
             confirmLink && link.mutate({ projectId, phoneNumber: confirmLink })
@@ -314,7 +320,7 @@ export function SmsNumberDialog({
           open={confirmBuy !== null}
           onOpenChange={(o) => !o && setConfirmBuy(null)}
           title={`Buy ${formatPhone(confirmBuy)}?`}
-          description="Telnyx charges the agency account for this number every month until it's released."
+          description={`${providerName} charges the agency account for this number every month until it's released.`}
           confirmLabel="Buy number"
           onConfirm={() =>
             confirmBuy && buy.mutate({ projectId, phoneNumber: confirmBuy })
@@ -324,7 +330,7 @@ export function SmsNumberDialog({
           open={confirmRelease}
           onOpenChange={setConfirmRelease}
           title={`Release ${formatPhone(current)}?`}
-          description="The number goes back to Telnyx and can't be recovered. Leads texting it won't reach this project anymore."
+          description={`The number goes back to ${providerName} and can't be recovered. Leads texting it won't reach this project anymore.`}
           confirmLabel="Release number"
           danger
           onConfirm={() => release.mutate({ projectId })}
