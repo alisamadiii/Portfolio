@@ -39,6 +39,8 @@
         "R2_PUBLIC_BASE_URL",
         "GOOGLE_PLACES_API_KEY",
         "APIFY_TOKEN",
+        "SITEWATCH_URL",
+        "SITEWATCH_API_KEY",
         "UBER_EATS_CLIENT_ID",
         "UBER_EATS_CLIENT_SECRET",
         "UBER_EATS_ENV",

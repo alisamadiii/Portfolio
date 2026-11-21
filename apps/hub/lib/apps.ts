@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  Activity,
   BarChart3,
   BookOpen,
   Code,
@@ -235,6 +236,8 @@ export const PROJECT_CORE: NavItem[] = [
   { id: "home", label: "Home", icon: Home, path: "" },
   // Opens the AI Canvas editor (unchanged).
   { id: "website", label: "Website", icon: Globe, path: "website" },
+  // Uptime, problems, pages and check history from sitewatch.
+  { id: "site-monitor", label: "Site Monitor", icon: Activity, path: "site-monitor" },
   { id: "business-info", label: "Business info", icon: Building2, path: "business-info" },
   // Appointment templates + "/" snippets with [[placeholders]].
   { id: "templates", label: "Templates", icon: FileText, path: "templates" },

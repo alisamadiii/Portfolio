@@ -252,3 +252,11 @@ describe("Coming soon badge (2026-11-19)", () => {
     }
   });
 });
+
+describe("Site Monitor in the core nav (2026-11-20)", () => {
+  it("shows for every project, right after Website", () => {
+    const ids = projectCoreNav({ netlify: false, members: false }).map((i) => i.id);
+    expect(ids.slice(0, 3)).toEqual(["home", "website", "site-monitor"]);
+    expect(projectCoreNav({ netlify: false, members: false }).find((i) => i.id === "site-monitor")?.path).toBe("site-monitor");
+  });
+});
