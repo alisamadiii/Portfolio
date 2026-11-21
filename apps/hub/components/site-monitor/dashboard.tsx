@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNowStrict, parseISO } from "date-fns";
-import { ArrowDown, ArrowUp, Lock, ShieldCheck } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Lock, ShieldCheck } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -21,73 +21,22 @@ import { Card, CardHeader } from "@/components/ds/ui/card";
 import { useProjectId } from "@/hooks/use-repo";
 
 import type { MonitoredOverview } from "./site-monitor-page";
+import { UptimeCards } from "./uptime-cards";
 
 const chartConfig = { ms: { label: "Response time", color: "var(--color-info)" } } satisfies ChartConfig;
 
-const ago = (iso: string | null) => (iso ? formatDistanceToNowStrict(parseISO(iso), { addSuffix: true }) : "—");
 const day = (iso: string | null) => (iso ? format(parseISO(iso), "MMM d, yyyy") : "—");
 
-/** Dashboard tab: status, last check, 24h strip, uptime %, response times, SSL/domain, downtime. */
+/** Dashboard tab: UptimeCards, uptime %, response times, SSL/domain, downtime. */
 export function SiteMonitorDashboard({ overview }: { overview: MonitoredOverview }) {
   const { site, uptime } = overview;
-  const down = site.uptimeStatus === "down";
-  const since = down ? uptime.downSince : uptime.upSince;
-  // Render clock for "up for" / "days left" (stable across re-renders).
+  // Render clock for "days left" (stable across re-renders).
   const [now] = useState(() => Date.now());
 
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="flex min-w-0 flex-col gap-5">
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1.3fr]">
-          <Stat label="Current status">
-            {site.uptimeStatus === "unknown" ? (
-              <span className="text-2xl font-semibold text-faint">—</span>
-            ) : (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 text-2xl font-semibold",
-                  down ? "text-danger" : "text-success-text"
-                )}
-              >
-                {down ? <ArrowDown className="size-5" aria-hidden /> : <ArrowUp className="size-5" aria-hidden />}
-                {down ? "Down" : "Up"}
-              </span>
-            )}
-            <span className="text-[13px] text-dim">
-              {since ? `${down ? "Down" : "Up"} for ${shortDuration(now - parseISO(since).getTime())}` : "Waiting for the first check"}
-            </span>
-          </Stat>
-          <Stat label="Last check">
-            <span className={cn("text-2xl font-semibold", !uptime.lastCheckAt && "text-faint")}>
-              {ago(uptime.lastCheckAt)}
-            </span>
-            <span className="text-[13px] text-dim">Checked every {site.pingEveryMinutes}m</span>
-          </Stat>
-          <Stat
-            label="Last 24 hours"
-            aside={
-              <span className={cn("text-[13px] font-semibold", uptime.pct24h == null ? "text-faint" : "text-success-text")}>
-                {formatPct(uptime.pct24h)}
-              </span>
-            }
-            className="sm:col-span-2 xl:col-span-1"
-          >
-            <div className="flex h-9 items-stretch gap-[2px]" aria-label="Uptime over the last 24 hours">
-              {uptime.bar24h.map((slot) => (
-                <span
-                  key={slot.from}
-                  title={`${format(slot.from, "MMM d, h:mm a")}: ${slot.state === "none" ? "no data" : slot.state}`}
-                  className={cn(
-                    "flex-1 rounded-[2px]",
-                    slot.state === "up" && "bg-success",
-                    slot.state === "down" && "bg-danger",
-                    slot.state === "none" && "bg-divider"
-                  )}
-                />
-              ))}
-            </div>
-          </Stat>
-        </div>
+        <UptimeCards site={site} uptime={uptime} />
 
         <Card>
           <CardHeader title="Uptime" />
@@ -208,28 +157,6 @@ export function SiteMonitorDashboard({ overview }: { overview: MonitoredOverview
         </Card>
       </div>
     </div>
-  );
-}
-
-function Stat({
-  label,
-  aside,
-  className,
-  children,
-}: {
-  label: string;
-  aside?: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card className={cn("flex flex-col gap-2 px-5 py-4", className)}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[13px] text-dim">{label}</span>
-        {aside}
-      </div>
-      {children}
-    </Card>
   );
 }
 

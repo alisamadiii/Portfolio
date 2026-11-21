@@ -23,6 +23,7 @@ import { useProject } from "@/hooks/use-project";
 import { useProjectId } from "@/hooks/use-repo";
 import { APPS, appState } from "@/lib/apps";
 import { installedDeliveryApps } from "@/components/orders/providers";
+import { UptimeSummary } from "@/components/site-monitor/uptime-cards";
 
 import { GithubRepoDialog } from "./github-repo-dialog";
 import { AnalyticsSection } from "./home/analytics-section";
@@ -54,6 +55,10 @@ export function HomePage() {
   const netlifyLinked = projects.data?.find((p) => p.projectId === projectId)?.netlify ?? true;
 
   const websiteUrl = project?.websiteUrl ?? null;
+  // Site Monitor status inside the website card, once the site is monitored.
+  const monitor = useQuery(
+    trpc.siteMonitor.overview.queryOptions({ projectId }, { enabled: !!websiteUrl, retry: false, staleTime: 60_000 })
+  );
   const sites = useQuery(trpc.websites.getMine.queryOptions(undefined, { enabled: !!websiteUrl }));
   const site = sites.data?.find(
     (s) => s.id.toLowerCase() === `${project?.owner}/${project?.repo}`.toLowerCase()
@@ -251,6 +256,11 @@ export function HomePage() {
               <GithubRepoDialog projectId={projectId} />
             )}
           </div>
+          {monitor.data?.state === "ok" && (
+            <div className="mt-2">
+              <UptimeSummary site={monitor.data.site} uptime={monitor.data.uptime} />
+            </div>
+          )}
           {isAdminUser(user) && !netlifyLinked && (
             <div>
               <LinkNetlifyDialog projectId={projectId} />

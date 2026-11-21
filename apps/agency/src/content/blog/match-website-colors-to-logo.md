@@ -89,7 +89,7 @@ Two checks before you ship:
 
 If you don't have a logo, resist the urge to design the website first and bolt a logo on later. That's how you end up with a green logo on a blue site, visually filing for divorce on day one.
 
-This is exactly how I work with new businesses: logo first, everything else derived from it. You pick a mark you love from a range of concepts — a logo platform like [design.com](https://design.com) is a good place to browse until something feels like your business — then I pull its colors and character into a theme, and the buttons, forms, and headings all inherit it. The site can't clash with the logo, because the site came _from_ the logo — the full workflow is on the [brand identity service page](/services/brand-identity).
+This is exactly how I work with new businesses: logo first, everything else derived from it. You pick a mark you love from a range of concepts — a logo platform like [design.com](https://www.design.com/) is a good place to browse until something feels like your business — then I pull its colors and character into a theme, and the buttons, forms, and headings all inherit it. The site can't clash with the logo, because the site came _from_ the logo — the full workflow is on the [brand identity service page](/services/brand-identity).
 
 The order matters. A logo is the hardest thing to change later; a website theme takes an afternoon to re-skin. Decide the permanent thing first and let the easy things follow it.
 
@@ -117,7 +117,7 @@ A distribution ratio: about 60% of the page in a neutral base, 30% in a supporti
 Keep the strongest one as a small accent and build the rest from neutrals and calmer tints of the same hue. And check contrast — text needs 4.5:1 against its background, whatever the logo thinks.
 
 **What if I don't have a logo yet?**
-Choose the logo first, then derive the website's colors from it. Browse a platform like [design.com](https://design.com) until a mark feels right — websites are easy to re-theme; logos are on everything and expensive to change. It's the approach I use on every [brand identity](/services/brand-identity) project.
+Choose the logo first, then derive the website's colors from it. Browse a platform like [design.com](https://www.design.com/) until a mark feels right — websites are easy to re-theme; logos are on everything and expensive to change. It's the approach I use on every [brand identity](/services/brand-identity) project.
 
 **Can I use colors on my website that aren't in my logo?**
 Yes — the neutrals almost never come from the logo, and tints and shades of logo colors are fair game everywhere. What you shouldn't add is a second loud color competing with the accent. One voice, plenty of quiet backup singers.
