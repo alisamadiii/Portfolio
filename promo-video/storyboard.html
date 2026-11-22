@@ -1,0 +1,684 @@
+<meta charset="utf-8">
+<title>Client Hub Promo Storyboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Fragment+Mono&display=swap">
+<style>
+/* Layout: a production document. Left-aligned column, scene cards in a 2-up grid, asset library as a dense grid. Page chrome follows the viewer theme; video frames keep the brand's light look in both. */
+:root {
+  --bg: #f7f6f4;
+  --surface: #ffffff;
+  --line: #e7e3de;
+  --ink: #221f1c;
+  --dim: #6b6560;
+  --coral: #fc8464;
+  --coral-text: #c2502f;
+  --coral-soft: #feede6;
+  --ok: #1f9d55;
+  --code-bg: #f1eee9;
+  --display: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
+  --body: Inter, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Fragment Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171513; --surface: #201d1a; --line: #34302b; --ink: #f2eee9; --dim: #a59d95;
+    --coral: #fc8464; --coral-text: #ff9a7c; --coral-soft: #3a241c; --ok: #4cc584; --code-bg: #2a2622;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171513; --surface: #201d1a; --line: #34302b; --ink: #f2eee9; --dim: #a59d95;
+  --coral: #fc8464; --coral-text: #ff9a7c; --coral-soft: #3a241c; --ok: #4cc584; --code-bg: #2a2622;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; padding: 32px 16px 96px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; line-height: 1.1; }
+h2 { font-size: 24px; font-weight: 700; }
+h3 { font-size: 17px; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--coral-text); }
+.muted { color: var(--dim); }
+.small { font-size: 13px; }
+.mono { font-family: var(--mono); font-size: 13px; }
+header.top { display: grid; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 18px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+.meta b { color: var(--ink); font-weight: 600; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.toc a { text-decoration: none; color: var(--ink); border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--coral); outline: none; }
+section { display: grid; gap: 18px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.note { background: var(--coral-soft); border-radius: 10px; padding: 14px 16px; font-size: 14px; }
+.note b { font-weight: 600; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 10px; min-width: 0; }
+.panel ul, .panel ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+dl.kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 14px; margin: 0; }
+dl.kv dt { color: var(--dim); font-size: 13px; padding-top: 1px; }
+dl.kv dd { margin: 0; min-width: 0; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.sw { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.sw i { display: block; height: 54px; }
+.sw div { padding: 8px 10px; display: grid; }
+.sw span { font-size: 13px; font-weight: 600; }
+.scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr)); gap: 18px; }
+.scene { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.scene.key { border-color: var(--coral); box-shadow: 0 0 0 1px var(--coral); }
+.thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.thumbs svg { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--line); background: #fffdfb; }
+.scene-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.tc { font-family: var(--mono); font-size: 13px; color: var(--coral-text); font-variant-numeric: tabular-nums; }
+.role { font-size: 12px; font-weight: 600; color: var(--dim); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; margin-left: 6px; vertical-align: 2px; font-family: var(--body); letter-spacing: 0; }
+.scene dl { display: grid; grid-template-columns: 92px 1fr; gap: 6px 12px; margin: 0; font-size: 14px; }
+.scene dt { font-weight: 600; }
+.scene dd { margin: 0; min-width: 0; color: var(--ink); }
+.scene dd.cues { font-family: var(--mono); font-size: 12.5px; color: var(--dim); display: grid; gap: 2px; }
+.sum { font-family: var(--mono); font-size: 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; white-space: nowrap; }
+.sum b { color: var(--ok); }
+.assets { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 14px; }
+.asset { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; grid-template-rows: auto 1fr; overflow: hidden; min-width: 0; }
+.asset .stage { background: #fffdfb; background-image: linear-gradient(45deg, #f3efea 25%, transparent 25%), linear-gradient(-45deg, #f3efea 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f3efea 75%), linear-gradient(-45deg, transparent 75%, #f3efea 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; height: 170px; display: grid; place-items: center; padding: 14px; border-bottom: 1px solid var(--line); }
+.asset .stage svg { max-width: 100%; max-height: 140px; width: auto; height: auto; }
+.asset .info { padding: 10px 12px 12px; display: grid; gap: 6px; align-content: start; }
+.asset .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.asset code { font-family: var(--mono); font-size: 13px; color: var(--coral-text); }
+.asset p { font-size: 13px; color: var(--dim); }
+button.copy { font: 600 13px var(--body); height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap; }
+button.copy:hover { border-color: var(--ink); }
+button.copy:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+button.copy.primary { background: var(--coral); border-color: var(--coral); color: #221f1c; height: 36px; padding: 0 16px; }
+button.copy.done { border-color: var(--ok); color: var(--ok); }
+button.copy.primary.done { color: #221f1c; background: #9fdcb8; border-color: #9fdcb8; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--dim); font-weight: 600; letter-spacing: 0.02em; }
+td.num { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+pre.prompt { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; overflow-x: auto; max-height: 520px; overflow-y: auto; }
+.check { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.check li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; }
+.check li::before { content: ""; width: 14px; height: 14px; border: 1.5px solid var(--dim); border-radius: 4px; margin-top: 4px; }
+textarea.fallback { width: 100%; flex-basis: 100%; height: 120px; font-family: var(--mono); font-size: 12px; }
+@media (max-width: 520px) { dl.kv { grid-template-columns: 1fr; } .scene dl { grid-template-columns: 1fr; gap: 2px 0; } .scene dd { margin-bottom: 6px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Client Hub, 60 s hero loop · storyboard v1</h1>
+    <div class="meta">
+      <span><b>12</b> scenes</span><span><b>1920 × 1080</b></span><span><b>60</b> fps</span><span><b>3600</b> frames</span><span>Music + SFX, hero plays muted with a sound toggle</span><span>Status: <b>waiting for Ali's approval</b></span>
+    </div>
+    <nav class="toc" aria-label="Sections">
+      <a href="#brief">Brief</a><a href="#brand">Brand</a><a href="#storyboard">Storyboard</a><a href="#assets">SVG assets</a><a href="#sound">Sound</a><a href="#backgrounds">Backgrounds</a><a href="#prompt">Build prompt</a><a href="#checklist">Checklist</a>
+    </nav>
+    <div class="note"><b>How this gets used:</b> approve this page, then press <b>Copy full kit</b> (in Build prompt) and paste it into a new Claude chat with the launch-motion skill loaded. The video is animated in code (Remotion) from these SVGs and rendered on your Mac, which costs no credits. Higgsfield is only used for the music, a few sound effects and, if you want them, 2 background images. Never ask Higgsfield to generate the video itself: AI video models scramble UI text and every retry costs credits.</div>
+  </header>
+
+  <section id="brief">
+    <div class="sec-head"><h2>Brief</h2><span class="muted small">launch-motion brief template</span></div>
+    <div class="panel">
+      <dl class="kv">
+        <dt>Company</dt><dd>Ali Samadii LLC designs and hand-codes custom websites for local businesses, built on the client's own Shopify, Wix or Square, and gives them Client Hub: one place to edit the site, publish it, answer leads, collect reviews, send newsletters, see orders and analytics, and watch uptime.</dd>
+        <dt>Audience</dt><dd>Owners of local businesses (restaurants, cafes, shops, service businesses) who run their business from their phone and too many tabs.</dd>
+        <dt>Goal</dt><dd>Hero video on alisamadii.com (autoplay, muted, looping), also usable on social with sound.</dd>
+        <dt>One message</dt><dd><b>A custom website on your platform, plus everything to run it, in one hub.</b></dd>
+        <dt>Must show</dt><dd>
+          <ol>
+            <li>The hook: too many tabs to run one small business.</li>
+            <li>The product: Client Hub, one window.</li>
+            <li>The key promise: a custom-designed site while Shopify, Wix or Square keeps running the store, bookings and checkout.</li>
+            <li>The features working: AI edits, publish to Netlify, code you own, leads + SMS, Google Reviews, newsletter, orders, analytics, site monitor.</li>
+            <li>Payoff: every app in one hub, logo, alisamadii.com.</li>
+          </ol></dd>
+        <dt>Tone</dt><dd>Calm, warm, premium. Clean product UI on a light warm canvas, coral accents. Not cartoonish, no stock footage, no voiceover. Music bed + light SFX.</dd>
+        <dt>Deliverables</dt><dd>60 s master 1920 × 1080, 60 fps, a full-quality master mp4 (H.264, CRF ~16, AAC 192 kbps) plus web encodes for the hero, mp4 and VP9 webm, each under 8 MB; <span class="mono">poster.webp</span> from frame 3480 (tagline); optional 15 s cutdown (scenes 1, 2, 3, 12).</dd>
+        <dt>Demo data</dt><dd>Fictional business <b>Harbor Coffee Co.</b> No real client names. Every number is sample data and must look plausible, not hyped.</dd>
+        <dt>Out of scope</dt><dd>DoorDash and Grubhub (still "coming soon"). Google Ads (left out for now). Booking, calls, ad campaigns and reports (GoHighLevel handles them).</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="brand">
+    <div class="sec-head"><h2>Brand</h2><span class="muted small">from apps/hub/app/tokens.css and the agency homepage hero</span></div>
+    <div class="swatches" id="swatches"></div>
+    <div class="two">
+      <div class="panel">
+        <h3>Type</h3>
+        <ul id="type-rules">
+          <li><b style="font-family:var(--display);font-weight:800">Plus Jakarta Sans 800</b>: headlines and captions (matches the homepage H1). Letter-spacing −0.04em.</li>
+          <li><b>Inter 400–700</b>: all hub UI text (the real hub font).</li>
+          <li><span class="mono">Fragment Mono</span>: platform pills only (matches the homepage platform cards).</li>
+          <li>All three from Google Fonts. Load them before frame 0 or the render falls back to Times.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>UI rules</h3>
+        <ul id="ui-rules">
+          <li>Coral fills always carry ink text (#221f1c), never white.</li>
+          <li>Cards: 1px #e7e3de border, radius 10, no shadow. Buttons radius 6, never pills.</li>
+          <li>Hub window floats on the warm canvas with one soft shadow (window only).</li>
+          <li>Key text at least 28 px on the 1920 canvas so it reads at hero size (about 1100 px wide).</li>
+          <li>Logo: the Ali Samadii mark from <span class="mono">packages/ui/src/icons/logo.tsx</span>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="storyboard">
+    <div class="sec-head"><h2>Storyboard</h2><span class="muted small">source of truth: never reorder, add or drop scenes</span></div>
+    <div class="sum" id="sum"></div>
+    <div class="scenes" id="scenes"></div>
+  </section>
+
+  <section id="assets">
+    <div class="sec-head"><h2>SVG assets</h2><button class="copy" id="copy-all-svg" type="button">Copy all SVGs</button></div>
+    <div class="note">Every asset is a standalone SVG drawn for the 1920 × 1080 canvas at scale 1. Animated parts are groups with <span class="mono">id</span>s (for example <span class="mono">tab-3</span>, <span class="mono">send-btn</span>, <span class="mono">bar-12</span>) so Claude can animate each one. Text stays live <span class="mono">&lt;text&gt;</span> so copy changes are one-line edits. No raster images anywhere.</div>
+    <div class="assets" id="asset-grid"></div>
+  </section>
+
+  <section id="sound">
+    <div class="sec-head"><h2>Sound</h2><span class="muted small">music bed + 8 reusable SFX, placed by frame</span></div>
+    <div class="two">
+      <div class="panel">
+        <h3>Music bed (generate once)</h3>
+        <pre class="prompt" id="music-prompt"></pre>
+        <p class="small muted">One take. Re-roll only if the loop point clicks or the drop misses ~7 s. Trim or time-stretch in code so the drop lands on frame 420 and the lift on 3180.</p>
+      </div>
+      <div class="panel">
+        <h3>Mix rules</h3>
+        <ul id="mix-rules">
+          <li>Music bed around −18 LUFS; ducks ~4 dB for 200 ms under each SFX hit.</li>
+          <li>The beat drop lands on frame 420 and the lift on frame 3180. Trim or time-stretch the track to fit.</li>
+          <li>SFX are short (under 400 ms), except the type.wav loop, which runs at low volume for as long as the typing lasts.</li>
+          <li>Never more than 2 SFX on the same frame. Staggered pops alternate every other card.</li>
+          <li>Pops pitch up one semitone per staggered item (playbackRate 1.06ⁿ) so lists feel alive, not repetitive.</li>
+          <li>Loop: music fades down to the opening pad over frames 3540–3599 and fades up over frames 0–30, so the 60 s loop has no click.</li>
+          <li>No voiceover. Export AAC 192 kbps in the mp4; the webm carries Opus.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tablewrap"><table id="sfx-table"><thead><tr><th>File</th><th>Use</th><th>Character</th><th>Fallback prompt (Higgsfield, one batch call)</th></tr></thead><tbody></tbody></table></div>
+    <h3>Cue sheet</h3>
+    <div class="tablewrap"><table id="cue-table"><thead><tr><th>Frame</th><th>Time</th><th>Scene</th><th>Sound</th><th>On</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="backgrounds">
+    <div class="sec-head"><h2>Backgrounds</h2><span class="muted small">default: <span class="mono">bg-warm</span> SVG, zero credits</span></div>
+    <div class="panel">
+      <p>The default background is the <span class="mono">bg-warm</span> asset: the homepage canvas (#fffdfb), its faint 4-column grid and a soft coral glow along the bottom. It costs nothing and matches the hero the video sits in. Generate the two images below only if the first render feels flat. Generate each one once and reuse it across scenes, never per scene.</p>
+      <div class="two" id="bg-prompts"></div>
+    </div>
+  </section>
+
+  <section id="prompt">
+    <div class="sec-head"><h2>Build prompt</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="copy" id="copy-prompt" type="button">Copy prompt</button><button class="copy primary" id="copy-kit" type="button">Copy full kit</button></div></div>
+    <p class="muted small">"Copy full kit" copies the prompt, brief, storyboard, cue sheet and every SVG as one message. Paste it into a fresh chat with the launch-motion skill loaded.</p>
+    <pre class="prompt" id="build-prompt"></pre>
+  </section>
+
+  <section id="checklist">
+    <div class="sec-head"><h2>Pre-render checklist</h2></div>
+    <div class="two">
+      <div class="panel"><h3>Picture</h3><ul class="check" id="check-picture"></ul></div>
+      <div class="panel"><h3>Sound, loop and hero</h3><ul class="check" id="check-sound"></ul></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  // ---------- palette (video) ----------
+  const C = {
+    page: "#fffdfb", canvas: "#f7f6f4", surface: "#ffffff", sidebar: "#fbfaf8", line: "#e7e3de", divider: "#efece8",
+    ink: "#221f1c", ink2: "#3a3531", dim: "#6b6560", faint: "#8a847e",
+    coral: "#fc8464", coralSoft: "#feede6", coralText: "#c2502f", coralDeep: "#9a3a1e",
+    ok: "#1f9d55", okSoft: "#e3f4ea", warn: "#e0a33a", info: "#2f6fed"
+  };
+  const INTER = "Inter, 'Helvetica Neue', Arial, sans-serif";
+  const JAKARTA = "'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif";
+  const MONO = "'Fragment Mono', ui-monospace, Menlo, monospace";
+
+  // ---------- lucide icons (24 grid, stroke) ----------
+  const ICON = {
+    inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    mail: '<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/>',
+    star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+    activity: '<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>',
+    send: '<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    chart: '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+    code: '<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
+    receipt: '<path d="M13 16H8"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/>',
+    gauge: '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+    pause: '<rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/>',
+    sparkles: '<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/>',
+    github: '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>',
+    house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    message: '<path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>',
+    settings: '<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/>'
+  };
+
+  // ---------- brand marks (same paths as apps/hub/components/ds/brand-logos.tsx + homepage platform cards) ----------
+  const BRAND = {
+    google: { vb: "0 0 24 24", body: '<path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.3a12 12 0 0 0 0 10.8z"/><path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9z"/>' },
+    analytics: { vb: "0 0 24 24", body: '<path fill="#F9AB00" d="M15.5 3.75v16.5c0 1.845 1.273 2.874 2.625 2.874 1.25 0 2.625-.875 2.625-2.874V3.875c0-1.692-1.25-2.75-2.625-2.75S15.5 2.292 15.5 3.75z"/><path fill="#E37400" d="M8.625 12v8.25c0 1.845 1.273 2.874 2.625 2.874 1.25 0 2.625-.875 2.625-2.874v-8.125c0-1.692-1.25-2.75-2.625-2.75S8.625 10.542 8.625 12z"/><circle fill="#E37400" cx="4.375" cy="20.5" r="2.625"/>' },
+    resend: { vb: "0 0 256 256", body: '<path fill="#221f1c" d="M156.575 0c49.582 0 79.07 29.488 79.07 68.632 0 39.144-29.488 68.632-79.07 68.632h-25.052L256 256h-87.943l-94.728-90.03c-6.784-6.264-9.916-13.57-9.916-19.833 0-8.873 6.263-16.701 18.267-20.094l48.8-13.048c18.527-4.958 31.314-19.31 31.314-38.1 0-22.964-18.789-36.274-42.014-36.274H0V0h156.575z"/>' },
+    neon: { vb: "0 0 36 36", body: '<path fill="#00E599" fill-rule="evenodd" d="M0 6.207A6.207 6.207 0 0 1 6.207 0h23.586A6.207 6.207 0 0 1 36 6.207v20.06c0 3.546-4.488 5.085-6.664 2.286l-6.805-8.754v10.615A5.586 5.586 0 0 1 16.945 36H6.207A6.207 6.207 0 0 1 0 29.793V6.207Zm6.207-1.241c-.686 0-1.241.555-1.241 1.24v23.587c0 .686.555 1.242 1.241 1.242h10.862c.343 0 .5-.278.5-.621V16.18c0-3.547 4.488-5.086 6.665-2.286l6.805 8.753V6.207c0-.686.064-1.241-.621-1.241H6.207Z"/>' },
+    wix: { vb: "0 7 24 10", body: '<path fill="#0C6EFC" d="m0 7.354 2.113 9.292h.801a1.54 1.54 0 0 0 1.506-1.218l1.351-6.34a.171.171 0 0 1 .167-.137c.08 0 .15.058.167.137l1.352 6.34a1.54 1.54 0 0 0 1.506 1.218h.805l2.113-9.292h-.565c-.62 0-1.159.43-1.296 1.035l-1.26 5.545-1.106-5.176a1.76 1.76 0 0 0-2.19-1.324c-.639.176-1.113.716-1.251 1.365l-1.094 5.127-1.26-5.537A1.33 1.33 0 0 0 .563 7.354H0zm13.992 0a.951.951 0 0 0-.951.95v8.342h.635a.952.952 0 0 0 .951-.95V7.353h-.635zm1.778 0 3.158 4.66-3.14 4.632h1.325c.368 0 .712-.181.918-.486l1.756-2.59a.12.12 0 0 1 .197 0l1.754 2.59c.206.305.55.486.918.486h1.326l-3.14-4.632L24 7.354h-1.326c-.368 0-.712.181-.918.486l-1.772 2.617a.12.12 0 0 1-.197 0L18.014 7.84a1.108 1.108 0 0 0-.918-.486H15.77z"/>' },
+    netlify: { vb: "0 0 24 24", body: '<path fill="#05BDBA" d="M6.49 19.04h-.23L5.13 17.9v-.23l1.73-1.71h1.2l.15.15v1.2Zm-1.36-12.7v-.23l1.13-1.13h.23L8.2 6.69v1.2l-.15.15h-1.2Zm9.96 9.09h-1.650l-.14-.13v-3.83c0-.68-.27-1.2-1.1-1.23-.42 0-.9 0-1.43.02l-.07.08v4.96l-.14.14H8.9l-.13-.14V8.73l.13-.14h3.7a2.6 2.6 0 0 1 2.61 2.6v4.1l-.13.14Zm-8.37-2.44H.14L0 12.85v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14Zm17.14 0h-6.58l-.14-.14v-1.64l.14-.14h6.58l.14.14v1.64l-.14.14ZM11.05 6.55V1.640l.14-.14h1.65l.14.14v4.91l-.14.14h-1.65l-.14-.14Zm0 15.81v-4.9l.14-.15h1.65l.14.14v4.91l-.14.14h-1.65l-.14-.14Z"/>' },
+    calendar: { vb: "0 0 24 24", body: '<path fill="#fff" d="M18.3 5.7H5.7v12.6h12.6z"/><path fill="#EA4335" d="M18.3 24 24 18.3h-5.7z"/><path fill="#FBBC04" d="M24 5.7h-5.7v12.6H24z"/><path fill="#34A853" d="M18.3 18.3H5.7V24h12.6z"/><path fill="#188038" d="M0 18.3v3.8C0 23.1.9 24 1.9 24h3.8v-5.7z"/><path fill="#1967D2" d="M24 5.7V1.9C24 .9 23.1 0 22.1 0h-3.8v5.7z"/><path fill="#4285F4" d="M18.3 0H1.9C.9 0 0 .9 0 1.9v16.4h5.7V5.7h12.6z"/><text x="12" y="16.2" text-anchor="middle" font-family="' + INTER + '" font-size="8" font-weight="700" fill="#4285F4">31</text>' },
+    ubereats: { vb: "0 0 24 24", body: '<rect width="24" height="24" rx="4" fill="#000"/><text x="12" y="11.2" text-anchor="middle" fill="#fff" font-family="' + INTER + '" font-size="7.2" font-weight="700">Uber</text><text x="12" y="18.6" text-anchor="middle" fill="#06C167" font-family="' + INTER + '" font-size="7.2" font-weight="700">Eats</text>' },
+    shopify: { vb: "0 0 24 24", body: '<path fill="#95BF47" d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.929-.136-1.929-.136-1.275-1.274-1.439-1.411c-.045-.037-.075-.057-.121-.074l-.914 21.104h.023zM11.71 11.305s-.81-.424-1.774-.424c-1.447 0-1.504.906-1.504 1.141 0 1.232 3.24 1.715 3.24 4.629 0 2.295-1.44 3.76-3.406 3.76-2.354 0-3.54-1.465-3.54-1.465l.646-2.086s1.245 1.066 2.28 1.066c.675 0 .975-.545.975-.932 0-1.619-2.654-1.694-2.654-4.359-.034-2.237 1.571-4.416 4.827-4.416 1.257 0 1.875.361 1.875.361l-.945 2.715-.02.01zM11.17.83c.136 0 .271.038.405.135-.984.465-2.064 1.639-2.508 3.992-.656.213-1.293.405-1.889.578C7.697 3.75 8.951.84 11.17.84V.83zm1.235 2.949v.135c-.754.232-1.583.484-2.394.736.466-1.777 1.333-2.645 2.085-2.971.193.501.309 1.176.309 2.1zm.539-2.234c.694.074 1.141.867 1.429 1.755-.349.114-.735.231-1.158.366v-.252c0-.752-.096-1.371-.271-1.871v.002zm2.992 1.289c-.02 0-.06.021-.078.021s-.289.075-.714.21c-.423-1.233-1.176-2.37-2.508-2.37h-.115C12.135.209 11.669 0 11.265 0 8.159 0 6.675 3.877 6.210 5.846c-1.194.365-2.063.636-2.16.674-.675.213-.694.232-.772.87-.075.462-1.83 14.063-1.83 14.063L15.009 24l.927-21.166z"/>' },
+    square: { vb: "0 0 24 24", body: '<path fill="#1b1a17" d="M4.01 0A4.01 4.01 0 000 4.01v15.98c0 2.21 1.8 4 4.01 4.01h15.98C22.2 24 24 22.2 24 19.99V4A4.01 4.01 0 0019.99 0H4zm1.62 4.36h12.74c.7 0 1.26.57 1.26 1.27v12.74c0 .7-.56 1.27-1.26 1.27H5.63c-.7 0-1.26-.57-1.26-1.27V5.63a1.27 1.27 0 011.26-1.27zm3.83 4.35a.73.73 0 00-.73.73v5.09c0 .4.32.72.72.72h5.1a.73.73 0 00.73-.72V9.44a.73.73 0 00-.73-.73h-5.1Z"/>' }
+  };
+  const MARK = 'M70.5869 82.0243H97.8874V100H70.5869V82.0243ZM46.4913 0L34.6717 20.9415H48.0666L29.2434 54.293H58.894L70.5869 33.576V57.6897H13.9329L2.11328 78.6276H15.5081L3.44588 100H33.1L45.1623 78.6276H97.8874V0H46.4913Z';
+
+  // ---------- svg helpers ----------
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const T = (x, y, txt, o = {}) => `<text x="${x}" y="${y}" font-family="${o.font || INTER}" font-size="${o.size || 24}" font-weight="${o.w || 500}" fill="${o.fill || C.ink}"${o.anchor ? ` text-anchor="${o.anchor}"` : ""}${o.ls != null ? ` letter-spacing="${o.ls}"` : ""}>${esc(txt)}</text>`;
+  const R = (x, y, w, h, o = {}) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.r ?? 0}" fill="${o.fill || "none"}"${o.stroke ? ` stroke="${o.stroke}" stroke-width="${o.sw || 2}"` : ""}${o.op != null ? ` opacity="${o.op}"` : ""}/>`;
+  const I = (name, x, y, size = 24, color = C.ink, sw = 2) => `<g transform="translate(${x} ${y}) scale(${size / 24})" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${ICON[name]}</g>`;
+  const B = (name, x, y, w, h) => `<svg x="${x}" y="${y}" width="${w}" height="${h ?? w}" viewBox="${BRAND[name].vb}">${BRAND[name].body}</svg>`;
+  const G = (id, inner, attrs = "") => `<g id="${id}"${attrs ? " " + attrs : ""}>${inner}</g>`;
+  const card = (x, y, w, h, r = 10) => R(x, y, w, h, { r, fill: C.surface, stroke: C.line, sw: 2 });
+  const stars = (x, y, n = 5, s = 26) => Array.from({ length: n }, (_, i) => `<g transform="translate(${x + i * (s + 4)} ${y}) scale(${s / 24})"><path fill="#f5b400" d="${ICON.star.match(/d="([^"]+)"/)[1]}"/></g>`).join("");
+  const checkDot = (x, y, r = 16) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${C.ok}"/>` + `<g transform="translate(${x - r * 0.62} ${y - r * 0.62}) scale(${(r * 1.24) / 24})" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></g>`;
+  const pillBtn = (x, y, w, h, label, o = {}) => R(x, y, w, h, { r: 6, fill: o.fill || C.coral }) + T(x + w / 2, y + h / 2 + 10, label, { size: o.size || 28, w: 600, fill: o.color || C.ink, anchor: "middle" });
+
+  // ---------- assets ----------
+  // Each: id, name, w, h, note, body (inner SVG in local coordinates).
+  const A = {};
+  const add = (id, w, h, note, body) => { A[id] = { id, w, h, note, body }; };
+  const svgOf = (id) => { const a = A[id]; return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${a.w} ${a.h}" width="${a.w}" height="${a.h}">${a.body}</svg>`; };
+  const LOG = [], LAYOUTS = [];
+  const place = (id, x, y, s = 1, extra = "") => (LOG.push(`${id} at (${x}, ${y})${s !== 1 ? " scale " + s : ""}`), 0) || `<g transform="translate(${x} ${y}) scale(${s})"${extra ? " " + extra : ""}>${A[id].body}</g>`;
+
+  add("bg-warm", 1920, 1080, "Default background. Homepage canvas, faint 4-column grid, coral glow along the bottom. Parallax the glow ±12 px.",
+    `<defs><radialGradient id="glow-grad" cx="50%" cy="100%" r="70%"><stop offset="0" stop-color="#fc8464" stop-opacity="0.38"/><stop offset="0.45" stop-color="#ffb59a" stop-opacity="0.22"/><stop offset="1" stop-color="#ffe3d6" stop-opacity="0"/></radialGradient></defs>` +
+    R(0, 0, 1920, 1080, { fill: C.page }) +
+    G("grid", [480, 960, 1440].map((x) => `<line x1="${x}" y1="0" x2="${x}" y2="1080" stroke="#221f1c" stroke-opacity="0.05" stroke-width="2"/>`).join("")) +
+    G("glow", `<ellipse cx="960" cy="1180" rx="1250" ry="560" fill="url(#glow-grad)"/>`));
+
+  add("logo-mark", 100, 100, "Ali Samadii mark (packages/ui/src/icons/logo.tsx). Scales in with overshoot.", G("mark", `<path d="${MARK}" fill="${C.ink}"/>`));
+
+  add("meet-title", 1100, 160, "\"Meet [mark] Client Hub\". Mark pops first, words slide out from behind it.",
+    G("meet-word", T(0, 112, "Meet", { font: JAKARTA, size: 112, w: 800, ls: -4 })) +
+    G("meet-mark", `<g transform="translate(305 26) scale(1.08)"><path d="${MARK}" fill="${C.coral}"/></g>`) +
+    G("meet-name", T(450, 112, "Client Hub", { font: JAKARTA, size: 112, w: 800, ls: -4 })));
+
+  const TABS = ["Site builder", "Texts", "Reviews", "Email list", "Orders", "Uptime", "Analytics", "Spreadsheet"];
+  add("browser-tabs", 1640, 120, "Browser chrome. Each tab is its own group (tab-1 … tab-8): drop in staggered, then squeeze into one tab.",
+    R(0, 0, 1640, 120, { r: 18, fill: "#efece8" }) +
+    G("traffic", `<circle cx="34" cy="60" r="9" fill="#ed6a5e"/><circle cx="62" cy="60" r="9" fill="#f5bf4f"/><circle cx="90" cy="60" r="9" fill="#62c554"/>`) +
+    TABS.map((t, i) => G(`tab-${i + 1}`, R(120 + i * 188, 28, 180, 74, { r: 12, fill: i === 7 ? C.surface : "#f7f5f2", stroke: C.line }) + T(140 + i * 188, 74, t, { size: 21, w: 500, fill: C.ink2 }) + `<path d="M${282 + i * 188} 58l10 10m0-10-10 10" stroke="${C.faint}" stroke-width="2" stroke-linecap="round"/>`)).join(""));
+
+  add("headline-hook", 1500, 130, "Kinetic headline, word by word (4 frames apart).",
+    G("hook-line", T(750, 96, "Running a business means too many tabs.", { font: JAKARTA, size: 76, w: 800, anchor: "middle", ls: -3 })));
+
+  const NAV = [["house", "Home"], ["globe", "Website"], ["activity", "Site Monitor"], ["receipt", "Orders"]];
+  const APPS = [["inbox", "Leads"], ["mail", "Newsletter"], ["g:google", "Google Reviews"], ["star", "Feedback"], ["g:analytics", "Analytics"], ["g:shopify", "Shopify"]];
+  const navY = (label) => { const i = NAV.findIndex((n) => n[1] === label); if (i >= 0) return 120 + i * 58; const j = APPS.findIndex((a) => a[1] === label); return j >= 0 ? 408 + j * 56 : null; };
+  const navItem = (ic, label, y, isApp, active) => {
+    const icon = ic.startsWith("g:") ? R(36, y - 2, 36, 36, { r: 8, fill: C.surface, stroke: C.line }) + B(ic.slice(2), 44, y + 6, 20, 20) : isApp ? R(36, y - 2, 36, 36, { r: 8, fill: C.coral }) + I(ic, 44, y + 6, 20, C.ink, 2.2) : I(ic, 42, y + 4, 26, active ? C.ink : C.dim);
+    return icon + T(88, y + 26, label, { size: 24, w: active ? 600 : 500, fill: active ? C.ink : C.ink2 });
+  };
+  const slug = (l) => l.toLowerCase().replace(/ /g, "-");
+  const hubShell = (active = "Website") =>
+    `<defs><filter id="winshadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="24" stdDeviation="30" flood-color="#221f1c" flood-opacity="0.12"/></filter></defs>` +
+    G("window", `<rect x="0" y="0" width="1600" height="900" rx="20" fill="${C.canvas}" stroke="${C.line}" stroke-width="2" filter="url(#winshadow)"/>`) +
+    G("sidebar", `<path d="M20 0h300v900H20a20 20 0 0 1-20-20V20A20 20 0 0 1 20 0z" fill="${C.sidebar}"/><line x1="320" y1="0" x2="320" y2="900" stroke="${C.line}" stroke-width="2"/>` +
+      G("project", R(28, 26, 44, 44, { r: 10, fill: C.ink }) + `<g transform="translate(37 35) scale(0.26)"><path d="${MARK}" fill="#fff"/></g>` + T(86, 50, "Harbor Coffee Co.", { size: 22, w: 600 }) + T(86, 70, "harborcoffee.com", { size: 16, w: 400, fill: C.dim })) +
+      (navY(active) != null ? G("nav-active", R(20, navY(active) - 10, 280, 54, { r: 8, fill: C.coralSoft })) : "") +
+      NAV.map(([ic, l], i) => G(`nav-${slug(l)}`, navItem(ic, l, 120 + i * 58, false, l === active))).join("") +
+      T(36, 380, "Apps", { size: 18, w: 600, fill: C.faint }) +
+      APPS.map(([ic, l], i) => G(`app-${slug(l)}`, navItem(ic, l, 408 + i * 56, true, l === active))).join("")) +
+    G("topbar", `<line x1="320" y1="72" x2="1600" y2="72" stroke="${C.line}" stroke-width="2"/>` + `<circle cx="1548" cy="36" r="18" fill="${C.coralSoft}"/>` + T(1548, 43, "H", { size: 18, w: 700, fill: C.coralText, anchor: "middle" }));
+  add("hub-shell", 1600, 900, "Client Hub window. Sidebar items (nav-*, app-*) stagger in 3 frames apart. nav-active is the highlight: slide it to the current page per scene (Home in 2, Website in 4, Leads in 6, Orders in 9; y = item y − 10) and set that label to weight 600. Page title: Inter 30/600 at (360, 50). Content area: x 320–1600, y 72–900.", hubShell());
+
+  add("home-dashboard", 1200, 760, "Hub Home page content for scene 2. Cards home-website, home-leads, home-reviews, home-status stagger 4 frames apart.",
+    G("home-greeting", T(0, 44, "Good morning, Harbor Coffee", { size: 40, w: 600 })) +
+    G("home-website", card(0, 90, 580, 320) + T(32, 146, "Website", { size: 28, w: 600 }) + R(32, 172, 516, 150, { r: 8, fill: "#1f2a2e" }) + T(56, 258, "Harbor Coffee", { font: JAKARTA, size: 34, w: 800, fill: "#f4ead9" }) + checkDot(48, 366, 14) + T(74, 375, "Published", { size: 24, w: 500, fill: C.ink2 })) +
+    G("home-leads", card(620, 90, 580, 320) + I("inbox", 652, 122, 30, C.coralText) + T(696, 146, "New leads", { size: 28, w: 600 }) + T(652, 280, "4", { font: JAKARTA, size: 96, w: 800, ls: -3 }) + T(652, 336, "this week", { size: 24, w: 400, fill: C.dim })) +
+    G("home-reviews", card(0, 440, 580, 290) + B("google", 32, 472, 30, 30) + T(76, 497, "Google reviews", { size: 28, w: 600 }) + T(32, 616, "4.8", { font: JAKARTA, size: 84, w: 800, ls: -3 }) + stars(200, 570, 5, 34) + T(32, 676, "Synced today", { size: 24, w: 400, fill: C.dim })) +
+    G("home-status", card(620, 440, 580, 290) + I("activity", 652, 472, 30, C.ok) + T(696, 497, "Site status", { size: 28, w: 600 }) + T(652, 616, "Up", { font: JAKARTA, size: 84, w: 800, fill: C.ok }) + T(652, 676, "Up for 32 days", { size: 24, w: 400, fill: C.dim })));
+
+  const pageTitle = (t) => T(360, 50, t, { size: 30, w: 600 });
+
+  const SITE = (holiday) =>
+    R(0, 0, 1060, 640, { r: 14, fill: "#1f2a2e" }) +
+    G("site-nav", T(48, 66, "Harbor Coffee", { font: JAKARTA, size: 30, w: 800, fill: "#f4ead9" }) + T(620, 64, "Menu", { size: 22, fill: "#d6cbb8" }) + T(720, 64, "Visit", { size: 22, fill: "#d6cbb8" }) + T(810, 64, "Story", { size: 22, fill: "#d6cbb8" }) + R(900, 34, 120, 46, { r: 6, fill: "#e8a16b" }) + T(960, 65, "Order", { size: 21, w: 600, fill: "#1f2a2e", anchor: "middle" })) +
+    G("site-hero", T(48, 220, "Small-batch coffee,", { font: JAKARTA, size: 64, w: 800, fill: "#f4ead9", ls: -2 }) + T(48, 296, "roasted by the harbor.", { font: JAKARTA, size: 64, w: 800, fill: "#e8a16b", ls: -2 }) + T(48, 352, "Open-air cafe and roastery since 2014.", { size: 26, w: 400, fill: "#c9bfae" }) +
+      `<circle cx="895" cy="290" r="125" fill="#2c3b40"/><circle cx="895" cy="290" r="88" fill="#e8a16b" opacity="0.9"/><ellipse cx="895" cy="290" rx="46" ry="66" fill="#6b3f22"/><path d="M895 226c-15 34 15 94 0 128" stroke="#e8a16b" stroke-width="7" fill="none"/>`) +
+    (holiday
+      ? G("hours-banner-holiday", R(48, 470, 680, 92, { r: 12, fill: "#e8a16b" }) + T(76, 506, "Holiday hours", { size: 22, w: 700, fill: "#1f2a2e" }) + T(76, 542, "Dec 24–26 · 8am–2pm", { size: 28, w: 600, fill: "#1f2a2e" }))
+      : G("hours-banner", R(48, 470, 680, 92, { r: 12, fill: "#2c3b40" }) + T(76, 506, "Hours", { size: 22, w: 700, fill: "#c9bfae" }) + T(76, 542, "Open daily · 7am–6pm", { size: 28, w: 600, fill: "#f4ead9" })));
+  add("site-preview", 1060, 640, "Custom-designed site for the demo business (not a template look). Group hours-banner swaps for hours-banner-holiday in scene 4.", SITE(false));
+  add("hours-banner-holiday", 1060, 640, "Same frame as site-preview with the holiday banner. Crossfade only the banner group (hours-banner → hours-banner-holiday).", SITE(true));
+
+  const platform = (key, name, pill, dot) =>
+    G(`platform-${key}`, B(key, 0, key === "wix" ? 30 : 0, key === "wix" ? 230 : 120, key === "wix" ? 96 : 120) + (key === "wix" ? "" : T(150, 92, name, { font: JAKARTA, size: 96, w: 800, ls: -4 })) +
+      G(`pill-${key}`, R(0, 168, Math.round(86 + pill.length * 15.7), 68, { r: 34, fill: C.surface, stroke: C.line }) + `<circle cx="34" cy="202" r="8" fill="${dot}"/>` + T(56, 212, pill, { font: MONO, size: 26, w: 400, fill: C.ink2 })));
+  add("platform-shopify", 800, 250, "Logo + homepage pill. Cycles Shopify → Wix → Square, about 2.5 s each.", platform("shopify", "Shopify", "Products & checkout stay in Shopify", "#95BF47"));
+  add("platform-wix", 800, 250, "Wix wordmark is the logo itself (no extra text).", platform("wix", "Wix", "Bookings, forms & checkout stay in Wix", "#0C6EFC"));
+  add("platform-square", 800, 250, "Square mark + name.", platform("square", "Square", "Catalog, checkout & bookings stay in Square", "#1b1a17"));
+
+  add("caption", 1500, 110, "Generic scene caption (Plus Jakarta 800, 64 px). Text changes per scene, see storyboard.",
+    G("caption-text", T(750, 80, "Custom design. Your Shopify, Wix or Square stays.", { font: JAKARTA, size: 64, w: 800, anchor: "middle", ls: -2 })));
+
+  add("editor-panel", 560, 700, "AI edit panel. Groups: msg-user, msg-ai, composer, send-btn. Prompt types on letter by letter.",
+    card(0, 0, 560, 700, 14) +
+    G("editor-head", I("sparkles", 28, 30, 30, C.coralText) + T(72, 56, "Edit with AI", { size: 28, w: 600 })) + `<line x1="0" y1="96" x2="560" y2="96" stroke="${C.line}" stroke-width="2"/>` +
+    G("msg-user", R(150, 136, 382, 110, { r: 14, fill: C.coralSoft }) + T(176, 182, "Change the hours to", { size: 26, w: 500 }) + T(176, 220, "holiday hours", { size: 26, w: 500 })) +
+    G("msg-ai", R(28, 276, 420, 110, { r: 14, fill: C.canvas }) + checkDot(62, 331, 16) + T(92, 322, "Updated the hours", { size: 26, w: 500 }) + T(92, 358, "banner on Home.", { size: 26, w: 500 })) +
+    G("composer", R(28, 584, 504, 88, { r: 12, fill: C.surface, stroke: C.line }) + T(52, 638, "Ask for a change…", { size: 24, w: 400, fill: C.faint }) +
+      G("send-btn", R(456, 600, 60, 56, { r: 8, fill: C.coral }) + I("send", 474, 616, 24, C.ink, 2.2))));
+
+  add("publish-btn", 240, 72, "Coral button, ink text. Press: scale 1 → 0.96 → 1 over 8 frames.", G("publish", pillBtn(0, 0, 240, 72, "Publish", { size: 30 })));
+  add("netlify-pill", 470, 80, "Status pill after publish. Soft glow on the dot.",
+    G("netlify", R(0, 0, 470, 80, { r: 40, fill: C.surface, stroke: C.line }) + B("netlify", 26, 20, 40, 40) + T(84, 51, "Live on Netlify", { size: 28, w: 600 }) + `<circle cx="430" cy="40" r="10" fill="${C.ok}"/><circle cx="430" cy="40" r="18" fill="${C.ok}" opacity="0.18"/>`));
+  add("source-code-row", 960, 110, "Source code row. \"Yours to keep\" chip lands last.",
+    card(0, 0, 960, 110, 12) + G("repo", I("github", 32, 31, 46, C.ink, 2) + T(104, 50, "Source code", { size: 28, w: 600 }) + T(104, 84, "github.com/your-business/website", { font: MONO, size: 22, w: 400, fill: C.dim })) +
+    G("own-chip", R(720, 32, 210, 48, { r: 6, fill: C.okSoft }) + T(825, 64, "Yours to keep", { size: 22, w: 600, fill: C.ok, anchor: "middle" })));
+
+  const LEADS = [["Maya Brooks", "Website form", "2m"], ["Jordan Lee", "Website form", "1h"], ["Priya Shah", "Website form", "3h"], ["Sam Ortiz", "Manual", "1d"]];
+  add("leads-inbox", 1240, 780, "Leads app. lead-card-1 drops in from the top as new. Thread groups: msg-in, msg-out, delivered, lead-composer.",
+    card(0, 0, 1240, 780, 14) + `<line x1="440" y1="0" x2="440" y2="780" stroke="${C.line}" stroke-width="2"/>` +
+    T(32, 58, "Inbox", { size: 30, w: 600 }) +
+    LEADS.map(([n, s, t], i) => G(`lead-card-${i + 1}`, (i === 0 ? R(16, 88, 408, 120, { r: 10, fill: C.coralSoft }) : "") + `<circle cx="64" cy="${148 + i * 128}" r="26" fill="${i === 0 ? C.coral : C.divider}"/>` + T(64, 156 + i * 128, n[0], { size: 22, w: 700, anchor: "middle", fill: C.ink }) + T(104, 140 + i * 128, n, { size: 26, w: 600 }) + T(104, 176 + i * 128, s, { size: 21, w: 500, fill: C.dim }) + T(404, 140 + i * 128, t, { size: 20, w: 500, fill: C.faint, anchor: "end" }) + (i === 0 ? `<circle cx="398" cy="174" r="7" fill="${C.coral}"/>` : ""))).join("") +
+    G("thread-head", T(480, 58, "Maya Brooks", { size: 30, w: 600 }) + T(706, 58, "(904) 555-0142", { size: 22, w: 400, fill: C.dim }) + R(1088, 30, 120, 40, { r: 6, fill: C.canvas, stroke: C.line }) + T(1148, 57, "SMS", { size: 20, w: 600, anchor: "middle", fill: C.ink2 })) +
+    `<line x1="440" y1="96" x2="1240" y2="96" stroke="${C.line}" stroke-width="2"/>` +
+    G("msg-in", R(480, 140, 560, 118, { r: 16, fill: C.canvas }) + T(508, 188, "Hi! Do you cater office events", { size: 26, w: 500 }) + T(508, 228, "for about 30 people?", { size: 26, w: 500 })) +
+    G("msg-out", R(660, 300, 540, 118, { r: 16, fill: C.coral }) + T(688, 348, "Yes, we do! I'll text you our", { size: 26, w: 500 }) + T(688, 388, "catering menu today.", { size: 26, w: 500 })) +
+    G("delivered", I("check", 1068, 436, 22, C.ok, 2.6) + T(1200, 455, "Delivered", { size: 20, w: 500, fill: C.dim, anchor: "end" })) +
+    G("lead-composer", R(480, 672, 720, 80, { r: 12, fill: C.surface, stroke: C.line }) + T(506, 721, "Text Maya…", { size: 24, w: 400, fill: C.faint }) + G("lead-send", R(1124, 684, 60, 56, { r: 8, fill: C.coral }) + I("send", 1142, 700, 24, C.ink, 2.2))));
+
+  const review = (id, name, text1, text2, when) => G(id, card(0, 0, 540, 236, 12) + `<circle cx="52" cy="54" r="26" fill="${C.divider}"/>` + T(52, 63, name[0], { size: 24, w: 700, anchor: "middle" }) + T(94, 50, name, { size: 24, w: 600 }) + T(94, 80, when, { size: 19, w: 400, fill: C.faint }) + B("google", 486, 30, 28, 28) + stars(26, 102, 5, 28) + T(26, 166, text1, { size: 23, w: 400, fill: C.ink2 }) + T(26, 196, text2, { size: 23, w: 400, fill: C.ink2 }));
+  add("review-card-1", 540, 236, "Google review card. Stars fill one by one (3 frames apart).", review("review-1", "Elena R.", "Best cortado in town and the", "staff remember your order.", "2 days ago"));
+  add("review-card-2", 540, 236, "Second review, staggered 6 frames.", review("review-2", "Marcus T.", "Great beans to take home.", "The pour-over is worth it.", "1 week ago"));
+  add("review-card-3", 540, 236, "Third review, staggered 6 frames.", review("review-3", "Dana K.", "Cozy spot by the water,", "fast Wi-Fi, friendly people.", "2 weeks ago"));
+  add("synced-pill", 330, 64, "Reviews synced from Google daily.", G("synced", R(0, 0, 330, 64, { r: 32, fill: C.okSoft }) + I("check", 22, 20, 24, C.ok, 2.6) + T(58, 42, "Synced today", { size: 24, w: 600, fill: C.ok })));
+  const toggle = (on) => G("toggle", R(0, 0, 640, 88, { r: 12, fill: C.surface, stroke: C.line }) + T(28, 54, "Show 5-star reviews on your site", { size: 25, w: 500 }) + G("toggle-track", R(532, 24, 84, 42, { r: 21, fill: on ? C.coral : C.line })) + G("toggle-knob", `<circle cx="${on ? 595 : 553}" cy="45" r="16" fill="#fff"/>`));
+  add("toggle-off", 640, 88, "Toggle before the click. Knob slides 42 px with overshoot, track fills coral, soft coral glow when on.", toggle(false));
+  add("toggle-on", 640, 88, "Toggle after the click.", toggle(true));
+  add("feedback-link-card", 900, 120, "Feedback app: one review link. 5 stars go to Google, the rest come to you privately.",
+    card(0, 0, 900, 120, 12) + R(24, 26, 68, 68, { r: 12, fill: C.coral }) + I("star", 40, 42, 36, C.ink, 2.2) + T(116, 54, "Your review link", { size: 28, w: 600 }) + T(116, 90, "5 stars go to Google, the rest come to you.", { size: 22, w: 400, fill: C.dim }) + G("copy-link", pillBtn(748, 34, 124, 52, "Copy", { size: 22, fill: C.canvas })));
+
+  add("newsletter-compose", 980, 640, "Newsletter compose. Groups: nl-to, nl-subject (types on), nl-body, nl-send.",
+    card(0, 0, 980, 640, 14) + T(32, 60, "New newsletter", { size: 30, w: 600 }) + `<line x1="0" y1="96" x2="980" y2="96" stroke="${C.line}" stroke-width="2"/>` +
+    G("nl-to", T(32, 148, "To", { size: 22, w: 500, fill: C.dim }) + R(120, 118, 250, 46, { r: 6, fill: C.coralSoft }) + T(140, 149, "All customers", { size: 22, w: 600, fill: C.coralDeep })) +
+    G("nl-subject", T(32, 220, "Subject", { size: 22, w: 500, fill: C.dim }) + T(140, 220, "Holiday hours + a free pastry", { size: 28, w: 600 })) +
+    `<line x1="32" y1="252" x2="948" y2="252" stroke="${C.divider}" stroke-width="2"/>` +
+    G("nl-body", R(32, 282, 916, 220, { r: 10, fill: C.canvas }) + T(64, 340, "Harbor Coffee", { font: JAKARTA, size: 30, w: 800 }) + R(64, 368, 560, 16, { r: 8, fill: C.line }) + R(64, 400, 720, 16, { r: 8, fill: C.line }) + R(64, 432, 480, 16, { r: 8, fill: C.line })) +
+    G("nl-send", pillBtn(788, 548, 160, 64, "Send", { size: 28 })));
+  add("sent-toast", 560, 84, "Success toast. Chime on land.", G("sent", R(0, 0, 560, 84, { r: 12, fill: C.ink }) + checkDot(44, 42, 18) + T(80, 52, "Sent to your customers", { size: 26, w: 600, fill: "#fff" })));
+
+  const ORDERS = [["ubereats", "#A141", "Cold Brew, Bagel", "$11.75", "New", C.coral], ["shopify", "#1043", "Gift card", "$25.00", "Paid", C.ok], ["ubereats", "#A140", "2 Lattes, Croissant", "$18.40", "Preparing", C.warn], ["shopify", "#1042", "House Blend 1 lb × 2", "$36.00", "Paid", C.ok]];
+  const ordersFeed = (paused) =>
+    card(0, 0, 1180, 600, 14) + T(32, 60, "All orders", { size: 30, w: 600 }) + T(200, 60, "Today", { size: 22, w: 500, fill: C.dim }) +
+    (paused
+      ? G("paused", R(772, 22, 380, 64, { r: 32, fill: C.coralSoft }) + I("pause", 794, 41, 26, C.coralDeep, 2) + T(832, 64, "Paused for 30 min", { size: 24, w: 600, fill: C.coralDeep }))
+      : G("pause-btn", R(900, 26, 252, 56, { r: 6, fill: C.surface, stroke: C.line }) + I("pause", 922, 40, 26, C.ink, 2) + T(962, 63, "Pause store", { size: 24, w: 600 }))) +
+    `<line x1="0" y1="104" x2="1180" y2="104" stroke="${C.line}" stroke-width="2"/>` +
+    ORDERS.map(([b, id, items, amt, st, col], i) => G(`order-${i + 1}`, B(b, 32, 130 + i * 112, 56, 56) + T(110, 156 + i * 112, id, { size: 24, w: 600 }) + T(110, 188 + i * 112, items, { size: 22, w: 400, fill: C.dim }) + T(840, 172 + i * 112, amt, { size: 26, w: 600, anchor: "end" }) + R(890, 138 + i * 112, 260, 46, { r: 6, fill: C.canvas }) + `<circle cx="914" cy="${161 + i * 112}" r="7" fill="${col}"/>` + T(932, 169 + i * 112, st, { size: 22, w: 600, fill: C.ink2 }) + (i < 3 ? `<line x1="32" y1="${222 + i * 112}" x2="1148" y2="${222 + i * 112}" stroke="${C.divider}" stroke-width="2"/>` : ""))).join("");
+  add("orders-feed", 1180, 600, "Orders from Uber Eats + Shopify in one list. order-2 … order-4 stagger in 6 frames apart; order-1 is the new order that slides in at the top later and pushes the others down 112 px.", ordersFeed(false));
+  add("orders-feed-paused", 1180, 600, "Same card after the Pause click: group pause-btn is swapped for group paused (right edges aligned). Only that group changes.", ordersFeed(true));
+  add("paused-pill", 380, 64, "Standalone copy of the paused state, for a close-up.", G("paused", R(0, 0, 380, 64, { r: 32, fill: C.coralSoft }) + I("pause", 22, 19, 26, C.coralDeep, 2) + T(60, 42, "Paused for 30 min", { size: 24, w: 600, fill: C.coralDeep })));
+
+  const pts = [40, 44, 41, 52, 50, 58, 55, 63, 60, 70, 66, 74, 80, 76, 88];
+  const chartPath = pts.map((v, i) => `${i ? "L" : "M"}${40 + i * 58} ${330 - v * 2.6}`).join(" ");
+  add("analytics-chart", 900, 420, "Visitors chart. Line draws left to right (stroke-dashoffset, ~1 s ease-out), area fades in after, counter eases 0 → 2,481.",
+    card(0, 0, 900, 420, 14) + B("analytics", 28, 26, 36, 36) + T(80, 54, "Visitors", { size: 28, w: 600 }) + T(872, 54, "Last 30 days", { size: 22, w: 500, fill: C.dim, anchor: "end" }) +
+    G("visitors-count", T(28, 128, "2,481", { font: JAKARTA, size: 60, w: 800, ls: -2 }) + T(210, 126, "+18%", { size: 24, w: 600, fill: C.ok })) +
+    G("chart-grid", [170, 230, 290].map((y) => `<line x1="40" y1="${y}" x2="860" y2="${y}" stroke="${C.divider}" stroke-width="2"/>`).join("")) +
+    G("chart-area", `<path d="${chartPath} L${40 + 14 * 58} 380 L40 380Z" fill="${C.coral}" opacity="0.14"/>`) +
+    G("chart-line", `<path d="${chartPath}" fill="none" stroke="${C.coral}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`) +
+    G("chart-end", `<circle cx="${40 + 14 * 58}" cy="${330 - 88 * 2.6}" r="9" fill="${C.coral}" stroke="#fff" stroke-width="4"/>`));
+  add("top-pages", 520, 420, "Top pages list, rows stagger 4 frames.",
+    card(0, 0, 520, 420, 14) + T(28, 54, "Top pages", { size: 28, w: 600 }) +
+    [["/menu", "1,204"], ["/", "862"], ["/catering", "241"], ["/visit", "174"]].map(([p, v], i) => G(`page-${i + 1}`, T(28, 130 + i * 72, p, { font: MONO, size: 26, w: 400 }) + T(492, 130 + i * 72, v, { size: 26, w: 600, anchor: "end" }) + R(28, 146 + i * 72, 464 * [1, 0.72, 0.2, 0.15][i], 8, { r: 4, fill: C.coralSoft }))).join(""));
+  add("uptime-card", 520, 210, "Current status. Dot pulses slowly.",
+    card(0, 0, 520, 210, 14) + T(28, 54, "Current status", { size: 24, w: 500, fill: C.dim }) + G("status", `<circle cx="44" cy="118" r="14" fill="${C.ok}"/><circle cx="44" cy="118" r="26" fill="${C.ok}" opacity="0.16"/>` + T(80, 134, "Up", { font: JAKARTA, size: 56, w: 800, fill: C.ok })) + T(28, 186, "Up for 32 days", { size: 24, w: 500, fill: C.ink2 }));
+  add("uptime-strip", 1000, 150, "24 hourly bars (bar-1 … bar-24) grow in 3 frames apart, quiet tick on every 4th.",
+    card(0, 0, 1000, 150, 14) + T(28, 46, "Last 24 hours", { size: 22, w: 500, fill: C.dim }) + T(972, 46, "100%", { size: 22, w: 600, anchor: "end" }) +
+    Array.from({ length: 24 }, (_, i) => G(`bar-${i + 1}`, R(28 + i * 39.5, 70, 30, 56, { r: 5, fill: C.ok }))).join(""));
+  const probRow = (id, label, y) => G(id, R(0, y, 760, 76, { r: 10, fill: C.surface, stroke: C.line }) + checkDot(40, y + 38, 16) + T(72, y + 47, label, { size: 25, w: 500 }));
+  add("problem-rows", 760, 260, "Site Monitor checks, rows check-1 … check-3 cascade 6 frames apart.",
+    probRow("check-1", "No broken links", 0) + probRow("check-2", "SSL certificate valid", 92) + probRow("check-3", "No problems found today", 184));
+  add("speed-ring", 280, 280, "Speed score ring. Arc and number ease 0 → 96 over ~1 s.",
+    card(0, 0, 280, 280, 14) + T(140, 46, "Speed", { size: 22, w: 500, fill: C.dim, anchor: "middle" }) +
+    `<circle cx="140" cy="158" r="84" fill="none" stroke="${C.divider}" stroke-width="16"/>` +
+    G("speed-arc", `<circle cx="140" cy="158" r="84" fill="none" stroke="${C.ok}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${(2 * Math.PI * 84 * 0.96).toFixed(1)} 999" transform="rotate(-90 140 158)"/>`) +
+    G("speed-score", T(140, 176, "96", { font: JAKARTA, size: 58, w: 800, anchor: "middle" })));
+
+  const TILES = [["b:shopify", "Shopify"], ["b:wix", "Wix"], ["b:square", "Square"], ["b:ubereats", "Uber Eats"], ["b:google", "Reviews"], ["b:analytics", "Analytics"], ["b:calendar", "Calendar"], ["b:resend", "Resend"], ["b:neon", "Neon"], ["b:netlify", "Netlify"], ["i:inbox", "Leads"], ["i:mail", "Newsletter"], ["i:star", "Feedback"]];
+  add("app-icon-grid", 1400, 380, "Every app. Tiles app-tile-1 … 13 pop in 3 frames apart, left to right, row by row.",
+    TILES.map(([k, l], i) => {
+      const x = (i % 7) * 200 + (i >= 7 ? 100 : 0), y = Math.floor(i / 7) * 196;
+      const [t, n] = k.split(":");
+      const mark = t === "b" ? (n === "wix" ? B("wix", x + 46, y + 58, 108, 45) : B(n, x + 56, y + 30, 88, 88)) : R(x + 46, y + 20, 108, 108, { r: 22, fill: C.coral }) + I(n, x + 72, y + 46, 56, C.ink, 2);
+      const tile = t === "b" ? R(x + 36, y + 10, 128, 128, { r: 24, fill: C.surface, stroke: C.line }) : "";
+      return G(`app-tile-${i + 1}`, tile + mark + T(x + 100, y + 176, l, { size: 24, w: 600, anchor: "middle", fill: C.ink2 }));
+    }).join(""));
+
+  add("tagline", 1500, 260, "Payoff. Line 1 word by word, then logo lockup and URL with 4-frame offset.",
+    G("tag-line", T(750, 100, "One hub. Your whole business.", { font: JAKARTA, size: 100, w: 800, anchor: "middle", ls: -4 })) +
+    G("tag-logo", `<g transform="translate(560 160) scale(0.64)"><path d="${MARK}" fill="${C.ink}"/></g>` + T(642, 212, "alisamadii.com", { size: 44, w: 600, fill: C.ink2 })));
+
+  add("cursor", 44, 60, "Pointer. Moves on arcs (quadratic bezier), eases in/out, hesitates ~10 frames before each click, presses with a tiny scale.",
+    G("pointer", `<path d="M4 4l0 46 12-11 9 20 9-4-9-19 16-1z" fill="${C.ink}" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>`));
+  add("check", 48, 48, "Success check, scales in with overshoot.", checkDot(24, 24, 22));
+
+  // ---------- frames (1920 × 1080 key frames) ----------
+  const F = (inner) => { LAYOUTS.push(LOG.splice(0).join("; ")); return `<svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" role="img">${A["bg-warm"].body}${inner}</svg>`; };
+  const HUB = (x, y, title, content, s = 0.92) => { const inner = LOG.splice(0); LOG.push(`hub-shell at (${x}, ${y}) scale ${s}, active page and page title "${title}"; inside the window, in hub-local coordinates: [${inner.join("; ")}]`); return `<g transform="translate(${x} ${y}) scale(${s})">${hubShell(title)}${pageTitle(title)}${content}</g>`; };
+  const cap = (txt, y = 1000, size = 56) => { LOG.push(`caption "${txt}" centered on x 960, baseline y ${y}, ${size}px`); return T(960, y, txt, { font: JAKARTA, size, w: 800, anchor: "middle", ls: -2 }); };
+  const cursorAt = (x, y) => place("cursor", x, y);
+
+  const scenes = [
+    { name: "Tab chaos", role: "hook", from: 0, to: 240,
+      onscreen: "Warm canvas. Browser bar with 8 tabs piling in: Site builder, Texts, Reviews, Email list, Orders, Uptime, Analytics, Spreadsheet. Headline: \"Running a business means too many tabs.\"",
+      motion: "Tabs drop in with overshoot, 12 frames apart (f12–f96). Headline word by word from f110. At f216 the tabs start squeezing toward the center.",
+      camera: "Slow push-in 100% → 106%.",
+      frames: [F(place("browser-tabs", 140, 380)), F(place("browser-tabs", 140, 300) + place("headline-hook", 210, 520))] },
+    { name: "Meet Client Hub", role: "product", from: 240, to: 420,
+      onscreen: "Tabs collapse into one point. \"Meet [mark] Client Hub\". The hub window rises in with the Harbor Coffee project.",
+      motion: "Whoosh collapse f240–f262. Mark scales in with overshoot at f270, \"Meet\" and \"Client Hub\" slide out from behind it (f282). Hold to f350, then hub-shell rises from below on the Home page; sidebar items stagger 3 frames apart, home-dashboard cards 4 frames apart.",
+      camera: "Micro-push on the title, then ease out to frame the window.",
+      frames: [F(place("meet-title", 410, 460)), F(HUB(160, 90, "Home", place("home-dashboard", 360, 110), 1))] },
+    { name: "Custom site on your platform", role: "key promise", key: true, from: 420, to: 900,
+      onscreen: "Music drop. The custom-designed Harbor Coffee site on the left. On the right the platform logo cycles Shopify → Wix → Square, each with its homepage pill. Caption: \"Custom design. Your Shopify, Wix or Square stays.\"",
+      motion: "Site scales in 0.94 → 1 with overshoot (f430). Shopify lands at f480 with its pill 6 frames later. Crossfade + 20 px slide to Wix at f630 and Square at f780. Caption types on at f450 and stays for the whole scene.",
+      camera: "Slow drift right (±40 px) across the site, steady on the logo swaps.",
+      frames: [F(place("site-preview", 100, 180, 0.82) + place("platform-shopify", 1030, 330) + cap("Custom design. Your Shopify, Wix or Square stays.", 140, 54)),
+               F(place("site-preview", 100, 180, 0.82) + place("platform-square", 1030, 330) + cap("Custom design. Your Shopify, Wix or Square stays.", 140, 54))] },
+    { name: "Edit with AI", role: "feature", from: 900, to: 1200,
+      onscreen: "Hub on the Website page: site preview left, Edit with AI panel right. The prompt \"Change the hours to holiday hours\" types in, Send, the AI replies and the hours banner on the site changes. Caption: \"Edit text and photos yourself, with AI.\"",
+      motion: "Cursor arcs to the composer (f930), hesitates, clicks (f960). Typing f970–f1040. Send press f1060. msg-ai pops f1080. Banner crossfades to holiday hours f1100 with a coral flash on the banner edge.",
+      camera: "Zoom to ~125% on the composer for the typing, ease back to 100% for the banner change.",
+      frames: [F(HUB(224, 50, "Website", place("site-preview", 345, 110, 0.62) + place("editor-panel", 1020, 104, 0.98)) + cursorAt(1400, 715)),
+               F(HUB(224, 50, "Website", place("hours-banner-holiday", 345, 110, 0.62) + place("editor-panel", 1020, 104, 0.98)) + cap("Edit text and photos yourself, with AI.", 985, 50))] },
+    { name: "Publish, host, own it", role: "feature", from: 1200, to: 1500,
+      onscreen: "Publish button. After the click: \"Live on Netlify\". Then the Source code row: \"github.com/your-business/website\", \"Yours to keep\". Caption: \"One click to publish. The code is yours.\"",
+      motion: "Cursor arcs to Publish (f1230), hesitates 10 frames, presses at f1270. A thin progress line runs f1275–f1310. Netlify pill pops f1320 with a soft glow. Source row slides up f1380, the chip lands 8 frames later.",
+      camera: "Push to 130% on Publish for the click, pull back as the source row arrives.",
+      frames: [F(place("publish-btn", 840, 440, 1.4) + cursorAt(1120, 505)),
+               F(place("netlify-pill", 725, 300) + place("source-code-row", 480, 470) + cap("One click to publish. The code is yours.", 760, 54))] },
+    { name: "Leads + SMS", role: "feature", from: 1500, to: 1860,
+      onscreen: "Leads app inside the hub. A new website-form lead (Maya Brooks) drops to the top. Thread opens: \"Hi! Do you cater office events for about 30 people?\" Reply typed and sent by SMS, \"Delivered\". Caption: \"Every lead in one inbox. Reply by text.\"",
+      motion: "lead-card-1 drops in from above, other rows shift down (f1520). Cursor clicks it (f1560). msg-in pops f1600. Reply types f1620–f1720, send press f1730, msg-out slides up f1740, Delivered fades in f1770.",
+      camera: "Ease in on the thread (115%), drift up with the conversation.",
+      frames: [F(HUB(224, 50, "Leads", place("leads-inbox", 340, 92, 0.98))), F(HUB(224, 50, "Leads", place("leads-inbox", 340, 92, 0.98)) + cap("Every lead in one inbox. Reply by text.", 985, 50))] },
+    { name: "Google Reviews", role: "feature", from: 1860, to: 2160,
+      onscreen: "\"Synced today\". Three 5-star Google reviews. The toggle \"Show 5-star reviews on your site\" switches on. The Feedback review-link card. Caption: \"Your Google reviews, synced every day.\"",
+      motion: "Pill pops f1880. Review cards stagger 6 frames from f1900, stars fill one by one. Cursor arcs to the toggle, clicks f2030 (knob overshoot, coral glow). Feedback card slides up f2080.",
+      camera: "Slow pan left → right over the cards (≥ 0.8 s), settle on the toggle.",
+      frames: [F(place("synced-pill", 160, 150) + place("review-card-1", 160, 250) + place("review-card-2", 720, 250) + place("review-card-3", 1280, 250) + place("toggle-off", 160, 500)),
+               F(place("synced-pill", 160, 150) + place("review-card-1", 160, 250) + place("review-card-2", 720, 250) + place("review-card-3", 1280, 250) + place("toggle-on", 160, 500) + place("feedback-link-card", 860, 484) + cap("Your Google reviews, synced every day.", 820, 54))] },
+    { name: "Newsletter", role: "feature", from: 2160, to: 2400,
+      onscreen: "Compose a branded newsletter to all customers: \"Holiday hours + a free pastry\". Send. Toast: \"Sent to your customers\". Caption: \"Email your customers in your own branding.\"",
+      motion: "Card rises f2165. Subject types f2190–f2250. Cursor arcs to Send, press f2280. Card tilts back slightly and fades, toast lands f2320.",
+      camera: "Micro-push the whole scene, 100% → 104%.",
+      frames: [F(place("newsletter-compose", 470, 160) + cursorAt(1380, 760)), F(place("newsletter-compose", 470, 160, 1, 'opacity="0.35"') + place("sent-toast", 680, 470) + cap("Email your customers in your own branding.", 960, 54))] },
+    { name: "Orders", role: "feature", from: 2400, to: 2700,
+      onscreen: "Orders page: Uber Eats and Shopify orders in one list. A new order arrives. Busy night: the cursor hits \"Pause store\", which becomes \"Paused for 30 min\". Caption: \"Uber Eats and Shopify orders in one place.\"",
+      motion: "Rows order-2 to order-4 stagger 6 frames from f2420. order-1 (status New) slides in at the top at f2520 and pushes the others down 112 px. Cursor arcs to Pause store, hesitates, clicks f2620. The paused group replaces pause-btn with overshoot (orders-feed-paused).",
+      camera: "Pan down the list, then push 120% on the Pause button.",
+      frames: [F(HUB(224, 50, "Orders", place("orders-feed", 380, 120, 0.98))), F(HUB(224, 50, "Orders", place("orders-feed-paused", 380, 120, 0.98)) + cap("Uber Eats and Shopify orders in one place.", 985, 50))] },
+    { name: "Analytics", role: "feature", from: 2700, to: 2940,
+      onscreen: "Visitors chart draws in, counter eases to 2,481, +18%. Top pages list: /menu, /, /catering, /visit. Caption: \"See what's working.\"",
+      motion: "Chart card rises f2705. Line draws f2710–f2770, area fades in after. Counter eases over 60 frames. Top pages card rises f2780, rows stagger 4 frames from f2790 and their bars grow. Caption word by word f2830.",
+      camera: "Steady with a micro-push 100% → 104%; never fully still.",
+      frames: [F(place("analytics-chart", 510, 300)), F(place("analytics-chart", 230, 200) + place("top-pages", 1170, 200) + cap("See what's working.", 800, 64))] },
+    { name: "Site Monitor + Speed", role: "feature", from: 2940, to: 3180,
+      onscreen: "Status \"Up\", up for 32 days. 24-hour strip fills green. Checks cascade: no broken links, SSL valid, no problems found today. Speed score 96. Caption: \"We watch your site so you don't have to.\"",
+      motion: "Status pops f2950. Bars grow 3 frames apart f2970–f3040. Check rows cascade from f3060. Speed ring and number ease 0 → 96 f3100–f3160.",
+      camera: "Ease out slightly (100% → 96%) to fit everything.",
+      frames: [F(place("uptime-card", 160, 140) + place("uptime-strip", 760, 170)), F(place("uptime-card", 160, 140) + place("uptime-strip", 760, 170) + place("problem-rows", 160, 420) + place("speed-ring", 1000, 400) + cap("We watch your site so you don't have to.", 860, 56))] },
+    { name: "All apps + payoff", role: "payoff", from: 3180, to: 3600,
+      onscreen: "Music lift. The Site Monitor cards shrink back and fade, every app tile pops in: Shopify, Wix, Square, Uber Eats, Reviews, Analytics, Calendar, Resend, Neon, Netlify, Leads, Newsletter, Feedback. \"One hub. Your whole business.\" Mark + alisamadii.com.",
+      motion: "Tiles pop 3 frames apart from f3220. Tagline word by word f3330, logo + URL f3390. Hold until f3540, then everything fades back to the empty bg-warm canvas so frame 3599 matches frame 0.",
+      camera: "Pull back 115% → 100% as the tiles land, gentle push-in on the tagline.",
+      frames: [F(place("app-icon-grid", 260, 300)), F(place("tagline", 210, 380))] }
+  ];
+
+  // ---------- sound ----------
+  const SFX = [
+    ["click.wav", "Every cursor press", "Soft trackpad click, dry, 40–80 ms", "Soft modern UI click, single, dry, no reverb, 60 ms"],
+    ["type.wav", "Prompts and replies typing", "Quiet laptop keys, 1 s loop (the only long SFX)", "Gentle laptop keyboard typing loop, quiet, close mic, 1 second"],
+    ["whoosh.wav", "Tab collapse, big camera moves", "Airy, short, low-passed", "Short airy whoosh transition, soft, 300 ms, no rumble"],
+    ["pop.wav", "Cards, bubbles, tiles landing", "Rounded bubble pop, mid pitch", "Soft rounded UI pop, friendly, 120 ms"],
+    ["send.wav", "Message and newsletter sent", "Quick upward swish", "Quick upward swish for message sent, light, 250 ms"],
+    ["chime.wav", "Success: Live on Netlify, Sent, speed 96", "Two-note warm chime", "Warm two-note success chime, marimba, 400 ms"],
+    ["toggle.wav", "Toggle on, Pause store", "Small mechanical snap", "Small switch toggle snap, clean, 80 ms"],
+    ["tick.wav", "Uptime bars (every 4th bar)", "Very quiet tick", "Very soft high tick, subtle, 30 ms"]
+  ];
+  const CUES = [
+    [0, 1, "music", "Bed starts: soft pad, no drums"], [12, 1, "pop", "tab-1 (then every 12 f to tab-8, pitch up)"], [110, 1, "type", "Headline types on (low volume)"], [216, 1, "whoosh", "Tabs start squeezing"],
+    [240, 2, "whoosh", "Tabs collapse"], [270, 2, "pop", "Mark scales in"], [350, 2, "whoosh", "Hub window rises"],
+    [420, 3, "music", "Beat drop"], [480, 3, "pop", "Shopify lands"], [630, 3, "whoosh", "Swap to Wix (soft)"], [780, 3, "whoosh", "Swap to Square (soft)"],
+    [960, 4, "click", "Click composer"], [970, 4, "type", "Prompt typing until f1040"], [1060, 4, "click", "Send"], [1062, 4, "send", "Prompt sent"], [1100, 4, "pop", "Hours banner changes"],
+    [1270, 5, "click", "Publish"], [1320, 5, "chime", "Live on Netlify"], [1380, 5, "pop", "Source code row"],
+    [1520, 6, "pop", "New lead lands"], [1560, 6, "click", "Open lead"], [1600, 6, "pop", "Inbound text"], [1620, 6, "type", "Reply typing until f1720"], [1730, 6, "click", "Send"], [1740, 6, "send", "SMS sent"], [1770, 6, "chime", "Delivered (quiet)"],
+    [1880, 7, "pop", "Synced today"], [1900, 7, "pop", "Review cards (alternate, pitch up)"], [2030, 7, "toggle", "Show reviews on site"], [2080, 7, "pop", "Feedback link card"],
+    [2190, 8, "type", "Subject typing until f2250"], [2280, 8, "click", "Send"], [2284, 8, "send", "Newsletter sent"], [2320, 8, "chime", "Sent to your customers"],
+    [2420, 9, "pop", "Order rows (alternate)"], [2520, 9, "pop", "New order arrives"], [2620, 9, "toggle", "Pause store"],
+    [2710, 10, "whoosh", "Chart draws (very soft)"], [2790, 10, "pop", "Top pages rows (alternate)"],
+    [2950, 11, "pop", "Status Up"], [2970, 11, "tick", "Every 4th uptime bar until f3040"], [3060, 11, "pop", "Check rows (alternate)"], [3160, 11, "chime", "Speed score 96"],
+    [3180, 12, "music", "Lift: fuller chords"], [3190, 12, "whoosh", "Camera pull back"], [3220, 12, "pop", "App tiles (every other tile, pitch up)"], [3390, 12, "chime", "Logo + URL"], [3540, 12, "music", "Fade down to the opening pad until f3599"]
+  ];
+  const MUSIC = "Instrumental background music for a 60-second software product video. Warm, modern, optimistic, calm confidence. Soft electric piano and warm synth pad over light, clean percussion, around 100 BPM, major key. Structure: 0–7 s soft pad and piano only; at 7 s a gentle beat comes in (kick, soft clap, shaker); steady groove until 53 s; at 53 s a lift with fuller chords; last 1 s settles back to the opening pad so the track loops seamlessly. No vocals, no risers, no big drops, no dubstep, no cinematic hits. Mixed quiet enough to sit under UI sound effects.";
+  const BGS = [
+    ["bg-photo-warm.png (optional)", "Soft abstract background for a software product video, 16:9, 1920x1080. Warm off-white cream (#fffdfb) with a gentle blurred coral and peach glow (#fc8464, #ffb59a) rising from the bottom edge, very subtle paper grain, lots of empty space in the center. Minimal, premium, calm. No text, no UI, no logos, no people, no objects."],
+    ["bg-photo-depth.png (optional)", "Abstract depth background for a software product video, 16:9, 1920x1080. Out-of-focus warm cafe interior bokeh in cream and soft coral tones, heavily blurred so nothing is recognizable, bright and airy, center kept clean and light for UI cards on top. No text, no UI, no logos, no faces."]
+  ];
+
+  const fmt = (f) => { const s = f / 60; const m = Math.floor(s / 60); const r = (s - m * 60).toFixed(1).padStart(4, "0"); return `${m}:${r}`; };
+
+  const BUILD = `Build the Client Hub hero video with the launch-motion skill.
+
+Everything is in this message, in this order: these rules, the brief, the brand tokens, the storyboard (12 scenes, 3600 frames, with a layout line per key frame), the sound rules and cue sheet, optional backgrounds, the checklist, then the SVG assets.
+
+Rules:
+1. Remotion (React). 1920 x 1080, 60 fps, exactly 3600 frames (60.0 s). The storyboard is the source of truth: never reorder, add or drop a scene, and keep each scene's frame range exactly.
+2. Use the SVG assets as given. Paste each one into its own React component, keep every group id, and animate the groups. Ids repeat across assets (for example toggle-off and toggle-on), so never inline two assets into one DOM without scoping. Never rasterize UI or swap in screenshots. Text stays live so copy edits are one-line changes. Layout lines give the top-left position of each asset on the 1920 x 1080 canvas at key frame A (early in the scene) and key frame B (end of the scene); convert them to center-relative offsets.
+3. Put every piece of copy, every number (2,481 visitors, speed 96, 32 days), every color and every volume in one config.ts.
+4. Fonts: Plus Jakarta Sans (600–800), Inter (400–700), Fragment Mono from @remotion/google-fonts. delayRender until document.fonts.ready. A fallback font is a bug.
+5. Canvas locked to 1920 x 1080. Position everything from the center, so 1080 x 1920 and 1080 x 1080 cutdowns can re-render later. Text stays 5% inside every edge (96 px sides, 54 px top and bottom). The thing being read or clicked in each shot should sit in or pass through the center 1080 x 1080 square; supporting cards may sit outside it.
+6. Motion: nothing linear. Entrances ~30 frames with slight overshoot (spring damping ~14). Exits ~60% of the entrance, ease-in. Repeated items stagger 3–6 frames and never land together. Overlap moves: start the next one during the last 20% of the previous one. Nothing ever fully stops: holds drift ±4 px or scale 1 → 1.02, and the camera keeps a micro-push.
+7. Cursor: travels on arcs (quadratic bezier, control point offset ~15% of the distance), eases in and out, hesitates ~10 frames before every click, then presses at scale 1 → 0.96 → 1 over 8 frames.
+8. Counters (2,481, 96) ease out over ~60 frames and never jump in one frame. Typing is letter by letter, paced to fill the frame range the storyboard gives (about 2 frames per character).
+9. One <Camera> per scene; every pan and zoom is ease-in-out, and a full-width pan takes at least 0.8 s.
+10. Hero readability: key text is at least 28 px on the 1920 canvas. Captions use Plus Jakarta Sans 800.
+11. Seamless loop: frames 3540 to 3599 fade everything back to the empty bg-warm canvas, so frame 3599 looks like frame 0. Music fades down to the opening pad over the same frames and fades up over frames 0 to 30.
+12. Sound: read audio from public/audio (music.mp3, click.wav, type.wav, whoosh.wav, pop.wav, send.wav, chime.wav, toggle.wav, tick.wav). I will drop royalty-free files there; if one is missing, stop and ask before generating anything. Place each SFX with <Sequence from={frame}> exactly as the cue sheet says. Follow the mix rules below.
+13. Background: bg-warm SVG with light parallax on the glow (±12 px). Use the optional Higgsfield backgrounds only if they were generated.
+14. Process: restate the scene list with frame ranges and check that the sum is 3600. Build one component per scene, plus shared theme.ts, <Camera>, <Cursor>, <Counter> and <Typewriter>. Render one still per scene at its key frame and at every scene boundary, fix any overlap or element leaving the canvas, and only then render the full video.
+15. Output: out/hero-master.mp4 (H.264, yuv420p, CRF ~16, AAC 192 kbps, any size), then web encodes out/hero.mp4 and out/hero.webm (VP9 + Opus) under 8 MB each: the size cap wins, so raise the CRF (23 to 30) and drop audio to 128 kbps before touching length or resolution. Also out/poster.webp from frame 3480 (tagline hold).
+16. On a revision, change the smallest thing that fixes it and re-render.
+
+Credits: do not call any Higgsfield video model. Higgsfield is only for the music bed (one generation) and, if I say so, missing SFX in one batch call. Generate a background only if I ask for one. Ask before every paid call.`;
+
+  // ---------- render page ----------
+  const $ = (id) => document.getElementById(id);
+  const SW = [["canvas", C.canvas], ["page bg", C.page], ["surface", C.surface], ["line", C.line], ["ink", C.ink], ["dim", C.dim], ["coral", C.coral], ["coral-soft", C.coralSoft], ["coral-text", C.coralText], ["success", C.ok]];
+  $("swatches").innerHTML = SW.map(([n, h]) => `<div class="sw"><i style="background:${h}"></i><div><span>${n}</span><span class="mono muted">${h}</span></div></div>`).join("");
+
+  const total = scenes.reduce((s, x) => s + (x.to - x.from), 0);
+  $("sum").innerHTML = scenes.map((s) => s.to - s.from).join(" + ") + ` = <b>${total}</b> frames (${(total / 60).toFixed(1)} s) ${total === 3600 ? "✓" : "✗ does not match 3600"}`;
+
+  const cuesFor = (i) => CUES.filter((c) => c[1] === i + 1).map((c) => `<span>f${c[0]} · ${c[2]} · ${esc(c[3])}</span>`).join("");
+  $("scenes").innerHTML = scenes.map((s, i) => `
+    <article class="scene${s.key ? " key" : ""}">
+      <div class="thumbs">${s.frames.join("")}</div>
+      <div class="scene-title"><h3>${i + 1} · ${esc(s.name)}<span class="role">${esc(s.role)}</span></h3><span class="tc">${fmt(s.from)}–${fmt(s.to)} · f${s.from}–${s.to - 1}</span></div>
+      <dl>
+        <dt>On screen</dt><dd>${esc(s.onscreen)}</dd>
+        <dt>Motion</dt><dd>${esc(s.motion)}</dd>
+        <dt>Camera</dt><dd>${esc(s.camera)}</dd>
+        <dt>Sound</dt><dd class="cues">${cuesFor(i)}</dd>
+      </dl>
+    </article>`).join("");
+
+  $("asset-grid").innerHTML = Object.values(A).map((a) => `
+    <div class="asset">
+      <div class="stage">${svgOf(a.id)}</div>
+      <div class="info">
+        <div class="row"><code>${a.id}.svg</code><button class="copy" type="button" data-asset="${a.id}">Copy SVG</button></div>
+        <p>${esc(a.note)} <span class="mono">${a.w}×${a.h}</span></p>
+      </div>
+    </div>`).join("");
+
+  $("music-prompt").textContent = MUSIC;
+  $("sfx-table").querySelector("tbody").innerHTML = SFX.map((r) => `<tr><td class="num">${r[0]}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td></tr>`).join("");
+  $("cue-table").querySelector("tbody").innerHTML = CUES.map((c) => `<tr><td class="num">${c[0]}</td><td class="num">${fmt(c[0])}</td><td>${c[1]} · ${esc(scenes[c[1] - 1].name)}</td><td class="num">${c[2]}</td><td>${esc(c[3])}</td></tr>`).join("");
+  $("bg-prompts").innerHTML = BGS.map(([n, p]) => `<div class="panel" style="background:var(--bg)"><h3 class="mono" style="font-weight:400">${n}</h3><pre class="prompt">${esc(p)}</pre></div>`).join("");
+  $("build-prompt").textContent = BUILD;
+
+  const PIC = ["Canvas 1920 × 1080, everything positioned from the center.", "Fonts loaded before frame 0. No Times anywhere.", "No overlapping text at any frame (stills at every scene boundary).", "Counters ease over ~1 s, never jump.", "Cards, rows, tiles, stars and bars stagger, never land together.", "Every camera move is ease-in-out and slow enough to read.", "Nothing leaves the canvas unless it is exiting on purpose.", "Key text ≥ 28 px; captions readable at 1100 px wide.", "Only demo data (Harbor Coffee). No real client names."];
+  const SND = ["Total is exactly 3600 frames.", "Frame 3599 matches frame 0 (empty bg-warm).", "Every SFX lands on its cue frame; max 2 at once.", "No clipping; music ducks under hits.", "Loop point has no audio click.", "hero.mp4 and hero.webm under 8 MB each, plus poster.webp from frame 3480.", "Hero embed (later step): muted autoplay loop playsinline, speaker toggle to unmute, poster for prefers-reduced-motion."];
+  $("check-picture").innerHTML = PIC.map((t) => `<li>${esc(t)}</li>`).join("");
+  $("check-sound").innerHTML = SND.map((t) => `<li>${esc(t)}</li>`).join("");
+
+  // ---------- copy ----------
+  const kitText = () => {
+    const lines = [];
+    lines.push(BUILD, "", "# Brief", document.querySelector("#brief .panel").innerText.trim(), "");
+    lines.push("# Brand", SW.map(([n, h]) => `${n}: ${h}`).join("\n"), "Type:", $("type-rules").innerText.trim(), "UI rules:", $("ui-rules").innerText.trim(), "");
+    lines.push(`# Storyboard (12 scenes, ${total} frames, 60 fps)`);
+    scenes.forEach((s, i) => lines.push(`\n## Scene ${i + 1} · ${s.name} (${s.role}) · ${fmt(s.from)}–${fmt(s.to)}, frames ${s.from}–${s.to - 1}`, `- On screen: ${s.onscreen}`, `- Motion: ${s.motion}`, `- Camera: ${s.camera}`, `- Layout, key frame A: ${LAYOUTS[i * 2]}`, `- Layout, key frame B: ${LAYOUTS[i * 2 + 1]}`));
+    lines.push("", "# Sound", "Music prompt (generate once): " + MUSIC, "", "Mix rules:", $("mix-rules").innerText.trim(), "", "SFX files:", ...SFX.map((r) => `- ${r[0]}: ${r[1]}. ${r[2]}. Fallback prompt: ${r[3]}`), "", "Cue sheet (frame · scene · sound · on):", ...CUES.map((c) => `- f${c[0]} · scene ${c[1]} · ${c[2]} · ${c[3]}`));
+    lines.push("", "# Optional backgrounds (only if asked)", ...BGS.map(([n, p]) => `- ${n}: ${p}`));
+    lines.push("", "# Pre-render checklist", ...PIC.concat(SND).map((t) => "- " + t));
+    lines.push("", "# SVG assets (1920 x 1080 canvas, scale 1)");
+    Object.values(A).forEach((a) => lines.push(`\n## ${a.id}.svg (${a.w}x${a.h})\n${a.note}\n${svgOf(a.id)}`));
+    return lines.join("\n");
+  };
+  const allSvgs = () => Object.values(A).map((a) => `<!-- ${a.id}.svg: ${a.note} -->\n${svgOf(a.id)}`).join("\n\n");
+  const copy = async (btn, text, label) => {
+    try { await navigator.clipboard.writeText(text); }
+    catch (e) {
+      document.querySelectorAll("textarea.fallback").forEach((t) => t.remove());
+      const ta = document.createElement("textarea"); ta.className = "fallback"; ta.readOnly = true; ta.value = text;
+      (btn.closest(".info, .sec-head") || btn.parentElement).appendChild(ta); ta.focus(); ta.select();
+      btn.textContent = "Selected below, press copy";
+      setTimeout(() => { btn.textContent = label; }, 4000); return;
+    }
+    btn.classList.add("done"); btn.textContent = "Copied";
+    setTimeout(() => { btn.classList.remove("done"); btn.textContent = label; }, 1600);
+  };
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button.copy"); if (!b) return;
+    if (b.dataset.asset) copy(b, svgOf(b.dataset.asset), "Copy SVG");
+    else if (b.id === "copy-prompt") copy(b, BUILD, "Copy prompt");
+    else if (b.id === "copy-kit") copy(b, kitText(), "Copy full kit");
+    else if (b.id === "copy-all-svg") copy(b, allSvgs(), "Copy all SVGs");
+  });
+})();
+</script>

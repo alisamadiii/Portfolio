@@ -252,6 +252,9 @@ function ListingCard({ data, source }: { data: Data; source: Source }) {
       />
       <div className="flex flex-col gap-4 p-6 text-sm">
         <Listing data={data} />
+        <p className="text-dim">
+          New reviews are added automatically every morning around 6 AM Eastern. Sync now is only for checking right away.
+        </p>
         {source.lastError && (
           <p className="rounded-inner border border-line bg-canvas px-4 py-3 text-dim">
             The last check didn&apos;t finish. We&apos;ll try again tomorrow, or press Sync now.
