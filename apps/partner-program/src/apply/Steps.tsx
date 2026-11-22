@@ -142,7 +142,7 @@ export function StepAgreement(props: StepProps & { hasRead: boolean; onRead: () 
             aria-describedby={errors.agree ? 'agree-err' : undefined}
             onChange={(e) => onChange('agree', e.target.checked)}
           />
-          <span>I've read and agree to the Partner Agreement. I understand payouts are one-time, 40% of a referred business's first website payment after payment processing fees, sent after they pay.</span>
+          <span>I've read and agree to the Partner Agreement. I understand payouts are one-time, 20% of a referred business's first website payment after payment processing fees, sent after they pay.</span>
         </label>
         {errors.agree && <p className="field-error" id="agree-err">✕ {errors.agree}</p>}
       </div>

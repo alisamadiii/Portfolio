@@ -52,7 +52,7 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { CLIENT_PAYMENT_LABELS, formatCents } from "@workspace/trpc/lib/partners-shared";
+import { CLIENT_PAYMENT_LABELS, formatCents, formatRate } from "@workspace/trpc/lib/partners-shared";
 import { urls } from "@workspace/ui/lib/company";
 
 import { Content } from "@/components/content-admin";
@@ -92,7 +92,7 @@ export default function PartnerPage() {
   >(null);
   const [clientPaid, setClientPaid] = useState<Referral | null>(null);
   const [partnerPaid, setPartnerPaid] = useState<Referral | null>(null);
-  const [admin, setAdmin] = useState<{ payoutMethod: string; notes: string } | null>(null);
+  const [admin, setAdmin] = useState<{ payoutMethod: string; commission: string; notes: string } | null>(null);
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: trpc.partners.get.queryKey({ id }) });
@@ -306,7 +306,7 @@ export default function PartnerPage() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-semibold">Payout &amp; notes</h2>
             {!admin && (
-              <Button variant="ghost" size="sm" onClick={() => setAdmin({ payoutMethod: p.payoutMethod ?? "", notes: p.notes ?? "" })}>
+              <Button variant="ghost" size="sm" onClick={() => setAdmin({ payoutMethod: p.payoutMethod ?? "", commission: String(p.commissionBps / 100), notes: p.notes ?? "" })}>
                 Edit
               </Button>
             )}
@@ -316,7 +316,12 @@ export default function PartnerPage() {
               className="space-y-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                update.mutate({ id, payoutMethod: admin.payoutMethod, notes: admin.notes });
+                const pct = Number(admin.commission);
+                if (!admin.commission.trim() || !Number.isFinite(pct) || pct < 0 || pct > 100) {
+                  toast.error("Enter a commission from 0 to 100%.");
+                  return;
+                }
+                update.mutate({ id, payoutMethod: admin.payoutMethod, commissionBps: Math.round(pct * 100), notes: admin.notes });
               }}
             >
               <div className="space-y-1.5">
@@ -328,6 +333,17 @@ export default function PartnerPage() {
                   value={admin.payoutMethod}
                   onChange={(e) => setAdmin({ ...admin, payoutMethod: e.target.value })}
                 />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="commission">Commission (%)</Label>
+                <Input
+                  id="commission"
+                  inputMode="decimal"
+                  placeholder="20"
+                  value={admin.commission}
+                  onChange={(e) => setAdmin({ ...admin, commission: e.target.value })}
+                />
+                <p className="text-muted-foreground text-xs">Of each referred client&apos;s first payment after provider fees. Already recorded commissions don&apos;t change.</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="notes">Private notes</Label>
@@ -342,6 +358,8 @@ export default function PartnerPage() {
             <dl className="grid grid-cols-[120px_1fr] gap-y-2 text-sm">
               <dt className="text-muted-foreground">Payout method</dt>
               <dd>{p.payoutMethod || "—"}</dd>
+              <dt className="text-muted-foreground">Commission</dt>
+              <dd>{formatRate(p.commissionBps)}</dd>
               <dt className="text-muted-foreground">Notes</dt>
               <dd className="whitespace-pre-wrap">{p.notes || "—"}</dd>
             </dl>
@@ -552,6 +570,7 @@ export default function PartnerPage() {
           key={`${editing.mode}-${editing.referral?.id ?? "new"}`}
           mode={editing.mode}
           partnerId={id}
+          commissionBps={p.commissionBps}
           referral={editing.referral}
           onOpenChange={(open) => !open && setEditing(null)}
           onDone={refresh}
@@ -560,6 +579,7 @@ export default function PartnerPage() {
       <ClientPaidDialog
         key={`cp-${clientPaid?.id ?? "none"}`}
         referral={clientPaid}
+        commissionBps={p.commissionBps}
         onOpenChange={(open) => !open && setClientPaid(null)}
         onDone={refresh}
       />

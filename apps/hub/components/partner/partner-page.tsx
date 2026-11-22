@@ -6,7 +6,7 @@ import { ArrowUpRight, Copy, Download, Handshake, Send, UserPlus, Wallet } from 
 import { toast } from "sonner";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { formatCents } from "@workspace/trpc/lib/partners-shared";
+import { DEFAULT_COMMISSION_BPS, formatCents, formatRate } from "@workspace/trpc/lib/partners-shared";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { Skeleton } from "@workspace/ui/components/skeleton";
 
@@ -61,7 +61,7 @@ function NotPartner() {
   const steps = [
     { icon: <UserPlus className="size-5" />, title: "Apply", text: "Tell us a bit about you. We review every application by hand." },
     { icon: <Send className="size-5" />, title: "Refer", text: "Share your code with a local business that needs a website." },
-    { icon: <Wallet className="size-5" />, title: "Get paid", text: "Earn 40% of their first website payment, after payment processing fees." },
+    { icon: <Wallet className="size-5" />, title: "Get paid", text: `Earn ${formatRate(DEFAULT_COMMISSION_BPS)} of their first website payment, after payment processing fees.` },
   ];
   return (
     <div className="flex flex-col gap-6">
@@ -71,11 +71,11 @@ function NotPartner() {
         </IconTile>
         <div className="flex max-w-[620px] flex-col gap-2">
           <h2 className="text-xl font-semibold tracking-[-0.01em]">
-            Earn 40% when a business you refer pays for its website
+            Earn {formatRate(DEFAULT_COMMISSION_BPS)} when a business you refer pays for its website
           </h2>
           <p className="text-sm leading-relaxed text-dim">
             Know local business owners who need a website? Introduce them to us. When a business you referred pays for
-            its website, you get 40% of that first payment, after payment processing fees. If they don&apos;t pay, there&apos;s no payout. You
+            its website, you get {formatRate(DEFAULT_COMMISSION_BPS)} of that first payment, after payment processing fees. If they don&apos;t pay, there&apos;s no payout. You
             don&apos;t earn from the monthly subscription, and joining is free.
           </p>
         </div>
@@ -191,7 +191,12 @@ function ApprovedPartner({ partner }: { partner: Partner }) {
         <CardHeader
           title="Your referral code"
           divided
-          action={<Badge tone="success" dot>Partner since {day(partner.approvedAt)}</Badge>}
+          action={
+            <span className="flex flex-wrap items-center gap-2">
+              <Badge tone="neutral">{formatRate(partner.commissionBps)} commission</Badge>
+              <Badge tone="success" dot>Partner since {day(partner.approvedAt)}</Badge>
+            </span>
+          }
         />
         <div className="flex flex-col gap-4 px-6 py-5">
           <button
@@ -203,7 +208,7 @@ function ApprovedPartner({ partner }: { partner: Partner }) {
             <Copy className="size-4 text-dim" />
           </button>
           <p className="max-w-[620px] text-[13px] leading-normal text-dim">
-            Businesses can enter your code on our quote form, mention it when we talk, or use your link. You earn 40%
+            Businesses can enter your code on our quote form, mention it when we talk, or use your link. You earn {formatRate(partner.commissionBps)}
             of a referred business&apos;s first website payment after payment processing fees, sent after they pay.
           </p>
           <div className="flex flex-wrap items-center gap-2">

@@ -15,8 +15,8 @@ import { hubProject } from "./hub";
 
 // ─── Partner program ─────────────────────────────────────────────
 // Referral partners apply on partners.alisamadii.com, Ali approves them by
-// hand in admin, and they earn 40% of a referred client's first website
-// payment after payment processing fees. Status/source columns are plain text (not pgEnum), like hub.ts.
+// hand in admin, and they earn their commission rate (default 20%) of a
+// referred client's first website payment after payment processing fees. Status/source columns are plain text (not pgEnum), like hub.ts.
 
 export const PARTNER_STATUS_VALUES = ["pending", "approved", "rejected"] as const;
 export type PartnerStatus = (typeof PARTNER_STATUS_VALUES)[number];
@@ -78,6 +78,9 @@ export const partner = pgTable(
 
     // "Zelle: handle" from the application (2026-11.2+); admin can edit it.
     payoutMethod: text("payout_method"),
+    // Share of the net first payment, in basis points (2000 = 20%). Admin
+    // sets it per partner; must default to DEFAULT_COMMISSION_BPS.
+    commissionBps: integer("commission_bps").notNull().default(2000),
     // Admin only.
     notes: text("notes"),
     approvedAt: timestamp("approved_at"),
@@ -99,7 +102,7 @@ export const partner = pgTable(
 
 // A Client Hub project a partner referred (set by Ali, admin only). Money in
 // cents. "Paying" = clientPaidAt set, "paid out" = partnerPaidAt set;
-// commission defaults to 40% of what the client paid. Form referrals (a code
+// commission defaults to the partner's rate of what the client paid. Form referrals (a code
 // typed on www.alisamadii.com) start as leads with no project until linked.
 export const partnerReferral = pgTable(
   "partner_referral",

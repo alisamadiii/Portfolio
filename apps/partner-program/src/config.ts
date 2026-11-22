@@ -5,8 +5,8 @@
  */
 export const program = {
   company: 'Ali Samadii LLC',
-  payoutRate: 0.4,
-  // Stripe's standard US card fee, taken off the first payment before the 40%.
+  payoutRate: 0.2,
+  // Stripe's standard US card fee, taken off the first payment before the 20%.
   // Used for "about" figures and the calculator only: real fees vary.
   cardFeeRate: 0.029,
   cardFeeFixed: 0.3,
@@ -17,7 +17,7 @@ export const program = {
   approvalDays: '2',
   refundPolicy: "If the business is refunded before your payout is sent, no payout is owed. Once it's sent, it's yours to keep.",
   // Must equal PARTNER_AGREEMENT_VERSION in packages/trpc/src/lib/partners-shared.ts.
-  agreementVersion: '2026-11.2',
+  agreementVersion: '2026-11.3',
 
   // Product facts used in examples.
   mainPlanPrice: 699,

@@ -15,10 +15,10 @@ export function Hero() {
             {program.company} Partner Program
           </p>
           <h1 className="h1" data-reveal="2">
-            Earn <span className="underline-coral">40%</span> of what a business you refer pays for its website, after payment processing fees.
+            Earn <span className="underline-coral">20%</span> of what a business you refer pays for its website, after payment processing fees.
           </h1>
           <p className="hero__sub" data-reveal="3">
-            When they pay, you get 40% of their first website payment after the payment provider's fee. If they don't
+            When they pay, you get 20% of their first website payment after the payment provider's fee. If they don't
             pay, there's no payout. Simple and honest.
           </p>
           <div className="hero__ctas" data-reveal="4">
@@ -45,7 +45,7 @@ export function Hero() {
               <div className="track__fill track__fill--hero" />
             </div>
             <div className="payout-card__row muted" style={{ marginTop: 8, fontSize: 13, fontWeight: 600 }}>
-              <span>40% to you, after fees</span>
+              <span>20% to you, after fees</span>
               <span>60% stays with us</span>
             </div>
             <div className="payout-card__row muted" style={{ marginTop: 14, fontSize: 14 }}>

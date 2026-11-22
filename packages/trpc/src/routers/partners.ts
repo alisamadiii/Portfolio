@@ -39,7 +39,7 @@ import { deletePrivateObject, presignPrivateGet, putPrivateObject } from "../lib
 // Partner Program admin (admin.alisamadii.com/partners). Ali approves
 // partners by hand, sets which Client Hub project each partner referred
 // (with the website price), marks when the client paid (Stripe, Cash App,
-// ...) and when the partner's 40% was sent. Partners only read (`me`).
+// ...) and when the partner's commission was sent. Partners only read (`me`).
 
 const idInput = z.object({ id: z.uuid() });
 
@@ -219,6 +219,7 @@ export const partnersRouter = createTRPCRouter({
         approvedAt: partner.approvedAt,
         pdfToken: partner.pdfToken,
         agreementKey: partner.agreementKey,
+        commissionBps: partner.commissionBps,
       })
       .from(partner)
       .where(
@@ -261,6 +262,7 @@ export const partnersRouter = createTRPCRouter({
       createdAt: p.createdAt,
       approvedAt: p.approvedAt,
       agreementUrl: p.agreementKey ? agreementUrl(p.pdfToken) : null,
+      commissionBps: p.commissionBps,
       referrals,
       stats: partnerStats(referrals),
     };
@@ -298,6 +300,7 @@ export const partnersRouter = createTRPCRouter({
         email: p.email,
         occupation: p.occupation,
         city: p.city,
+        commissionBps: p.commissionBps,
         createdAt: p.createdAt,
         stats: partnerStats(byPartner.get(p.id) ?? []),
       })),
@@ -464,6 +467,7 @@ export const partnersRouter = createTRPCRouter({
       idInput.extend({
         phone: optText(40).optional(),
         payoutMethod: optText(300).optional(),
+        commissionBps: z.number().int().min(0).max(10_000).optional(),
         notes: optText(5000).optional(),
       })
     )
@@ -563,7 +567,7 @@ export const partnersRouter = createTRPCRouter({
 
   approvedPartners: adminProcedure.query(() =>
     db
-      .select({ id: partner.id, fullName: partner.fullName, code: partner.code })
+      .select({ id: partner.id, fullName: partner.fullName, code: partner.code, commissionBps: partner.commissionBps })
       .from(partner)
       .where(eq(partner.status, "approved"))
       .orderBy(asc(partner.fullName))
@@ -626,8 +630,8 @@ export const partnersRouter = createTRPCRouter({
     return { ok: true };
   }),
 
-  // The client paid for its website. Commission defaults to 40% of the
-  // payment after the provider fee (the method's default fee unless given).
+  // The client paid for its website. Commission defaults to the partner's
+  // rate of the payment after the provider fee (the method's default fee unless given).
   markClientPaid: adminProcedure
     .input(
       referralIdInput.extend({
@@ -645,6 +649,7 @@ export const partnersRouter = createTRPCRouter({
       if (!amount) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Enter the amount the client paid." });
       }
+      const { commissionBps } = await getPartner(r.partnerId);
       await db
         .update(partnerReferral)
         .set({
@@ -656,7 +661,8 @@ export const partnersRouter = createTRPCRouter({
             commissionFor(
               amount,
               input.feeCents ??
-                providerFeeCents(amount, PROVIDER_FEES[input.method].percent, PROVIDER_FEES[input.method].fixedCents)
+                providerFeeCents(amount, PROVIDER_FEES[input.method].percent, PROVIDER_FEES[input.method].fixedCents),
+              commissionBps
             ),
           status: "won",
         })

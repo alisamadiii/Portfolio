@@ -32,6 +32,7 @@ import {
   CLIENT_PAYMENT_LABELS,
   commissionFor,
   formatCents,
+  formatRate,
   PROVIDER_FEES,
   providerFeeCents,
   RECEIPT_MAX_BYTES,
@@ -69,8 +70,8 @@ const toBase64 = (file: File) =>
   });
 const dollars = (cents: number | null | undefined) => (cents ? String(cents / 100) : "");
 
-/** Website price: $699 / $1,199 quick picks or a custom amount, with the 40% preview. */
-function PriceField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+/** Website price: $699 / $1,199 quick picks or a custom amount, with the partner's commission preview. */
+function PriceField({ value, onChange, bps }: { value: string; onChange: (v: string) => void; bps: number }) {
   const cents = toCents(value);
   return (
     <div className="space-y-1.5">
@@ -99,7 +100,7 @@ function PriceField({ value, onChange }: { value: string; onChange: (v: string) 
       </div>
       <p className="text-muted-foreground text-xs">
         {cents
-          ? `What the client pays for the website. Partner earns 40% after card fees: about ${formatCents(commissionFor(cents, providerFeeCents(cents, PROVIDER_FEES.stripe.percent, PROVIDER_FEES.stripe.fixedCents)))}.`
+          ? `What the client pays for the website. Partner earns ${formatRate(bps)} after card fees: about ${formatCents(commissionFor(cents, providerFeeCents(cents, PROVIDER_FEES.stripe.percent, PROVIDER_FEES.stripe.fixedCents), bps))}.`
           : "What the client pays for the website."}
       </p>
     </div>
@@ -142,12 +143,14 @@ function ProjectField({ value, onChange }: { value: string; onChange: (v: string
 export function ReferralDialog({
   mode,
   partnerId,
+  commissionBps,
   referral,
   onOpenChange,
   onDone,
 }: {
   mode: "add" | "link" | "edit";
   partnerId: string;
+  commissionBps: number;
   referral: Referral | null;
   onOpenChange: (open: boolean) => void;
   onDone: () => void;
@@ -197,7 +200,7 @@ export function ReferralDialog({
           }}
         >
           {mode !== "edit" && <ProjectField value={projectId} onChange={setProjectId} />}
-          <PriceField value={price} onChange={setPrice} />
+          <PriceField value={price} onChange={setPrice} bps={commissionBps} />
           {mode === "edit" && (
             <>
               <div className="space-y-1.5">
@@ -235,10 +238,12 @@ export function ReferralDialog({
 /** The referred client paid: amount (defaults to the price), date, method. */
 export function ClientPaidDialog({
   referral,
+  commissionBps,
   onOpenChange,
   onDone,
 }: {
   referral: Referral | null;
+  commissionBps: number;
   onOpenChange: (open: boolean) => void;
   onDone: () => void;
 }) {
@@ -255,7 +260,7 @@ export function ClientPaidDialog({
   const fixed = Math.round(Number(feeFixed) || 0);
   const feeValid = pct >= 0 && pct < 100 && fixed >= 0;
   const fee = cents && feeValid ? providerFeeCents(cents, pct, fixed) : 0;
-  const suggested = cents ? commissionFor(cents, fee) : null;
+  const suggested = cents ? commissionFor(cents, fee, commissionBps) : null;
 
   const changeMethod = (m: PaymentMethod) => {
     setMethod(m);
@@ -280,7 +285,7 @@ export function ClientPaidDialog({
         <DialogHeader>
           <DialogTitle>Client paid</DialogTitle>
           <DialogDescription>
-            {referral?.project?.name ?? referral?.businessName} paid for its website. The partner earns 40% of this
+            {referral?.project?.name ?? referral?.businessName} paid for its website. The partner earns {formatRate(commissionBps)} of this
             first payment after the payment provider&apos;s fee.
           </DialogDescription>
         </DialogHeader>
@@ -343,12 +348,12 @@ export function ClientPaidDialog({
             <Input
               id="cp-commission"
               inputMode="decimal"
-              placeholder={suggested ? `${(suggested / 100).toFixed(2)} (40% of net)` : "40% of net"}
+              placeholder={suggested ? `${(suggested / 100).toFixed(2)} (${formatRate(commissionBps)} of net)` : `${formatRate(commissionBps)} of net`}
               value={commission}
               onChange={(e) => setCommission(e.target.value)}
             />
             <p className="text-muted-foreground text-xs">
-              Leave empty for 40% of net{suggested ? `: ${formatCents(suggested)}` : ""}.
+              Leave empty for {formatRate(commissionBps)} of net{suggested ? `: ${formatCents(suggested)}` : ""}.
             </p>
           </div>
           <DialogFooter>

@@ -8,6 +8,7 @@ import { useTRPC } from "@workspace/trpc/client";
 import {
   commissionFor,
   formatCents,
+  formatRate,
   WEBSITE_PRICE_PRESETS,
 } from "@workspace/trpc/lib/partners-shared";
 import {
@@ -37,7 +38,7 @@ export type ProjectReferral = {
 
 /**
  * Admin only: which partner referred this project, and the website price the
- * client pays (the partner earns 40% of it once the client pays).
+ * client pays (the partner earns their commission rate of it once the client pays).
  */
 export function ReferralDialog({
   project,
@@ -54,6 +55,7 @@ export function ReferralDialog({
   const [partnerId, setPartnerId] = useState(current?.partnerId ?? "");
   const [price, setPrice] = useState(current?.priceCents ? String(current.priceCents / 100) : "699");
   const cents = toCents(price);
+  const bps = partners.data?.find((p) => p.id === partnerId)?.commissionBps;
 
   const save = useMutation(
     trpc.partners.setProjectReferral.mutationOptions({
@@ -124,7 +126,9 @@ export function ReferralDialog({
             </div>
             <span className="text-[13px] text-dim">
               {cents
-                ? `What the client pays for the website. Partner earns 40%: ${formatCents(commissionFor(cents))}, after the client pays.`
+                ? bps != null
+                  ? `What the client pays for the website. Partner earns ${formatRate(bps)}: ${formatCents(commissionFor(cents, 0, bps))}, after the client pays.`
+                  : "What the client pays for the website. Choose a partner to see their commission."
                 : "Enter what the client pays for the website."}
             </span>
           </div>

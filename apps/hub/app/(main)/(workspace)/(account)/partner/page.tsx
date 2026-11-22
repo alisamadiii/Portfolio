@@ -10,7 +10,7 @@ export default function PartnerProgramPage() {
       <DocumentTitle title="Partner Program" />
       <PageHeader
         title="Partner Program"
-        description="Refer local businesses that need a website and earn 40% of their first website payment, after payment processing fees."
+        description="Refer local businesses that need a website and earn 20% of their first website payment, after payment processing fees."
       />
       <PartnerPage />
     </>

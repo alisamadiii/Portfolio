@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { partner } from "@workspace/drizzle/schema/partner";
 import {
   CODE_ALPHABET,
   commissionFor,
+  DEFAULT_COMMISSION_BPS,
   formatCents,
+  formatRate,
   generatePartnerCode,
   normalizePartnerCode,
   partnerCodeError,
@@ -17,9 +20,26 @@ import {
 } from "@workspace/trpc/lib/partners-shared";
 
 describe("commissionFor", () => {
-  it("is 40% of the first payment, in cents", () => {
-    expect(commissionFor(69_900)).toBe(27_960);
-    expect(commissionFor(119_900)).toBe(47_960);
+  // Default dropped from 40% to 20% (agreement 2026-11.3).
+  it("is 20% of the first payment by default, in cents", () => {
+    expect(DEFAULT_COMMISSION_BPS).toBe(2000);
+    expect(commissionFor(69_900)).toBe(13_980);
+    expect(commissionFor(119_900)).toBe(23_980);
+  });
+
+  it("uses the partner's own rate when given", () => {
+    expect(commissionFor(69_900, 0, 4000)).toBe(27_960);
+    expect(commissionFor(69_900, 2_057, 2500)).toBe(16_961);
+    expect(commissionFor(69_900, 0, 0)).toBe(0);
+  });
+
+  it("matches the partner.commission_bps column default", () => {
+    expect(partner.commissionBps.default).toBe(DEFAULT_COMMISSION_BPS);
+  });
+
+  it("formats basis points as a percent", () => {
+    expect(formatRate(2000)).toBe("20%");
+    expect(formatRate(2250)).toBe("22.5%");
   });
 
   it("rounds to the nearest cent", () => {

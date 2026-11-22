@@ -1,0 +1,1 @@
+ALTER TABLE "partner" ADD COLUMN "commission_bps" integer DEFAULT 2000 NOT NULL;

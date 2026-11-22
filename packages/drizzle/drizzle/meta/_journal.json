@@ -533,6 +533,13 @@
       "when": 1795120914036,
       "tag": "0075_supreme_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1795382834865,
+      "tag": "0076_far_harrier",
+      "breakpoints": true
     }
   ]
 }

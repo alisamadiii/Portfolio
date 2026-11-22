@@ -72,7 +72,7 @@ src/
   styles/global.css      ← all styles; colors and sizes are CSS variables at the top
   lib/
     api.ts               ← submitApplication() + payload types
-    money.ts             ← money formatting, 40% payout math
+    money.ts             ← money formatting, 20% payout math
     motion.ts            ← scroll reveal, scroll progress bar, count-up number
   components/            ← Header, Footer, Logo, Icons, Eyebrow, Ph (placeholder highlight)
   sections/              ← one file per landing page section

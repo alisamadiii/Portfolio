@@ -18,7 +18,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { formatCents } from "@workspace/trpc/lib/partners-shared";
+import { formatCents, formatRate } from "@workspace/trpc/lib/partners-shared";
 
 import { Content } from "@/components/content-admin";
 import { StatTile } from "@/components/stat-tile";
@@ -52,7 +52,7 @@ export default function PartnersPage() {
       <div className="mb-5">
         <h1 className="text-xl font-semibold tracking-tight">Partners</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Referral partners earn 40% of a referred client&apos;s first website
+          Referral partners earn their commission rate (default 20%) of a referred client&apos;s first website
           payment. Approve applications, log referrals and mark payouts.
         </p>
       </div>
@@ -124,6 +124,7 @@ export default function PartnersPage() {
               <TableHead>Occupation</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Code</TableHead>
+              <TableHead className="text-right">Commission</TableHead>
               <TableHead className="text-right">Referred</TableHead>
               <TableHead className="text-right">Paying</TableHead>
               <TableHead className="text-right">Owed</TableHead>
@@ -134,14 +135,14 @@ export default function PartnersPage() {
           <TableBody>
             {list.isPending && (
               <TableRow>
-                <TableCell colSpan={9} className="text-muted-foreground h-20 text-center">
+                <TableCell colSpan={10} className="text-muted-foreground h-20 text-center">
                   Loading…
                 </TableCell>
               </TableRow>
             )}
             {!list.isPending && rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="text-muted-foreground h-20 text-center">
+                <TableCell colSpan={10} className="text-muted-foreground h-20 text-center">
                   {list.data?.partners.length ? "No partners match." : "No applications yet."}
                 </TableCell>
               </TableRow>
@@ -165,6 +166,7 @@ export default function PartnersPage() {
                   <PartnerStatusBadge status={p.status} />
                 </TableCell>
                 <TableCell className="font-mono text-xs">{p.code ?? "—"}</TableCell>
+                <TableCell className="text-right tabular-nums">{formatRate(p.commissionBps)}</TableCell>
                 <TableCell className="text-right tabular-nums">{p.stats.referrals}</TableCell>
                 <TableCell className="text-right tabular-nums">{p.stats.paying}</TableCell>
                 <TableCell className="text-right tabular-nums">

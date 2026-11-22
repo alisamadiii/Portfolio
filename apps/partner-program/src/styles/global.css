@@ -145,11 +145,11 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 .tag { border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .track { height: 14px; background: var(--track); border-radius: 4px; overflow: hidden; }
 .track__fill { height: 100%; border-radius: 4px; }
-.track__fill--hero { width: 40%; background: var(--coral); animation: fill 1.4s var(--ease) 0.5s both; }
+.track__fill--hero { width: 20%; background: var(--coral); animation: fill 1.4s var(--ease) 0.5s both; }
 .you-get { margin-top: 24px; padding: 20px; background: var(--ink); color: var(--bg); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .big-num { font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; color: var(--coral); }
 .pill-success { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 6px 12px; background: var(--success-bg); color: var(--success-ink); border-radius: 4px; font-size: 14px; font-weight: 600; animation: pop 0.7s var(--ease) 1.5s both; }
-@keyframes fill { from { width: 0; } to { width: 40%; } }
+@keyframes fill { from { width: 0; } to { width: 20%; } }
 @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: none; } }
 @keyframes float { 50% { transform: translateY(-8px); } }
 

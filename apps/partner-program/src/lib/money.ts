@@ -20,7 +20,7 @@ export function cardFee(price: number): number {
   return price > 0 ? cents(price * program.cardFeeRate + program.cardFeeFixed) : 0;
 }
 
-/** Estimated payout: 40% of the price after the card fee. $699 -> $271.37 */
+/** Estimated payout: 20% of the price after the card fee. $699 -> $135.69 */
 export function payoutFor(price: number): number {
   return Math.max(0, cents((price - cardFee(price)) * program.payoutRate));
 }

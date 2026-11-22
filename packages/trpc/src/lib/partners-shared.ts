@@ -1,14 +1,19 @@
 // Pure partner-program helpers (no DB, no server-only) so tests and both
 // apps can import them.
 
-export const PARTNER_PAYOUT_RATE = 0.4;
+/** Standard partner rate in basis points (20%). Equals partner.commission_bps default. */
+export const DEFAULT_COMMISSION_BPS = 2000;
 
 /**
- * 40% of the client's first payment after the payment provider's fee, in
- * cents (agreement 2026-11.2, section 3.1). 69_900 with a 2_057 fee -> 27_137.
+ * The partner's rate (default 20%) of the client's first payment after the
+ * payment provider's fee, in cents (agreement 2026-11.3, section 3.1).
+ * 69_900 with a 2_057 fee -> 13_569.
  */
-export const commissionFor = (clientPaidCents: number, feeCents = 0) =>
-  Math.max(0, Math.round((clientPaidCents - feeCents) * PARTNER_PAYOUT_RATE));
+export const commissionFor = (clientPaidCents: number, feeCents = 0, bps = DEFAULT_COMMISSION_BPS) =>
+  Math.max(0, Math.round(((clientPaidCents - feeCents) * bps) / 10_000));
+
+/** 2000 -> "20%", 2250 -> "22.5%". */
+export const formatRate = (bps: number) => `${bps / 100}%`;
 
 /** Default provider fee per payment method: Stripe's US card fee, 2.9% + 30¢. */
 export const PROVIDER_FEES = {
@@ -157,4 +162,4 @@ export function parseRefCookie(cookieHeader: string | null | undefined): string 
  * apps/partner-program/src/config.ts agreementVersion (bump both together,
  * with the text in AgreementText.tsx and packages/ui/src/pdfs/partner-agreement.tsx).
  */
-export const PARTNER_AGREEMENT_VERSION = "2026-11.2";
+export const PARTNER_AGREEMENT_VERSION = "2026-11.3";

@@ -33,7 +33,7 @@ export function Earnings() {
         <h2 id="earn-h" className="h2" data-reveal="2">Your payout follows the price.</h2>
         <p className="lead" data-reveal="3">
           Every business is different, so website prices are too. Whatever the business pays for its website, you
-          get 40% of that first payment after payment processing fees.
+          get 20% of that first payment after payment processing fees.
         </p>
 
         <div className="earn">
@@ -114,7 +114,7 @@ export function Earnings() {
                 <span>Card processing fee (est. 2.9% + $0.30)</span><span>−{money(fee)}</span>
               </div>
               <div className="bar-row">
-                <div className="bar-row__label"><span>You get (40% of {money(Math.max(0, amount - fee))})</span><span>{money(earn)}</span></div>
+                <div className="bar-row__label"><span>You get (20% of {money(Math.max(0, amount - fee))})</span><span>{money(earn)}</span></div>
                 <div className="track" aria-hidden="true"><div className="track__fill bar" style={{ width: pct(earn), background: 'var(--coral)' }} /></div>
               </div>
             </div>
@@ -138,8 +138,8 @@ export function Earnings() {
         </div>
         <p className="body-2" data-reveal="3" style={{ marginTop: 20, fontSize: 16 }}>
           <strong style={{ color: 'var(--ink)' }}>One-time payout only.</strong> You don't earn from the client's monthly
-          subscription. Figures are estimates; your payout is 40% of what the business actually pays as its first website
-          payment, after the payment provider's fees. If they pay with no fees, you get 40% of the full amount.
+          subscription. Figures are estimates; your payout is 20% of what the business actually pays as its first website
+          payment, after the payment provider's fees. If they pay with no fees, you get 20% of the full amount.
         </p>
       </div>
     </section>
