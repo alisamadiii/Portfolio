@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, MonitorSmartphone, Search, Star } from "lucide-react";
 
@@ -30,8 +30,9 @@ import { LocationDialog } from "./location-dialog";
 const PER_PAGE = 6;
 
 /**
- * Admin only: every design in the client-websites R2 bucket. Filter state
- * lives in the URL (?q, ?industry, ?page) so back and reload keep the view.
+ * Admin only: every design in the client-websites R2 bucket. Tab and page
+ * live in the URL (?industry, ?page) so back and reload keep the view; the
+ * search stays local so typing never triggers a navigation.
  */
 export function WebsitesPage() {
   const user = useCurrentUser();
@@ -39,8 +40,8 @@ export function WebsitesPage() {
   const trpc = useTRPC();
   const websites = useQuery(trpc.clientWebsites.list.queryOptions(undefined, { enabled: isAdmin }));
   const params = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
+  const [search, setSearch] = useState("");
 
   if (!user.isPending && !isAdmin) {
     return (
@@ -55,7 +56,7 @@ export function WebsitesPage() {
   }
 
   const data = websites.data;
-  const q = (params.get("q") ?? "").trim().slice(0, 80);
+  const q = search.trim().slice(0, 80);
   const needle = q.toLowerCase();
   const rows = (data ?? []).map((website) => ({
     website,
@@ -85,18 +86,17 @@ export function WebsitesPage() {
   const page = Math.min(pageCount, Math.max(1, Number.parseInt(params.get("page") ?? "1", 10) || 1));
   const shown = matches.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const update = (next: { q?: string; industry?: Industry | null; page?: number }) => {
+  // Native history: Next syncs useSearchParams without a server round-trip.
+  const update = (next: { industry?: Industry | null; page?: number }, replace = false) => {
     const out = new URLSearchParams();
-    const nextQ = (next.q ?? q).trim();
     const nextIndustry = next.industry === undefined ? industry : next.industry;
     // a new search or tab starts from page 1
     const nextPage = next.page ?? 1;
-    if (nextQ) out.set("q", nextQ);
     if (nextIndustry) out.set("industry", nextIndustry);
     if (nextPage > 1) out.set("page", String(nextPage));
     const url = out.size ? `${pathname}?${out}` : pathname;
-    if (next.q !== undefined) router.replace(url, { scroll: false });
-    else router.push(url, { scroll: false });
+    if (replace) window.history.replaceState(null, "", url);
+    else window.history.pushState(null, "", url);
   };
 
   return (
@@ -125,8 +125,11 @@ export function WebsitesPage() {
                 type="search"
                 aria-label="Search client websites"
                 placeholder="Search by name, category or city"
-                value={params.get("q") ?? ""}
-                onChange={(e) => update({ q: e.target.value })}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (page > 1) update({ page: 1 }, true);
+                }}
                 className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-faint"
               />
             </label>
