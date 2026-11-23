@@ -159,8 +159,9 @@ const labelClass =
 
       {/* 10DLC SMS consent: optional, unchecked, separate from any other
           agreement. Unchecked boxes aren't in FormData, so the email only
-          shows this row when the visitor opted in. Wording is the opt-in
-          flow of the 10DLC campaign registered in Zernio; change it there too. */}
+          shows this row when the visitor opted in. Two boxes: conversational
+          and marketing consent are separate (TCPA). Wording is the opt-in flow
+          of the toll-free verification; change it there too. */}
       {
         !compact && (
           <div class="rounded-xl border border-charcoal/[0.08] bg-charcoal/[0.02] p-4">
@@ -175,6 +176,19 @@ const labelClass =
                 I agree to receive text messages from Ali Samadii LLC about my
                 inquiry, quotes, projects, and scheduled calls at the phone
                 number provided. <span class="text-warmgray">(Optional)</span>
+              </span>
+            </label>
+            <label class="mt-3 flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-charcoal">
+              <input
+                type="checkbox"
+                name="smsMarketingConsent"
+                value="Yes, agreed to receive marketing texts from Ali Samadii LLC"
+                class="mt-1 size-4 shrink-0 accent-accent"
+              />
+              <span>
+                I agree to receive marketing text messages from Ali Samadii LLC,
+                such as offers, tips, and news, at the phone number provided.
+                <span class="text-warmgray">(Optional)</span>
               </span>
             </label>
             <p class="mt-3 text-xs leading-relaxed text-warmgray">
