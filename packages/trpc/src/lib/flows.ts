@@ -19,7 +19,7 @@ export async function createFlowsEmbed(input: {
   projectName: string;
   user: { id?: string; email?: string; name?: string };
   role: FlowsRole;
-}): Promise<{ url: string; expiresAt: string }> {
+}): Promise<{ url: string; workspaceId: string; expiresAt: string }> {
   const key = process.env.FLOWS_API_KEY;
   if (!key) {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Automations isn't configured (FLOWS_API_KEY)." });
@@ -36,9 +36,14 @@ export async function createFlowsEmbed(input: {
   } catch {
     throw new TRPCError({ code: "BAD_GATEWAY", message: "Automations is unreachable. Try again in a moment." });
   }
-  const json = (await res.json().catch(() => ({}))) as { url?: string; expiresAt?: string; error?: string };
+  const json = (await res.json().catch(() => ({}))) as {
+    url?: string;
+    workspaceId?: string;
+    expiresAt?: string;
+    error?: string;
+  };
   if (!res.ok || !json.url) {
     throw new TRPCError({ code: "BAD_GATEWAY", message: json.error || `Automations request failed (${res.status})` });
   }
-  return { url: json.url, expiresAt: json.expiresAt ?? "" };
+  return { url: json.url, workspaceId: json.workspaceId ?? input.projectId, expiresAt: json.expiresAt ?? "" };
 }
