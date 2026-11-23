@@ -10,12 +10,13 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   // Dashboards (Home, Orders) and the Business info steps use the full width.
   const wide = pathname === "/" || pathname === "/orders" || pathname.includes("/business-info/");
   // Edge to edge, scrolling inside: the calendar week, the Leads inbox, the
-  // Source Code browser, the Newsletter app (campaign and template editors
+  // Source Code browser, Automations (the Flows iframe), the Newsletter app (campaign and template editors
   // included) and a client website preview.
   const bleed =
     pathname.endsWith("/calendar") ||
     pathname.endsWith("/leads") ||
     pathname.endsWith("/source-code") ||
+    pathname.endsWith("/automations") ||
     /\/newsletter(\/|$)/.test(pathname) ||
     /^\/client-websites\/[^/]+/.test(pathname);
   return (

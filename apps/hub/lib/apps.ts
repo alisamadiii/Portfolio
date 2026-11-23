@@ -29,6 +29,7 @@ import {
   ReceiptText,
   User,
   Users,
+  Workflow,
 } from "lucide-react";
 
 import { urls } from "@workspace/ui/lib/company";
@@ -238,6 +239,8 @@ export const PROJECT_CORE: NavItem[] = [
   { id: "website", label: "Website", icon: Globe, path: "website" },
   // Uptime, problems, pages and check history from sitewatch.
   { id: "site-monitor", label: "Site Monitor", icon: Activity, path: "site-monitor" },
+  // Workflows, cron jobs and notifications from Flows (agency-toolkit), embedded full screen.
+  { id: "automations", label: "Automations", icon: Workflow, path: "automations" },
   { id: "business-info", label: "Business info", icon: Building2, path: "business-info" },
   // Appointment templates + "/" snippets with [[placeholders]].
   { id: "templates", label: "Templates", icon: FileText, path: "templates" },

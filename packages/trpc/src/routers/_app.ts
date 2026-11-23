@@ -26,6 +26,7 @@ import { neonRouter } from "./neon";
 import { resendRouter } from "./resend";
 import { shopifyRouter } from "./shopify";
 import { siteMonitorRouter } from "./site-monitor";
+import { automationsRouter } from "./automations";
 import { uberEatsRouter } from "./uber-eats";
 import { doordashRouter } from "./doordash";
 import { grubhubRouter } from "./grubhub";
@@ -71,6 +72,7 @@ export const appRouter = createTRPCRouter({
   doordash: doordashRouter,
   grubhub: grubhubRouter,
   siteMonitor: siteMonitorRouter,
+  automations: automationsRouter,
 });
 
 // export type definition of API
