@@ -245,7 +245,7 @@ export function PartnerAgreementPdf({ data }: { data: PartnerAgreementData }) {
           <View>
             <Text style={s.company}>{p.company}</Text>
             <Text style={s.small}>
-              566 Kit St, Jacksonville, FL · a@alisamadii.com · (971) 382-8969
+              566 Kit St, Jacksonville, FL · a@alisamadii.com · (904) 274-2126
             </Text>
           </View>
         </View>

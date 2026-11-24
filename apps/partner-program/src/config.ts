@@ -27,8 +27,8 @@ export const program = {
 
 export const contact = {
   email: 'a@alisamadii.com',
-  phone: '(971) 382-8969',
-  phoneHref: 'tel:+19713828969',
+  phone: '(904) 274-2126',
+  phoneHref: 'tel:+19042742126',
   address: '566 Kit St, Jacksonville, FL',
   website: 'https://www.alisamadii.com',
   privacy: 'https://alisamadii.com/privacy',

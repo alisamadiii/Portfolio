@@ -82,7 +82,7 @@ export const Company = () => {
             render={({ field, fieldState }) => (
               <TextField
                 label="Phone"
-                placeholder="+1 (971) 382-8969"
+                placeholder="+1 (904) 274-2126"
                 error={fieldState.invalid}
                 helperText={fieldState.error?.message}
                 {...field}

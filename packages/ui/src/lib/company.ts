@@ -9,7 +9,7 @@ export const company = {
   email: "a@alisamadii.com",
   agencyEmail: "a@alisamadii.com",
   ownerName: "Ali Samadi",
-  phone: "+1 (971) 382-8969",
+  phone: "+1 (904) 274-2126",
   location: "Portland, OR",
   website: "alisamadii.com",
   disclaimer: "All rights reserved.",

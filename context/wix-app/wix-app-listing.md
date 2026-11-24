@@ -98,7 +98,7 @@ Ali Samadii LLC is a web agency that designs, builds and manages websites for sm
 | Support email | a@alisamadii.com |
 | Billing email | a@alisamadii.com |
 | Urgent matters email | a@alisamadii.com |
-| Phone | (971) 382-8969 |
+| Phone | (904) 274-2126 |
 
 ---
 

@@ -220,7 +220,7 @@ SCHEDULE
 [Book a Meeting ↗](https://cal.com/alisamadii)
 PHONE
 
-[+1 (971) 382-8969](tel:+19713828969)
+[+1 (904) 274-2126](tel:+19042742126)
 LOCATION
 
 Jacksonville, FL
