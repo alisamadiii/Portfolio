@@ -27,7 +27,7 @@ export function Hero() {
             </Link>
             <a className="link-strong" href="#how">See how it works</a>
           </div>
-          <p className="hero__note" data-reveal="4">One-time payout per paying client. No fees to join.</p>
+          <p className="hero__note" data-reveal="4">Paid on every website a referred business buys. No fees to join.</p>
         </div>
 
         <div className="hero__visual" data-reveal="3">

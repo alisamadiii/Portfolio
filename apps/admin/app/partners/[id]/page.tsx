@@ -59,6 +59,7 @@ import {
   formatCents,
   formatRate,
   isMercuryFailed,
+  PARTNER_AGREEMENT_VERSION,
   PAYOUT_STATE_LABELS,
 } from "@workspace/trpc/lib/partners-shared";
 import { urls } from "@workspace/ui/lib/company";
@@ -98,7 +99,7 @@ export default function PartnerPage() {
   const [codeMode, setCodeMode] = useState<"approve" | "change" | null>(null);
   const [notifyReject, setNotifyReject] = useState(true);
   const [editing, setEditing] = useState<
-    { mode: "add"; referral: null } | { mode: "link" | "edit"; referral: Referral } | null
+    { mode: "add"; referral: null; projectId?: string } | { mode: "link" | "edit"; referral: Referral } | null
   >(null);
   const [clientPaid, setClientPaid] = useState<Referral | null>(null);
   const [partnerPaid, setPartnerPaid] = useState<Referral | null>(null);
@@ -189,7 +190,7 @@ export default function PartnerPage() {
     );
   }
 
-  const { partner: p, referrals, stats, signups, mercuryConfigured } = query.data;
+  const { partner: p, referrals, stats, signups, otherProjects, mercuryConfigured } = query.data;
   const mercuryBusy = mercuryInvite.isPending || mercurySync.isPending;
   const busy = reject.isPending || resend.isPending || remove.isPending;
   const copy = (text: string, label: string) =>
@@ -291,7 +292,12 @@ export default function PartnerPage() {
             <dt className="text-muted-foreground">Signed</dt>
             <dd>{format(new Date(p.signedAt), "MMM d, yyyy h:mm a")}</dd>
             <dt className="text-muted-foreground">Version</dt>
-            <dd>{p.agreementVersion}</dd>
+            <dd>
+              {p.agreementVersion}
+              {p.agreementVersion !== PARTNER_AGREEMENT_VERSION && (
+                <span className="text-muted-foreground"> (current {PARTNER_AGREEMENT_VERSION}; signed terms apply)</span>
+              )}
+            </dd>
             <dt className="text-muted-foreground">IP</dt>
             <dd>{p.signedIp ?? "—"}</dd>
           </dl>
@@ -449,6 +455,35 @@ export default function PartnerPage() {
                   {u.name} <span className="text-muted-foreground">{u.email}</span>
                 </Link>
                 <span className="text-muted-foreground shrink-0 text-xs">Joined {day(u.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="bg-card rounded-2xl border p-5">
+        <h2 className="font-semibold">Client&apos;s other websites</h2>
+        <p className="text-muted-foreground mb-3 text-sm">
+          Projects owned by this partner&apos;s referred clients or sign-ups that have no referral yet. From agreement
+          2026-11.5 every new website a referred business buys pays the partner.
+        </p>
+        {otherProjects.length === 0 ? (
+          <p className="text-muted-foreground text-sm">None right now.</p>
+        ) : (
+          <ul className="divide-y text-sm">
+            {otherProjects.map((o) => (
+              <li key={o.projectId} className="flex items-center justify-between gap-3 py-2">
+                <span className="min-w-0 truncate">
+                  <a href={`${urls.cms}/p/${o.projectId}`} target="_blank" rel="noreferrer" className="font-medium hover:underline">
+                    {o.name}
+                  </a>{" "}
+                  <span className="text-muted-foreground">
+                    {o.ownerEmail ?? "no owner"} · {day(o.createdAt)}
+                  </span>
+                </span>
+                <Button size="sm" variant="outline" onClick={() => setEditing({ mode: "add", referral: null, projectId: o.projectId })}>
+                  <Plus /> Add as referral…
+                </Button>
               </li>
             ))}
           </ul>
@@ -654,11 +689,12 @@ export default function PartnerPage() {
 
       {editing && (
         <ReferralDialog
-          key={`${editing.mode}-${editing.referral?.id ?? "new"}`}
+          key={`${editing.mode}-${editing.referral?.id ?? (editing.mode === "add" ? editing.projectId : null) ?? "new"}`}
           mode={editing.mode}
           partnerId={id}
           commissionBps={p.commissionBps}
           referral={editing.referral}
+          initialProjectId={editing.mode === "add" ? editing.projectId : undefined}
           onOpenChange={(open) => !open && setEditing(null)}
           onDone={refresh}
         />

@@ -137,8 +137,8 @@ export function Earnings() {
           </p>
         </div>
         <p className="body-2" data-reveal="3" style={{ marginTop: 20, fontSize: 16 }}>
-          <strong style={{ color: 'var(--ink)' }}>One-time payout only.</strong> You don't earn from the client's monthly
-          subscription. Figures are estimates; your payout is 20% of what the business actually pays as its first website
+          <strong style={{ color: 'var(--ink)' }}>Setup fees only.</strong> You don't earn from the client's monthly
+          subscription. If the same business buys another website later, you earn on that one too. Figures are estimates; your payout is 20% of what the business actually pays as its first website
           payment, after the payment provider's fees. If they pay with no fees, you get 20% of the full amount.
         </p>
       </div>

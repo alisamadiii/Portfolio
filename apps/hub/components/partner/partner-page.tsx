@@ -107,7 +107,7 @@ function NotPartner() {
         ))}
       </div>
       <p className="text-[13px] text-dim">
-        One-time payout per paying client. Amounts depend on the plan the business picks. This isn&apos;t an
+        Paid per website, setup fee only. Amounts depend on the plan the business picks. This isn&apos;t an
         employment offer.
       </p>
     </div>

@@ -182,6 +182,45 @@ const projectInfo = async (projectIds: string[]) => {
   );
 };
 
+/**
+ * Projects owned by this partner's referred clients (or their ?ref sign-ups)
+ * that nobody has recorded as a referral yet. Agreement 2026-11.5 pays the
+ * partner on every website a referred business buys, so admin gets a hint.
+ */
+const clientOtherProjects = async (referredProjectIds: string[], signupUserIds: string[]) => {
+  const owners = new Set(signupUserIds);
+  if (referredProjectIds.length) {
+    const rows = await db
+      .select({ ownerId: hubProject.githubConnectedUserId })
+      .from(hubProject)
+      .where(inArray(hubProject.id, referredProjectIds));
+    for (const r of rows) if (r.ownerId) owners.add(r.ownerId);
+  }
+  if (!owners.size) return [];
+  const rows = await db
+    .select({
+      projectId: hubProject.id,
+      repo: hubProject.repo,
+      websiteUrl: hubProject.websiteUrl,
+      name: hubProject.name,
+      createdAt: hubProject.syncedAt,
+      ownerEmail: user.email,
+      referralId: partnerReferral.id,
+    })
+    .from(hubProject)
+    .leftJoin(user, eq(user.id, hubProject.githubConnectedUserId))
+    .leftJoin(partnerReferral, eq(partnerReferral.projectId, hubProject.id))
+    .where(and(eq(hubProject.hidden, false), inArray(hubProject.githubConnectedUserId, [...owners])))
+    .orderBy(desc(hubProject.syncedAt))
+    .limit(50);
+  return rows
+    .filter((r) => r.referralId == null)
+    .map(({ repo, websiteUrl, name, referralId: _r, ...r }) => ({
+      ...r,
+      name: projectDisplayName({ name, repo, websiteUrl }),
+    }));
+};
+
 const getPartner = async (id: string) => {
   const [row] = await db.select().from(partner).where(eq(partner.id, id)).limit(1);
   if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Partner not found." });
@@ -338,6 +377,10 @@ export const partnersRouter = createTRPCRouter({
       .orderBy(desc(user.createdAt))
       .limit(200);
     const info = await projectInfo(referrals.flatMap((r) => (r.projectId ? [r.projectId] : [])));
+    const otherProjects = await clientOtherProjects(
+      referrals.flatMap((r) => (r.projectId ? [r.projectId] : [])),
+      signups.map((u) => u.id)
+    );
     const { pdfToken, agreementKey: key, ...rest } = p;
     return {
       partner: { ...rest, hasAgreement: !!key, payoutState: partnerPayoutState(p) },
@@ -348,6 +391,7 @@ export const partnersRouter = createTRPCRouter({
       })),
       stats: partnerStats(referrals),
       signups,
+      otherProjects,
       agreementPublicUrl: key ? agreementUrl(pdfToken) : null,
     };
   }),

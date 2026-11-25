@@ -145,6 +145,7 @@ export function ReferralDialog({
   partnerId,
   commissionBps,
   referral,
+  initialProjectId,
   onOpenChange,
   onDone,
 }: {
@@ -152,11 +153,13 @@ export function ReferralDialog({
   partnerId: string;
   commissionBps: number;
   referral: Referral | null;
+  /** Preselects the project ("Add as referral" from the client's other websites). */
+  initialProjectId?: string;
   onOpenChange: (open: boolean) => void;
   onDone: () => void;
 }) {
   const trpc = useTRPC();
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(initialProjectId ?? "");
   const [price, setPrice] = useState(dollars(referral?.priceCents) || "699");
   const [status, setStatus] = useState<Status>(referral?.status ?? "won");
   const [notes, setNotes] = useState(referral?.notes ?? "");
