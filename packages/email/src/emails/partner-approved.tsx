@@ -79,8 +79,8 @@ export default function PartnerApprovedEmail({ fullName, code, mercuryUrl }: Par
               <Img src={MERCURY_WORDMARK} alt="Mercury" width={104} height={24} style={mercuryLogo} />
               <Text style={mercuryTitle}>One thing to do now: add your bank account</Text>
               <Text style={mercuryText}>
-                Mercury, our bank, keeps the account you want your payouts sent to. We never see your account
-                number.
+                Mercury, our bank, keeps the account you want your payouts sent to. Our systems never store it;
+                only we can view it in Mercury, to send your payout.
               </Text>
               <Section style={{ margin: "20px 0 14px" }}>
                 <Button href={mercuryUrl} style={mercuryButton}>
@@ -94,8 +94,8 @@ export default function PartnerApprovedEmail({ fullName, code, mercuryUrl }: Par
             </Section>
           ) : (
             <Text style={{ ...paragraph, margin: "0 0 20px" }}>
-              Payouts go by bank transfer to the account you add through Mercury, our bank. We never see your
-              account number.
+              Payouts go by bank transfer to the account you add through Mercury, our bank. Our systems never
+              store it; only we can view it in Mercury, to send your payout.
             </Text>
           )}
 

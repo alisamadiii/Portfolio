@@ -42,7 +42,7 @@ export function StepAbout(props: StepProps) {
         <p className="note__title">How you get paid</p>
         <p className="body-2" style={{ fontSize: 15 }}>
           Payouts are sent by bank transfer (ACH). After you're approved, Mercury, our bank, emails you a secure link
-          to add your bank account. No Mercury account needed, and we never see or store your account number.
+          to add your bank account. No Mercury account needed. Mercury holds your details; our website never stores them, and only we can view them in Mercury to send your payout.
         </p>
       </div>
     </div>

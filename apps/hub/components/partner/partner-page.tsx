@@ -145,7 +145,7 @@ function Application({ partner }: { partner: Partner }) {
 /**
  * How the partner gets paid: by ACH to the bank account they add on
  * Mercury's form (invite emailed on approval). The invite link is theirs
- * alone; we never see their account number. Mercury-themed on purpose: this
+ * alone; our DB never stores bank details (Ali sees them in Mercury). Mercury-themed on purpose: this
  * step happens on Mercury's site, like the approval email's card.
  */
 function PayoutCard({ payout }: { payout: Partner["payout"] }) {
@@ -178,7 +178,8 @@ function PayoutCard({ payout }: { payout: Partner["payout"] }) {
           <p className="text-lg font-medium tracking-[-0.01em]">Payouts go straight to your bank</p>
           <p className="max-w-[620px] text-sm leading-relaxed text-mercury-text-2">
             We&apos;ll invite you through Mercury, our bank, to add the account you want paid. No Mercury account
-            needed, and we never see your account number.
+            needed. Mercury holds your details; this site never stores them, and only we can view them in Mercury to send
+            your payout.
           </p>
           <div>
             <a href={howItWorks} target="_blank" rel="noreferrer" className={`${pill} border border-mercury-line-strong bg-mercury-surface text-mercury-text hover:border-mercury-muted`}>
@@ -193,7 +194,8 @@ function PayoutCard({ payout }: { payout: Partner["payout"] }) {
           <p className="max-w-[620px] text-sm leading-relaxed text-mercury-text-2">
             Mercury emailed you a secure link; you can also open it here. You don&apos;t need a Mercury account: click{" "}
             <strong className="font-semibold text-mercury-text">Skip</strong> on the first page and go straight to
-            the bank form. We never see your account number.
+            the bank form. Mercury holds your details; this site never stores them, and only we can view them in
+            Mercury to send your payout.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             {payout.inviteUrl && (

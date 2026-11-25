@@ -9,21 +9,25 @@ export const maxDuration = 30;
 // matches the transfer to the owed referral. The payload only identifies
 // the transaction; it is re-read from the API.
 //
-// Register once (secret is returned only on creation -> MERCURY_WEBHOOK_SECRET):
-//   POST https://api.mercury.com/api/v1/webhooks
-//   { "url": "https://api.alisamadii.com/api/webhook/mercury",
-//     "eventTypes": ["transaction.created", "transaction.updated"] }
+// Created once in the Mercury dashboard (Settings -> Webhooks) with
+// transaction.created + transaction.updated; the secret shown on creation
+// goes to MERCURY_WEBHOOK_SECRET on the api service.
 //
 // POST /api/webhook/mercury
 
 export async function POST(request: Request) {
+  const rawBody = await request.text();
+
+  // Mercury verifies the URL before it hands out the signing secret, so with
+  // no secret configured we acknowledge and ignore. Nothing is processed
+  // until MERCURY_WEBHOOK_SECRET is set; events in that window are lost
+  // (admin can still record the payout by hand).
   const secret = process.env.MERCURY_WEBHOOK_SECRET;
   if (!secret) {
-    console.error("[mercury] MERCURY_WEBHOOK_SECRET is not set");
-    return new Response("Not configured", { status: 503 });
+    console.warn("[mercury] MERCURY_WEBHOOK_SECRET is not set; event ignored", rawBody.slice(0, 200));
+    return new Response(null, { status: 200 });
   }
 
-  const rawBody = await request.text();
   if (!verifyMercurySignature(rawBody, request.headers.get("mercury-signature"), secret)) {
     return new Response("Invalid signature", { status: 401 });
   }

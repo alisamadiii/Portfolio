@@ -22,7 +22,7 @@ const STEPS = [
   {
     icon: BankIcon,
     title: 'Add your bank, once',
-    text: 'Enter your routing and account number, or sign in to your bank. Mercury may ask for a W-9. Mercury stores it; we never see your account number.',
+    text: 'Enter your routing and account number, or sign in to your bank. Mercury may ask for a W-9. Mercury holds your details; our website never stores them, and only we can view them in Mercury, to send your payout.',
   },
 ];
 
