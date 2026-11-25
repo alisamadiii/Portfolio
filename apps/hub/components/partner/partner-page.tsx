@@ -23,6 +23,8 @@ type Referral = Partner["referrals"][number];
 const PARTNERS_SITE =
   process.env.NODE_ENV === "development" ? "http://localhost:5173" : "https://partners.alisamadii.com";
 const AGENCY_SITE = "https://www.alisamadii.com";
+// White wordmark on Mercury's dark, 2x (same file the approval email uses).
+const MERCURY_WORDMARK = "https://cdn.alisamadii.com/third-party-services/mercury-wordmark-dark.png";
 
 const day = (d: Date | string | null) => (d ? format(new Date(d), "MMM d, yyyy") : "—");
 
@@ -140,6 +142,95 @@ function Application({ partner }: { partner: Partner }) {
   );
 }
 
+/**
+ * How the partner gets paid: by ACH to the bank account they add on
+ * Mercury's form (invite emailed on approval). The invite link is theirs
+ * alone; we never see their account number. Mercury-themed on purpose: this
+ * step happens on Mercury's site, like the approval email's card.
+ */
+function PayoutCard({ payout }: { payout: Partner["payout"] }) {
+  const howItWorks = `${PARTNERS_SITE}/#get-paid`;
+  const pill =
+    "inline-flex h-9 items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-medium transition-colors " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mercury-accent focus-visible:ring-offset-2 focus-visible:ring-offset-mercury-bg";
+  const status =
+    payout.state === "invited"
+      ? { label: "Action needed", dot: "bg-mercury-accent" }
+      : payout.state === "ready"
+        ? { label: "Bank account on file", dot: "bg-success" }
+        : payout.state === "expired"
+          ? { label: "Link expired", dot: "bg-mercury-muted" }
+          : null;
+  return (
+    <section className="flex flex-col gap-4 rounded-card border border-mercury-line bg-mercury-bg px-6 py-6 text-mercury-text">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <img src={MERCURY_WORDMARK} alt="Mercury" width={104} height={24} className="h-6 w-auto" />
+        {status && (
+          <span className="inline-flex items-center gap-2 rounded-full border border-mercury-line-strong bg-mercury-surface px-3 py-1 text-[13px] font-medium text-mercury-text-2">
+            <span className={`size-1.5 rounded-full ${status.dot}`} />
+            {status.label}
+          </span>
+        )}
+      </div>
+
+      {payout.state === "not_invited" && (
+        <>
+          <p className="text-lg font-medium tracking-[-0.01em]">Payouts go straight to your bank</p>
+          <p className="max-w-[620px] text-sm leading-relaxed text-mercury-text-2">
+            We&apos;ll invite you through Mercury, our bank, to add the account you want paid. No Mercury account
+            needed, and we never see your account number.
+          </p>
+          <div>
+            <a href={howItWorks} target="_blank" rel="noreferrer" className={`${pill} border border-mercury-line-strong bg-mercury-surface text-mercury-text hover:border-mercury-muted`}>
+              How it works
+            </a>
+          </div>
+        </>
+      )}
+      {payout.state === "invited" && (
+        <>
+          <p className="text-lg font-medium tracking-[-0.01em]">One thing to do now: add your bank account</p>
+          <p className="max-w-[620px] text-sm leading-relaxed text-mercury-text-2">
+            Mercury emailed you a secure link; you can also open it here. You don&apos;t need a Mercury account: click{" "}
+            <strong className="font-semibold text-mercury-text">Skip</strong> on the first page and go straight to
+            the bank form. We never see your account number.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {payout.inviteUrl && (
+              <a href={payout.inviteUrl} target="_blank" rel="noreferrer" className={`${pill} bg-mercury-accent text-white hover:brightness-110`}>
+                Add bank account
+                <ArrowUpRight className="size-4" />
+              </a>
+            )}
+            <a href={howItWorks} target="_blank" rel="noreferrer" className={`${pill} border border-mercury-line-strong bg-mercury-surface text-mercury-text hover:border-mercury-muted`}>
+              How it works
+            </a>
+          </div>
+        </>
+      )}
+      {payout.state === "ready" && (
+        <>
+          <p className="text-lg font-medium tracking-[-0.01em]">
+            Your bank account is on file{payout.bankName ? ` at ${payout.bankName}` : ""}
+          </p>
+          <p className="max-w-[620px] text-sm leading-relaxed text-mercury-text-2">
+            Payouts arrive by ACH within 14 days after the business pays. Nothing is taken out on the way.
+          </p>
+        </>
+      )}
+      {payout.state === "expired" && (
+        <>
+          <p className="text-lg font-medium tracking-[-0.01em]">Your Mercury link expired</p>
+          <p className="max-w-[620px] text-sm leading-relaxed text-mercury-text-2">
+            It ran out before your bank account was added. We&apos;ll send you a new one; reply to any of our emails if
+            you need it sooner.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
 function ApprovedPartner({ partner }: { partner: Partner }) {
   const code = partner.code ?? "";
   const link = `${AGENCY_SITE}/?ref=${encodeURIComponent(code)}`;
@@ -224,6 +315,8 @@ function ApprovedPartner({ partner }: { partner: Partner }) {
           </div>
         </div>
       </Card>
+
+      <PayoutCard payout={partner.payout} />
 
       <KpiGrid
         items={[

@@ -7,8 +7,13 @@ import { money, payoutFor } from '../lib/money';
 const FAQS: { q: string; a: ReactNode }[] = [
   {
     q: 'When do I get paid?',
-    a: <>After the client pays for their website. We send your payout within <Ph>{program.payoutDays}</Ph> via <Ph>{program.paymentMethod}</Ph>.</>,
+    a: <>After the client pays for their website. We send your payout within <Ph>{program.payoutDays}</Ph> via <Ph>{program.paymentMethod}</Ph>, straight to your bank account.</>,
   },
+  {
+    q: 'Do I need a Mercury account?',
+    a: <>No. Mercury, our bank, emails you a secure link to add your bank account. On the first page click <strong>Skip</strong> and you go straight to the bank form. <a href="#get-paid">See how it works</a>.</>,
+  },
+  { q: 'Is there a fee on my payout?', a: 'No. We send the payout by ACH from Mercury at no cost to you. What you see is what lands in your account.' },
   {
     q: 'How much will I earn?',
     a: <>20% of the business's first website payment, after payment processing fees (like Stripe). Website prices depend on the kind of website the business needs, so for example a {money(program.mainPlanPrice)} website pays you about {money(payoutFor(program.mainPlanPrice))} and a $1,000 website pays you about {money(payoutFor(1000))}.</>,

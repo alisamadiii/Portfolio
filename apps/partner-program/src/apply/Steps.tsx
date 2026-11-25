@@ -3,7 +3,7 @@ import { contact, program } from '../config';
 import { AgreementText } from './AgreementText';
 import { TextAreaField, TextField } from './Field';
 import type { Errors, FieldName, FormValues } from './form';
-import { payoutLabel, todayLabel } from './form';
+import { todayLabel } from './form';
 
 type StepProps = {
   values: FormValues;
@@ -31,41 +31,19 @@ function StepHeading({ title, sub }: { title: string; sub: string }) {
 export function StepAbout(props: StepProps) {
   return (
     <div className="wizard__step">
-      <StepHeading title="About you" sub="How we'll reach you, and where we send your payouts. These go on your agreement." />
+      <StepHeading title="About you" sub="How we'll reach you. These go on your agreement." />
       <TextField id="fullName" label="Full name" type="text" autoComplete="name" required {...text(props, 'fullName')} />
       <div className="grid-fields">
         <TextField id="email" label="Email" type="email" autoComplete="email" inputMode="email" required readOnly hint="From your Client Hub account." {...text(props, 'email')} />
         <TextField id="phone" label={<>Phone <span className="label__opt">(optional)</span></>} type="tel" autoComplete="tel" inputMode="tel" {...text(props, 'phone')} />
       </div>
       <TextField id="address" label="Mailing address" type="text" autoComplete="street-address" required placeholder="Street, city, state and ZIP" {...text(props, 'address')} />
-      <div className="grid-fields">
-        <div className="field-group">
-          <label className="label" htmlFor="payoutMethod">Payout method</label>
-          <select
-            className="field"
-            id="payoutMethod"
-            name="payoutMethod"
-            required
-            value={props.values.payoutMethod}
-            aria-invalid={!!props.errors.payoutMethod}
-            aria-describedby={props.errors.payoutMethod ? 'payoutMethod-err' : undefined}
-            onChange={(e) => props.onChange('payoutMethod', e.target.value)}
-            onBlur={() => props.onBlur('payoutMethod')}
-          >
-            <option value="" disabled>Choose one</option>
-            <option value="Zelle">Zelle</option>
-            <option value="Cash App">Cash App</option>
-          </select>
-          {props.errors.payoutMethod && <p className="field-error" id="payoutMethod-err">✕ {props.errors.payoutMethod}</p>}
-        </div>
-        <TextField
-          id="payoutHandle"
-          label={props.values.payoutMethod === 'Cash App' ? 'Cash App $cashtag or phone' : 'Zelle email or phone'}
-          type="text"
-          autoComplete="off"
-          required
-          {...text(props, 'payoutHandle')}
-        />
+      <div className="note" role="note">
+        <p className="note__title">How you get paid</p>
+        <p className="body-2" style={{ fontSize: 15 }}>
+          Payouts are sent by bank transfer (ACH). After you're approved, Mercury, our bank, emails you a secure link
+          to add your bank account. No Mercury account needed, and we never see or store your account number.
+        </p>
       </div>
     </div>
   );
@@ -213,7 +191,7 @@ export function StepReview({ values, onEdit, failed, message }: { values: FormVa
           <div><dt>Email</dt><dd>{values.email}</dd></div>
           <div><dt>Phone</dt><dd>{values.phone.trim() || 'Not provided'}</dd></div>
           <div><dt>Mailing address</dt><dd>{values.address.trim()}</dd></div>
-          <div><dt>Payout method</dt><dd>{payoutLabel(values)}</dd></div>
+          <div><dt>Payouts</dt><dd>Bank transfer (ACH) via Mercury</dd></div>
         </dl>
       </section>
 

@@ -41,6 +41,16 @@
   --color-success-soft: #e6f4ec;
   --color-success-tint: #e9f4ec;
   --color-info: #2f6fed;
+
+  /* Mercury (our bank) themed blocks only: partner payouts. mercury.com tokens. */
+  --color-mercury-bg: #11101a;
+  --color-mercury-surface: #181623;
+  --color-mercury-line: #272735;
+  --color-mercury-line-strong: #363644;
+  --color-mercury-text: #fbfcfd;
+  --color-mercury-text-2: #c3c0df;
+  --color-mercury-muted: #9d9da8;
+  --color-mercury-accent: #4d68eb;
   --color-info-text: #1a4fb5;
   --color-info-soft: #e8f0fe;
   --color-warning: #e0a33a;

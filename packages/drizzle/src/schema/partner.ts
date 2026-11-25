@@ -38,6 +38,17 @@ export const CLIENT_PAYMENT_METHODS = [
   "other",
 ] as const;
 export type ClientPaymentMethod = (typeof CLIENT_PAYMENT_METHODS)[number];
+export const MERCURY_INVITE_STATUSES = ["created", "completed", "expired", "declined"] as const;
+export type MercuryInviteStatus = (typeof MERCURY_INVITE_STATUSES)[number];
+export const MERCURY_TRANSACTION_STATUSES = [
+  "pending",
+  "sent",
+  "cancelled",
+  "failed",
+  "reversed",
+  "blocked",
+] as const;
+export type MercuryTransactionStatus = (typeof MERCURY_TRANSACTION_STATUSES)[number];
 
 export const partner = pgTable(
   "partner",
@@ -76,8 +87,20 @@ export const partner = pgTable(
     pdfToken: text("pdf_token").notNull().unique(),
     agreementKey: text("agreement_key"),
 
-    // "Zelle: handle" from the application (2026-11.2+); admin can edit it.
+    // Admin-only payout note. Applications before 2026-11.4 stored
+    // "Zelle: handle" here; partners now add their bank through Mercury.
     payoutMethod: text("payout_method"),
+    // Mercury recipient invite (POST /recipients/invites, sent on approval).
+    // The partner adds their own bank details on Mercury's form: we store
+    // the invite, its status and the resulting recipient id, never account
+    // or routing numbers. Status: created | completed | expired | declined.
+    mercuryInviteId: text("mercury_invite_id"),
+    mercuryInviteUrl: text("mercury_invite_url"),
+    mercuryInviteStatus: text("mercury_invite_status").$type<MercuryInviteStatus>(),
+    mercuryInviteAt: timestamp("mercury_invite_at"),
+    mercuryInviteCheckedAt: timestamp("mercury_invite_checked_at"),
+    mercuryRecipientId: text("mercury_recipient_id"),
+    mercuryBankName: text("mercury_bank_name"),
     // Share of the net first payment, in basis points (2000 = 20%). Admin
     // sets it per partner; must default to DEFAULT_COMMISSION_BPS.
     commissionBps: integer("commission_bps").notNull().default(2000),
@@ -145,6 +168,11 @@ export const partnerReferral = pgTable(
     // when marking the partner paid.
     payoutReceiptKey: text("payout_receipt_key"),
     payoutReceiptName: text("payout_receipt_name"),
+    // The Mercury ACH that paid this commission, matched by the Mercury
+    // webhook (recipient + amount). The dashboard link doubles as the receipt.
+    mercuryTransactionId: text("mercury_transaction_id"),
+    mercuryTransactionStatus: text("mercury_transaction_status").$type<MercuryTransactionStatus>(),
+    mercuryTransactionUrl: text("mercury_transaction_url"),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
@@ -155,5 +183,6 @@ export const partnerReferral = pgTable(
   (t) => [
     index("idx_partner_referral_partner").on(t.partnerId),
     uniqueIndex("uq_partner_referral_project").on(t.projectId),
+    uniqueIndex("uq_partner_referral_mercury_tx").on(t.mercuryTransactionId),
   ]
 );

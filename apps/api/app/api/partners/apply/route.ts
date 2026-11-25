@@ -46,9 +46,9 @@ const optional = (max: number) =>
 const bodySchema = z.object({
   fullName: text(120),
   phone: z.string().trim().max(40).nullish(),
-  // Printed on the agreement: mailing address and "Zelle: handle".
+  // Printed on the agreement. Payouts go by ACH via a Mercury invite sent
+  // on approval, so nothing payout-related is collected here.
   address: text(300),
-  payoutMethod: text(200),
   // Agreement 1.2: partners must be 18 or older.
   adult: z.literal(true),
   // Optional step: blank becomes null.
@@ -137,7 +137,6 @@ export async function POST(req: Request) {
     email,
     phone: data.phone?.trim() || null,
     address: data.address,
-    payoutMethod: data.payoutMethod,
     occupation: data.occupation,
     city: data.city,
     knowOwners: data.knowOwners,
@@ -168,7 +167,6 @@ export async function POST(req: Request) {
       fullName: fields.fullName,
       email,
       address: fields.address,
-      payoutMethod: fields.payoutMethod,
       signature: fields.signature,
       initials: fields.initials,
       signedAt,

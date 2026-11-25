@@ -50,6 +50,12 @@ export const DashboardIcon = (p: IconProps) => (
 export const CalendarCheckIcon = (p: IconProps) => (
   <Svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" /><path d="m9 16 2 2 4-4" /></Svg>
 );
+export const BankIcon = (p: IconProps) => (
+  <Svg {...p}><path d="M3 10h18" /><path d="M5 10v8" /><path d="M9.5 10v8" /><path d="M14.5 10v8" /><path d="M19 10v8" /><path d="M3 21h18" /><path d="m12 3 9 6H3l9-6Z" /></Svg>
+);
+export const SkipIcon = (p: IconProps) => (
+  <Svg {...p}><path d="M5 5v14" /><path d="m9 6 10 6-10 6V6Z" /></Svg>
+);
 export const MailIcon = (p: IconProps) => (
   <Svg {...p}><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></Svg>
 );

@@ -4,7 +4,7 @@ import { ApplicationError, getMe, submitApplication, AGREEMENT_VERSION, type Me 
 import { hub } from '../config';
 import { prefersReducedMotion } from '../lib/motion';
 import { Done } from '../apply/Done';
-import { EMPTY_VALUES, STEPS, STEP_FIELDS, payoutLabel, validate, type Errors, type FieldName, type FormValues, type StepNumber } from '../apply/form';
+import { EMPTY_VALUES, STEPS, STEP_FIELDS, validate, type Errors, type FieldName, type FormValues, type StepNumber } from '../apply/form';
 import { StepAbout, StepAgreement, StepNetwork, StepReview } from '../apply/Steps';
 
 type Status = 'idle' | 'loading' | 'error' | 'done';
@@ -142,7 +142,6 @@ function ApplyForm({ account }: { account: { name: string; email: string } }) {
         email: values.email.trim(),
         phone: values.phone.trim() || null,
         address: values.address.trim(),
-        payoutMethod: payoutLabel(values),
         adult: true,
         occupation: values.occupation.trim(),
         city: values.city.trim(),

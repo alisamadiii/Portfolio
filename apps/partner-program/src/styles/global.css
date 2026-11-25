@@ -173,6 +173,50 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 .step p { max-width: 340px; }
 @media (max-width: 820px) { .steps__line { display: none; } }
 
+/* ===== How you get paid (Mercury theme) =====
+   Mercury's own tokens (mercury.com): purple-base dark surfaces, #4d68eb
+   accent, pill buttons, medium weights. Scoped to this section only. */
+.section--mercury {
+  --m-bg: #11101a; --m-surface: #181623; --m-raised: #1f1d2d; --m-line: #272735; --m-line-2: #363644;
+  --m-text: #fbfcfd; --m-text-2: #c3c0df; --m-muted: #9d9da8; --m-accent: #4d68eb; --m-accent-soft: #9cb4e8;
+  background: var(--m-bg); color: var(--m-text); border-top: 1px solid var(--m-line); border-bottom: 1px solid var(--m-line);
+}
+.section--mercury .eyebrow { color: var(--m-muted); margin-bottom: 0; }
+.section--mercury .h2 { color: var(--m-text); font-weight: 500; letter-spacing: -0.03em; max-width: 820px; }
+.section--mercury .body-2 { color: var(--m-text-2); }
+.section--mercury ::selection { background: var(--m-accent); color: #fff; }
+.paid__eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-bottom: 16px; }
+.paid__via { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 10px; border: 1px solid var(--m-line-2); border-radius: 999px; background: var(--m-surface); color: var(--m-muted); font-size: 13px; font-weight: 500; }
+.paid__via img { height: 18px; width: auto; color: var(--m-text); }
+.paid { margin-top: 56px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 40px 64px; }
+.paid__steps { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.paid__step { display: flex; align-items: flex-start; gap: 18px; }
+.paid__num { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--m-raised); border: 1px solid var(--m-line-2); color: var(--m-text); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.paid__title { display: flex; align-items: center; gap: 10px; margin: 7px 0 8px; font-size: 20px; font-weight: 500; letter-spacing: -0.02em; color: var(--m-text); }
+.paid__title svg { color: var(--m-accent-soft); }
+.paid__step p { max-width: 460px; }
+.paid__note { padding: 18px 22px; border: 1px solid var(--m-line); border-radius: 12px; background: var(--m-surface); font-size: 15px; color: var(--m-muted); max-width: 520px; }
+.mock { --mercury: #4d68eb; --mercury-ink: #1f1d2d; flex: 1 1 360px; max-width: 460px; min-width: 0; position: relative; background: #fff; border: 1px solid var(--m-line-2); border-radius: 14px; color: var(--mercury-ink); font-family: var(--font); box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px -30px rgba(77,104,235,0.45), 0 20px 50px -30px rgba(0,0,0,0.8); }
+.mock__bar { display: flex; align-items: center; padding: 14px 20px; border-bottom: 1px solid #ecebf1; color: var(--mercury-ink); border-radius: 14px 14px 0 0; }
+.mock__bar img { height: 24px; width: auto; }
+.mock__body { padding: 24px 22px 26px; display: flex; flex-direction: column; gap: 10px; }
+.mock__h { font-size: 19px; font-weight: 500; letter-spacing: -0.015em; line-height: 1.25; }
+.mock__p { font-size: 13px; color: #70707d; margin-bottom: 6px; }
+.mock__row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mock__field { display: block; height: 36px; border: 1px solid #dddde5; border-radius: 8px; background: #fbfbff; padding: 0 12px; font-size: 12px; line-height: 34px; color: #9d9da8; }
+.mock__actions { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
+.mock__continue { padding: 0 18px; height: 38px; line-height: 38px; border-radius: 999px; background: var(--mercury); color: #fff; font-size: 14px; font-weight: 500; opacity: 0.4; }
+.mock__skip { position: relative; font-size: 15px; font-weight: 500; color: var(--mercury-ink); padding: 8px 16px; border-radius: 999px; outline: 2px solid var(--mercury); outline-offset: 3px; animation: skip-pulse 2.2s ease-in-out infinite; }
+.mock__callout { position: absolute; right: 18px; bottom: -22px; background: var(--mercury); color: #fff; font-size: 14px; font-weight: 500; padding: 10px 14px; border-radius: 999px; white-space: nowrap; box-shadow: 0 10px 30px -10px rgba(77,104,235,0.8); }
+.mock__callout strong { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.mock__callout-arrow { position: absolute; top: -5px; right: 30px; width: 12px; height: 12px; background: var(--mercury); transform: rotate(45deg); border-radius: 2px; }
+@keyframes skip-pulse { 0%, 100% { outline-color: var(--mercury); } 50% { outline-color: rgba(77,104,235,0.25); } }
+@media (max-width: 760px) { .mock { max-width: 100%; } .mock__callout { right: 12px; } }
+
+/* ===== Apply: inline note ===== */
+.note { padding: 18px 20px; border: 1px solid var(--line); border-left: 3px solid var(--coral); border-radius: var(--r-card); background: var(--bg); display: flex; flex-direction: column; gap: 6px; }
+.note__title { font-size: 15px; font-weight: 600; }
+
 /* ===== Earnings ===== */
 .earn { margin-top: 48px; display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch; }
 .earn__examples { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -331,6 +375,7 @@ button.stepper__item:hover { background: var(--card); }
 
 /* ===== Reduced motion ===== */
 @media (prefers-reduced-motion: reduce) {
+  .mock__skip { animation: none; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; }
   .marquee__track, .payout-card, .track__fill--hero, .pill-success, .wizard__step, .done, .done__check { animation: none; }

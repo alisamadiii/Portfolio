@@ -14,13 +14,17 @@ import {
 import { renderPartnerAgreement } from "@workspace/ui/pdfs/partner-agreement";
 
 import { adminProcedure, authenticatedProcedure, createTRPCRouter } from "../init";
+import { isMercuryConfigured } from "../lib/mercury";
 import {
   agreementKey,
   agreementUrl,
+  inviteToMercury,
   isPartnerCodeTaken,
+  pendingMercuryUrl,
   receiptKey,
   sendPartnerApproved,
   sendPartnerRejected,
+  syncMercuryInvite,
 } from "../lib/partners";
 import { getEntitlements } from "../lib/payment/entitlements";
 import {
@@ -29,6 +33,7 @@ import {
   providerFeeCents,
   normalizePartnerCode,
   partnerCodeError,
+  partnerPayoutState,
   partnerStats,
   projectDisplayName,
   RECEIPT_MAX_BYTES,
@@ -234,6 +239,14 @@ export const partnersRouter = createTRPCRouter({
       )
       .limit(1);
     if (!p) return null;
+    // Mercury payout state (the invite link is the partner's own; nothing
+    // else from Mercury is shown here).
+    const synced = await syncMercuryInvite(await getPartner(p.id));
+    const payout = {
+      state: partnerPayoutState(synced),
+      inviteUrl: synced.mercuryRecipientId ? null : synced.mercuryInviteUrl,
+      bankName: synced.mercuryBankName,
+    };
     // Project name only: never the client's contact details.
     const rows = await db
       .select({
@@ -263,6 +276,7 @@ export const partnersRouter = createTRPCRouter({
       approvedAt: p.approvedAt,
       agreementUrl: p.agreementKey ? agreementUrl(p.pdfToken) : null,
       commissionBps: p.commissionBps,
+      payout,
       referrals,
       stats: partnerStats(referrals),
     };
@@ -308,7 +322,7 @@ export const partnersRouter = createTRPCRouter({
   }),
 
   get: adminProcedure.input(idInput).query(async ({ input }) => {
-    const p = await getPartner(input.id);
+    const p = await syncMercuryInvite(await getPartner(input.id));
     const referrals = await db
       .select()
       .from(partnerReferral)
@@ -326,7 +340,8 @@ export const partnersRouter = createTRPCRouter({
     const info = await projectInfo(referrals.flatMap((r) => (r.projectId ? [r.projectId] : [])));
     const { pdfToken, agreementKey: key, ...rest } = p;
     return {
-      partner: { ...rest, hasAgreement: !!key },
+      partner: { ...rest, hasAgreement: !!key, payoutState: partnerPayoutState(p) },
+      mercuryConfigured: isMercuryConfigured(),
       referrals: referrals.map((r) => ({
         ...r,
         project: r.projectId ? (info.get(r.projectId) ?? null) : null,
@@ -383,7 +398,9 @@ export const partnersRouter = createTRPCRouter({
       return { code, available: !(await isPartnerCodeTaken(code, input.id)), problem: null };
     }),
 
-  // Approve with the code Ali chose, then email it to the partner.
+  // Approve with the code Ali chose, invite them to add their bank on
+  // Mercury, then email the code. A failed invite never blocks approval:
+  // admin re-sends it from the Payouts card.
   approve: adminProcedure.input(idInput.extend({ code: codeInput })).mutation(async ({ input }) => {
     const p = await getPartner(input.id);
     const code = input.code;
@@ -392,16 +409,55 @@ export const partnersRouter = createTRPCRouter({
       .update(partner)
       .set({ status: "approved", approvedAt: new Date(), rejectedAt: null })
       .where(eq(partner.id, p.id));
+    let mercuryInvited = false;
+    let mercuryUrl = pendingMercuryUrl(p);
+    if (isMercuryConfigured() && !p.mercuryRecipientId) {
+      try {
+        mercuryUrl = (await inviteToMercury(p)).onboardingUrl;
+        mercuryInvited = true;
+      } catch (err) {
+        console.error("[partners] mercury invite failed", p.id, err);
+      }
+    }
     try {
       await sendPartnerApproved({
         fullName: p.fullName,
         email: p.email,
         code,
+        mercuryUrl,
       });
     } catch (err) {
       throw emailError(err);
     }
-    return { code };
+    return { code, mercuryInvited };
+  }),
+
+  // Send or re-send the Mercury bank-details invite (expired link, invite
+  // failed on approval, or a partner approved before Mercury).
+  mercuryInvite: adminProcedure.input(idInput).mutation(async ({ input }) => {
+    const p = await getPartner(input.id);
+    if (!isMercuryConfigured()) {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "MERCURY_API_TOKEN is not set on the api." });
+    }
+    if (p.status !== "approved") {
+      throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Approve the partner first." });
+    }
+    try {
+      await inviteToMercury(p);
+    } catch (err) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Mercury invite failed: ${err instanceof Error ? err.message : "unknown error"}`,
+      });
+    }
+    return { ok: true };
+  }),
+
+  // Re-read the invite from Mercury now (the pages refresh it every 10 minutes).
+  mercurySync: adminProcedure.input(idInput).mutation(async ({ input }) => {
+    const p = await getPartner(input.id);
+    const synced = await syncMercuryInvite(p, true);
+    return { state: partnerPayoutState(synced), status: synced.mercuryInviteStatus };
   }),
 
   // Change an approved partner's code. The old code stops matching at once;
@@ -417,6 +473,7 @@ export const partnersRouter = createTRPCRouter({
             fullName: p.fullName,
             email: p.email,
             code: input.code,
+            mercuryUrl: pendingMercuryUrl(p),
           });
         } catch (err) {
           throw emailError(err);
@@ -435,6 +492,7 @@ export const partnersRouter = createTRPCRouter({
         fullName: p.fullName,
         email: p.email,
         code: p.code,
+        mercuryUrl: pendingMercuryUrl(p),
       });
     } catch (err) {
       throw emailError(err);
@@ -466,6 +524,7 @@ export const partnersRouter = createTRPCRouter({
     .input(
       idInput.extend({
         phone: optText(40).optional(),
+        // Admin-only payout note (e.g. the name on the Mercury recipient).
         payoutMethod: optText(300).optional(),
         commissionBps: z.number().int().min(0).max(10_000).optional(),
         notes: optText(5000).optional(),
@@ -745,12 +804,21 @@ export const partnersRouter = createTRPCRouter({
     return { url: await presignPrivateGet(r.payoutReceiptKey) };
   }),
 
-  // Undo also deletes the receipt; marking paid again needs a new one.
+  // Undo also deletes the receipt and forgets the Mercury transfer; marking
+  // paid again needs a new one.
   unmarkPartnerPaid: adminProcedure.input(referralIdInput).mutation(async ({ input }) => {
     const r = await getReferral(input.referralId);
     await db
       .update(partnerReferral)
-      .set({ partnerPaidAt: null, payoutReference: null, payoutReceiptKey: null, payoutReceiptName: null })
+      .set({
+        partnerPaidAt: null,
+        payoutReference: null,
+        payoutReceiptKey: null,
+        payoutReceiptName: null,
+        mercuryTransactionId: null,
+        mercuryTransactionStatus: null,
+        mercuryTransactionUrl: null,
+      })
       .where(eq(partnerReferral.id, r.id));
     await dropReceipt(r.payoutReceiptKey);
     return { ok: true };

@@ -1,5 +1,5 @@
 import { contact, program } from '../config';
-import { payoutLabel, todayLabel, type FormValues } from './form';
+import { todayLabel, type FormValues } from './form';
 
 /**
  * The Partner Agreement. The signed PDF is rendered from
@@ -11,7 +11,7 @@ const KEY_TERMS: [string, string][] = [
   ['What you do', 'Introduce local businesses that need a website. We handle the conversation, design and build. (Section 1)'],
   ['What you earn', "20% of the business's first website payment, after payment processing fees. One time per business. (Section 3)"],
   ['Monthly subscription', '$0 to you. You earn only from the first website payment. (Section 3)'],
-  ["When you're paid", 'Within 14 days after the business pays, by Zelle or Cash App. (Section 3)'],
+  ["When you're paid", 'Within 14 days after the business pays, by bank transfer (ACH) to the account you add through our bank. (Section 3)'],
   ['Refunds', "If the business is refunded before your payout is sent, no payout is owed. Once sent, it's yours to keep. (Section 3)"],
   ['Cost to join', 'Free. (Section 1)'],
   ['Ending', 'Either side can stop anytime. Payouts you already earned are still paid. (Section 7)'],
@@ -39,7 +39,7 @@ const SECTIONS: { title: string; clauses: string[] }[] = [
       "3.1. For each Qualified Referral, Partner earns twenty percent (20%) of the Net First Payment, unless Company agrees a different rate with Partner in writing. \"Net First Payment\" means the business's first website payment (the one-time setup fee only, not the monthly plan or sales tax), minus every fee the payment provider charges on it, such as Stripe processing fees. If the business pays with no provider fees, such as by check, the commission is calculated on the full setup fee.",
       '3.2. Example: a business pays a $1,000 setup fee by card. The Stripe fee on it is $29.30, so the Net First Payment is $970.70, and Partner earns $194.14 at the 20% rate. Actual fees vary by payment method and card.',
       "3.3. The payout is one time per business. Partner earns nothing from the business's monthly plan, renewals, add-ons or later projects.",
-      "3.4. Agency sends the payout within fourteen (14) days after the business's payment is received and cleared, by Zelle or Cash App to the details Partner provides. Agency shows Partner the payment amount and fees on request.",
+      "3.4. Agency sends the payout within fourteen (14) days after the business's payment is received and cleared, by bank transfer (ACH) to the bank account Partner adds through the secure recipient form of Agency's bank (Mercury). Partner provides any tax form that form requires, such as a W-9. Agency shows Partner the payment amount and fees on request.",
       '3.5. If the business receives a refund before the payout is sent, no payout is owed. Once a payout is sent, Partner keeps it.',
     ],
   },
@@ -99,7 +99,6 @@ const SECTIONS: { title: string; clauses: string[] }[] = [
 export function AgreementText({ values }: { values: FormValues }) {
   const name = values.fullName.trim() || '[Partner full name]';
   const address = values.address.trim() || '[Partner address]';
-  const payout = payoutLabel(values) || '[Zelle / Cash App: handle or phone]';
   const date = todayLabel();
 
   const sigRows: [string, string, string][] = [
@@ -109,7 +108,7 @@ export function AgreementText({ values }: { values: FormValues }) {
     ['Title', 'Managing Member', 'Partner'],
     ['Date', date, date],
     ['Notices to', contact.email, values.email],
-    ['Payout method', '', payout],
+    ['Payout method', '', 'Bank transfer (ACH) via Mercury'],
   ];
 
   return (

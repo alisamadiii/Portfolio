@@ -13,11 +13,11 @@ export const program = {
 
   // Program terms (the agreement PDF mirrors these: packages/ui/src/pdfs/partner-agreement.tsx).
   payoutDays: '14 days',
-  paymentMethod: 'Zelle or Cash App',
+  paymentMethod: 'bank transfer (ACH)',
   approvalDays: '2',
   refundPolicy: "If the business is refunded before your payout is sent, no payout is owed. Once it's sent, it's yours to keep.",
   // Must equal PARTNER_AGREEMENT_VERSION in packages/trpc/src/lib/partners-shared.ts.
-  agreementVersion: '2026-11.3',
+  agreementVersion: '2026-11.4',
 
   // Product facts used in examples.
   mainPlanPrice: 699,

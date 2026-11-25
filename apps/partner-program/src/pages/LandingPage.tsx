@@ -5,6 +5,7 @@ import { useScrollReveal } from '../lib/motion';
 import { ApplyCta } from '../sections/ApplyCta';
 import { Earnings } from '../sections/Earnings';
 import { Faq } from '../sections/Faq';
+import { GetPaid } from '../sections/GetPaid';
 import { Hero } from '../sections/Hero';
 import { HowItWorks } from '../sections/HowItWorks';
 import { Marquee } from '../sections/Marquee';
@@ -25,6 +26,7 @@ export default function LandingPage() {
         <Marquee />
         <HowItWorks />
         <Earnings />
+        <GetPaid />
         <WhoItsFor />
         <WhatWeBuild />
         <Faq />

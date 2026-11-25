@@ -11,6 +11,8 @@ import PartnerRejectedTemplate from "@workspace/email/emails/partner-rejected";
 import { sendEmail } from "@workspace/email/usesend";
 import { renderEmailParts } from "@workspace/email/utils";
 
+import { createRecipientInvite, getRecipient, getRecipientInvite, getTransaction, isMercuryConfigured } from "./mercury";
+import { isOutgoingToRecipient, matchPayoutReferral, type MercuryInvite } from "./mercury-shared";
 import { normalizePartnerCode } from "./partners-shared";
 
 // ─── Partner program (server) ────────────────────────────────────
@@ -126,6 +128,111 @@ export const referralLine = (
       ? `Referred by ${found.fullName} (${found.code})`
       : `Referral code (not found): ${code.trim()}`;
 
+// ─── Mercury payouts ─────────────────────────────────────────────
+// Partners add their bank account on Mercury's own form (invite on
+// approval, W-9 included). Ali pays by ACH in Mercury; the webhook below
+// matches each transfer to the owed referral. Nothing here moves money.
+
+type PartnerRow = typeof partner.$inferSelect;
+
+const INVITE_RECHECK_MS = 10 * 60 * 1000;
+
+const inviteFields = (invite: MercuryInvite) => ({
+  mercuryInviteId: invite.id,
+  mercuryInviteUrl: invite.onboardingUrl,
+  mercuryInviteStatus: invite.status,
+  mercuryInviteCheckedAt: new Date(),
+});
+
+/** Sends (or re-sends) the Mercury invite email and stores the invite. Throws on API errors. */
+export async function inviteToMercury(p: PartnerRow) {
+  const invite = await createRecipientInvite({
+    name: p.fullName,
+    contactEmail: p.email,
+    recipientId: p.mercuryRecipientId,
+    notes: "Partner Program payouts from Ali Samadii LLC. Add the bank account you want your referral payouts sent to. You can skip creating a Mercury profile.",
+  });
+  await db
+    .update(partner)
+    .set({ ...inviteFields(invite), mercuryInviteAt: new Date() })
+    .where(eq(partner.id, p.id));
+  return invite;
+}
+
+/**
+ * Refreshes a pending invite from Mercury at most every 10 minutes (or on
+ * `force`), and copies the recipient id + bank name once it completes.
+ * Never throws: page loads must not break when Mercury is down.
+ */
+export async function syncMercuryInvite(p: PartnerRow, force = false): Promise<PartnerRow> {
+  if (!isMercuryConfigured() || !p.mercuryInviteId || p.mercuryRecipientId) return p;
+  const stale =
+    force || !p.mercuryInviteCheckedAt || Date.now() - p.mercuryInviteCheckedAt.getTime() > INVITE_RECHECK_MS;
+  if (!stale || (p.mercuryInviteStatus !== "created" && !force)) return p;
+  try {
+    const invite = await getRecipientInvite(p.mercuryInviteId);
+    const patch: Partial<PartnerRow> = inviteFields(invite);
+    if (invite.status === "completed" && invite.recipientId) {
+      patch.mercuryRecipientId = invite.recipientId;
+      const recipient = await getRecipient(invite.recipientId).catch(() => null);
+      patch.mercuryBankName = recipient?.electronicRoutingInfo?.bankName?.trim() || null;
+    }
+    await db.update(partner).set(patch).where(eq(partner.id, p.id));
+    return { ...p, ...patch };
+  } catch (err) {
+    console.error("[partners] mercury invite sync failed", p.id, err);
+    return p;
+  }
+}
+
+/**
+ * Webhook: a Mercury transaction was created or updated. Re-reads it, finds
+ * the partner by recipient and the one owed referral with that commission,
+ * then records the transfer (paid once Mercury says "sent"). Safe to run
+ * twice; ambiguous matches are left for admin.
+ */
+export async function handleMercuryTransactionEvent(transactionId: string) {
+  const t = await getTransaction(transactionId);
+  if (!isOutgoingToRecipient(t)) return { matched: false as const, reason: "not a payout" };
+  const [p] = await db
+    .select({ id: partner.id })
+    .from(partner)
+    .where(eq(partner.mercuryRecipientId, t.counterpartyId!))
+    .limit(1);
+  if (!p) return { matched: false as const, reason: "no partner for recipient" };
+  const rows = await db
+    .select({
+      id: partnerReferral.id,
+      commissionCents: partnerReferral.commissionCents,
+      partnerPaidAt: partnerReferral.partnerPaidAt,
+      mercuryTransactionId: partnerReferral.mercuryTransactionId,
+      clientPaidAt: partnerReferral.clientPaidAt,
+    })
+    .from(partnerReferral)
+    .where(eq(partnerReferral.partnerId, p.id));
+  const match = matchPayoutReferral(t, rows.filter((r) => r.clientPaidAt));
+  if (!match) {
+    console.warn("[partners] mercury payout not matched", { transactionId, partnerId: p.id, amount: t.amount });
+    return { matched: false as const, reason: "no single owed referral" };
+  }
+  const sent = t.status === "sent";
+  await db
+    .update(partnerReferral)
+    .set({
+      mercuryTransactionId: t.id,
+      mercuryTransactionStatus: t.status,
+      mercuryTransactionUrl: t.dashboardLink,
+      ...(sent && !match.partnerPaidAt
+        ? {
+            partnerPaidAt: new Date(t.postedAt ?? t.createdAt),
+            payoutReference: `Mercury ${t.id}`,
+          }
+        : {}),
+    })
+    .where(eq(partnerReferral.id, match.id));
+  return { matched: true as const, referralId: match.id, status: t.status };
+}
+
 // ─── Emails ──────────────────────────────────────────────────────
 
 // Templates live in packages/email (partner-application, partner-approved,
@@ -160,6 +267,7 @@ export async function sendPartnerApproved(a: {
   fullName: string;
   email: string;
   code: string;
+  mercuryUrl?: string | null;
 }) {
   return sendEmail({
     from: FROM,
@@ -170,10 +278,18 @@ export async function sendPartnerApproved(a: {
       createElement(PartnerApprovedTemplate, {
         fullName: a.fullName,
         code: a.code,
+        mercuryUrl: a.mercuryUrl ?? null,
       })
     )),
   });
 }
+
+/** The invite link to put in emails: only while the partner still has to add their bank. */
+export const pendingMercuryUrl = (p: {
+  mercuryInviteUrl: string | null;
+  mercuryInviteStatus: string | null;
+  mercuryRecipientId: string | null;
+}) => (p.mercuryRecipientId || p.mercuryInviteStatus !== "created" ? null : p.mercuryInviteUrl);
 
 export async function sendPartnerRejected(a: { fullName: string; email: string }) {
   return sendEmail({

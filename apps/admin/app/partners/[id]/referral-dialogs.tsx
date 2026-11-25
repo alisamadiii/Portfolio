@@ -415,7 +415,7 @@ export function PartnerPaidDialog({
           <DialogTitle>Partner paid</DialogTitle>
           <DialogDescription>
             You sent {formatCents(referral?.commissionCents ?? 0)} for {referral?.project?.name ?? referral?.businessName}.
-            {payoutMethod ? ` Payout method: ${payoutMethod}.` : ""}
+            {payoutMethod ? ` Note: ${payoutMethod}.` : ""} Mercury transfers are recorded automatically; use this for anything paid another way.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -444,7 +444,7 @@ export function PartnerPaidDialog({
             <Input
               id="pp-ref"
               maxLength={200}
-              placeholder="Zelle confirmation, Cash App id…"
+              placeholder="Mercury transaction id, check number…"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
             />

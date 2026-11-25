@@ -111,6 +111,40 @@ export const projectDisplayName = (p: { name?: string | null; websiteUrl: string
     ? p.websiteUrl.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "") || p.repo
     : p.repo);
 
+// ─── Partner payouts via Mercury ─────────────────────────────────
+// On approval the api invites the partner through Mercury (our bank) to add
+// their bank account on Mercury's own form. Ali pays by ACH from Mercury;
+// the Mercury webhook matches the transfer to the owed referral.
+
+export type PartnerPayoutState = "not_invited" | "invited" | "ready" | "expired";
+
+/** Derived from the Mercury invite columns; never from the old payout_method text. */
+export function partnerPayoutState(p: {
+  mercuryInviteId: string | null;
+  mercuryInviteStatus: string | null;
+  mercuryRecipientId: string | null;
+}): PartnerPayoutState {
+  if (p.mercuryRecipientId) return "ready";
+  if (!p.mercuryInviteId) return "not_invited";
+  if (p.mercuryInviteStatus === "expired" || p.mercuryInviteStatus === "declined") return "expired";
+  return "invited";
+}
+
+export const PAYOUT_STATE_LABELS: Record<PartnerPayoutState, string> = {
+  not_invited: "No Mercury invite yet",
+  invited: "Mercury invite sent",
+  ready: "Bank account on file",
+  expired: "Mercury invite expired",
+};
+
+/** Mercury transaction statuses that mean the money did not arrive. */
+export const MERCURY_FAILED_STATUSES = ["cancelled", "failed", "reversed", "blocked"] as const;
+export const isMercuryFailed = (status: string | null | undefined) =>
+  !!status && (MERCURY_FAILED_STATUSES as readonly string[]).includes(status);
+
+/** Mercury amounts are dollars with cents ("194.14"); commissions are stored in cents. */
+export const mercuryAmountToCents = (amount: number) => Math.round(Math.abs(amount) * 100);
+
 export const CLIENT_PAYMENT_LABELS = {
   stripe: "Stripe",
   cashapp: "Cash App",
@@ -162,4 +196,4 @@ export function parseRefCookie(cookieHeader: string | null | undefined): string 
  * apps/partner-program/src/config.ts agreementVersion (bump both together,
  * with the text in AgreementText.tsx and packages/ui/src/pdfs/partner-agreement.tsx).
  */
-export const PARTNER_AGREEMENT_VERSION = "2026-11.3";
+export const PARTNER_AGREEMENT_VERSION = "2026-11.4";

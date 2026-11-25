@@ -10,9 +10,11 @@ import {
   Check,
   Copy,
   Download,
+  ExternalLink,
   Mail,
   MoreHorizontal,
   Plus,
+  RefreshCw,
   Trash,
   X,
 } from "lucide-react";
@@ -52,7 +54,13 @@ import {
 import { Textarea } from "@workspace/ui/components/textarea";
 
 import { useTRPC } from "@workspace/trpc/client";
-import { CLIENT_PAYMENT_LABELS, formatCents, formatRate } from "@workspace/trpc/lib/partners-shared";
+import {
+  CLIENT_PAYMENT_LABELS,
+  formatCents,
+  formatRate,
+  isMercuryFailed,
+  PAYOUT_STATE_LABELS,
+} from "@workspace/trpc/lib/partners-shared";
 import { urls } from "@workspace/ui/lib/company";
 
 import { Content } from "@/components/content-admin";
@@ -69,6 +77,8 @@ import {
 } from "./referral-dialogs";
 
 const day = (d: Date | string | null) => (d ? format(new Date(d), "MMM d, yyyy") : "—");
+// White wordmark on Mercury's dark, 2x (same file the approval email uses).
+const MERCURY_WORDMARK = "https://cdn.alisamadii.com/third-party-services/mercury-wordmark-dark.png";
 
 type Confirm =
   | { kind: "reject" }
@@ -153,6 +163,15 @@ export default function PartnerPage() {
   const unmarkPartner = useMutation(
     trpc.partners.unmarkPartnerPaid.mutationOptions({ onSuccess: ok("Payout removed."), onError })
   );
+  const mercuryInvite = useMutation(
+    trpc.partners.mercuryInvite.mutationOptions({ onSuccess: ok("Mercury invite sent."), onError })
+  );
+  const mercurySync = useMutation(
+    trpc.partners.mercurySync.mutationOptions({
+      onSuccess: ({ state }) => ok(state === "ready" ? "Bank account on file." : "Still waiting on the partner.")(),
+      onError,
+    })
+  );
 
   if (query.isPending) {
     return (
@@ -170,7 +189,8 @@ export default function PartnerPage() {
     );
   }
 
-  const { partner: p, referrals, stats, signups } = query.data;
+  const { partner: p, referrals, stats, signups, mercuryConfigured } = query.data;
+  const mercuryBusy = mercuryInvite.isPending || mercurySync.isPending;
   const busy = reject.isPending || resend.isPending || remove.isPending;
   const copy = (text: string, label: string) =>
     navigator.clipboard.writeText(text).then(
@@ -304,12 +324,58 @@ export default function PartnerPage() {
 
         <section className="bg-card rounded-2xl border p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-semibold">Payout &amp; notes</h2>
+            <h2 className="font-semibold">Payouts (Mercury)</h2>
             {!admin && (
               <Button variant="ghost" size="sm" onClick={() => setAdmin({ payoutMethod: p.payoutMethod ?? "", commission: String(p.commissionBps / 100), notes: p.notes ?? "" })}>
                 Edit
               </Button>
             )}
+          </div>
+          <div className="mb-4 rounded-xl border border-[#272735] bg-[#11101a] p-4 text-sm text-[#fbfcfd]">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-3">
+                <img src={MERCURY_WORDMARK} alt="Mercury" width={87} height={20} className="h-5 w-auto" />
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#363644] bg-[#181623] px-2.5 py-0.5 text-xs font-medium text-[#c3c0df]">
+                  <span
+                    className={`size-1.5 rounded-full ${
+                      p.payoutState === "ready" ? "bg-emerald-400" : p.payoutState === "invited" ? "bg-[#4d68eb]" : p.payoutState === "expired" ? "bg-red-400" : "bg-[#9d9da8]"
+                    }`}
+                  />
+                  {PAYOUT_STATE_LABELS[p.payoutState]}
+                  {p.payoutState === "ready" && p.mercuryBankName ? ` · ${p.mercuryBankName}` : ""}
+                </span>
+              </span>
+              <span className="flex flex-wrap gap-1.5">
+                {p.payoutState === "invited" && p.mercuryInviteUrl && (
+                  <Button variant="ghost" size="sm" className="text-[#c3c0df] hover:bg-[#1f1d2d] hover:text-[#fbfcfd]" onClick={() => copy(p.mercuryInviteUrl!, "Invite link")}>
+                    <Copy /> Copy link
+                  </Button>
+                )}
+                {p.payoutState !== "ready" && mercuryConfigured && p.status === "approved" && (
+                  <Button size="sm" className="rounded-full bg-[#4d68eb] text-white hover:bg-[#4d68eb] hover:brightness-110" disabled={mercuryBusy} onClick={() => mercuryInvite.mutate({ id })}>
+                    <Mail /> {p.payoutState === "not_invited" ? "Send invite" : "Re-invite"}
+                  </Button>
+                )}
+                {p.payoutState !== "not_invited" && mercuryConfigured && (
+                  <Button variant="ghost" size="sm" className="text-[#c3c0df] hover:bg-[#1f1d2d] hover:text-[#fbfcfd]" disabled={mercuryBusy} onClick={() => mercurySync.mutate({ id })}>
+                    <RefreshCw /> Refresh
+                  </Button>
+                )}
+              </span>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-[#9d9da8]">
+              {!mercuryConfigured
+                ? "Set MERCURY_API_TOKEN on the api to send invites and track bank details."
+                : p.payoutState === "not_invited"
+                  ? p.status === "approved"
+                    ? "The partner has no Mercury invite. Send one so they can add their bank account."
+                    : "The Mercury invite is sent automatically when you approve."
+                  : p.payoutState === "invited"
+                    ? `Invite sent ${day(p.mercuryInviteAt)}. The partner adds their bank account (and W-9) on Mercury's form; refresh to check.`
+                    : p.payoutState === "expired"
+                      ? "The link expired or was declined. Re-invite to send a new one."
+                      : "Pay from Mercury → Recipients → the partner's name. The transfer is matched to the owed referral automatically."}
+            </p>
           </div>
           {admin ? (
             <form
@@ -325,11 +391,11 @@ export default function PartnerPage() {
               }}
             >
               <div className="space-y-1.5">
-                <Label htmlFor="payout">Payout method</Label>
+                <Label htmlFor="payout">Payout note</Label>
                 <Input
                   id="payout"
                   maxLength={300}
-                  placeholder="Zelle (555) 123-4567"
+                  placeholder="Name on the Mercury recipient, special arrangements…"
                   value={admin.payoutMethod}
                   onChange={(e) => setAdmin({ ...admin, payoutMethod: e.target.value })}
                 />
@@ -356,7 +422,7 @@ export default function PartnerPage() {
             </form>
           ) : (
             <dl className="grid grid-cols-[120px_1fr] gap-y-2 text-sm">
-              <dt className="text-muted-foreground">Payout method</dt>
+              <dt className="text-muted-foreground">Payout note</dt>
               <dd>{p.payoutMethod || "—"}</dd>
               <dt className="text-muted-foreground">Commission</dt>
               <dd>{formatRate(p.commissionBps)}</dd>
@@ -474,7 +540,23 @@ export default function PartnerPage() {
                     {r.partnerPaidAt ? (
                       <>
                         {day(r.partnerPaidAt)}
-                        {r.payoutReference && <div className="text-muted-foreground text-xs">{r.payoutReference}</div>}
+                        {isMercuryFailed(r.mercuryTransactionStatus) && (
+                          <div>
+                            <StatusBadge tone="red">Mercury: {r.mercuryTransactionStatus}</StatusBadge>
+                          </div>
+                        )}
+                        {r.mercuryTransactionUrl ? (
+                          <a
+                            href={r.mercuryTransactionUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-muted-foreground inline-flex items-center gap-1 text-xs underline underline-offset-2 hover:no-underline"
+                          >
+                            Mercury transfer <ExternalLink className="size-3" />
+                          </a>
+                        ) : (
+                          r.payoutReference && <div className="text-muted-foreground text-xs">{r.payoutReference}</div>
+                        )}
                         {r.payoutReceiptKey && (
                           <button
                             type="button"
@@ -488,7 +570,12 @@ export default function PartnerPage() {
                         )}
                       </>
                     ) : r.clientPaidAt ? (
-                      <span className="text-orange-600 dark:text-orange-400">Owed</span>
+                      <>
+                        <span className="text-orange-600 dark:text-orange-400">Owed</span>
+                        {r.mercuryTransactionStatus === "pending" && (
+                          <div className="text-muted-foreground text-xs">Mercury transfer pending</div>
+                        )}
+                      </>
                     ) : (
                       "—"
                     )}
