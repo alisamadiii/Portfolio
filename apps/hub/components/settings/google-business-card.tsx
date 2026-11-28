@@ -27,7 +27,6 @@ export function GoogleBusinessCard({ projectId }: { projectId: string }) {
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: trpc.project.business.pathKey() }),
-      queryClient.invalidateQueries({ queryKey: trpc.feedback.pathKey() }),
       queryClient.invalidateQueries({ queryKey: trpc.googleReviews.pathKey() }),
     ]);
   const setPlace = useMutation(
@@ -164,7 +163,7 @@ export function PlaceSearch({
     <div className="flex flex-col gap-4">
       <p className="text-sm text-dim">
         Search your business name as it appears on Google, then pick your business listing (not your street
-        address). <DocsLink path="client-hub/feedback#setting-it-up">How it works</DocsLink>
+        address). <DocsLink path="client-hub/google-reviews">How it works</DocsLink>
       </p>
       <form
         className="flex flex-wrap gap-2"
@@ -258,7 +257,7 @@ export function GoogleLinkForm({
         <li>Select Share, copy the link and paste it here.</li>
       </ol>
       <p className="text-sm text-dim">
-        <DocsLink path="client-hub/feedback#setting-it-up">See how to set it up, step by step</DocsLink>
+        <DocsLink path="client-hub/settings#google-listing">See how to set it up, step by step</DocsLink>
       </p>
       <div className="flex flex-wrap gap-2">
         <Input

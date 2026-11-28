@@ -42,7 +42,6 @@ export function BusinessCard({ projectId }: { projectId: string }) {
           queryClient.invalidateQueries({ queryKey: trpc.project.business.pathKey() }),
           // The switcher and page titles show the name.
           queryClient.invalidateQueries({ queryKey: trpc.cms.repos.listMine.queryKey() }),
-          queryClient.invalidateQueries({ queryKey: trpc.feedback.pathKey() }),
         ]);
       },
       onError: (error) => toast.error(error.message),

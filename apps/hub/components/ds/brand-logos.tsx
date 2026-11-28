@@ -1,6 +1,6 @@
 // Third-party brand marks for apps whose logo users recognize (Google Ads,
-// Google Analytics, Google Calendar, Resend). Full color, so they sit on a
-// white tile, never a coral one. Our own apps (Leads, Newsletter) keep their lucide icons.
+// Google Analytics, Resend). Full color, so they sit on a
+// white tile, never a coral one. Our own apps (Leads) keep their lucide icons.
 
 type LogoProps = { className?: string };
 
@@ -93,32 +93,6 @@ export function NetlifyLogo({ className }: LogoProps) {
   );
 }
 
-export function GoogleCalendarLogo({ className }: LogoProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <path fill="#fff" d="M18.3 5.7H5.7v12.6h12.6z" />
-      <path fill="#EA4335" d="M18.3 24 24 18.3h-5.7z" />
-      <path fill="#FBBC04" d="M24 5.7h-5.7v12.6H24z" />
-      <path fill="#34A853" d="M18.3 18.3H5.7V24h12.6z" />
-      <path fill="#188038" d="M0 18.3v3.8C0 23.1.9 24 1.9 24h3.8v-5.7z" />
-      <path fill="#1967D2" d="M24 5.7V1.9C24 .9 23.1 0 22.1 0h-3.8v5.7z" />
-      <path fill="#4285F4" d="M18.3 0H1.9C.9 0 0 .9 0 1.9v16.4h5.7V5.7h12.6z" />
-      <text
-        x="12"
-        y="16.2"
-        textAnchor="middle"
-        fontFamily="Arial, sans-serif"
-        fontSize="8"
-        fontWeight="700"
-        fill="#4285F4"
-      >
-        31
-      </text>
-    </svg>
-  );
-}
-
-/** Uber Eats: black tile, white "Uber", green "Eats" (set in type, not the trademark drawing). */
 export function UberEatsLogo({ className }: LogoProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden>

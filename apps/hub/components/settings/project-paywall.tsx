@@ -30,20 +30,12 @@ const PITCH: Record<Feature, { title: string; body: string }> = {
     body: "Describe a change, watch it happen on a live preview, then publish in one click.",
   },
   leads: {
-    title: "Every lead in one inbox",
-    body: "Form and call leads from your website, tracked from first click to closed deal.",
+    title: "Every lead from your website in one list",
+    body: "Form leads from your website, tracked from first click to closed deal.",
   },
   ads: {
     title: "See what your ads bring in",
     body: "Spend, clicks and leads from Google Ads, side by side.",
-  },
-  newsletter: {
-    title: "Stay in touch with your customers",
-    body: "A newsletter that brings past customers back for repeat business.",
-  },
-  feedback: {
-    title: "Get more 5-star Google reviews",
-    body: "Send customers one review link. Happy customers go to Google, the rest tell you privately.",
   },
 };
 

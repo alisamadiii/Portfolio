@@ -11,8 +11,6 @@ import {
   hubCollaborator,
   hubCollaboratorInvite,
   hubReview,
-  hubReviewFeedback,
-  hubReviewLink,
   hubReviewsSource,
   hubConfig,
   hubProject,
@@ -47,12 +45,6 @@ const deleteProjectChildRows = async (
   await db
     .delete(hubCollaboratorInvite)
     .where(inArray(hubCollaboratorInvite.projectId, projectIds));
-  await db
-    .delete(hubReviewFeedback)
-    .where(inArray(hubReviewFeedback.projectId, projectIds));
-  await db
-    .delete(hubReviewLink)
-    .where(inArray(hubReviewLink.projectId, projectIds));
   await db.delete(hubReview).where(inArray(hubReview.projectId, projectIds));
   await db
     .delete(hubReviewsSource)

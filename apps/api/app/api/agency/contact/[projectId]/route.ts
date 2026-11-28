@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { usesendFetch } from "@workspace/email/usesend";
-import { senderDisplayName } from "@workspace/trpc/lib/inbox-shared";
 import { workspaceFetch } from "@workspace/trpc/lib/usesend-provision";
 import {
   MAX_BODY_BYTES,
@@ -10,6 +9,7 @@ import {
   isEmail,
   stripUrl,
   tooFast,
+  senderDisplayName,
 } from "@workspace/trpc/lib/agency/lead-capture";
 import { urls } from "@workspace/ui/lib/company";
 
@@ -28,7 +28,7 @@ import {
 // Public endpoint behind the contact script (public/contact.js) on clients' websites.
 // Unlike the lead-capture endpoint, this just sends the site owner an email
 // from the shared agency sending domain: through the project's own useSend team
-// when it has one (hub_project.usesendTeamId, set by the Newsletter app), else
+// when it has one (hub_project.usesendTeamId, legacy), else
 // the shared agency key. No lead row, no ad attribution.
 //
 // contact.js posts JSON as text/plain (a "simple" CORS request, no preflight). The
@@ -84,10 +84,9 @@ export async function POST(
     return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
   }
 
-  // Sending runs on the shared agency domain. Projects that set up the
-  // Newsletter app send through their own useSend team (so it shows in their
-  // workspace); the rest use the shared agency key. Workspaces are only
-  // created by the Newsletter app, never at import.
+  // Sending runs on the shared agency domain. Projects that still own a useSend
+  // team (legacy, from the removed Newsletter app) send through it; the rest
+  // use the shared agency key.
   const recipient = client.notifyEmail ?? client.ownerEmail;
   if (!recipient) {
     return NextResponse.json(

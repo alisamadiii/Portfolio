@@ -9,10 +9,7 @@ import { cmsRouter } from "./cms/index";
 import { contactRouter } from "./contact";
 import { deployRouter } from "./deploy";
 import { emailsRouter } from "./emails";
-import { newsletterRouter } from "./newsletter";
-import { feedbackRouter } from "./feedback";
 import { googleReviewsRouter } from "./google-reviews";
-import { gcalRouter } from "./gcal";
 import { inspirationRouter } from "./inspiration";
 import { integrationsRouter } from "./integrations/index";
 import { leadsRouter } from "./leads";
@@ -26,8 +23,6 @@ import { neonRouter } from "./neon";
 import { resendRouter } from "./resend";
 import { shopifyRouter } from "./shopify";
 import { siteMonitorRouter } from "./site-monitor";
-import { automationsRouter } from "./automations";
-import { flowsServiceRouter } from "./flows-service";
 import { uberEatsRouter } from "./uber-eats";
 import { doordashRouter } from "./doordash";
 import { grubhubRouter } from "./grubhub";
@@ -50,7 +45,6 @@ export const appRouter = createTRPCRouter({
   uploads: uploadsRouter,
   contact: contactRouter,
   emails: emailsRouter,
-  newsletter: newsletterRouter,
   analytics: analyticsRouter,
   integrations: integrationsRouter,
   deploy: deployRouter,
@@ -65,16 +59,12 @@ export const appRouter = createTRPCRouter({
   wix: wixRouter,
   clientWebsites: clientWebsitesRouter,
   inspiration: inspirationRouter,
-  gcal: gcalRouter,
-  feedback: feedbackRouter,
   googleReviews: googleReviewsRouter,
   uberEats: uberEatsRouter,
   shopify: shopifyRouter,
   doordash: doordashRouter,
   grubhub: grubhubRouter,
   siteMonitor: siteMonitorRouter,
-  automations: automationsRouter,
-  flowsService: flowsServiceRouter,
 });
 
 // export type definition of API

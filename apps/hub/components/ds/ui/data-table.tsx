@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import { cn } from "@workspace/ui/lib/utils";
 
@@ -60,14 +61,14 @@ export function DataTable<T>({
           ));
           if (rowHref) {
             return (
-              <a
+              <Link
                 key={rowKey(r)}
                 href={rowHref(r)}
                 className={cn(rowClass, "text-inherit no-underline")}
                 style={{ gridTemplateColumns: template }}
               >
                 {cells}
-              </a>
+              </Link>
             );
           }
           return (

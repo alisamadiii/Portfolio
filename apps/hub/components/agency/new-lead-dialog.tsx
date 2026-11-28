@@ -36,7 +36,7 @@ export function NewLeadDialog() {
       onSuccess: (lead) => {
         queryClient.invalidateQueries({ queryKey: trpc.agency.leads.pathKey() });
         setOpen(false);
-        router.push(`/leads?tab=conversations&lead=${lead.id}`);
+        router.push(`/leads/${lead.id}`);
       },
       onError: (error) => toast.error(error.message),
     })

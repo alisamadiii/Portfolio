@@ -5,13 +5,10 @@ import { FREE_PLAN, type Entitlement, type Feature } from "./payment/plans";
 export const APP_IDS = [
   "leads",
   "analytics",
-  "newsletter",
   "google-ads",
   "resend",
-  "gcal",
   "neon",
   "wix",
-  "feedback",
   "google-reviews",
   "uber-eats",
   "doordash",
@@ -24,9 +21,7 @@ export type AppId = (typeof APP_IDS)[number];
 export const APP_FEATURES: Partial<Record<AppId, Feature>> = {
   leads: "leads",
   analytics: "analytics",
-  newsletter: "newsletter",
   "google-ads": "ads",
-  feedback: "feedback",
 };
 
 /**

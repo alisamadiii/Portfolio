@@ -21,15 +21,9 @@ export const GA_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
 // Event CRUD on the user's calendars (we only touch `primary`) — narrower
 // than the full calendar scope, no calendar-list access needed.
 export const CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar.events";
-// Non-sensitive (no Google review): the calendar list, for the project's
-// Google Calendar app. Events on every listed calendar come from CALENDAR_SCOPE.
-export const CALENDAR_LIST_SCOPE =
-  "https://www.googleapis.com/auth/calendar.calendarlist.readonly";
-export const GCAL_SCOPES = [CALENDAR_SCOPE, CALENDAR_LIST_SCOPE];
 export type IntegrationId =
   | "google-analytics"
   | "google-calendar"
-  | "gcal"
   | "netlify"
   | "resend";
 
@@ -44,9 +38,6 @@ type IntegrationProvider = {
 export const INTEGRATIONS: IntegrationProvider[] = [
   { id: "google-analytics", providerId: "google", requiredScope: GA_SCOPE },
   { id: "google-calendar", providerId: "google", requiredScope: CALENDAR_SCOPE },
-  // Project Google Calendar app (lib/integrations/calendar, routers/gcal).
-  // Verified calendar.events + the non-sensitive calendar list.
-  { id: "gcal", providerId: "google", requiredScope: GCAL_SCOPES },
   // Deploys upload projects to the user's own Netlify account (lib/netlify).
   { id: "netlify", providerId: "netlify" },
   // Client's Resend account: domains, recent emails, API keys (lib/resend).

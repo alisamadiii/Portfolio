@@ -134,16 +134,10 @@ export const hubProject = pgTable(
     // Per-project settings, with defaults for new projects.
     basePath: text("base_path").notNull().default(""),
     // ── useSend per-project team (workspace) ──
-    // Created only by the Newsletter app's "Set up" (never at import), keyed
-    // by projectId (Team.externalId). Only the team id is stored: every call
-    // uses the instance admin key + X-Team-Id, scoped to this team.
+    // Legacy: the removed Newsletter app created these, keyed by projectId
+    // (Team.externalId). Only the team id is stored: every call uses the
+    // instance admin key + X-Team-Id, scoped to this team.
     usesendTeamId: integer("usesend_team_id"),
-    // The Newsletter app's one sending domain (useSend Domain.id) and the
-    // project's subscriber list (ContactBook.id). Both live inside the
-    // project's own team and are only ever read from here, never from client
-    // input. One domain per project: claimed with a conditional update.
-    usesendDomainId: integer("usesend_domain_id"),
-    usesendContactBookId: text("usesend_contact_book_id"),
     // Per-client Google Analytics. gaPropertyId is the numeric GA4 property id
     // (e.g. "123456789") the project's Analytics tab reports on; gaConnectedUserId
     // is the Better Auth user.id whose stored Google token (account table) we use
@@ -170,7 +164,7 @@ export const hubProject = pgTable(
     // owner's account email.
     notifyEmail: text("notify_email"),
     // Apps the client added from the hub's Apps page ("leads" | "analytics" |
-    // "newsletter"). Drives the project sidebar; each app page gates itself by
+    // ...). Drives the project sidebar; each app page gates itself by
     // plan feature, so this is only "what the client chose to show".
     apps: text("apps").array().notNull().default(sql`'{}'::text[]`),
     // Per-client GitHub. The Better Auth user.id who imported the project — owns
@@ -196,11 +190,6 @@ export const hubProject = pgTable(
     // project's Resend page right after the OAuth consent.
     resendConnectedUserId: text("resend_connected_user_id"),
     resendAccountId: text("resend_account_id"),
-    // The project's Google Calendar app: the Better Auth user.id who connected
-    // it + which of their Google accounts (account.account_id), since a user
-    // can link several. The dashboard reads calendars with that token.
-    gcalConnectedUserId: text("gcal_connected_user_id"),
-    gcalAccountId: text("gcal_account_id"),
     // The project's Neon app: the Better Auth user.id who linked Neon + their
     // Neon user id (account.account_id for provider "neon"), and the Neon
     // project bound to this hub project (+ its org, for org-owned projects).
@@ -320,50 +309,6 @@ export const hubCacheFileMeta = pgTable(
   })
 );
 
-// ─── Feedback app ───────────────────────────────────────────────
-// One public review link per project (www.alisamadii.com/review/<id>). The
-// Google place is what 5-star customers are sent to review.
-export const hubReviewLink = pgTable("hub_review_link", {
-  // Short random slug, the public URL id. Kept when the place changes so
-  // links already handed out keep working.
-  id: text("id").primaryKey(),
-  projectId: uuid("project_id").notNull().unique(),
-  // Legacy: the place, name, address and review link now live on
-  // hub_project (googlePlaceId, name, address, googleReviewUrl) since
-  // migration 0070. Nothing reads or writes these; dropped in a follow-up
-  // migration once prod is backfilled.
-  placeId: text("place_id"),
-  businessName: text("business_name"),
-  address: text("address"),
-  placeTypes: text("place_types").array(),
-  googleReviewUrl: text("google_review_url"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-// Every rating left on a review link. 5 stars are stored too (no message) so
-// the stats are real; wentToGoogle = the customer opened the Google review.
-export const hubReviewFeedback = pgTable(
-  "hub_review_feedback",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    projectId: uuid("project_id").notNull(),
-    linkId: text("link_id").notNull(),
-    rating: smallint("rating").notNull(),
-    message: text("message"),
-    name: text("name"),
-    contact: text("contact"),
-    wentToGoogle: boolean("went_to_google").notNull().default(false),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => ({
-    idxProjectCreated: index("hub_review_feedback_project_created_idx").on(
-      table.projectId,
-      table.createdAt
-    ),
-  })
-);
-
 // ─── Reviews app ────────────────────────────────────────────────
 // Review sources per project. provider = where reviews come from ("google"
 // today via Apify, more later). Google is scraped daily by apps/api
@@ -383,8 +328,7 @@ export const hubReviewsSource = pgTable(
     // Provider's id for the listing (Google place id), filled by the first scrape.
     externalId: text("external_id"),
     // Legacy: the business name comes from hub_project.name (Settings) since
-    // migration 0070. Nothing reads or writes this; dropped with the
-    // hub_review_link place columns in a follow-up migration.
+    // migration 0070. Nothing reads or writes this.
     businessName: text("business_name"),
     rating: real("rating"),
     totalReviews: integer("total_reviews"),

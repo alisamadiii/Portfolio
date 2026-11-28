@@ -26,7 +26,7 @@ describe("pickWorkspaceProject", () => {
 
 describe("safeWorkspacePath", () => {
   it("keeps same-origin paths and rejects everything else", () => {
-    expect(safeWorkspacePath("/leads?tab=conversations")).toBe("/leads?tab=conversations");
+    expect(safeWorkspacePath("/leads/12?tab=all")).toBe("/leads/12?tab=all");
     expect(safeWorkspacePath("//evil.com")).toBe("/");
     expect(safeWorkspacePath("https://evil.com")).toBe("/");
     expect(safeWorkspacePath(undefined)).toBe("/");

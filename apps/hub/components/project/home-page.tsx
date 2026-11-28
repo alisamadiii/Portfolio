@@ -149,7 +149,7 @@ export function HomePage() {
   const has = (id: (typeof installed)[number]) => installed.includes(id);
   const deliveryApps = installedDeliveryApps(installed);
   const showLeads = has("leads") && agency != null;
-  const showReviews = has("feedback") || has("google-reviews");
+  const showReviews = has("google-reviews");
   const hasDashboard = showLeads || has("analytics") || deliveryApps.length > 0 || showReviews;
   const allDone = items.every((i) => i.state === "done");
 
@@ -274,9 +274,7 @@ export function HomePage() {
           {showLeads && <LeadsSection projectId={projectId} days={days} leadsRange={leadsRange} />}
           {has("analytics") && <AnalyticsSection projectId={projectId} range={range} />}
           {deliveryApps.length > 0 && <OrdersSection projectId={projectId} days={days} providers={deliveryApps} />}
-          {showReviews && (
-            <ReviewsSection projectId={projectId} feedback={has("feedback")} googleReviews={has("google-reviews")} />
-          )}
+          {showReviews && <ReviewsSection projectId={projectId} />}
         </div>
       )}
 

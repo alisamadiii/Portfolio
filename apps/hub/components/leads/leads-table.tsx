@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { Inbox, Search } from "lucide-react";
 
 import { useTRPC } from "@workspace/trpc/client";
@@ -28,7 +28,6 @@ import { EmptyState } from "@/components/ds/ui/misc";
 import { SegmentedTabs } from "@/components/ds/ui/tabs";
 import { appPath } from "@/lib/paths";
 
-import { conversationHref } from "./inbox/conversation-href";
 
 const PAGE_SIZE = 25;
 const ALL_SOURCES = "all";
@@ -119,7 +118,7 @@ export function LeadsTable() {
       key: "lead",
       header: "Lead",
       width: "minmax(240px, 2fr)",
-      cell: (lead) => <LeadNameCell lead={lead} href={conversationHref(base, lead.id)} />,
+      cell: (lead) => <LeadNameCell lead={lead} href={`${base}/${lead.id}`} />,
     },
     {
       key: "source",
@@ -147,20 +146,6 @@ export function LeadsTable() {
       header: "Status",
       width: "minmax(110px, 0.8fr)",
       cell: (lead) => <LeadStatusBadge status={lead.status} />,
-    },
-    {
-      key: "meeting",
-      header: "Meeting",
-      width: "minmax(110px, 0.8fr)",
-      cell: (lead) =>
-        lead.meetingAt && new Date(lead.meetingAt) > new Date() ? (
-          <span className="flex flex-col">
-            <span className="text-ink">{format(new Date(lead.meetingAt), "EEE, MMM d")}</span>
-            <span className="text-xs text-dim">{format(new Date(lead.meetingAt), "h:mm a")}</span>
-          </span>
-        ) : (
-          <span className="text-faint">—</span>
-        ),
     },
     {
       key: "value",
@@ -236,7 +221,7 @@ export function LeadsTable() {
         rows={data?.rows ?? []}
         rowKey={(lead) => String(lead.id)}
         minWidth={980}
-        onRowClick={(lead) => router.push(conversationHref(base, lead.id))}
+        onRowClick={(lead) => router.push(`${base}/${lead.id}`)}
         empty={
           isLoading ? (
             <div className="px-6 py-12 text-center text-[13px] text-dim">Loading leads…</div>

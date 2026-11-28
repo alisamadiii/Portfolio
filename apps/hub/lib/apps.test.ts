@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { APP_IDS, planAllowsApp } from "@workspace/trpc/lib/apps";
 import { entitlementFor } from "@workspace/trpc/lib/payment/plans";
 
-import { ACCOUNT_PRODUCTS, accountNav, APPS, appById, appState, projectCoreNav } from "./apps";
+import { ACCOUNT_PRODUCTS, accountNav, APPS, appById, appState, isNewNav, projectCoreNav } from "./apps";
 
 // DELIBERATE CHANGE (2026-11-15, plans priced per client): free projects can
 // add NO app, feature-less ones (Resend, Calendar, Neon, Wix) included, and
@@ -37,16 +37,6 @@ describe("appState", () => {
     expect(appState(leads, [], FREE)).toBe("locked");
     expect(appState(leads, [], WEBSITE)).toBe("included");
     expect(appState(leads, [], CUSTOM)).toBe("included");
-  });
-});
-
-describe("Google Calendar app", () => {
-  it("needs a paid plan and opens /calendar", () => {
-    const gcal = appById("gcal")!;
-    expect(gcal.path).toBe("calendar");
-    expect(appState(gcal, [], FREE)).toBe("locked");
-    expect(appState(gcal, [], WEBSITE)).toBe("included");
-    expect(appState(gcal, ["gcal"], FREE)).toBe("installed");
   });
 });
 
@@ -258,5 +248,31 @@ describe("Site Monitor in the core nav (2026-11-20)", () => {
     const ids = projectCoreNav({ netlify: false, members: false }).map((i) => i.id);
     expect(ids.slice(0, 3)).toEqual(["home", "website", "site-monitor"]);
     expect(projectCoreNav({ netlify: false, members: false }).find((i) => i.id === "site-monitor")?.path).toBe("site-monitor");
+  });
+});
+
+// 2026-11-28: Automations, Google Calendar, Newsletter and Feedback left the
+// hub (GoHighLevel handles comms). Old projects may still list their ids in
+// hub_project.apps; the registry must not know them so the sidebar, the Apps
+// page and useInstalledApps drop them instead of crashing.
+describe("removed apps (2026-11-28)", () => {
+  it.each(["gcal", "newsletter", "feedback", "automations"])("%s is gone from the registry", (id) => {
+    expect(appById(id)).toBeUndefined();
+    expect((APP_IDS as readonly string[]).includes(id)).toBe(false);
+    expect(projectCoreNav({ netlify: false, members: false }).find((i) => i.id === id)).toBeUndefined();
+  });
+});
+
+describe("isNewNav (sidebar New badge, 2026-11-28)", () => {
+  const now = new Date("2026-11-28T12:00:00");
+  it("is new for 14 days from addedAt", () => {
+    expect(isNewNav("2026-11-27", now)).toBe(true);
+    expect(isNewNav("2026-11-15", now)).toBe(true);
+    expect(isNewNav("2026-11-14", now)).toBe(false);
+  });
+  it("is never new without a valid past date", () => {
+    expect(isNewNav(undefined, now)).toBe(false);
+    expect(isNewNav("not-a-date", now)).toBe(false);
+    expect(isNewNav("2026-12-30", now)).toBe(false);
   });
 });

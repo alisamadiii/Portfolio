@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useTRPC } from "@workspace/trpc/client";
 import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 
-import type { AppId } from "@/lib/apps";
+import { APPS, type AppId } from "@/lib/apps";
 import { handleCmsError } from "@/lib/trpc-errors";
 
 type Projects = RouterOutputs["cms"]["repos"]["listMine"];
@@ -24,7 +24,8 @@ export function useInstalledApps(projectId: string) {
 
   const projects = useQuery(trpc.cms.repos.listMine.queryOptions());
   const row = projects.data?.find((p) => p.projectId === projectId);
-  const installed = (row?.apps ?? []) as AppId[];
+  // Ids of removed apps may linger on old projects: never show or resend them.
+  const installed = (row?.apps ?? []).filter((id): id is AppId => APPS.some((a) => a.id === id));
 
   const write = (apps: AppId[]) => {
     queryClient.setQueryData<Projects>(listKey, (old) =>

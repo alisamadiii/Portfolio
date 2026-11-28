@@ -8,7 +8,7 @@ import { ArrowUpRight, CircleHelp, Lock } from "lucide-react";
 import { RequestDialog } from "@workspace/ui/custom/request-dialog";
 import { cn } from "@workspace/ui/lib/utils";
 
-import type { NavItem } from "@/lib/apps";
+import { isNewNav, type NavItem } from "@/lib/apps";
 
 // Every row: same 34px box, same 20px icon slot, same hover. shrink-0 because
 // the nav is a fixed-height flex column: without it rows squash before the
@@ -64,6 +64,9 @@ export function SidebarLink({
         )}
       </span>
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
+      {isNewNav(item.addedAt) && (
+        <span className="shrink-0 rounded bg-coral-soft px-1.5 py-px text-[11px] font-medium text-coral-deep">New</span>
+      )}
       {item.external && <ArrowUpRight className="size-3.5 shrink-0" aria-hidden />}
       {item.adminOnly && (
         <Lock className="size-3.5 shrink-0 text-faint" aria-label="Admins only">

@@ -11,7 +11,6 @@ import { ChannelBadge } from "@/components/agency/lead-channel";
 import { formatMoney, LeadStatusBadge } from "@/components/agency/lead-status";
 import { DataTable, type Column } from "@/components/ds/ui/data-table";
 import { EmptyState, KpiGrid } from "@/components/ds/ui/misc";
-import { conversationHref } from "@/components/leads/inbox/conversation-href";
 import { LeadNameCell } from "@/components/leads/leads-table";
 
 import { SectionCard } from "./section-card";
@@ -98,7 +97,7 @@ export function LeadsSection({
             columns={columns}
             rows={latest.data?.rows ?? []}
             rowKey={(lead) => String(lead.id)}
-            rowHref={(lead) => conversationHref("/leads", lead.id)}
+            rowHref={(lead) => `/leads/${lead.id}`}
             minWidth={520}
             empty={
               <EmptyState

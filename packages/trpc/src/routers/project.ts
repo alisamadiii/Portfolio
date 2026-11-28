@@ -39,6 +39,7 @@ import { projectBusinessRouter } from "./project-business";
 
 /** Apps whose data lives on the project's agency_client row. */
 const AGENCY_APPS: readonly AppId[] = ["leads", "google-ads"];
+const isAppId = (id: string): id is AppId => (APP_IDS as readonly string[]).includes(id);
 
 export const projectRouter = createTRPCRouter({
   // Business details (name, phone, address, hours, Google listing).
@@ -118,9 +119,11 @@ export const projectRouter = createTRPCRouter({
    * adding an app must never depend on GitHub.
    */
   setApps: collaboratorManageProcedure
-    .input(z.object({ apps: z.array(z.enum(APP_IDS)).max(APP_IDS.length) }))
+    .input(z.object({ apps: z.array(z.string().max(40)).max(32) }))
     .mutation(async ({ ctx, input }) => {
-      const apps = [...new Set(input.apps)];
+      // Ids of apps that no longer exist (removed from APP_IDS) may still sit
+      // on old projects; they are dropped here instead of failing the call.
+      const apps = [...new Set(input.apps)].filter(isAppId);
       // Adding needs a paid plan that covers the app, for everyone (admins
       // included). Removing, or keeping what's installed, is always allowed.
       const [current] = await db

@@ -62,3 +62,15 @@ export const isEmail = (value: string | null | undefined): value is string =>
  */
 export const tooFast = (elapsedMs: number | undefined) =>
   elapsedMs !== undefined && elapsedMs < MIN_FILL_MS;
+
+/**
+ * A business name made safe for an email From display name: one line, no
+ * quotes/angle brackets/control chars, at most 60 chars. Empty → "Message".
+ */
+export const senderDisplayName = (name: string) =>
+  name
+    .replace(/\s+/g, " ")
+    .replace(/[^\p{L}\p{N} .&'-]/gu, "")
+    .replace(/ +/g, " ")
+    .trim()
+    .slice(0, 60) || "Message";

@@ -47,19 +47,26 @@ describe("member management rules", () => {
 describe("projectCoreNav", () => {
   const ids = (o: { netlify: boolean; members: boolean }) => projectCoreNav(o).map((i) => i.id);
 
+  // DELIBERATE CHANGE (2026-11-28): the core nav grew Site Monitor (2026-11-20)
+  // and SEO, and lost Automations (removed with the Flows service). Members
+  // still comes after the last core item.
   it("Members sits right below Business info for managers", () => {
     expect(ids({ netlify: false, members: true })).toEqual([
       "home",
       "website",
+      "site-monitor",
       "business-info",
       "templates",
+      "seo",
       "members",
     ]);
     expect(ids({ netlify: true, members: true })).toEqual([
       "home",
       "website",
+      "site-monitor",
       "business-info",
       "templates",
+      "seo",
       "members",
       "netlify",
     ]);

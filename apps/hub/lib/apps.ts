@@ -4,53 +4,52 @@ import {
   Activity,
   BarChart3,
   BookOpen,
-  Code,
   Building2,
-  CalendarDays,
-  FileText,
+  Code,
   CreditCard,
   Database,
+  FileText,
   Gauge,
   Globe,
   Handshake,
   Home,
   Images,
   Inbox,
-  Send,
-  ShoppingBag,
-  Star,
   LayoutGrid,
-  Settings,
-  Mail,
-  UtensilsCrossed,
   Megaphone,
   MonitorSmartphone,
   Plug,
   ReceiptText,
+  Send,
+  Settings,
+  ShoppingBag,
+  Star,
+  Trophy,
   User,
   Users,
-  Workflow,
+  UtensilsCrossed,
 } from "lucide-react";
 
 import { urls } from "@workspace/ui/lib/company";
+
 import { planAllowsApp, type AppId } from "@workspace/trpc/lib/apps";
 import type { Entitlement, Feature } from "@workspace/trpc/lib/payment/plans";
 
+import { docsUrl } from "@/lib/docs-links";
+
 import {
+  DoorDashLogo,
   GoogleAdsLogo,
   GoogleAnalyticsLogo,
-  GoogleCalendarLogo,
   GoogleLogo,
+  GrubhubLogo,
   NeonLogo,
   NetlifyLogo,
   ResendLogo,
-  DoorDashLogo,
-  GrubhubLogo,
   ShopifyLogo,
   UberEatsLogo,
   WixLogo,
 } from "@/components/ds/brand-logos";
-import { docsUrl } from "@/lib/docs-links";
 
 export type { AppId };
 
@@ -83,7 +82,7 @@ export const APPS: AppDef[] = [
     id: "leads",
     name: "Leads",
     description:
-      "Every form and manual lead in one inbox, with where each lead came from.",
+      "Every form and manual lead in one list, with where each lead came from.",
     icon: Inbox,
     path: "leads",
     feature: "leads",
@@ -109,27 +108,10 @@ export const APPS: AppDef[] = [
     feature: "ads",
   },
   {
-    id: "newsletter",
-    name: "Newsletter",
-    description:
-      "Email your customers from your own list, with your branding.",
-    icon: Mail,
-    path: "newsletter",
-    feature: "newsletter",
-  },
-  {
-    id: "feedback",
-    name: "Feedback",
-    description:
-      "One review link for your customers. 5 stars go to Google, the rest come to you privately.",
-    icon: Star,
-    path: "feedback",
-    feature: "feedback",
-  },
-  {
     id: "google-reviews",
     name: "Google Reviews",
-    description: "Save your Google reviews every day and show the 5-star ones on your website.",
+    description:
+      "Save your Google reviews every day and show the 5-star ones on your website.",
     icon: Star,
     logo: GoogleLogo,
     path: "google-reviews",
@@ -137,7 +119,8 @@ export const APPS: AppDef[] = [
   {
     id: "uber-eats",
     name: "Uber Eats",
-    description: "Your Uber Eats orders and sales in one place, and a Pause button for busy nights.",
+    description:
+      "Your Uber Eats orders and sales in one place, and a Pause button for busy nights.",
     icon: UtensilsCrossed,
     logo: UberEatsLogo,
     path: "uber-eats",
@@ -145,7 +128,8 @@ export const APPS: AppDef[] = [
   {
     id: "doordash",
     name: "DoorDash",
-    description: "Connect your DoorDash store to Client Hub and follow the integration from sign-in to live.",
+    description:
+      "Connect your DoorDash store to Client Hub and follow the integration from sign-in to live.",
     icon: UtensilsCrossed,
     logo: DoorDashLogo,
     path: "doordash",
@@ -154,7 +138,8 @@ export const APPS: AppDef[] = [
   {
     id: "grubhub",
     name: "Grubhub",
-    description: "Grubhub orders in one place: confirm, reject, mark ready, and pause the store on busy nights.",
+    description:
+      "Grubhub orders in one place: confirm, reject, mark ready, and pause the store on busy nights.",
     icon: UtensilsCrossed,
     logo: GrubhubLogo,
     path: "grubhub",
@@ -163,7 +148,8 @@ export const APPS: AppDef[] = [
   {
     id: "shopify",
     name: "Shopify",
-    description: "Your Shopify orders and products in one place: ship, cancel, refund, and change prices and stock.",
+    description:
+      "Your Shopify orders and products in one place: ship, cancel, refund, and change prices and stock.",
     icon: ShoppingBag,
     logo: ShopifyLogo,
     path: "shopify",
@@ -171,24 +157,16 @@ export const APPS: AppDef[] = [
   {
     id: "resend",
     name: "Resend",
-    description:
-      "Connect the Resend account your website sends email from.",
+    description: "Connect the Resend account your website sends email from.",
     icon: Send,
     logo: ResendLogo,
     path: "resend",
   },
   {
-    id: "gcal",
-    name: "Google Calendar",
-    description: "See your Google calendars and upcoming appointments in one place.",
-    icon: CalendarDays,
-    logo: GoogleCalendarLogo,
-    path: "calendar",
-  },
-  {
     id: "neon",
     name: "Neon",
-    description: "Your Postgres database on Neon: projects, branches and connection strings.",
+    description:
+      "Your Postgres database on Neon: projects, branches and connection strings.",
     icon: Database,
     logo: NeonLogo,
     path: "neon",
@@ -196,7 +174,8 @@ export const APPS: AppDef[] = [
   {
     id: "wix",
     name: "Wix",
-    description: "Manage your Wix site's blog, form leads, contacts, orders and bookings.",
+    description:
+      "Manage your Wix site's blog, form leads, contacts, orders and bookings.",
     icon: Globe,
     logo: WixLogo,
     path: "wix",
@@ -230,6 +209,20 @@ export type NavItem = {
   external?: boolean;
   /** Admin-only page: the sidebar shows a lock on it. */
   adminOnly?: boolean;
+  /** Day the page shipped (YYYY-MM-DD). The sidebar shows "New" for NEW_NAV_DAYS. */
+  addedAt?: string;
+};
+
+/** How long a page keeps its "New" badge. */
+export const NEW_NAV_DAYS = 14;
+
+/** Whether a nav item shipped within the last NEW_NAV_DAYS days. */
+export const isNewNav = (addedAt: string | undefined, now: Date = new Date()) => {
+  if (!addedAt) return false;
+  const added = new Date(`${addedAt}T00:00:00`);
+  if (Number.isNaN(added.getTime())) return false;
+  const age = now.getTime() - added.getTime();
+  return age >= 0 && age < NEW_NAV_DAYS * 24 * 60 * 60 * 1000;
 };
 
 /** Project sidebar, top group. Always shown for every client. */
@@ -238,21 +231,46 @@ export const PROJECT_CORE: NavItem[] = [
   // Opens the AI Canvas editor (unchanged).
   { id: "website", label: "Website", icon: Globe, path: "website" },
   // Uptime, problems, pages and check history from sitewatch.
-  { id: "site-monitor", label: "Site Monitor", icon: Activity, path: "site-monitor" },
-  // Workflows, cron jobs and notifications from Flows (agency-toolkit), embedded full screen.
-  { id: "automations", label: "Automations", icon: Workflow, path: "automations" },
-  { id: "business-info", label: "Business info", icon: Building2, path: "business-info" },
+  {
+    id: "site-monitor",
+    label: "Site Monitor",
+    icon: Activity,
+    path: "site-monitor",
+    addedAt: "2026-11-20",
+  },
+  {
+    id: "business-info",
+    label: "Business info",
+    icon: Building2,
+    path: "business-info",
+  },
   // Appointment templates + "/" snippets with [[placeholders]].
   { id: "templates", label: "Templates", icon: FileText, path: "templates" },
+  { id: "seo", label: "SEO", icon: Trophy, path: "seo", addedAt: "2026-11-27" },
 ];
 
 /** Core link shown only once an upload project has published to Netlify. */
-export const NETLIFY_NAV: NavItem = { id: "netlify", label: "Netlify", logo: NetlifyLogo, path: "netlify" };
+export const NETLIFY_NAV: NavItem = {
+  id: "netlify",
+  label: "Netlify",
+  logo: NetlifyLogo,
+  path: "netlify",
+};
 
 /** Who has access to the project. Full-access only (the server 403s anyone else). */
-export const MEMBERS_NAV: NavItem = { id: "members", label: "Members", icon: Users, path: "members" };
+export const MEMBERS_NAV: NavItem = {
+  id: "members",
+  label: "Members",
+  icon: Users,
+  path: "members",
+};
 /** Every order in one list; shown once an orders app (Uber Eats, DoorDash, Grubhub, Shopify) is installed. */
-export const ORDERS_NAV: NavItem = { id: "orders", label: "Orders", icon: ReceiptText, path: "orders" };
+export const ORDERS_NAV: NavItem = {
+  id: "orders",
+  label: "Orders",
+  icon: ReceiptText,
+  path: "orders",
+};
 
 /** Top sidebar group: core, then Members (managers only), Netlify (linked upload sites), Orders (orders apps). */
 export const projectCoreNav = ({
@@ -277,29 +295,76 @@ export const PROJECT_SETTINGS: NavItem[] = [
 ];
 
 /** Download the site's code. Owner and admins, once Website Setup is paid (admins always). */
-export const SOURCE_CODE_NAV: NavItem = { id: "source-code", label: "Source Code", icon: Code, path: "source-code" };
+export const SOURCE_CODE_NAV: NavItem = {
+  id: "source-code",
+  label: "Source Code",
+  icon: Code,
+  path: "source-code",
+};
 
 /** Project Settings (name, logo, website, domains, delete). Owner and admins only. */
-export const SETTINGS_NAV: NavItem = { id: "settings", label: "Settings", icon: Settings, path: "settings" };
+export const SETTINGS_NAV: NavItem = {
+  id: "settings",
+  label: "Settings",
+  icon: Settings,
+  path: "settings",
+};
 
 /** Account group of the workspace sidebar (below the project pages). Client websites, Inspirations: admins only. */
 export const accountNav = ({ isAdmin }: { isAdmin: boolean }): NavItem[] => [
   { id: "sites", label: "Sites", icon: LayoutGrid, path: "/sites" },
   { id: "account", label: "Account", icon: User, path: "/account" },
-  { id: "integrations", label: "Integrations", icon: Plug, path: "/integrations" },
-  { id: "billing", label: "Billing", icon: CreditCard, path: "/account/billing" },
-  { id: "partner", label: "Partner Program", icon: Handshake, path: "/partner" },
+  {
+    id: "integrations",
+    label: "Integrations",
+    icon: Plug,
+    path: "/integrations",
+  },
+  {
+    id: "billing",
+    label: "Billing",
+    icon: CreditCard,
+    path: "/account/billing",
+  },
+  {
+    id: "partner",
+    label: "Partner Program",
+    icon: Handshake,
+    path: "/partner",
+  },
   // The Client Hub docs live on the agency site only.
-  { id: "guide", label: "Guide", icon: BookOpen, path: docsUrl("client-hub/getting-started"), external: true },
+  {
+    id: "guide",
+    label: "Guide",
+    icon: BookOpen,
+    path: docsUrl("client-hub/getting-started"),
+    external: true,
+  },
   ...(isAdmin
     ? [
-        { id: "client-websites", label: "Client websites", icon: MonitorSmartphone, path: "/client-websites", adminOnly: true },
-        { id: "inspirations", label: "Inspirations", icon: Images, path: "/inspirations", adminOnly: true },
+        {
+          id: "client-websites",
+          label: "Client websites",
+          icon: MonitorSmartphone,
+          path: "/client-websites",
+          adminOnly: true,
+        },
+        {
+          id: "inspirations",
+          label: "Inspirations",
+          icon: Images,
+          path: "/inspirations",
+          adminOnly: true,
+        },
       ]
     : []),
 ];
 
 export const ACCOUNT_PRODUCTS: NavItem[] = [
   { id: "motion", label: "Motion", path: urls.motion, external: true },
-  { id: "purchases", label: "Purchases", path: "/account/billing?tab=purchases" },
+  {
+    id: "purchases",
+    label: "Purchases",
+    path: "/account/billing?tab=purchases",
+  },
 ];

@@ -82,8 +82,7 @@ async function insertGithubProject(
     })
     .returning({ id: hubProject.id });
 
-  // No useSend workspace here: it's created only when the client sets up the
-  // Newsletter app (newsletter.setup).
+  // No useSend workspace here (legacy projects may still have one).
   return row!.id;
 }
 

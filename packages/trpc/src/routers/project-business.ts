@@ -19,7 +19,7 @@ import {
 } from "../lib/project-business-shared";
 import { publicObjectUrl } from "../lib/r2";
 import { rateLimit } from "../middleware/rate-limit";
-import { parseGoogleReviewUrl } from "../lib/review-link-shared";
+import { parseGoogleReviewUrl } from "../lib/project-business-shared";
 
 // Business details on hub_project (Settings › Business, Google listing).
 // DB-only like agency.businessProcedure: no GitHub token, so it works on

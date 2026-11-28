@@ -55,7 +55,6 @@ export function SiteLogoCard({ name }: { name: string }) {
     void queryClient.invalidateQueries({ queryKey: trpc.agency.businessInfo.logo.pathKey() });
     // The project switcher shows the logo too.
     void queryClient.invalidateQueries({ queryKey: trpc.cms.repos.listMine.queryKey() });
-    void queryClient.invalidateQueries({ queryKey: trpc.feedback.pathKey() });
   };
 
   const set = useMutation(

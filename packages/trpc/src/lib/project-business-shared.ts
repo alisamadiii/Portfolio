@@ -45,3 +45,24 @@ export const writeReviewUrl = (placeId: string) =>
 /** Where a 5-star customer is sent: the pasted Business Profile link, else the place id link. */
 export const reviewTargetUrl = (b: Pick<ProjectBusiness, "googlePlaceId" | "googleReviewUrl">) =>
   b.googleReviewUrl ?? (b.googlePlaceId ? writeReviewUrl(b.googlePlaceId) : null);
+
+/**
+ * The pasted Business Profile review link (g.page/r/<code>/review),
+ * normalized, or null. It is the only link Google guarantees opens the
+ * review form for the business.
+ */
+export function parseGoogleReviewUrl(input: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(input.trim());
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+  const host = url.hostname.toLowerCase();
+  if (host === "g.page") {
+    const m = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)\/review\/?$/);
+    return m ? `https://g.page/r/${m[1]}/review` : null;
+  }
+  return null;
+}

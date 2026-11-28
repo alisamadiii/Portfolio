@@ -3,8 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { isFreshSnsTimestamp, isSnsCertUrl } from "@workspace/trpc/lib/inbound/sns";
-import { OUTBOUND_LIMITS, senderDisplayName } from "@workspace/trpc/lib/inbox-shared";
+import { senderDisplayName } from "@workspace/trpc/lib/agency/lead-capture";
 import {
   commissionFor,
   PARTNER_AGREEMENT_VERSION,
@@ -67,23 +66,6 @@ describe("verifySignedInstance with maxAgeMs (Wix install callback)", () => {
   });
 });
 
-describe("SNS hardening", () => {
-  it("only trusts SNS's own signing certificates", () => {
-    expect(isSnsCertUrl("https://sns.us-west-2.amazonaws.com/attacker.pem")).toBe(false);
-    expect(
-      isSnsCertUrl("https://sns.us-west-2.amazonaws.com/SimpleNotificationService-abc.pem")
-    ).toBe(true);
-  });
-
-  it("rejects old or far-future timestamps", () => {
-    const now = Date.parse("2026-11-15T12:00:00Z");
-    expect(isFreshSnsTimestamp("2026-11-15T11:59:00.000Z", now)).toBe(true);
-    expect(isFreshSnsTimestamp("2026-11-14T12:00:00.000Z", now)).toBe(false);
-    expect(isFreshSnsTimestamp("2026-11-15T13:00:00.000Z", now)).toBe(false);
-    expect(isFreshSnsTimestamp("nonsense", now)).toBe(false);
-  });
-});
-
 describe("senderDisplayName (email From display names)", () => {
   it("strips anything that could forge an address or break headers", () => {
     expect(senderDisplayName('Stripe Billing <billing@alisamadii.com>,')).toBe(
@@ -97,13 +79,6 @@ describe("senderDisplayName (email From display names)", () => {
     expect(senderDisplayName("Café Ñandú")).toBe("Café Ñandú");
     expect(senderDisplayName("x".repeat(100))).toHaveLength(60);
     expect(senderDisplayName("<>")).toBe("Message");
-  });
-});
-
-describe("inbox outbound limits", () => {
-  it("allow normal use but cap a day of sends", () => {
-    expect(OUTBOUND_LIMITS.perHour).toBeGreaterThanOrEqual(30);
-    expect(OUTBOUND_LIMITS.perDay).toBeLessThanOrEqual(500);
   });
 });
 

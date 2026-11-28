@@ -19,7 +19,6 @@ import type { RouterOutputs } from "@workspace/trpc/routers/_app";
 import { useCurrentUser } from "@workspace/auth/hooks/use-user";
 import type { AgencyLeadStatus } from "@workspace/drizzle/schema";
 
-import { MeetingCard, ScheduleButton } from "@/components/agency/lead-meeting";
 import {
   MarkLostDialog,
   MarkWonDialog,
@@ -226,14 +225,6 @@ export function LeadDetail({ id }: { id: number }) {
           ? formatMoney(lead.valueCents, lead.currency)
           : undefined,
     });
-  if (lead.meetingAt)
-    statusEvents.push({
-      at: lead.meetingAt,
-      title: new Date(lead.meetingAt) > new Date() ? "Meeting scheduled" : "Meeting",
-      extra: lead.meetingEndAt
-        ? `${format(new Date(lead.meetingAt), "p")} – ${format(new Date(lead.meetingEndAt), "p")}`
-        : undefined,
-    });
   if (lead.lostAt)
     statusEvents.push({
       at: lead.lostAt,
@@ -274,7 +265,6 @@ export function LeadDetail({ id }: { id: number }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {canEdit && <ScheduleButton projectId={projectId} lead={lead} onSaved={onSaved} />}
           {lead.phone && (
             <Button
               variant="outline"
@@ -430,7 +420,6 @@ export function LeadDetail({ id }: { id: number }) {
 
         {/* Right rail */}
         <aside className="bg-card ring-foreground/7 flex h-fit flex-col gap-4 rounded-[18px] p-6 shadow-[0_6px_16px_rgba(27,26,23,0.05)] ring-1">
-          <MeetingCard projectId={projectId} lead={lead} canEdit={canEdit} onSaved={onSaved} />
           <div>
             <p className="text-[15px] font-semibold">Status</p>
             <div className="mt-2 grid grid-cols-3 gap-1.5">

@@ -1,10 +1,10 @@
 /**
  * One-time backfill for the business columns on hub_project (migration
- * 0070): name, phone, address, hours, google_place_id, google_review_url.
+ * 0070): name, phone, address, hours, google_place_id. (The hub_review_link
+ * source was dropped with the Feedback app, migration 0078.)
  * Copies them from where they used to live, filling EMPTY columns only:
  *   - agency_client.business_info (website = business name, businessPhone,
  *     businessAddress, businessHours)
- *   - hub_review_link (place_id, business_name, address, google_review_url)
  *   - hub_reviews_source provider google (external_id, business_name)
  * Safe to run twice. Never deletes the legacy values.
  *
@@ -29,7 +29,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 const { db } = await import("@workspace/drizzle/index");
-const { agencyClient, hubProject, hubReviewLink, hubReviewsSource } = await import(
+const { agencyClient, hubProject, hubReviewsSource } = await import(
   "@workspace/drizzle/schema"
 );
 
@@ -51,16 +51,11 @@ const rows = await db
     googlePlaceId: hubProject.googlePlaceId,
     googleReviewUrl: hubProject.googleReviewUrl,
     businessInfo: agencyClient.businessInfo,
-    linkPlaceId: hubReviewLink.placeId,
-    linkName: hubReviewLink.businessName,
-    linkAddress: hubReviewLink.address,
-    linkReviewUrl: hubReviewLink.googleReviewUrl,
     sourcePlaceId: hubReviewsSource.externalId,
     sourceName: hubReviewsSource.businessName,
   })
   .from(hubProject)
   .leftJoin(agencyClient, eq(agencyClient.projectId, hubProject.id))
-  .leftJoin(hubReviewLink, eq(hubReviewLink.projectId, hubProject.id))
   .leftJoin(
     hubReviewsSource,
     and(eq(hubReviewsSource.projectId, hubProject.id), eq(hubReviewsSource.provider, "google"))
@@ -73,7 +68,7 @@ for (const row of rows) {
   const infoName = first(info.website);
   const patch: Record<string, string> = {};
 
-  const name = clean(row.name) ?? infoName ?? clean(row.linkName) ?? clean(row.sourceName);
+  const name = clean(row.name) ?? infoName ?? clean(row.sourceName);
   if (!row.name && name) patch.name = name;
   if (row.name && infoName && row.name.trim() !== infoName) {
     console.log(`  CHECK ${row.id} (${row.repo}): Settings name "${row.name}" vs Business info "${infoName}"`);
@@ -83,18 +78,11 @@ for (const row of rows) {
   if (!row.phone && phone) patch.phone = phone;
   const hours = first(info.businessHours);
   if (!row.hours && hours) patch.hours = hours;
-  const address = first(info.businessAddress) ?? clean(row.linkAddress);
+  const address = first(info.businessAddress);
   if (!row.address && address) patch.address = address;
 
-  const placeId = clean(row.linkPlaceId) ?? clean(row.sourcePlaceId);
-  if (row.linkPlaceId && row.sourcePlaceId && row.linkPlaceId !== row.sourcePlaceId) {
-    console.log(
-      `  CHECK ${row.id} (${row.repo}): Feedback place ${row.linkPlaceId} vs Google Reviews place ${row.sourcePlaceId}`
-    );
-  }
+  const placeId = clean(row.sourcePlaceId);
   if (!row.googlePlaceId && placeId) patch.googlePlaceId = placeId;
-  const reviewUrl = clean(row.linkReviewUrl);
-  if (!row.googleReviewUrl && reviewUrl) patch.googleReviewUrl = reviewUrl;
 
   if (Object.keys(patch).length === 0) continue;
   changed++;

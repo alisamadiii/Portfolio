@@ -1,4 +1,3 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { initTRPC, TRPCError } from "@trpc/server";
@@ -12,7 +11,6 @@ import { collaboratorMatchesUser } from "./lib/cms/collaborator-access";
 import { db } from "./lib/cms/db";
 import { toTRPCError } from "./lib/cms/errors";
 import { getToken } from "./lib/cms/token";
-import { rateLimit } from "./middleware/rate-limit";
 
 export const createTRPCContext = cache(async () => {});
 
@@ -167,25 +165,4 @@ export const collaboratorManageProcedure = authenticatedProcedure
     }
 
     return next({ ctx: { ...ctx, ...access } });
-  });
-
-
-// Server-to-server calls from Flows (the automations service). No user session:
-// the caller proves itself with the shared FLOWS_HUB_KEY (same value as Flows'
-// HUB_API_KEY), compared in constant time. Refuses everything when the key is
-// unset or weak, so the route can never be open by accident. Procedures built on
-// this still scope every call to the one projectId they are given.
-const MIN_SERVICE_KEY_LENGTH = 32;
-const digest = (value: string) => createHash("sha256").update(value).digest();
-
-export const flowsServiceProcedure = baseProcedure
-  .input(z.object({ projectId: z.string().uuid() }))
-  .use(async ({ next, input }) => {
-    const expected = process.env.FLOWS_HUB_KEY ?? "";
-    const given = (await headers()).get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim() ?? "";
-    if (expected.length < MIN_SERVICE_KEY_LENGTH || !given || !timingSafeEqual(digest(given), digest(expected))) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid service key" });
-    }
-    await rateLimit(120, 60_000, `flows-service:${input.projectId}`);
-    return next({ ctx: { projectId: input.projectId } });
   });
